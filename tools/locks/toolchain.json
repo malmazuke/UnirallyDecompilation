@@ -1,0 +1,62 @@
+{
+  "lock_schema_version": 1,
+  "note": "Pinned build tools fetched as PyPI wheel archives and extracted into an ignored directory. Wheels are used as plain zip files; nothing is installed into any Python environment. Digests were resolved on 10 September 2026 from the PyPI JSON metadata via pip's install report and re-verified by hashing the downloaded files.",
+  "cache_dir": "local/cache/wheels",
+  "install_dir": "local/toolchain",
+  "tools": {
+    "cmake": {
+      "version": "3.31.10",
+      "extract_prefix": "cmake/data/",
+      "binaries": { "cmake": "bin/cmake", "ctest": "bin/ctest" },
+      "artifacts": {
+        "darwin-arm64": {
+          "filename": "cmake-3.31.10-py3-none-macosx_10_10_universal2.whl",
+          "url": "https://files.pythonhosted.org/packages/99/3b/6ed408a99709808df4014bead522e075f0e8d1100e6d886eb5bc30fee04e/cmake-3.31.10-py3-none-macosx_10_10_universal2.whl",
+          "sha256": "ad697643a00d9ba85179590a383c4f7401169b55ebf4b8b2938daf28c6bdeb6d"
+        },
+        "darwin-x86_64": {
+          "filename": "cmake-3.31.10-py3-none-macosx_10_10_universal2.whl",
+          "url": "https://files.pythonhosted.org/packages/99/3b/6ed408a99709808df4014bead522e075f0e8d1100e6d886eb5bc30fee04e/cmake-3.31.10-py3-none-macosx_10_10_universal2.whl",
+          "sha256": "ad697643a00d9ba85179590a383c4f7401169b55ebf4b8b2938daf28c6bdeb6d"
+        },
+        "linux-x86_64": {
+          "filename": "cmake-3.31.10-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+          "url": "https://files.pythonhosted.org/packages/f4/2e/cefc60143950ca1a8dda26d4c8484e6fc406db16e7ca098ebae549de35f9/cmake-3.31.10-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+          "sha256": "2f766bb46367e5e0559fa33184653754bce044583a06014dcaebf8e6dff8a1f1"
+        },
+        "linux-aarch64": {
+          "filename": "cmake-3.31.10-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl",
+          "url": "https://files.pythonhosted.org/packages/b1/6c/d629c3b6a30105f5946e754b42d6ce84be36c190cc70b70fb2eb8a0ffc37/cmake-3.31.10-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl",
+          "sha256": "a4a5615f31f692c9b9aa8b365704e4b76172348af6fa40e16fea3f118bb01194"
+        }
+      }
+    },
+    "ninja": {
+      "version": "1.13.2",
+      "extract_prefix": "ninja-1.13.2.data/scripts/",
+      "binaries": { "ninja": "ninja" },
+      "artifacts": {
+        "darwin-arm64": {
+          "filename": "ninja-1.13.2-py3-none-macosx_10_9_universal2.whl",
+          "url": "https://files.pythonhosted.org/packages/b5/b8/90a9518f2264637084d6199bc20c2f3fb97fefc4c474d277720150c3bd6d/ninja-1.13.2-py3-none-macosx_10_9_universal2.whl",
+          "sha256": "fd82e26c0706ad4ab88e5fdd26f3fab0a987a90f810160f6c322e752c6af298b"
+        },
+        "darwin-x86_64": {
+          "filename": "ninja-1.13.2-py3-none-macosx_10_9_universal2.whl",
+          "url": "https://files.pythonhosted.org/packages/b5/b8/90a9518f2264637084d6199bc20c2f3fb97fefc4c474d277720150c3bd6d/ninja-1.13.2-py3-none-macosx_10_9_universal2.whl",
+          "sha256": "fd82e26c0706ad4ab88e5fdd26f3fab0a987a90f810160f6c322e752c6af298b"
+        },
+        "linux-x86_64": {
+          "filename": "ninja-1.13.2-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+          "url": "https://files.pythonhosted.org/packages/6e/53/ebfed7b689c338dd8ebeec9c0730c8d56821292f14e2536e5f3ef1a05744/ninja-1.13.2-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+          "sha256": "65a24341b5ac09fcadcc37082660be40a94174e51a937fabf6e2cae26225fa2c"
+        },
+        "linux-aarch64": {
+          "filename": "ninja-1.13.2-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl",
+          "url": "https://files.pythonhosted.org/packages/35/54/7368ce188625e39acc03ee362bb86cc9bfa6ad15e25c50889ae36e2889b3/ninja-1.13.2-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl",
+          "sha256": "d775a5e43e9088f507a6250d57fcf5678eb31268c545feb5064ffeee33735622"
+        }
+      }
+    }
+  }
+}

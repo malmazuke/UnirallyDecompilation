@@ -22,6 +22,7 @@ from unirally_lab import (  # noqa: E402
     EXIT_MISSING_PREREQUISITE,
     EXIT_OK,
     __version__,
+    lab_commands,
     report as reportmod,
     rom as rommod,
 )
@@ -144,6 +145,8 @@ def build_parser() -> argparse.ArgumentParser:
     insp.add_argument("--report", help="write the JSON run report here")
     insp.add_argument("--task", help="task ID to record in the report")
     insp.set_defaults(func=cmd_rom_inspect)
+
+    lab_commands.register(sub)
     return parser
 
 

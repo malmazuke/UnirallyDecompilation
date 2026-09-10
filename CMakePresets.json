@@ -1,0 +1,100 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 27,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "lab-base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "LAB_WARNINGS_AS_ERRORS": "ON"
+      }
+    },
+    {
+      "name": "lab-debug",
+      "displayName": "Laboratory debug",
+      "inherits": "lab-base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "lab-release",
+      "displayName": "Laboratory release",
+      "inherits": "lab-base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+      }
+    },
+    {
+      "name": "lab-sanitize",
+      "displayName": "Laboratory debug with sanitizers",
+      "inherits": "lab-debug",
+      "cacheVariables": {
+        "LAB_SANITIZERS": "ON"
+      }
+    },
+    {
+      "name": "lab-failure-probe",
+      "displayName": "Laboratory debug plus deliberately failing tests",
+      "inherits": "lab-debug",
+      "cacheVariables": {
+        "LAB_PROBE_FAILURES": "ON"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "lab-debug",
+      "configurePreset": "lab-debug"
+    },
+    {
+      "name": "lab-release",
+      "configurePreset": "lab-release"
+    },
+    {
+      "name": "lab-sanitize",
+      "configurePreset": "lab-sanitize"
+    },
+    {
+      "name": "lab-failure-probe",
+      "configurePreset": "lab-failure-probe"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "lab-debug",
+      "configurePreset": "lab-debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "lab-release",
+      "configurePreset": "lab-release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "lab-sanitize",
+      "configurePreset": "lab-sanitize",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "lab-failure-probe",
+      "configurePreset": "lab-failure-probe",
+      "output": {
+        "outputOnFailure": true
+      }
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 # Build, reference execution and validation
 
-This is the M0 implementation specification. The interfaces below do not exist yet.
+This is the M0 implementation specification. Commands marked implemented below exist in `tools/project.py`; the rest remain proposals until a task record shows them running.
 
 ## Environment and dependencies
 
@@ -38,27 +38,27 @@ Select one primary adapter based on this spike. A second emulator is useful to i
 | `local/` | Ignored ROMs, extracted assets, persistent data, private test fixtures and runner state |
 | `artifacts/<run-id>/` | Ignored logs, snapshots, traces, reports and visual diffs |
 
-Only planning files currently exist. Add directories when there is an implementation to put in them.
+Directories are added when there is an implementation to put in them. Present after M0-02: `tools/`, `tests/tooling/` (Python checks for the tooling itself), `tests/synthetic/`, `tests/manifests/rom/`, `docs/research/`, `src/lab/` (a synthetic determinism probe used to validate the toolchain and reports; it is not game code and `src/core/` does not exist yet), `.github/workflows/` (ROM-free CI) and `tools/locks/` (pinned tool artifacts).
 
 ## Stable command contract
 
 Implement a thin repository CLI, tentatively `python3 tools/project.py`, so any model/runtime uses the same entry points. The wrapper should invoke standard tools instead of reimplementing a build system.
 
-| Proposed subcommand | Contract |
-| --- | --- |
-| `doctor` | Report installed/pinned versions, platform and missing capabilities; no game inputs required |
-| `bootstrap` | Prepare isolated dependencies; safe to repeat; emit resolved-version manifest |
-| `rom inspect --path <path>` | Hash original input, identify header/mapping/region candidates and emit manifest; do not silently normalize bytes |
-| `build --preset <name>` | Configure/build the specified CMake preset and record exact configuration |
-| `test --suite synthetic` | Run ROM-free checks and produce machine-readable results |
-| `reference capture --case <manifest>` | Reproduce the original run and save identified reference artifacts |
-| `compare --case <manifest>` | Run native/reference comparison and emit the first divergence and field summary |
-| `verify --task <id>` | Run that task's declared checks, validate required artifacts and report eligibility for review |
-| `package --preset <name>` | Later: assemble a runnable build with dependency notices and no unintended local inputs |
+| Subcommand | Status | Contract |
+| --- | --- | --- |
+| `doctor` | implemented (M0-02) | Report installed/pinned versions, platform and missing capabilities; no game inputs required |
+| `bootstrap` | implemented (M0-02) | Prepare isolated dependencies from `tools/locks/toolchain.json`; safe to repeat; emit resolved-version manifest under ignored `local/toolchain/` |
+| `rom inspect --path <path>` | implemented (M0-01) | Hash original input, identify header/mapping/region candidates and emit manifest; do not silently normalize bytes; `--expect` rejects another revision |
+| `build --preset <name>` | implemented (M0-02) | Configure/build the specified CMake preset with the isolated toolchain and record exact configuration in `build/<preset>/lab-build-info.json` |
+| `test --suite synthetic` | implemented (M0-02) | Run ROM-free checks (Python tooling tests, ctest, fresh-process repeatability) and produce machine-readable results |
+| `reference capture --case <manifest>` | proposed | Reproduce the original run and save identified reference artifacts |
+| `compare --case <manifest>` | proposed | Run native/reference comparison and emit the first divergence and field summary |
+| `verify --task <id>` | proposed | Run that task's declared checks, validate required artifacts and report eligibility for review |
+| `package --preset <name>` | proposed | Later: assemble a runnable build with dependency notices and no unintended local inputs |
 
-All commands must have bounded execution, useful help, noninteractive operation and a `--report <path>` option. Define exit codes for success, failure, missing prerequisites and invalid input. Reports include individual passed/failed/skipped checks. A required skipped check prevents task acceptance even if unrelated checks pass. A bare zero exit status must never conceal missing ROM tests.
+All commands must have bounded execution, useful help, noninteractive operation and a `--report <path>` option. Exit codes as implemented: 0 success, 1 check failure, 2 missing prerequisite, 3 invalid input, 4 timeout. Reports include individual passed/failed/skipped checks. A required skipped check prevents task acceptance even if unrelated checks pass. A bare zero exit status must never conceal missing ROM tests.
 
-Use an agreed JSON report schema containing run ID, task ID, source commit, dirty-diff digest if applicable, tool versions, input hashes, command, elapsed time, check outcomes and artifact hashes/locations. A check result applies only to the exact recorded source/input state.
+Use an agreed JSON report schema containing run ID, task ID, source commit, dirty-diff digest if applicable, tool versions, input hashes, command, elapsed time, check outcomes and artifact hashes/locations. A check result applies only to the exact recorded source/input state. The schema is implemented in `tools/unirally_lab/report.py` (schema version 1): each check has an outcome of `passed`, `failed`, `skipped`, `missing` or `timeout` and a `required` flag; a run's `status` is `passed` only when every required check passed.
 
 ## ROM and replay identity
 

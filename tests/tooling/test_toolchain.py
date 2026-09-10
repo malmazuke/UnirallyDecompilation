@@ -63,6 +63,35 @@ def make_lock(dest: Path, wheel: Path, sha256: str, version: str = "9.9.9") -> P
 
 
 class BoundedRunnerTests(unittest.TestCase):
+    @unittest.skipIf(os.name == "nt", "process groups are POSIX")
+    def test_timeout_kills_grandchildren(self) -> None:
+        import signal
+        import time
+        child = (
+            "import subprocess, sys, time; "
+            "p = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(60)']); "
+            "print(p.pid, flush=True); time.sleep(60)"
+        )
+        r = run_bounded([sys.executable, "-c", child], timeout=1.0)
+        self.assertEqual(r.outcome, "timeout")
+        grandchild = int(r.stdout.strip().splitlines()[0])
+        deadline = time.monotonic() + 5
+        alive = True
+        while time.monotonic() < deadline:
+            try:
+                os.kill(grandchild, 0)
+            except ProcessLookupError:
+                alive = False
+                break
+            time.sleep(0.1)
+        if alive:
+            os.kill(grandchild, signal.SIGKILL)
+        self.assertFalse(alive, "grandchild survived the timeout")
+
+    def test_non_positive_timeout_is_rejected(self) -> None:
+        r = run_bounded([sys.executable, "-c", "print(1)"], timeout=0)
+        self.assertEqual(r.outcome, "timeout")
+
     def test_timeout_is_reported_not_raised(self) -> None:
         r = run_bounded([sys.executable, "-c", "import time; time.sleep(30)"], timeout=0.3)
         self.assertTrue(r.timed_out)
@@ -124,6 +153,18 @@ class BootstrapTests(unittest.TestCase):
         self.assertFalse((self.root / "toolchain" / "manifest.json").exists())
         self.assertFalse((self.root / "cache" / self.wheel.name).exists(), "bad download must not stay cached")
 
+    def test_bootstrap_recovers_from_corrupt_install_stamp(self) -> None:
+        lock = make_lock(self.root / "lock.json", self.wheel, self.sha)
+        self.assertEqual(run_cli("bootstrap", "--root", str(self.root), "--lock", str(lock)).returncode, EXIT_OK)
+        stamps = list((self.root / "toolchain").glob("*/.installed.json"))
+        self.assertEqual(len(stamps), 1)
+        stamps[0].write_text("{corrupt")
+        report = self.root / "r.json"
+        r = run_cli("bootstrap", "--root", str(self.root), "--lock", str(lock), "--report", str(report))
+        self.assertEqual(r.returncode, EXIT_OK, r.stderr)
+        check = next(c for c in json.loads(report.read_text())["checks"] if c["name"] == "bootstrap_fake")
+        self.assertIn("extracted=True", check["detail"])
+
     def test_bootstrap_rejects_wrong_reported_version(self) -> None:
         lock = make_lock(self.root / "lock.json", self.wheel, self.sha, version="1.0.0")
         r = run_cli("bootstrap", "--root", str(self.root), "--lock", str(lock))
@@ -153,6 +194,7 @@ class BootstrapTests(unittest.TestCase):
 
     def test_test_without_native_build_is_missing_not_pass(self) -> None:
         lock = make_lock(self.root / "lock.json", self.wheel, self.sha)
+        (self.root / "CMakePresets.json").write_bytes((ROOT / "CMakePresets.json").read_bytes())
         report = self.root / "r.json"
         r = run_cli("test", "--suite", "synthetic", "--root", str(self.root), "--lock", str(lock),
                     "--report", str(report), "--artifacts", str(self.root / "art"), "--no-python-tests")
@@ -166,6 +208,41 @@ class BootstrapTests(unittest.TestCase):
     def test_unknown_suite_is_invalid_input(self) -> None:
         r = run_cli("test", "--suite", "everything")
         self.assertEqual(r.returncode, EXIT_INVALID_INPUT)
+
+    def test_unknown_or_hidden_preset_is_invalid_input(self) -> None:
+        for preset in ("lab-nope", "lab-base"):
+            r = run_cli("test", "--suite", "synthetic", "--preset", preset, "--no-python-tests")
+            self.assertEqual(r.returncode, EXIT_INVALID_INPUT, (preset, r.stderr))
+
+    def test_non_positive_timeouts_are_invalid_input(self) -> None:
+        r = run_cli("test", "--suite", "synthetic", "--no-python-tests", "--test-timeout", "0")
+        self.assertEqual(r.returncode, EXIT_INVALID_INPUT)
+        r = run_cli("build", "--preset", "lab-debug", "--timeout", "-1")
+        self.assertEqual(r.returncode, EXIT_INVALID_INPUT)
+
+
+class SourceStateTests(unittest.TestCase):
+    def test_untracked_file_marks_source_dirty(self) -> None:
+        from unirally_lab import report as reportmod
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            subprocess.run(["git", "init", "-q", str(repo)], check=True)
+            subprocess.run(["git", "-C", str(repo), "-c", "user.name=t", "-c", "user.email=t@example.invalid",
+                            "commit", "-q", "--allow-empty", "-m", "base"], check=True)
+            original = reportmod.repo_root
+            reportmod.repo_root = lambda: repo
+            try:
+                clean = reportmod.source_state()
+                (repo / "new_test.py").write_text("x = 1\n")
+                dirty = reportmod.source_state()
+                (repo / "new_test.py").write_text("x = 2\n")
+                dirty2 = reportmod.source_state()
+            finally:
+                reportmod.repo_root = original
+        self.assertFalse(clean["dirty"])
+        self.assertTrue(dirty["dirty"])
+        self.assertEqual(dirty["untracked_files"], ["new_test.py"])
+        self.assertNotEqual(dirty["dirty_diff_sha256"], dirty2["dirty_diff_sha256"])
 
 
 if __name__ == "__main__":

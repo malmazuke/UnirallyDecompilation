@@ -53,6 +53,18 @@ int bounds() {
     for (int i = 0; i < 100000; ++i) lab::step(s, brake);
     EXPECT(s.velocity_fp >= -32768);
     EXPECT(s.tick == 200000u);
+    // Saturation must clamp exactly at the 16-bit limits. Airborne avoids the
+    // ground-friction term; the airborne jitter is bounded to [-3, 3].
+    lab::State hi;
+    hi.velocity_fp = 32760;
+    hi.airborne = 5;
+    lab::step(hi, accel);
+    EXPECT(hi.velocity_fp == 32767);
+    lab::State lo;
+    lo.velocity_fp = -32760;
+    lo.airborne = 5;
+    lab::step(lo, brake);
+    EXPECT(lo.velocity_fp == -32768);
     // Wrap-around of the 32-bit position must not trap or change tick accounting.
     lab::State w;
     w.position_fp = 0x7FFFFFFF;

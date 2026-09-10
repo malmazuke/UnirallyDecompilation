@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import platform
 import re
@@ -177,31 +178,72 @@ def _read_compiler_info(build_dir: Path) -> dict[str, Any]:
     return info
 
 
-def cmd_build(args: argparse.Namespace) -> int:
-    rep = reportmod.Report(sys.argv, task_id=args.task)
-    root = Path(args.root).resolve()
-    lock, manifest, error = _load_toolchain(root, Path(args.lock))
+def _check_preset(rep: reportmod.Report, root: Path, preset: str) -> int | None:
+    """Validate a preset name against CMakePresets.json; returns an exit code on failure."""
+    presets = root / "CMakePresets.json"
+    if not presets.is_file():
+        rep.add_check("cmake_presets", "missing", detail=f"{presets} not found")
+        return EXIT_MISSING_PREREQUISITE
+    try:
+        names = {p["name"] for p in json.loads(presets.read_text())["configurePresets"] if not p.get("hidden")}
+    except (ValueError, KeyError, TypeError) as exc:
+        rep.add_check("cmake_presets", "failed", detail=f"unreadable presets: {exc}")
+        return EXIT_INVALID_INPUT
+    if preset not in names:
+        rep.add_check("cmake_presets", "failed", detail=f"unknown preset {preset!r}; known: {sorted(names)}")
+        return EXIT_INVALID_INPUT
+    rep.add_input("cmake_presets", presets, toolchain.sha256_of(presets))
+    return None
+
+
+def _write_build_info(rep: reportmod.Report, build_dir: Path, preset: str, manifest: dict[str, Any], outcome: str) -> dict[str, Any]:
+    """Record what was built and from which source state; ``outcome`` is the build outcome."""
+    info = {
+        "preset": preset,
+        "build_dir": str(build_dir),
+        "outcome": outcome,
+        "compiler": _read_compiler_info(build_dir),
+        "toolchain": {k: v["reported"] for k, v in manifest["tools"].items()},
+        "source": reportmod.source_state(),
+    }
+    if build_dir.is_dir():
+        info_path = build_dir / "lab-build-info.json"
+        info_path.write_text(json.dumps(info, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        rep.add_artifact("build_info", info_path)
+    rep.data["build"] = info
+    return info
+
+
+def _require_toolchain(rep: reportmod.Report, root: Path, lock_path: Path) -> tuple[dict[str, Any] | None, int | None]:
+    lock, manifest, error = _load_toolchain(root, lock_path)
     if error:
         rep.add_check("toolchain_lock", "failed", detail=error)
-        return _finish(rep, args, EXIT_INVALID_INPUT)
+        return None, EXIT_INVALID_INPUT
     cmake = toolchain.tool_path(manifest, "cmake")
     ninja = toolchain.tool_path(manifest, "ninja")
     if cmake is None or ninja is None:
         rep.add_check("isolated_toolchain", "missing", detail="run `python3 tools/project.py bootstrap` first")
-        return _finish(rep, args, EXIT_MISSING_PREREQUISITE)
+        return None, EXIT_MISSING_PREREQUISITE
     rep.add_check("isolated_toolchain", "passed", detail=f"{cmake}; {ninja}")
     for name, entry in manifest["tools"].items():
         rep.data["tools"][name] = entry["reported"]
+    return manifest, None
 
-    presets = root / "CMakePresets.json"
-    if not presets.is_file():
-        rep.add_check("cmake_presets", "missing", detail=f"{presets} not found")
-        return _finish(rep, args, EXIT_MISSING_PREREQUISITE)
-    names = {p["name"] for p in json.loads(presets.read_text())["configurePresets"] if not p.get("hidden")}
-    if args.preset not in names:
-        rep.add_check("cmake_presets", "failed", detail=f"unknown preset {args.preset!r}; known: {sorted(names)}")
+
+def cmd_build(args: argparse.Namespace) -> int:
+    rep = reportmod.Report(sys.argv, task_id=args.task)
+    root = Path(args.root).resolve()
+    if args.timeout <= 0:
+        rep.add_check("arguments", "failed", detail=f"--timeout must be positive, got {args.timeout}")
         return _finish(rep, args, EXIT_INVALID_INPUT)
-    rep.add_input("cmake_presets", presets, toolchain.sha256_of(presets))
+    manifest, code = _require_toolchain(rep, root, Path(args.lock))
+    if code is not None:
+        return _finish(rep, args, code)
+    code = _check_preset(rep, root, args.preset)
+    if code is not None:
+        return _finish(rep, args, code)
+    cmake = toolchain.tool_path(manifest, "cmake")
+    ninja = toolchain.tool_path(manifest, "ninja")
 
     build_dir = root / "build" / args.preset
     if args.clean and build_dir.exists():
@@ -213,23 +255,12 @@ def cmd_build(args: argparse.Namespace) -> int:
     )
     rep.add_check("configure", configure.outcome, detail=configure.tail(1500) if configure.outcome != "passed" else f"{configure.elapsed:.1f}s")
     if configure.outcome != "passed":
+        _write_build_info(rep, build_dir, args.preset, manifest, configure.outcome)
         return _finish(rep, args, _status_from_checks(rep))
 
     build = run_bounded([cmake, "--build", "--preset", args.preset], timeout=args.timeout, cwd=root)
     rep.add_check("build", build.outcome, detail=build.tail(3000) if build.outcome != "passed" else f"{build.elapsed:.1f}s")
-
-    info = {
-        "preset": args.preset,
-        "build_dir": str(build_dir),
-        "compiler": _read_compiler_info(build_dir),
-        "toolchain": {k: v["reported"] for k, v in manifest["tools"].items()},
-        "source": rep.data["source"],
-    }
-    info_path = build_dir / "lab-build-info.json"
-    if build_dir.is_dir():
-        info_path.write_text(json.dumps(info, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-        rep.add_artifact("build_info", info_path)
-    rep.data["build"] = info
+    _write_build_info(rep, build_dir, args.preset, manifest, build.outcome)
     return _finish(rep, args, _status_from_checks(rep))
 
 
@@ -268,6 +299,12 @@ def cmd_test(args: argparse.Namespace) -> int:
     if args.suite != "synthetic":
         rep.add_check("suite", "failed", detail=f"unknown suite {args.suite!r}; only 'synthetic' exists")
         return _finish(rep, args, EXIT_INVALID_INPUT)
+    if args.timeout <= 0 or args.test_timeout <= 0:
+        rep.add_check("arguments", "failed", detail="--timeout and --test-timeout must be positive")
+        return _finish(rep, args, EXIT_INVALID_INPUT)
+    code = _check_preset(rep, root, args.preset)
+    if code is not None:
+        return _finish(rep, args, code)
     # Absolute: ctest --test-dir resolves relative output paths against the build tree.
     artifacts = (Path(args.artifacts) if args.artifacts else root / "artifacts" / rep.data["run_id"]).resolve()
     artifacts.mkdir(parents=True, exist_ok=True)
@@ -303,26 +340,36 @@ def cmd_test(args: argparse.Namespace) -> int:
         if not records:
             rep.add_check("python_tooling_tests", "failed", detail="no tests discovered")
 
-    # 2. Native synthetic tests via ctest.
+    # 2. Native synthetic tests via ctest. The build is first brought up to
+    # date incrementally so that every native outcome below belongs to the
+    # source state recorded in this report, not to whatever was built last.
     lock, manifest, error = _load_toolchain(root, Path(args.lock))
+    cmake = toolchain.tool_path(manifest, "cmake") if not error else None
     ctest = toolchain.tool_path(manifest, "cmake", "ctest") if not error else None
     build_dir = root / "build" / args.preset
+    native_ready = False
     if error:
         rep.add_check("toolchain_lock", "failed", detail=error)
-    elif ctest is None:
+    elif ctest is None or cmake is None:
         rep.add_check("native_build_available", "missing", detail="isolated toolchain absent; run bootstrap and build")
     elif not (build_dir / "CTestTestfile.cmake").is_file():
         rep.add_check("native_build_available", "missing", detail=f"no build at {build_dir}; run `build --preset {args.preset}`")
     else:
-        rep.add_check("native_build_available", "passed", detail=str(build_dir))
-        info_path = build_dir / "lab-build-info.json"
-        if info_path.is_file():
-            rep.add_input("build_info", info_path, toolchain.sha256_of(info_path))
         for name, entry in manifest["tools"].items():
             rep.data["tools"][name] = entry["reported"]
+        rebuild = run_bounded([cmake, "--build", "--preset", args.preset], timeout=args.timeout, cwd=root)
+        info = _write_build_info(rep, build_dir, args.preset, manifest, rebuild.outcome)
+        if rebuild.outcome == "passed":
+            rep.add_check("native_build_available", "passed",
+                          detail=f"{build_dir}; incremental build {rebuild.elapsed:.1f}s at {info['source']['commit']}"
+                                 f"{' (dirty)' if info['source']['dirty'] else ''}")
+            native_ready = True
+        else:
+            rep.add_check("native_build_available", rebuild.outcome, detail=f"incremental build: {rebuild.tail(2000)}")
+    if native_ready:
         junit = artifacts / f"ctest-{args.preset}.xml"
         ct = run_bounded(
-            [ctest, "--test-dir", str(build_dir), "--output-on-failure", "--timeout", str(int(args.test_timeout)),
+            [ctest, "--test-dir", str(build_dir), "--output-on-failure", "--timeout", str(math.ceil(args.test_timeout)),
              "--output-junit", str(junit)],
             timeout=args.timeout, cwd=root,
         )

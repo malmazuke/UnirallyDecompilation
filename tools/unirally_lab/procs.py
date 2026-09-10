@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+import signal
 import subprocess
 import time
 from dataclasses import dataclass, field
@@ -39,22 +41,38 @@ def run_bounded(
     env: dict[str, str] | None = None,
     stdin_text: str | None = None,
 ) -> RunResult:
-    """Run a command with a hard timeout. Never raises for process failures."""
+    """Run a command with a hard timeout. Never raises for process failures.
+
+    The child starts in its own session so that on timeout the whole process
+    group (including grandchildren such as a test binary under ctest) is
+    killed, not only the direct child.
+    """
     start = time.monotonic()
+    if timeout <= 0:
+        return RunResult(command, None, "", f"invalid timeout {timeout}", 0.0, timed_out=True)
+    posix = os.name == "posix"
     try:
-        proc = subprocess.run(
+        proc = subprocess.Popen(
             [str(c) for c in command],
             cwd=str(cwd) if cwd else None,
             env=env,
-            input=stdin_text,
-            capture_output=True,
+            stdin=subprocess.PIPE if stdin_text is not None else subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
             text=True,
-            timeout=timeout,
+            start_new_session=posix,
         )
-    except subprocess.TimeoutExpired as exc:
-        out = exc.stdout.decode(errors="replace") if isinstance(exc.stdout, bytes) else (exc.stdout or "")
-        err = exc.stderr.decode(errors="replace") if isinstance(exc.stderr, bytes) else (exc.stderr or "")
-        return RunResult(command, None, out, err, time.monotonic() - start, timed_out=True)
     except (FileNotFoundError, PermissionError, NotADirectoryError) as exc:
         return RunResult(command, None, "", str(exc), time.monotonic() - start, missing=True)
-    return RunResult(command, proc.returncode, proc.stdout, proc.stderr, time.monotonic() - start)
+    try:
+        out, err = proc.communicate(stdin_text, timeout=timeout)
+    except subprocess.TimeoutExpired:
+        if posix:
+            try:
+                os.killpg(proc.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+        proc.kill()
+        out, err = proc.communicate()
+        return RunResult(command, None, out or "", err or "", time.monotonic() - start, timed_out=True)
+    return RunResult(command, proc.returncode, out or "", err or "", time.monotonic() - start)

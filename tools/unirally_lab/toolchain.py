@@ -11,9 +11,11 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import os
 import platform
 import shutil
+import ssl
 import stat
 import sys
 import urllib.request
@@ -29,6 +31,10 @@ MANIFEST_SCHEMA_VERSION = 1
 
 class ToolchainError(Exception):
     pass
+
+
+class ToolchainMissingError(ToolchainError):
+    """A prerequisite (platform artifact, downloader) is absent: exit code 2."""
 
 
 def platform_key() -> str:
@@ -75,7 +81,7 @@ def _download(url: str, dest: Path, timeout: float) -> str:
     curl = shutil.which("curl")
     if curl:
         result = run_bounded(
-            [curl, "-fsSL", "--retry", "2", "--max-time", str(int(timeout)), "-o", str(tmp), url],
+            [curl, "-fsSL", "--retry", "2", "--max-time", str(math.ceil(timeout)), "-o", str(tmp), url],
             timeout=timeout + 15,
         )
         if result.outcome == "passed":
@@ -92,6 +98,10 @@ def _download(url: str, dest: Path, timeout: float) -> str:
     except Exception as exc:  # noqa: BLE001 - reported, not swallowed
         if tmp.exists():
             tmp.unlink()
+        if not curl and isinstance(getattr(exc, "reason", None), ssl.SSLCertVerificationError):
+            raise ToolchainMissingError(
+                f"no usable downloader for {url}: {curl_error}; urllib has no CA bundle: {exc}"
+            ) from exc
         raise ToolchainError(f"download failed for {url}: {curl_error}; urllib: {exc}") from exc
     tmp.replace(dest)
     return "urllib"
@@ -142,6 +152,11 @@ def bootstrap(lock: dict[str, Any], root: Path, timeout: float, checks: list[dic
                            "detail": f"no locked artifact for platform {key}"})
             ok = False
             continue
+        if timeout <= 0:
+            checks.append({"name": f"bootstrap_{name}", "outcome": "failed", "required": True,
+                           "detail": f"invalid timeout {timeout}"})
+            ok = False
+            continue
         wheel = cache_dir / artifact["filename"]
         try:
             if wheel.is_file() and sha256_of(wheel) == artifact["sha256"]:
@@ -159,7 +174,13 @@ def bootstrap(lock: dict[str, Any], root: Path, timeout: float, checks: list[dic
             tool_dir = install_dir / f"{name}-{spec['version']}-{key}"
             stamp = tool_dir / ".installed.json"
             extracted = False
-            if not (stamp.is_file() and json.loads(stamp.read_text()).get("sha256") == observed):
+            installed_sha = None
+            if stamp.is_file():
+                try:
+                    installed_sha = json.loads(stamp.read_text()).get("sha256")
+                except (ValueError, OSError):
+                    installed_sha = None  # corrupt stamp: treat as not installed
+            if installed_sha != observed:
                 if tool_dir.exists():
                     shutil.rmtree(tool_dir)
                 tool_dir.mkdir(parents=True)
@@ -191,7 +212,10 @@ def bootstrap(lock: dict[str, Any], root: Path, timeout: float, checks: list[dic
             }
             checks.append({"name": f"bootstrap_{name}", "outcome": "passed", "required": True,
                            "detail": f"{version_line}; source={source}; extracted={extracted}"})
-        except (ToolchainError, OSError, zipfile.BadZipFile) as exc:
+        except ToolchainMissingError as exc:
+            checks.append({"name": f"bootstrap_{name}", "outcome": "missing", "required": True, "detail": str(exc)})
+            ok = False
+        except (ToolchainError, OSError, ValueError, zipfile.BadZipFile) as exc:
             checks.append({"name": f"bootstrap_{name}", "outcome": "failed", "required": True, "detail": str(exc)})
             ok = False
     if not ok:

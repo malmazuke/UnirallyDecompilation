@@ -40,14 +40,31 @@ def _git(*args: str) -> str | None:
 
 
 def source_state() -> dict[str, Any]:
-    """Commit and a digest of the uncommitted diff, or nulls outside Git."""
+    """Commit and a digest of every uncommitted change, or nulls outside Git.
+
+    Untracked (non-ignored) files count as dirty and their contents enter the
+    digest, since a new test file or source file changes results just as a
+    modified tracked file does.
+    """
     commit = _git("rev-parse", "HEAD")
-    dirty = _git("status", "--porcelain", "--untracked-files=no")
+    status = _git("status", "--porcelain", "--untracked-files=all")
     dirty_digest = None
-    if dirty:
-        diff = _git("diff", "HEAD") or ""
-        dirty_digest = hashlib.sha256(diff.encode()).hexdigest()
-    return {"commit": commit, "dirty": bool(dirty), "dirty_diff_sha256": dirty_digest}
+    untracked: list[str] = []
+    if status:
+        digest = hashlib.sha256((_git("diff", "HEAD") or "").encode())
+        for line in status.splitlines():
+            if line.startswith("??"):
+                rel = line[3:]
+                untracked.append(rel)
+                path = repo_root() / rel
+                digest.update(f"\n--- untracked {rel}\n".encode())
+                try:
+                    digest.update(path.read_bytes())
+                except OSError:
+                    digest.update(b"<unreadable>")
+        dirty_digest = digest.hexdigest()
+    return {"commit": commit, "dirty": bool(status), "dirty_diff_sha256": dirty_digest,
+            "untracked_files": untracked}
 
 
 def file_sha256(path: Path, chunk: int = 1 << 20) -> str:

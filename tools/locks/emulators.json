@@ -11,13 +11,28 @@
       "describe": "nightly, after v115; commit dated 2026-05-23",
       "checkout_dir": "bsnes",
       "patch": "tools/unirally_lab/reference/patches/bsnes-lab-exports.patch",
-      "patch_sha256": "27758024c1aaa1bc18059cdc49933510a95ff18133912df10ca775585a72a408",
+      "patch_sha256": "04267fc82746a6b99c0fc2887882895ce0980e00a2907fdc7434536e13d847d7",
       "build": {
-        "command": ["make", "-C", "bsnes", "target=libretro", "binary=library", "local=false", "-j4"],
-        "library": {"darwin": "bsnes/out/bsnes_libretro.dylib", "linux": "bsnes/out/bsnes_libretro.so"},
-        "outputs": ["bsnes/out", "bsnes/obj"],
+        "command": [
+          "make",
+          "-C",
+          "bsnes",
+          "target=libretro",
+          "binary=library",
+          "local=false",
+          "-j4"
+        ],
+        "library": {
+          "darwin": "bsnes/out/bsnes_libretro.dylib",
+          "linux": "bsnes/out/bsnes_libretro.so"
+        },
+        "outputs": [
+          "bsnes/out",
+          "bsnes/obj"
+        ],
         "notes": "local=false avoids -march=native so the library is portable across machines of the same architecture. The upstream default build profile (performance, -O3) is kept."
-      }
+      },
+      "patch_diff_command": "git -c diff.noprefix=false -c diff.mnemonicPrefix=false -c diff.renames=false -c core.abbrev=40 -c diff.algorithm=myers -c diff.suppressBlankEmpty=false diff --no-color --no-ext-diff --full-index --src-prefix=a/ --dst-prefix=b/ --no-renames -- . ':!bsnes/out' ':!bsnes/obj' (after git add -N -A with the same pathspec)"
     },
     "mesen": {
       "role": "evaluated in M0-03 as an investigation tool; no adapter is built for it",
@@ -27,9 +42,21 @@
       "describe": "2.2.1-83-g20f497c9",
       "checkout_dir": "MesenCE",
       "build": {
-        "command": ["make", "core", "-j4", "CXXFLAGS=-fPIC -Wall --std=c++17 -m64 -O3 $(sdl2-config --cflags) -I. -ICore -IUtilities -ISdl -ILinux -IMacOS"],
-        "library": {"darwin": "InteropDLL/obj.osx-arm64/MesenCore.dylib", "linux": "InteropDLL/obj.linux-x64/MesenCore.so"},
-        "outputs": ["InteropDLL/obj.osx-arm64", "InteropDLL/obj.linux-x64", "bin"],
+        "command": [
+          "make",
+          "core",
+          "-j4",
+          "CXXFLAGS=-fPIC -Wall --std=c++17 -m64 -O3 $(sdl2-config --cflags) -I. -ICore -IUtilities -ISdl -ILinux -IMacOS"
+        ],
+        "library": {
+          "darwin": "InteropDLL/obj.osx-arm64/MesenCore.dylib",
+          "linux": "InteropDLL/obj.linux-x64/MesenCore.so"
+        },
+        "outputs": [
+          "InteropDLL/obj.osx-arm64",
+          "InteropDLL/obj.linux-x64",
+          "bin"
+        ],
         "notes": "The upstream makefile expands $(realpath ./) unquoted, so a checkout under a path containing a space fails; the CXXFLAGS override uses relative include paths. Requires SDL2 development files; the .NET SDK is only needed for the GUI, which the laboratory does not use. The CXXFLAGS value contains a shell substitution and must be run through a shell."
       }
     }

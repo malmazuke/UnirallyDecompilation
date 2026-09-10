@@ -73,6 +73,39 @@ class ScriptContractTests(unittest.TestCase):
         self.assertEqual(worker.inputs_for_frame(script, 5), {0: set(), 1: {"b"}})
 
 
+class StateSidecarTests(unittest.TestCase):
+    ACTUAL = {"sha256": "s" * 64, "core_sha256": "c" * 64, "rom_sha256": "r" * 64, "script_sha256": "p" * 64, "serialization_method": "Strict"}
+
+    def meta(self, **overrides):
+        m = {**self.ACTUAL, "after_frame": 149, "post_serialize": {"wram_sha256": "w" * 64, "registers": {"pc": 1}}}
+        m.update(overrides)
+        return m
+
+    def test_valid_sidecar_resumes_after_the_saved_frame(self) -> None:
+        start, post = worker.validate_state_sidecar(self.meta(), self.ACTUAL, 300)
+        self.assertEqual(start, 150)
+        self.assertEqual(post["wram_sha256"], "w" * 64)
+
+    def test_state_from_another_core_rom_script_or_method_is_rejected(self) -> None:
+        for key in worker.STATE_IDENTITY_KEYS:
+            with self.subTest(key=key):
+                with self.assertRaisesRegex(worker.ScriptError, key):
+                    worker.validate_state_sidecar(self.meta(**{key: "other"}), self.ACTUAL, 300)
+
+    def test_state_must_leave_frames_to_run(self) -> None:
+        for after in (299, 400, -1, "149", True):
+            with self.subTest(after_frame=after):
+                with self.assertRaises(worker.ScriptError):
+                    worker.validate_state_sidecar(self.meta(after_frame=after), self.ACTUAL, 300)
+        worker.validate_state_sidecar(self.meta(after_frame=298), self.ACTUAL, 300)
+
+    def test_incomplete_sidecar_is_rejected(self) -> None:
+        for broken in ({}, "not an object", self.meta(post_serialize=None), {k: v for k, v in self.meta().items() if k != "rom_sha256"}):
+            with self.subTest(sidecar=broken):
+                with self.assertRaises(worker.ScriptError):
+                    worker.validate_state_sidecar(broken, self.ACTUAL, 300)
+
+
 class WorkerErrorPathTests(unittest.TestCase):
     def test_missing_core_is_missing_prerequisite(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -94,6 +127,22 @@ class WorkerErrorPathTests(unittest.TestCase):
             r = subprocess.run([sys.executable, str(commands.WORKER), "--core", f"{tmp}/absent.dylib", "--rom", f"{tmp}/absent.sfc",
                                 "--script", str(SCRIPTS / "boot-300.json"), "--samples-out", f"{tmp}/s.json"], capture_output=True, text=True, timeout=60)
             self.assertEqual(r.returncode, EXIT_MISSING_PREREQUISITE, r.stderr)
+
+    def test_unknown_serialization_method_is_invalid_input(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            r = subprocess.run([sys.executable, str(commands.WORKER), "--core", f"{tmp}/absent.dylib", "--rom", f"{tmp}/absent.sfc",
+                                "--script", str(SCRIPTS / "boot-300.json"), "--samples-out", f"{tmp}/s.json", "--serialization-method", "Loose"],
+                               capture_output=True, text=True, timeout=60)
+            self.assertEqual(r.returncode, EXIT_INVALID_INPUT, r.stderr)
+
+    def test_worker_command_forwards_the_serialization_method(self) -> None:
+        p = commands.Prepared()
+        p.core = {"library": "/lib"}
+        p.rom = Path("/rom")
+        p.serialization_method = "Fast"
+        cmd = commands._worker_command(p, Path("/script.json"), Path("/out/samples.json"), save_after=3, state_out=Path("/out/s.bst"))
+        self.assertIn("Fast", cmd[cmd.index("--serialization-method") + 1])
+        self.assertEqual(cmd[cmd.index("--save-after") + 1], "3")
 
     def test_save_arguments_must_pair(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

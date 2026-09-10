@@ -25,6 +25,12 @@ DEFAULT_EXPECT = ROOT / "tests" / "manifests" / "rom" / "unirally-pal.json"
 DEFAULT_ROM_LOCATION = ROOT / "local" / "rom-location.txt"
 WORKER = Path(__file__).resolve().parent / "worker.py"
 LOCK_SCHEMA_VERSION = 1
+# The tracked patch is compared by digest against the checkout's own diff, so
+# the diff text must not depend on user git configuration. Regenerate patches
+# with exactly: git <DIFF_OPTIONS> diff <DIFF_FLAGS> -- . ':!<outputs>'
+DIFF_OPTIONS = ["-c", "diff.noprefix=false", "-c", "diff.mnemonicPrefix=false", "-c", "diff.renames=false",
+                "-c", "core.abbrev=40", "-c", "diff.algorithm=myers", "-c", "diff.suppressBlankEmpty=false"]
+DIFF_FLAGS = ["--no-color", "--no-ext-diff", "--full-index", "--src-prefix=a/", "--dst-prefix=b/", "--no-renames"]
 CORE_MANIFEST_SCHEMA_VERSION = 1
 
 
@@ -122,7 +128,7 @@ def _current_patch_digest(checkout: Path, build_outputs: list[str]) -> tuple[str
     add = _git(["add", "-N", "-A", "--", *pathspec], checkout)
     if add.outcome != "passed":
         return None, add.tail(300)
-    diff = _git(["diff", "--", *pathspec], checkout, timeout=120)
+    diff = _git([*DIFF_OPTIONS, "diff", *DIFF_FLAGS, "--", *pathspec], checkout, timeout=120)
     _git(["reset", "-q"], checkout)
     if diff.outcome != "passed":
         return None, diff.tail(300)
@@ -268,12 +274,14 @@ class Prepared:
         self.rom: Path | None = None
         self.rom_sha256: str | None = None
         self.expected_sha256: str | None = None
+        self.serialization_method = "Strict"
         self.status = EXIT_OK
 
 
 def _prepare(rep: reportmod.Report, args: argparse.Namespace) -> Prepared:
     """Shared checks: lock, built core, ROM presence and identity."""
     p = Prepared()
+    p.serialization_method = getattr(args, "serialization_method", "Strict")
     root = Path(args.root).resolve()
     if args.timeout <= 0:
         rep.add_check("arguments", "failed", detail="--timeout must be positive")
@@ -346,7 +354,8 @@ def _prepare(rep: reportmod.Report, args: argparse.Namespace) -> Prepared:
 def _worker_command(p: Prepared, script: Path, samples_out: Path, state_in: Path | None = None,
                     save_after: int | None = None, state_out: Path | None = None) -> list[str]:
     cmd = [sys.executable, str(WORKER), "--core", p.core["library"], "--rom", str(p.rom), "--script", str(script),
-           "--samples-out", str(samples_out), "--system-dir", str(samples_out.parent / "core-system")]
+           "--samples-out", str(samples_out), "--system-dir", str(samples_out.parent / "core-system"),
+           "--serialization-method", p.serialization_method]
     if state_in is not None:
         cmd += ["--state-in", str(state_in)]
     if save_after is not None:
@@ -524,9 +533,9 @@ def cmd_restore_check(args: argparse.Namespace) -> int:
     pairs = list(zip(tail_b, c["frames"]))
     first_diff = next((fb["frame"] for fb, fc in pairs if key(fb) != key(fc)), None)
     same_len = len(tail_b) == len(c["frames"])
-    restored_ok = c.get("state_in", {}).get("wram_sha256") == next((f["wram_sha256"] for f in b["frames"] if f["frame"] == args.save_after), None)
+    restored_ok = bool(c.get("state_in", {}).get("matches_post_serialize"))
     rep.add_check("restore_matches_saved_state", "passed" if restored_ok else "failed",
-                  detail=f"WRAM right after restore equals the saved run's frame {args.save_after} sample: {restored_ok}")
+                  detail=f"WRAM and registers right after restore equal the saving run's post-serialize sample after frame {args.save_after}: {restored_ok}")
     rep.add_check("restore_continuation_identical", "passed" if same_len and first_diff is None and b["final"]["state_sha256"] == c["final"]["state_sha256"] else "failed",
                   detail=f"frames {c['start_frame']}..{c['end_frame']} after restore in a fresh process: {len(pairs)} samples compared on WRAM+registers"
                   + ("" if first_diff is None else f"; first differing frame {first_diff}")
@@ -556,6 +565,8 @@ def _run_common(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--expect", default=str(DEFAULT_EXPECT), help="ROM identity manifest; '' disables the check")
     parser.add_argument("--expect-region", default="PAL", help="region the core must report (default PAL)")
     parser.add_argument("--artifacts", help="directory for samples, states and logs (default artifacts/reference/<run-id>/)")
+    parser.add_argument("--serialization-method", default="Strict", choices=("Fast", "Strict"),
+                        help="bsnes save-state synchronization method (default Strict)")
 
 
 def register(sub: argparse._SubParsersAction) -> None:

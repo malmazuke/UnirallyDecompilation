@@ -78,6 +78,34 @@ def validate_script(data: Any) -> dict[str, Any]:
     return data
 
 
+STATE_IDENTITY_KEYS = ("sha256", "core_sha256", "rom_sha256", "script_sha256", "serialization_method")
+
+
+def validate_state_sidecar(meta: Any, actual: dict[str, Any], script_frames: int) -> tuple[int, dict[str, Any]]:
+    """Check a state's sidecar against the current run; returns (resume frame, post-serialize sample).
+
+    A state is only meaningful for the exact core build, ROM, script and
+    synchronization method it was taken with, and must leave frames to run.
+    """
+    if not isinstance(meta, dict):
+        raise ScriptError("state sidecar must be a JSON object")
+    try:
+        after = meta["after_frame"]
+        expected = {k: meta[k] for k in STATE_IDENTITY_KEYS}
+        post = meta["post_serialize"]
+        post_ok = isinstance(post, dict) and isinstance(post.get("wram_sha256"), str) and isinstance(post.get("registers"), dict)
+    except (KeyError, TypeError) as exc:
+        raise ScriptError(f"state sidecar incomplete: {exc}") from exc
+    if not post_ok:
+        raise ScriptError("state sidecar lacks a post_serialize sample")
+    mismatched = [k for k in STATE_IDENTITY_KEYS if expected[k] != actual.get(k)]
+    if mismatched:
+        raise ScriptError(f"state does not belong to this run: {', '.join(mismatched)} differ from the sidecar")
+    if not isinstance(after, int) or isinstance(after, bool) or not (0 <= after < script_frames - 1):
+        raise ScriptError(f"state after frame {after!r} leaves no frames to run in a {script_frames}-frame script")
+    return after + 1, post
+
+
 def inputs_for_frame(script: dict[str, Any], frame: int) -> dict[int, set[str]]:
     result: dict[int, set[str]] = {0: set(), 1: set()}
     for entry in script.get("inputs", []):
@@ -145,6 +173,12 @@ def run(args: argparse.Namespace) -> int:
     except bsnes.CoreError as exc:
         print(str(exc), file=sys.stderr)
         return EXIT_FAILURE
+    try:
+        core.set_serialization_method(args.serialization_method)
+    except bsnes.CoreError as exc:
+        print(str(exc), file=sys.stderr)
+        return EXIT_INVALID_INPUT
+    out["core"]["serialization_method"] = core.serialization_method
     out["rom"]["region"] = core.region
     out["wram_size"] = len(core.wram())
     out["cartridge_ram_size"] = len(core.cartridge_ram())
@@ -162,18 +196,22 @@ def run(args: argparse.Namespace) -> int:
             print(f"state file not found: {state_in}", file=sys.stderr)
             return EXIT_MISSING_PREREQUISITE
         blob = state_in.read_bytes()
+        actual = {"sha256": hashlib.sha256(blob).hexdigest(), "core_sha256": out["core"]["sha256"], "rom_sha256": out["rom"]["sha256"],
+                  "script_sha256": out["script"]["sha256"], "serialization_method": core.serialization_method}
         try:
             meta = json.loads((state_in.with_suffix(state_in.suffix + ".json")).read_text(encoding="utf-8"))
-            start = int(meta["after_frame"]) + 1
-        except (OSError, ValueError, KeyError, TypeError) as exc:
-            print(f"state metadata unreadable: {exc}", file=sys.stderr)
+            start, post = validate_state_sidecar(meta, actual, script["frames"])
+        except (OSError, ValueError) as exc:  # ScriptError is a ValueError
+            print(f"state sidecar rejected: {exc}", file=sys.stderr)
             return EXIT_INVALID_INPUT
         if not core.unserialize(blob):
-            print("core rejected the state (different core build or ROM?)", file=sys.stderr)
+            print("core rejected the state", file=sys.stderr)
             return EXIT_FAILURE
-        out["state_in"] = {"path": str(state_in), "sha256": hashlib.sha256(blob).hexdigest(), "size": len(blob),
-                           "after_frame": start - 1, "resumed_at_frame": start,
-                           "wram_sha256": hashlib.sha256(core.wram()).hexdigest(), "registers": core.registers()}
+        regs = core.registers()
+        wram_sha = hashlib.sha256(core.wram()).hexdigest()
+        out["state_in"] = {"path": str(state_in), **actual, "after_frame": start - 1, "resumed_at_frame": start,
+                           "wram_sha256": wram_sha, "registers": regs,
+                           "matches_post_serialize": wram_sha == post["wram_sha256"] and regs == post["registers"]}
 
     sample_every = script.get("sample_every", 1)
     state_digest = hashlib.sha256()
@@ -195,8 +233,13 @@ def run(args: argparse.Namespace) -> int:
             state_out = Path(args.state_out)
             state_out.parent.mkdir(parents=True, exist_ok=True)
             state_out.write_bytes(blob)
+            # Serializing first runs the cores to a synchronization point, so the
+            # state corresponds to this post-serialize sample, not to the
+            # frame-end sample above (M0-03 review finding).
             meta = {"after_frame": frame, "sha256": hashlib.sha256(blob).hexdigest(), "size": len(blob),
-                    "core_sha256": out["core"]["sha256"], "rom_sha256": out["rom"]["sha256"], "script_sha256": out["script"]["sha256"]}
+                    "core_sha256": out["core"]["sha256"], "rom_sha256": out["rom"]["sha256"], "script_sha256": out["script"]["sha256"],
+                    "serialization_method": core.serialization_method,
+                    "post_serialize": {"wram_sha256": hashlib.sha256(core.wram()).hexdigest(), "registers": core.registers()}}
             state_out.with_suffix(state_out.suffix + ".json").write_text(json.dumps(meta, indent=2, sort_keys=True) + "\n", encoding="utf-8")
             out["state_out"] = {"path": str(state_out), **meta}
 
@@ -247,6 +290,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--state-in")
     parser.add_argument("--save-after", type=int)
     parser.add_argument("--state-out")
+    parser.add_argument("--serialization-method", default="Strict", choices=("Fast", "Strict"),
+                        help="bsnes save-state synchronization method (default Strict; see R-0002)")
     try:
         args = parser.parse_args(argv)
     except SystemExit as exc:

@@ -106,8 +106,13 @@ class BsnesCore:
         self.api_version = api
         self._system_dir = Path(system_dir)
         self._system_dir.mkdir(parents=True, exist_ok=True)
-        self._system_dir_c = C.c_char_p(str(self._system_dir).encode())
+        # ctypes copies a c_char_p's pointer, not the buffer: the encoded bytes
+        # objects themselves must stay referenced for as long as the core may
+        # read them, so they live in these attributes for the core's lifetime.
+        self._system_dir_bytes = str(self._system_dir).encode()
+        self._option_bytes = {key.encode(): value.encode() for key, value in self.options.items()}
         self._keep: list[Any] = []
+        self.serialization_method: str | None = None
         self._inputs: dict[int, set[int]] = {0: set(), 1: set()}
         self._frame_video: tuple[int, int, str] | None = None
         self._frame_audio = hashlib.sha256()
@@ -128,18 +133,16 @@ class BsnesCore:
                 return C.cast(data, C.POINTER(C.c_uint))[0] == _PIXEL_FORMAT_XRGB8888
             if cmd == _ENV_GET_VARIABLE:
                 var = C.cast(data, C.POINTER(_RetroVariable))
-                value = self.options.get(var[0].key.decode() if var[0].key else "")
+                value = self._option_bytes.get(var[0].key) if var[0].key else None
                 if value is None:
                     return False
-                cval = C.c_char_p(value.encode())
-                self._keep.append(cval)
-                var[0].value = cval.value
+                var[0].value = value  # points into the bytes object held by self._option_bytes
                 return True
             if cmd == _ENV_GET_VARIABLE_UPDATE:
                 C.cast(data, C.POINTER(C.c_bool))[0] = False
                 return True
             if cmd in (_ENV_GET_SYSTEM_DIRECTORY, _ENV_GET_SAVE_DIRECTORY):
-                C.cast(data, C.POINTER(C.c_char_p))[0] = self._system_dir_c.value
+                C.cast(data, C.POINTER(C.c_char_p))[0] = self._system_dir_bytes
                 return True
             if cmd == _ENV_GET_FASTFORWARDING:
                 C.cast(data, C.POINTER(C.c_bool))[0] = False
@@ -200,6 +203,8 @@ class BsnesCore:
         lib.unirally_trace_read.argtypes = [C.c_void_p, C.c_size_t]
         lib.unirally_trace_read.restype = C.c_size_t
         lib.unirally_trace_total.restype = C.c_uint64
+        lib.unirally_set_serialization_method.argtypes = [C.c_char_p]
+        lib.unirally_set_serialization_method.restype = C.c_bool
         lib.unirally_trace_entry_size.restype = C.c_size_t
         lib.retro_init()
 
@@ -219,6 +224,12 @@ class BsnesCore:
         entry = self._lib.unirally_trace_entry_size()
         if entry != _TRACE_ENTRY.size:
             raise CoreError(f"trace entry size {entry} != {_TRACE_ENTRY.size}")
+
+    def set_serialization_method(self, method: str) -> None:
+        """"Fast" (bsnes default) or "Strict": how the cores are synchronized before serializing."""
+        if not self._lib.unirally_set_serialization_method(method.encode()):
+            raise CoreError(f"unknown serialization method {method!r}")
+        self.serialization_method = method
 
     def unload(self) -> None:
         if self.loaded:

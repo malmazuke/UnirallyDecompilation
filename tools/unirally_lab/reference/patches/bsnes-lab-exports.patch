@@ -1,5 +1,5 @@
 diff --git a/bsnes/sfc/cpu/cpu.cpp b/bsnes/sfc/cpu/cpu.cpp
-index b6fec167a..bf49174b9 100644
+index b6fec167ae25b01236e158bdbceae5c9b24ce4f4..bf49174b9eec866437b1a64d6cda291ca144616c 100644
 --- a/bsnes/sfc/cpu/cpu.cpp
 +++ b/bsnes/sfc/cpu/cpu.cpp
 @@ -34,7 +34,10 @@ auto CPU::Enter() -> void {
@@ -15,7 +15,7 @@ index b6fec167a..bf49174b9 100644
    if(status.nmiPending) {
      status.nmiPending = 0;
 diff --git a/bsnes/sfc/cpu/cpu.hpp b/bsnes/sfc/cpu/cpu.hpp
-index 2d79adbcf..40343fa89 100644
+index 2d79adbcfb4d379c828b7cdf1e76eaca370054fb..40343fa89e4b63b4a9adf121fda6f2691afdd49e 100644
 --- a/bsnes/sfc/cpu/cpu.hpp
 +++ b/bsnes/sfc/cpu/cpu.hpp
 @@ -69,6 +69,7 @@ struct CPU : Processor::WDC65816, Thread, PPUcounter {
@@ -27,7 +27,7 @@ index 2d79adbcf..40343fa89 100644
  
    struct Overclocking {
 diff --git a/bsnes/target-libretro/GNUmakefile b/bsnes/target-libretro/GNUmakefile
-index 53ebb7dda..3dcc792bd 100644
+index 53ebb7dda5334255417840d33f231189adf59279..3dcc792bd3e9dba8cde99692ae61de1e67edcb3a 100644
 --- a/bsnes/target-libretro/GNUmakefile
 +++ b/bsnes/target-libretro/GNUmakefile
 @@ -11,10 +11,11 @@ else ifeq ($(platform), tvos-arm64)
@@ -44,7 +44,7 @@ index 53ebb7dda..3dcc792bd 100644
  all: $(objects)
  ifeq ($(platform),linux)
 diff --git a/bsnes/target-libretro/link.T b/bsnes/target-libretro/link.T
-index 9e82b5dd3..1bbe92f25 100644
+index 9e82b5dd3f8a038b36ff5391c738ca89160a08dd..1bbe92f25fc5a10478f789d7307948fbcab9211d 100644
 --- a/bsnes/target-libretro/link.T
 +++ b/bsnes/target-libretro/link.T
 @@ -1,4 +1,4 @@
@@ -55,10 +55,10 @@ index 9e82b5dd3..1bbe92f25 100644
  };
 diff --git a/bsnes/target-libretro/unirally.cpp b/bsnes/target-libretro/unirally.cpp
 new file mode 100644
-index 000000000..dca9fab4d
+index 0000000000000000000000000000000000000000..7283babe7e4eb36d7898be1178e7b27266935200
 --- /dev/null
 +++ b/bsnes/target-libretro/unirally.cpp
-@@ -0,0 +1,103 @@
+@@ -0,0 +1,112 @@
 +// unirally-lab extensions for the bsnes libretro build.
 +// These exports are not part of the libretro API; tools/unirally_lab/reference
 +// loads the library directly and uses them for headless capture.
@@ -158,7 +158,49 @@ index 000000000..dca9fab4d
 +	return n;
 +}
 +
++// Select bsnes' save-state synchronization method ("Fast" or "Strict", see sfc/system/system.cpp).
++// Returns false for any other value and leaves the setting unchanged.
++RETRO_API bool unirally_set_serialization_method(const char* method) {
++	nall::string value = method ? method : "";
++	if(value != "Fast" && value != "Strict") return false;
++	SuperFamicom::configuration.system.serialization.method = value;
++	return true;
++}
++
 +RETRO_API uint64_t unirally_trace_total() { return UnirallyLab::traceTotal; }
 +RETRO_API size_t unirally_trace_entry_size() { return sizeof(UnirallyLab::TraceEntry); }
 +
++}
+diff --git a/lab-core.json b/lab-core.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..7cfd0929e6b7b8a1b1eaaf716d59d0961f62c7a4
+--- /dev/null
++++ b/lab-core.json
+@@ -0,0 +1,27 @@
++{
++  "api_version": 1,
++  "build_command": [
++    "make",
++    "-C",
++    "bsnes",
++    "target=libretro",
++    "binary=library",
++    "local=false",
++    "-j4"
++  ],
++  "build_seconds": 0.6,
++  "built_utc": "2026-09-10T11:42:02Z",
++  "commit": "7d5aa1e656b9171524d01b1b22917197d8121cb4",
++  "compiler": "Apple clang version 17.0.0 (clang-1700.4.4.1)",
++  "core": "bsnes",
++  "library": "/Users/markfeaver/Projects/Unirally Decompilation/local/emulators/bsnes/bsnes/out/bsnes_libretro.dylib",
++  "library_sha256": "b00ed0c05fdbb5d2733be882a98c7f5ddec417371da979ccba34d93783600596",
++  "lock_sha256": "66e4a13445ac628686ceda33878cdc7ba46561d5603a29e82f6caf4897edf514",
++  "machine": "arm64",
++  "patch": "tools/unirally_lab/reference/patches/bsnes-lab-exports.patch",
++  "patch_sha256": "27758024c1aaa1bc18059cdc49933510a95ff18133912df10ca775585a72a408",
++  "platform": "macOS-15.7.2-arm64-arm-64bit-Mach-O",
++  "repository": "https://github.com/bsnes-emu/bsnes.git",
++  "schema_version": 1,
++  "tree": "62631b8a2f01f663f1e1300987295af6bf8ea556"
 +}

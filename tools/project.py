@@ -38,11 +38,28 @@ def _default_rom_path() -> Path | None:
     return None
 
 
+def _same_file(a: Path | None, b: str | None) -> bool:
+    if a is None or not b:
+        return False
+    try:
+        return a.resolve() == Path(b).expanduser().resolve()
+    except OSError:
+        return False
+
+
 def cmd_rom_inspect(args: argparse.Namespace) -> int:
     rep = reportmod.Report(sys.argv, task_id=args.task)
-    path = Path(args.path).expanduser() if args.path else _default_rom_path()
+    if args.path is not None and not args.path.strip():
+        print("--path must not be empty; omit it to use local/rom-location.txt", file=sys.stderr)
+        return EXIT_INVALID_INPUT
+    path = Path(args.path).expanduser() if args.path is not None else _default_rom_path()
     status = EXIT_OK
     manifest = None
+
+    for label, out in (("--manifest-out", args.manifest_out), ("--report", args.report)):
+        if _same_file(path, out):
+            print(f"refusing to write {label} onto the input file {path}", file=sys.stderr)
+            return EXIT_INVALID_INPUT
 
     if path is None:
         rep.add_check(
@@ -55,10 +72,12 @@ def cmd_rom_inspect(args: argparse.Namespace) -> int:
             manifest = rommod.inspect_rom(path)
             rep.add_input("rom", path, manifest["file"]["sha256"], size=manifest["file"]["size"])
             rep.add_check("rom_available", "passed", detail=str(path))
+        except rommod.RomMissingError as exc:
+            rep.add_check("rom_available", "missing", detail=str(exc))
+            status = EXIT_MISSING_PREREQUISITE
         except rommod.RomError as exc:
-            missing = "not found" in str(exc) or "not a regular file" in str(exc)
-            rep.add_check("rom_available", "missing" if missing else "failed", detail=str(exc))
-            status = EXIT_MISSING_PREREQUISITE if missing else EXIT_INVALID_INPUT
+            rep.add_check("rom_available", "failed", detail=str(exc))
+            status = EXIT_INVALID_INPUT
 
     if manifest is not None:
         hdr = manifest["header"]
@@ -77,9 +96,12 @@ def cmd_rom_inspect(args: argparse.Namespace) -> int:
         if args.expect:
             try:
                 expected = rommod.load_manifest(Path(args.expect))
-            except rommod.RomError as exc:
+            except rommod.RomMissingError as exc:
                 rep.add_check("expected_manifest", "missing", detail=str(exc))
                 status = EXIT_MISSING_PREREQUISITE
+            except rommod.RomError as exc:
+                rep.add_check("expected_manifest", "failed", detail=str(exc))
+                status = EXIT_INVALID_INPUT
             else:
                 fields = rommod.compare_identity(manifest, expected)
                 mismatches = [f for f in fields if not f["matches"]]

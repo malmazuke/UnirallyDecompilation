@@ -66,6 +66,14 @@ class RomError(Exception):
     """Raised for input problems; the CLI maps these to exit codes."""
 
 
+class RomMissingError(RomError):
+    """The input or a required manifest is absent (exit code 2)."""
+
+
+class RomInvalidError(RomError):
+    """The input exists but cannot be a ROM or manifest (exit code 3)."""
+
+
 def _hashes(data: bytes) -> dict[str, Any]:
     return {
         "size": len(data),
@@ -160,12 +168,12 @@ def snes_checksum(rom: bytes) -> int:
 def inspect_rom(path: Path) -> dict[str, Any]:
     path = Path(path)
     if not path.exists():
-        raise RomError(f"file not found: {path}")
+        raise RomMissingError(f"file not found: {path}")
     if not path.is_file():
-        raise RomError(f"not a regular file: {path}")
+        raise RomInvalidError(f"not a regular file: {path}")
     data = path.read_bytes()
     if len(data) < 0x8000:
-        raise RomError(f"file too small to hold a SNES header ({len(data)} bytes)")
+        raise RomInvalidError(f"file too small to hold a SNES header ({len(data)} bytes)")
 
     copier = len(data) % 1024 == COPIER_HEADER_SIZE
     rom = data[COPIER_HEADER_SIZE:] if copier else data
@@ -237,14 +245,19 @@ def compare_identity(observed: dict[str, Any], expected: dict[str, Any]) -> list
 def load_manifest(path: Path) -> dict[str, Any]:
     path = Path(path)
     if not path.exists():
-        raise RomError(f"manifest not found: {path}")
+        raise RomMissingError(f"manifest not found: {path}")
     try:
         with open(path, encoding="utf-8") as fh:
             manifest = json.load(fh)
-    except json.JSONDecodeError as exc:
-        raise RomError(f"manifest is not valid JSON: {path}: {exc}") from exc
-    if not isinstance(manifest, dict) or "file" not in manifest:
-        raise RomError(f"manifest lacks a 'file' section: {path}")
+    except (json.JSONDecodeError, OSError) as exc:
+        raise RomInvalidError(f"manifest is not valid JSON: {path}: {exc}") from exc
+    if not isinstance(manifest, dict) or not isinstance(manifest.get("file"), dict):
+        raise RomInvalidError(f"manifest lacks a 'file' object: {path}")
+    version = manifest.get("manifest_schema_version")
+    if version != MANIFEST_SCHEMA_VERSION:
+        raise RomInvalidError(
+            f"manifest schema version {version!r} is not the supported {MANIFEST_SCHEMA_VERSION}: {path}"
+        )
     return manifest
 
 

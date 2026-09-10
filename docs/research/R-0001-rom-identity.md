@@ -1,6 +1,6 @@
 # R-0001 — Identity of the selected PAL Unirally ROM
 
-- Status: observed
+- Status: independently verified
 - Related task/decision: [M0-01](../../tasks/M0-01.md)
 - Tested domain and excluded cases: static file inspection only. Region, mapping and timing are read from the cartridge header and are not confirmed by execution. No emulator was used.
 - ROM hash, emulator revision/configuration and adapter version: SHA-256 `a1105819d48c04d680c8292bbfa9abbce05224f1bc231afd66af43b7e0a1fd4e`, 2,097,152 bytes; no emulator; `unirally_lab` 0.1.0.
@@ -50,7 +50,7 @@ Falsification: if execution under a reference emulator shows non-PAL timing beha
 
 ## Independent check
 
-Two independent computations agree: the ad hoc read-only shell inspection recorded in the M0-01 task attempts table, and the implemented tool. A fresh session has not yet reproduced this record.
+Three independent computations agree: the ad hoc read-only shell inspection recorded in the M0-01 task attempts table, the implemented tool, and an independent reviewer in a fresh agent session who decoded the header bytes with its own code and recomputed all hashes. The reviewer also confirmed the reset vector target at file offset 0x0858 begins with opcode 0x4C (JMP absolute), which is plausible code; this is an observation, not yet a traced execution.
 
 ## Implementation consequence
 

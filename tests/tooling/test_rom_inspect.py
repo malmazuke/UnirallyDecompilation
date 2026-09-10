@@ -161,6 +161,39 @@ class InspectTests(unittest.TestCase):
         r = run_cli("rom", "inspect", "--path", str(p))
         self.assertEqual(r.returncode, EXIT_INVALID_INPUT)
 
+    def test_cli_refuses_to_overwrite_input(self) -> None:
+        data = make_rom(0x40000, 0x7FC0, 0x20)
+        p = self.write("lo.sfc", data)
+        r = run_cli("rom", "inspect", "--path", str(p), "--manifest-out", str(p))
+        self.assertEqual(r.returncode, EXIT_INVALID_INPUT)
+        self.assertEqual(p.read_bytes(), data)
+        r = run_cli("rom", "inspect", "--path", str(p), "--report", str(self.dir / "." / "lo.sfc"))
+        self.assertEqual(r.returncode, EXIT_INVALID_INPUT)
+        self.assertEqual(p.read_bytes(), data)
+
+    def test_cli_empty_path_does_not_fall_back_to_local_rom(self) -> None:
+        r = run_cli("rom", "inspect", "--path", "")
+        self.assertEqual(r.returncode, EXIT_INVALID_INPUT)
+        self.assertNotIn("rom_available", r.stderr, "no ROM may be inspected for an empty path")
+
+    def test_cli_directory_is_invalid_input(self) -> None:
+        r = run_cli("rom", "inspect", "--path", str(self.dir))
+        self.assertEqual(r.returncode, EXIT_INVALID_INPUT)
+
+    def test_manifest_schema_version_and_shape_are_validated(self) -> None:
+        p = self.write("lo.sfc", make_rom(0x40000, 0x7FC0, 0x20))
+        good = self.dir / "good.json"
+        self.assertEqual(run_cli("rom", "inspect", "--path", str(p), "--manifest-out", str(good)).returncode, EXIT_OK)
+        m = json.loads(good.read_text())
+        for bad in ({**m, "manifest_schema_version": 99}, {**m, "file": 5}, [], {"header": {}}):
+            f = self.dir / "bad.json"
+            f.write_text(json.dumps(bad))
+            r = run_cli("rom", "inspect", "--path", str(p), "--expect", str(f))
+            self.assertEqual(r.returncode, EXIT_INVALID_INPUT, (bad, r.stderr))
+        (self.dir / "bad.json").write_text("{nope")
+        r = run_cli("rom", "inspect", "--path", str(p), "--expect", str(self.dir / "bad.json"))
+        self.assertEqual(r.returncode, EXIT_INVALID_INPUT)
+
     def test_cli_usage_error_is_invalid_input(self) -> None:
         r = run_cli("rom", "inspect", "--bogus")
         self.assertEqual(r.returncode, EXIT_INVALID_INPUT)

@@ -1,0 +1,164 @@
+diff --git a/bsnes/sfc/cpu/cpu.cpp b/bsnes/sfc/cpu/cpu.cpp
+index b6fec167a..bf49174b9 100644
+--- a/bsnes/sfc/cpu/cpu.cpp
++++ b/bsnes/sfc/cpu/cpu.cpp
+@@ -34,7 +34,10 @@ auto CPU::Enter() -> void {
+ auto CPU::main() -> void {
+   if(r.wai) return instructionWait();
+   if(r.stp) return instructionStop();
+-  if(!status.interruptPending) return instruction();
++  if(!status.interruptPending) {
++    if(instructionHook) instructionHook();  //unirally-lab
++    return instruction();
++  }
+ 
+   if(status.nmiPending) {
+     status.nmiPending = 0;
+diff --git a/bsnes/sfc/cpu/cpu.hpp b/bsnes/sfc/cpu/cpu.hpp
+index 2d79adbcf..40343fa89 100644
+--- a/bsnes/sfc/cpu/cpu.hpp
++++ b/bsnes/sfc/cpu/cpu.hpp
+@@ -69,6 +69,7 @@ struct CPU : Processor::WDC65816, Thread, PPUcounter {
+   auto serialize(serializer&) -> void;
+ 
+   uint8 wram[128 * 1024];
++  void (*instructionHook)() = nullptr;  //unirally-lab: called before each executed instruction
+   vector<Thread*> coprocessors;
+ 
+   struct Overclocking {
+diff --git a/bsnes/target-libretro/GNUmakefile b/bsnes/target-libretro/GNUmakefile
+index 53ebb7dda..3dcc792bd 100644
+--- a/bsnes/target-libretro/GNUmakefile
++++ b/bsnes/target-libretro/GNUmakefile
+@@ -11,10 +11,11 @@ else ifeq ($(platform), tvos-arm64)
+ 	options += -dynamiclib
+ endif
+ 
+-objects := libretro $(objects)
++objects := libretro unirally $(objects)
+ objects := $(patsubst %,obj/%.o,$(objects))
+ 
+ obj/libretro.o: target-libretro/libretro.cpp
++obj/unirally.o: target-libretro/unirally.cpp
+ 
+ all: $(objects)
+ ifeq ($(platform),linux)
+diff --git a/bsnes/target-libretro/link.T b/bsnes/target-libretro/link.T
+index 9e82b5dd3..1bbe92f25 100644
+--- a/bsnes/target-libretro/link.T
++++ b/bsnes/target-libretro/link.T
+@@ -1,4 +1,4 @@
+ {
+-   global: retro_*;
++   global: retro_*; unirally_*;
+    local: *;
+ };
+diff --git a/bsnes/target-libretro/unirally.cpp b/bsnes/target-libretro/unirally.cpp
+new file mode 100644
+index 000000000..dca9fab4d
+--- /dev/null
++++ b/bsnes/target-libretro/unirally.cpp
+@@ -0,0 +1,103 @@
++// unirally-lab extensions for the bsnes libretro build.
++// These exports are not part of the libretro API; tools/unirally_lab/reference
++// loads the library directly and uses them for headless capture.
++#include <sfc/sfc.hpp>
++#include <new>
++#include "libretro.h"
++// ---- unirally-lab extensions -------------------------------------------------
++// Laboratory exports used by tools/unirally_lab/reference. They are not part of
++// the libretro API; the Python adapter loads the library directly.
++
++namespace UnirallyLab {
++#pragma pack(push, 1)
++struct Registers {
++	uint32_t pc;      // 24-bit program counter (bank in bits 16-23)
++	uint16_t a, x, y, s, d;
++	uint8_t b, p, e, mdr;
++	uint16_t vcounter, hcounter;
++	uint8_t field, wai, stp, reserved;
++};
++struct TraceEntry {
++	uint32_t pc;
++	uint16_t a, x, y, s, d;
++	uint8_t b, p, e, reserved;
++	uint16_t vcounter, hcounter;
++};
++#pragma pack(pop)
++static TraceEntry* ring = nullptr;
++static size_t ringCapacity = 0, ringHead = 0, ringCount = 0;
++static uint64_t traceTotal = 0;
++
++static void fill(TraceEntry& t) {
++	auto& c = SuperFamicom::cpu;
++	t.pc = (uint32_t)c.r.pc.d; t.a = c.r.a.w; t.x = c.r.x.w; t.y = c.r.y.w; t.s = c.r.s.w; t.d = c.r.d.w;
++	t.b = c.r.b; t.p = (uint8_t)(uint)c.r.p; t.e = c.r.e; t.reserved = 0;
++	t.vcounter = c.vcounter(); t.hcounter = c.hcounter();
++}
++
++static void hook() {
++	fill(ring[ringHead]);
++	ringHead = (ringHead + 1) % ringCapacity;
++	if(ringCount < ringCapacity) ringCount++;
++	traceTotal++;
++}
++}
++
++extern "C" {
++
++RETRO_API uint32_t unirally_api_version() { return 1; }
++
++// id 0: work RAM (128 KiB); id 1: cartridge RAM (save RAM, may be empty)
++RETRO_API void* unirally_memory(unsigned id, size_t* size) {
++	switch(id) {
++	case 0: if(size) *size = sizeof(SuperFamicom::cpu.wram); return SuperFamicom::cpu.wram;
++	case 1: if(size) *size = SuperFamicom::cartridge.ram.size(); return SuperFamicom::cartridge.ram.data();
++	}
++	if(size) *size = 0;
++	return nullptr;
++}
++
++RETRO_API size_t unirally_cpu_registers(void* out, size_t capacity) {
++	if(!out || capacity < sizeof(UnirallyLab::Registers)) return sizeof(UnirallyLab::Registers);
++	auto& c = SuperFamicom::cpu;
++	UnirallyLab::Registers r = {};
++	r.pc = (uint32_t)c.r.pc.d; r.a = c.r.a.w; r.x = c.r.x.w; r.y = c.r.y.w; r.s = c.r.s.w; r.d = c.r.d.w;
++	r.b = c.r.b; r.p = (uint8_t)(uint)c.r.p; r.e = c.r.e; r.mdr = c.r.mdr;
++	r.vcounter = c.vcounter(); r.hcounter = c.hcounter(); r.field = c.field(); r.wai = c.r.wai; r.stp = c.r.stp;
++	memcpy(out, &r, sizeof r);
++	return sizeof r;
++}
++
++// Reseed the emulator's entropy source so serialized states from identical runs are byte-identical.
++// With "Hacks/Entropy" = "None" the generator never influences emulation; only its serialized state changes.
++RETRO_API void unirally_reseed(uint32_t seed, uint32_t sequence) {
++	SuperFamicom::random.seed(seed, sequence);
++}
++
++// Keep the last `entries` executed instructions (0 disables). Returns false on allocation failure.
++RETRO_API bool unirally_trace_enable(size_t entries) {
++	delete[] UnirallyLab::ring; UnirallyLab::ring = nullptr;
++	UnirallyLab::ringCapacity = UnirallyLab::ringHead = UnirallyLab::ringCount = 0;
++	UnirallyLab::traceTotal = 0;
++	SuperFamicom::cpu.instructionHook = nullptr;
++	if(entries == 0) return true;
++	UnirallyLab::ring = new(std::nothrow) UnirallyLab::TraceEntry[entries];
++	if(!UnirallyLab::ring) return false;
++	UnirallyLab::ringCapacity = entries;
++	SuperFamicom::cpu.instructionHook = &UnirallyLab::hook;
++	return true;
++}
++
++// Copy up to max_entries of the trace window, oldest first. Returns the number copied.
++RETRO_API size_t unirally_trace_read(void* out, size_t max_entries) {
++	size_t n = UnirallyLab::ringCount < max_entries ? UnirallyLab::ringCount : max_entries;
++	auto dst = static_cast<UnirallyLab::TraceEntry*>(out);
++	size_t start = (UnirallyLab::ringHead + UnirallyLab::ringCapacity - UnirallyLab::ringCount) % (UnirallyLab::ringCapacity ? UnirallyLab::ringCapacity : 1);
++	for(size_t i = 0; i < n; i++) dst[i] = UnirallyLab::ring[(start + i) % UnirallyLab::ringCapacity];
++	return n;
++}
++
++RETRO_API uint64_t unirally_trace_total() { return UnirallyLab::traceTotal; }
++RETRO_API size_t unirally_trace_entry_size() { return sizeof(UnirallyLab::TraceEntry); }
++
++}

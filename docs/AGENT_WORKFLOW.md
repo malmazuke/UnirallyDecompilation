@@ -1,0 +1,104 @@
+# Model-independent agent workflow
+
+This protocol is intended for humans and agents using different models or runtimes. The repository is the durable record. Provider chat history, hidden memory, model-specific tools and subscription limits are not project dependencies. A scheduler is future implementation, not something already running.
+
+## Roles and ownership
+
+| Role | Responsibility | Write ownership |
+| --- | --- | --- |
+| Coordinator/integrator | Select ready work, allocate scope, resolve dependencies, accept results and maintain project state | Canonical task registry, integration branch, milestone status |
+| Research worker | Recover one bounded behavior, format or routine with evidence | Assigned research/experiment paths on its own branch |
+| Implementation worker | Implement a defined contract and its checks | Assigned code/test paths on its own branch |
+| Reviewer | Reproduce the claim, inspect evidence, exercise independent cases and identify regressions | Review report; no silent edits to the implementation being reviewed |
+
+Roles do not require four simultaneous agents. Start with a coordinator and one worker; add a second worker only when tasks are independent. Review can use a fresh sequential session. A model switch does not change the task's acceptance criteria.
+
+For example, after M0, one worker could investigate track encoding while another identifies rider-state writes. Two workers should not independently rewrite the state schema. The coordinator establishes a small shared interface first and serializes changes to it.
+
+## Task lifecycle
+
+Use `planned -> ready -> claimed -> in_progress -> review -> accepted`, with `blocked` and `abandoned` as explicit alternatives. `accepted` means merged with required evidence. A worker reporting success only moves work to review. Claims are coordination records, not evidence that work has begun.
+
+The coordinator is the single writer of the canonical task registry. Each task record uses [the template](../tasks/TEMPLATE.md). Before dispatch it needs:
+
+- A concrete outcome and milestone; prerequisites and the exact starting commit.
+- Owned paths, interface dependencies, allowed scope and non-goals.
+- Acceptance criteria, check commands or the task to implement those commands, and required evidence.
+- Required inputs/tools and the fixture-access arrangement.
+- A bounded session/time budget and any actually authorized monetary limit.
+- Worker identity, branch/worktree, claim time, heartbeat and checkpoint location.
+
+On a single workstation, one coordinator can serialize assignments through task files. A later scheduler needs atomic claims and a lease store under ignored runtime state; committing a Markdown file is not a distributed lock. Do not let two coordinators dispatch from independent copies of the same queue.
+
+A stale heartbeat is a reason to inspect the process, not immediately reassign its files. Confirm the former worker is stopped or isolated before issuing a new attempt. Keep attempt history, recovered commits and failure reasons.
+
+## Worker loop
+
+1. Read project state, the task, relevant decisions and evidence. Inspect the actual branch and working tree; do not assume they match the handoff.
+2. Run the environment check and reproduce the baseline relevant to this task. Record missing prerequisites and pre-existing failures.
+3. Write the next hypothesis and the cheapest experiment that could reject it. Inspect traces/code, change one bounded behavior, then run the declared check.
+4. Record observations separately from interpretation. Preserve useful failed experiments to prevent another agent repeating them.
+5. Commit a coherent change when it is ready for review. Check staged files for accidental local inputs. Update the task handoff with the resulting hash.
+6. Submit evidence and known limitations. If blocked, give the smallest concrete dependency or decision needed, and let the coordinator select other ready work.
+
+Do not spend the entire session producing source code before running an experiment. An unsuccessful hypothesis with a reproducible trace can be a valuable accepted research result if that was the assigned outcome. Do not accept a failed gameplay implementation under that interpretation.
+
+## Unattended operation and stopping conditions
+
+Proposed initial operating defaults, adjustable from measured runs:
+
+- One worker initially; at most two independent workers until integration is stable.
+- A 45-minute task session, checkpoint at least every 10 minutes and before an expensive experiment. Larger tasks become several sessions with durable progress.
+- After three attempts at the same hypothesis without new evidence, stop that approach. Narrow the experiment, ask for review, or reassign; do not blindly regenerate implementations.
+- Apply explicit process timeouts to builds and tests. Separate timeout, crash, unavailable prerequisite and behavioral mismatch in reports.
+- On usage exhaustion, provider error or interruption, persist progress when possible; the coordinator can recover the isolated worktree even if the agent could not write a final message.
+- Stop dispatching when the active scope is complete, the authorized run budget is exhausted, or no ready task remains. Never let workers recursively expand the budget by spawning more workers.
+
+The scheduler configuration must state total run duration and concurrency. If money is metered, also set an authorized spend cap using the provider's actual metering facilities. Unknown usage is unknown, not zero. These planning defaults do not authorize additional purchases or paid services.
+
+Notify the user when a milestone is accepted, a scope/budget decision is needed, a material failure prevents progress, or a requested run ends. Do not require user approval for every hypothesis, reversible fix or merge that is already within the active assignment. Runtime-required approvals cannot be replaced by this protocol.
+
+Routine integration can proceed automatically only when the task is in scope, a reviewer has accepted the evidence, and the exact merge candidate passes its required checks. Public release, deployment and new service spending remain distinct actions requiring the user's authorization; do not infer those from the aspiration to have online play.
+
+## Source control and integration
+
+At implementation start, initialize a local Git repository if none exists. Record the first planning baseline, then use a stable `main` and short-lived task branches such as `task/M0-02-reference-adapter`. Create one worktree or checkout per active worker; respect any repository/workspace manager already in use.
+
+- Dispatch from an explicit commit. Workers do not modify `main` or another worker's checkout.
+- Keep commits focused. Separate reference-baseline changes from implementation changes so a reviewer can see whether both sides of the comparison moved.
+- Before acceptance, inspect the diff, run the relevant suite, and record the source and input hashes. Merge dependencies before dependent tasks.
+- The coordinator creates the actual merge candidate and runs affected integration checks on it. Concurrently passing branches can fail when combined.
+- Resolve conflicts by understanding the interface change and rerunning checks. Do not choose one side wholesale to finish a merge quickly.
+- Retain old reference artifacts by hash. A baseline change needs an explained correction and independent confirmation; never overwrite the previous result in place.
+- Use revert commits for accepted changes that later prove wrong. Preserve failed task attempts for diagnosis; avoid force-pushing shared history.
+- Add milestone tags only when the gate is met, and link the evidence report from project state.
+
+A remote repository is optional for early work. If one is established, use the same task record in the PR description, require checks/review on `main`, and use CI as specified in [build and validation](BUILD_AND_VALIDATION.md). A local integration report provides the equivalent review trail before hosting is configured.
+
+## Handoff and model switching
+
+Persist the same fields for a switch to another model, another machine, or a fresh session of the same model:
+
+1. Task, milestone, base/head commits, worktree path and uncommitted changes.
+2. Verified facts and links to the supporting experiment/artifacts.
+3. Current hypothesis, failed approaches, unresolved questions and exact next command.
+4. Commands run and outcomes, including skipped/failed checks and affected coverage.
+5. Toolchain/ROM/fixture identities, resource usage when available, and location of local-only artifacts.
+
+The incoming agent first reproduces a recorded check. It must not continue from an unverified natural-language summary. On another host, recreate ignored artifacts from their manifests or arrange authorized private transfer. If the required inputs are absent, report that dependency explicitly.
+
+Keep model name/version/runtime in execution metadata for reproducibility, but don't branch game logic on it. Each runtime adapter should demonstrate shell/file/Git access, structured report handling and access to the reference tools before taking a gameplay task. A model-specific entry file, such as `CLAUDE.md` if needed, should be a short pointer to `AGENTS.md`. Dispatch prompts refer to paths and task IDs, not a transcript dump.
+
+### Portable dispatch prompt
+
+> Work on task `<ID>` in `<task file>`, starting from `<commit>` in `<worktree>`. Read AGENTS.md and docs/STATE.md. Verify prerequisites, work within the assigned scope, and use the acceptance criteria in the task. Record reproducible evidence and update the handoff before yielding. Do not mark the task accepted; submit it for review. If blocked, preserve the current state and state the smallest next dependency.
+
+### Reviewer checklist
+
+Confirm the claimed behavior against the frozen reference and inspect whether the implementation covers the task's domain. Check that tests exercised the new code and did not use an emulator fallback for supposedly native logic. Run an independent boundary/withheld case where appropriate. Check for changed baselines, weakened comparisons, masked skips, undefined arithmetic and accidental content commits. Approve or return a specific reproducible failure; a second model's agreement alone is not validation.
+
+## Durable records with minimal bureaucracy
+
+`docs/STATE.md` is a brief coordinator-owned summary. Task files hold execution details. Research records hold evidence. Decision records capture choices affecting several tasks. These should link to each other rather than copy large logs.
+
+Record one finding per useful claim, one task per reviewable outcome, and one decision when a real tradeoff is resolved. Avoid creating a large speculative task tree for M4–M6 before M0–M3 establish the game's structure.

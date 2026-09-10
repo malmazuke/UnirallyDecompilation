@@ -1,0 +1,18 @@
+# Private inputs and generated research artifacts
+/local/
+/artifacts/
+/build/
+/.worktrees/
+*.sfc
+*.smc
+*.srm
+
+# Local runtimes and settings
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+.env
+.env.*
+!.env.example
+CMakeUserPresets.json

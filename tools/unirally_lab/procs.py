@@ -64,15 +64,23 @@ def run_bounded(
         )
     except (FileNotFoundError, PermissionError, NotADirectoryError) as exc:
         return RunResult(command, None, "", str(exc), time.monotonic() - start, missing=True)
-    try:
-        out, err = proc.communicate(stdin_text, timeout=timeout)
-    except subprocess.TimeoutExpired:
+    def kill_group() -> None:
         if posix:
             try:
                 os.killpg(proc.pid, signal.SIGKILL)
             except ProcessLookupError:
                 pass
         proc.kill()
+
+    try:
+        out, err = proc.communicate(stdin_text, timeout=timeout)
+    except subprocess.TimeoutExpired:
+        kill_group()
         out, err = proc.communicate()
         return RunResult(command, None, out or "", err or "", time.monotonic() - start, timed_out=True)
+    except KeyboardInterrupt:
+        # The child runs in its own session and would not see the terminal's SIGINT.
+        kill_group()
+        proc.communicate()
+        raise
     return RunResult(command, proc.returncode, out or "", err or "", time.monotonic() - start)

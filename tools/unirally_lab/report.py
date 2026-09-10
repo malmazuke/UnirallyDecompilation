@@ -124,6 +124,10 @@ class Report:
         self.data["elapsed_seconds"] = round(time.monotonic() - self.started, 3)
         self.data["status"] = status
         self.data["summary"] = self.outcomes()
+        # The tree may have changed while checks ran; record it so a reader can tell.
+        end_state = source_state()
+        self.data["source_at_finish"] = end_state
+        self.data["source_changed_during_run"] = end_state != self.data["source"]
         return self.data
 
     def write(self, path: Path | None) -> None:

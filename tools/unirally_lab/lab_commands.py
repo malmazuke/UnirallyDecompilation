@@ -249,8 +249,14 @@ def cmd_build(args: argparse.Namespace) -> int:
     if args.clean and build_dir.exists():
         shutil.rmtree(build_dir)
 
+    defines = []
+    for item in args.define or []:
+        if "=" not in item:
+            rep.add_check("arguments", "failed", detail=f"--define expects NAME=VALUE, got {item!r}")
+            return _finish(rep, args, EXIT_INVALID_INPUT)
+        defines.append(f"-D{item}")
     configure = run_bounded(
-        [cmake, "--preset", args.preset, f"-DCMAKE_MAKE_PROGRAM={ninja}"],
+        [cmake, "--preset", args.preset, f"-DCMAKE_MAKE_PROGRAM={ninja}", *defines],
         timeout=args.timeout, cwd=root,
     )
     rep.add_check("configure", configure.outcome, detail=configure.tail(1500) if configure.outcome != "passed" else f"{configure.elapsed:.1f}s")
@@ -357,15 +363,21 @@ def cmd_test(args: argparse.Namespace) -> int:
     else:
         for name, entry in manifest["tools"].items():
             rep.data["tools"][name] = entry["reported"]
-        rebuild = run_bounded([cmake, "--build", "--preset", args.preset], timeout=args.timeout, cwd=root)
+        # Re-run configure so preset changes (cache variables) take effect, then build.
+        ninja = toolchain.tool_path(manifest, "ninja")
+        reconfigure = run_bounded([cmake, "--preset", args.preset, f"-DCMAKE_MAKE_PROGRAM={ninja}"], timeout=args.timeout, cwd=root)
+        rebuild = reconfigure
+        if reconfigure.outcome == "passed":
+            rebuild = run_bounded([cmake, "--build", "--preset", args.preset], timeout=args.timeout, cwd=root)
         info = _write_build_info(rep, build_dir, args.preset, manifest, rebuild.outcome)
         if rebuild.outcome == "passed":
             rep.add_check("native_build_available", "passed",
-                          detail=f"{build_dir}; incremental build {rebuild.elapsed:.1f}s at {info['source']['commit']}"
-                                 f"{' (dirty)' if info['source']['dirty'] else ''}")
+                          detail=f"{build_dir}; reconfigure {reconfigure.elapsed:.1f}s, incremental build {rebuild.elapsed:.1f}s "
+                                 f"at {info['source']['commit']}{' (dirty)' if info['source']['dirty'] else ''}")
             native_ready = True
         else:
-            rep.add_check("native_build_available", rebuild.outcome, detail=f"incremental build: {rebuild.tail(2000)}")
+            stage = "configure" if reconfigure.outcome != "passed" else "incremental build"
+            rep.add_check("native_build_available", rebuild.outcome, detail=f"{stage}: {rebuild.tail(2000)}")
     if native_ready:
         junit = artifacts / f"ctest-{args.preset}.xml"
         ct = run_bounded(
@@ -435,6 +447,8 @@ def register(sub: argparse._SubParsersAction) -> None:
     _common(build)
     build.add_argument("--preset", required=True)
     build.add_argument("--clean", action="store_true", help="remove the preset's build directory first")
+    build.add_argument("--define", action="append", metavar="NAME=VALUE",
+                       help="extra CMake cache entry for configure (testing hooks; not for acceptance runs)")
     build.add_argument("--timeout", type=float, default=900, help="seconds for configure and again for build")
     build.set_defaults(func=cmd_build)
 
@@ -444,7 +458,9 @@ def register(sub: argparse._SubParsersAction) -> None:
     test.add_argument("--preset", default="lab-debug", help="built preset to test")
     test.add_argument("--artifacts", help="directory for junit and other outputs (default artifacts/<run-id>)")
     test.add_argument("--timeout", type=float, default=600, help="seconds for each test runner process")
-    test.add_argument("--test-timeout", type=float, default=60, help="seconds per native test")
+    test.add_argument("--test-timeout", type=float, default=60,
+                      help="seconds per lab_runner repeatability run, and ctest's default for tests without a TIMEOUT property "
+                           "(every test in tests/synthetic sets its own TIMEOUT)")
     test.add_argument("--no-python-tests", dest="python_tests", action="store_false",
                       help="run only the native part (recorded as a skipped optional check)")
     test.set_defaults(func=cmd_test)

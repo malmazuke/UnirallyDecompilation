@@ -158,12 +158,13 @@ class BootstrapTests(unittest.TestCase):
         self.assertEqual(run_cli("bootstrap", "--root", str(self.root), "--lock", str(lock)).returncode, EXIT_OK)
         stamps = list((self.root / "toolchain").glob("*/.installed.json"))
         self.assertEqual(len(stamps), 1)
-        stamps[0].write_text("{corrupt")
-        report = self.root / "r.json"
-        r = run_cli("bootstrap", "--root", str(self.root), "--lock", str(lock), "--report", str(report))
-        self.assertEqual(r.returncode, EXIT_OK, r.stderr)
-        check = next(c for c in json.loads(report.read_text())["checks"] if c["name"] == "bootstrap_fake")
-        self.assertIn("extracted=True", check["detail"])
+        for corrupt in ("{corrupt", "null", "[]", '"str"'):
+            stamps[0].write_text(corrupt)
+            report = self.root / "r.json"
+            r = run_cli("bootstrap", "--root", str(self.root), "--lock", str(lock), "--report", str(report))
+            self.assertEqual(r.returncode, EXIT_OK, (corrupt, r.stderr))
+            check = next(c for c in json.loads(report.read_text())["checks"] if c["name"] == "bootstrap_fake")
+            self.assertIn("extracted=True", check["detail"], corrupt)
 
     def test_bootstrap_rejects_wrong_reported_version(self) -> None:
         lock = make_lock(self.root / "lock.json", self.wheel, self.sha, version="1.0.0")

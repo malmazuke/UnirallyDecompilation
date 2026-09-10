@@ -4,7 +4,12 @@ target_link_libraries(lab_state_tests PRIVATE lab_state)
 # Reference hash of the probe after 1000 scripted steps, first observed on
 # macOS 15.7 arm64 with Homebrew clang 19.1.7 at -O0, -O2, with ASan/UBSan
 # and with Apple clang (Xcode 26.1). Linux must reproduce it.
-target_compile_definitions(lab_state_tests PRIVATE LAB_KNOWN_HASH=0x0be347c529fadda9ull)
+set(LAB_KNOWN_HASH_OVERRIDE "" CACHE STRING "Testing hook: replace the reference hash (empty = use the recorded value)")
+if(LAB_KNOWN_HASH_OVERRIDE)
+  target_compile_definitions(lab_state_tests PRIVATE LAB_KNOWN_HASH=${LAB_KNOWN_HASH_OVERRIDE})
+else()
+  target_compile_definitions(lab_state_tests PRIVATE LAB_KNOWN_HASH=0x0be347c529fadda9ull)
+endif()
 
 add_test(NAME lab_state_serialization_roundtrip COMMAND lab_state_tests roundtrip)
 add_test(NAME lab_state_arithmetic_bounds COMMAND lab_state_tests bounds)
@@ -24,4 +29,9 @@ if(LAB_PROBE_FAILURES)
   add_test(NAME lab_probe_expected_timeout COMMAND lab_runner --sleep-ms 10000 --steps 1)
   set_tests_properties(lab_probe_expected_failure PROPERTIES TIMEOUT 30 LABELS probe)
   set_tests_properties(lab_probe_expected_timeout PROPERTIES TIMEOUT 1 LABELS probe)
+endif()
+
+option(LAB_PROBE_COMPILE_ERROR "Testing hook: add a target that fails to compile" OFF)
+if(LAB_PROBE_COMPILE_ERROR)
+  add_executable(lab_probe_broken lab_probe_broken.cpp)
 endif()

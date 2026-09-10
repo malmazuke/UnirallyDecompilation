@@ -52,7 +52,7 @@ def load_lock(path: Path) -> dict[str, Any]:
         raise ToolchainError(f"lock file not found: {path}")
     with open(path, encoding="utf-8") as fh:
         lock = json.load(fh)
-    if lock.get("lock_schema_version") != LOCK_SCHEMA_VERSION:
+    if not isinstance(lock, dict) or lock.get("lock_schema_version") != LOCK_SCHEMA_VERSION:
         raise ToolchainError(f"unsupported lock schema {lock.get('lock_schema_version')!r} in {path}")
     return lock
 
@@ -177,7 +177,8 @@ def bootstrap(lock: dict[str, Any], root: Path, timeout: float, checks: list[dic
             installed_sha = None
             if stamp.is_file():
                 try:
-                    installed_sha = json.loads(stamp.read_text()).get("sha256")
+                    stamp_data = json.loads(stamp.read_text())
+                    installed_sha = stamp_data.get("sha256") if isinstance(stamp_data, dict) else None
                 except (ValueError, OSError):
                     installed_sha = None  # corrupt stamp: treat as not installed
             if installed_sha != observed:
@@ -236,9 +237,9 @@ def load_manifest(path: Path) -> dict[str, Any] | None:
     try:
         with open(path, encoding="utf-8") as fh:
             manifest = json.load(fh)
-    except json.JSONDecodeError:
+    except (json.JSONDecodeError, OSError):
         return None
-    if manifest.get("manifest_schema_version") != MANIFEST_SCHEMA_VERSION:
+    if not isinstance(manifest, dict) or manifest.get("manifest_schema_version") != MANIFEST_SCHEMA_VERSION:
         return None
     if manifest.get("platform") != platform_key():
         return None

@@ -5,8 +5,8 @@ The coordinator maintains the status registry below. Work orders further below d
 | Task | Status | Record |
 | --- | --- | --- |
 | M0-00 | accepted | [Repository setup](M0-00.md) |
-| M0-01 | planned: ROM path supplied; user paused execution | Not dispatched |
-| M0-02 | planned: paused by user before implementation | [Laboratory bootstrap](M0-02.md) |
+| M0-01 | in_progress: resumed 10 September 2026 | [ROM identity manifest](M0-01.md) |
+| M0-02 | ready: resumed 10 September 2026; starts after M0-01 merges | [Laboratory bootstrap](M0-02.md) |
 | M0-03 through M0-06 | planned | Waiting for prerequisites |
 | M1–M6 | planned | See milestone definitions |
 

@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "core": "bsnes",
+  "description": "Cold start, 300 PAL frames (6 s), no controller input. Diagnostic script for M0-03; not a gameplay replay.",
+  "frames": 300,
+  "sample_every": 1,
+  "inputs": [],
+  "trace_entries": 64
+}

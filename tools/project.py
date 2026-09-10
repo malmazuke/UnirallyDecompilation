@@ -26,6 +26,7 @@ from unirally_lab import (  # noqa: E402
     report as reportmod,
     rom as rommod,
 )
+from unirally_lab.reference import commands as reference_commands  # noqa: E402
 
 ROOT = reportmod.repo_root()
 DEFAULT_ROM_LOCATION = ROOT / "local" / "rom-location.txt"
@@ -147,6 +148,7 @@ def build_parser() -> argparse.ArgumentParser:
     insp.set_defaults(func=cmd_rom_inspect)
 
     lab_commands.register(sub)
+    reference_commands.register(sub)
     return parser
 
 

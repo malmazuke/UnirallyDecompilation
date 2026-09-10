@@ -1,0 +1,37 @@
+{
+  "lock_schema_version": 1,
+  "note": "Pinned reference emulator sources. Checkouts live in the ignored install_dir; `python3 tools/project.py reference build` clones the pinned commit, applies the tracked patch and builds. Commits and tree hashes were recorded on 10 September 2026 from the checkouts used in task M0-03.",
+  "install_dir": "local/emulators",
+  "cores": {
+    "bsnes": {
+      "role": "primary reference adapter (decision D-0001)",
+      "repository": "https://github.com/bsnes-emu/bsnes.git",
+      "commit": "7d5aa1e656b9171524d01b1b22917197d8121cb4",
+      "tree": "62631b8a2f01f663f1e1300987295af6bf8ea556",
+      "describe": "nightly, after v115; commit dated 2026-05-23",
+      "checkout_dir": "bsnes",
+      "patch": "tools/unirally_lab/reference/patches/bsnes-lab-exports.patch",
+      "patch_sha256": "27758024c1aaa1bc18059cdc49933510a95ff18133912df10ca775585a72a408",
+      "build": {
+        "command": ["make", "-C", "bsnes", "target=libretro", "binary=library", "local=false", "-j4"],
+        "library": {"darwin": "bsnes/out/bsnes_libretro.dylib", "linux": "bsnes/out/bsnes_libretro.so"},
+        "outputs": ["bsnes/out", "bsnes/obj"],
+        "notes": "local=false avoids -march=native so the library is portable across machines of the same architecture. The upstream default build profile (performance, -O3) is kept."
+      }
+    },
+    "mesen": {
+      "role": "evaluated in M0-03 as an investigation tool; no adapter is built for it",
+      "repository": "https://github.com/nesdev-org/MesenCE.git",
+      "commit": "20f497c9620a7f4e55b7752e1d22734f9d7492fa",
+      "tree": "8cb1d07e77575f232f6fe6e49792bd82cb5b776c",
+      "describe": "2.2.1-83-g20f497c9",
+      "checkout_dir": "MesenCE",
+      "build": {
+        "command": ["make", "core", "-j4", "CXXFLAGS=-fPIC -Wall --std=c++17 -m64 -O3 $(sdl2-config --cflags) -I. -ICore -IUtilities -ISdl -ILinux -IMacOS"],
+        "library": {"darwin": "InteropDLL/obj.osx-arm64/MesenCore.dylib", "linux": "InteropDLL/obj.linux-x64/MesenCore.so"},
+        "outputs": ["InteropDLL/obj.osx-arm64", "InteropDLL/obj.linux-x64", "bin"],
+        "notes": "The upstream makefile expands $(realpath ./) unquoted, so a checkout under a path containing a space fails; the CXXFLAGS override uses relative include paths. Requires SDL2 development files; the .NET SDK is only needed for the GUI, which the laboratory does not use. The CXXFLAGS value contains a shell substitution and must be run through a shell."
+      }
+    }
+  }
+}

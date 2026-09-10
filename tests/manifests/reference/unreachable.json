@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "core": "bsnes",
+  "description": "Deliberately unreachable: one billion frames cannot complete inside any laboratory timeout. Used to prove the bounded runner reports `timeout` and exits 4.",
+  "frames": 1000000000,
+  "sample_every": 1000000,
+  "inputs": [],
+  "trace_entries": 0
+}

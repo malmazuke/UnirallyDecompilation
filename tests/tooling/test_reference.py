@@ -127,6 +127,35 @@ class SamplingAndPairingTests(unittest.TestCase):
     def test_no_common_frames_is_not_identical(self) -> None:
         self.assertFalse(commands.compare_runs(self.make_run([0]), self.make_run([5]))["identical"])
 
+    def test_dense_sampling_from_the_save_point(self) -> None:
+        self.assertTrue(worker.should_sample(151, 100, set(), dense_from=150))
+        self.assertTrue(worker.should_sample(150, 100, set(), dense_from=150))
+        self.assertFalse(worker.should_sample(149, 100, set(), dense_from=150))
+        self.assertTrue(worker.should_sample(100, 100, set(), dense_from=150))
+
+    def test_perturbation_verdict_needs_equal_dense_frame_sets(self) -> None:
+        """With every frame from the save point sampled in both runs, an extra or
+        missing frame on either side is a failure, not a schedule artefact."""
+        dense = [0, 100, *range(150, 300)]
+        a, b = self.make_run(dense), self.make_run(dense)
+        self.assertTrue(commands.perturbation_verdict(commands.compare_runs(a, b)))
+        self.assertFalse(commands.perturbation_verdict(commands.compare_runs(a, self.make_run([0, 100, *range(151, 300)]))))
+        self.assertFalse(commands.perturbation_verdict(commands.compare_runs(self.make_run([0, 100, *range(151, 300)]), b)))
+
+        def transient(out):  # differs on one frame only, reconverging before the end
+            out["frames"][60]["registers"] = {"pc": -1}
+        self.assertFalse(commands.perturbation_verdict(commands.compare_runs(a, self.make_run(dense, tweak=transient))))
+        self.assertEqual(commands.compare_runs(a, self.make_run(dense, tweak=transient))["first_differing_frame"], dense[60])
+
+    def test_continuation_verdict_requires_resume_frame_and_complete_tail(self) -> None:
+        b = self.make_run([0, 100, *range(150, 300)])
+        c = self.make_run(range(151, 300)); c["start_frame"] = 151
+        self.assertTrue(commands.continuation_verdict(commands.compare_runs(b, c, 151), c))
+        short = self.make_run(range(152, 300)); short["start_frame"] = 151
+        self.assertFalse(commands.continuation_verdict(commands.compare_runs(b, short, 151), short))
+        empty = self.make_run([]); empty["start_frame"] = 151
+        self.assertFalse(commands.continuation_verdict(commands.compare_runs(b, empty, 151), empty))
+
 
 class StateSidecarTests(unittest.TestCase):
     ACTUAL = {"sha256": "s" * 64, "core_sha256": "c" * 64, "rom_sha256": "r" * 64, "script_sha256": "p" * 64, "serialization_method": "Strict"}
@@ -195,9 +224,11 @@ class WorkerErrorPathTests(unittest.TestCase):
         p.core = {"library": "/lib"}
         p.rom = Path("/rom")
         p.serialization_method = "Fast"
-        cmd = commands._worker_command(p, Path("/script.json"), Path("/out/samples.json"), save_after=3, state_out=Path("/out/s.bst"))
+        cmd = commands._worker_command(p, Path("/script.json"), Path("/out/samples.json"), save_after=3, state_out=Path("/out/s.bst"), sample_from=3)
         self.assertIn("Fast", cmd[cmd.index("--serialization-method") + 1])
         self.assertEqual(cmd[cmd.index("--save-after") + 1], "3")
+        self.assertEqual(cmd[cmd.index("--sample-from-frame") + 1], "3")
+        self.assertNotIn("--sample-from-frame", commands._worker_command(p, Path("/script.json"), Path("/out/samples.json")))
 
     def test_save_arguments_must_pair(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

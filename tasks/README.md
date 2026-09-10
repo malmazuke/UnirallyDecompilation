@@ -7,7 +7,7 @@ The coordinator maintains the status registry below. Work orders further below d
 | M0-00 | accepted | [Repository setup](M0-00.md) |
 | M0-01 | accepted: integrated 10 September 2026 | [ROM identity manifest](M0-01.md) |
 | M0-02 | accepted: integrated 10 September 2026 after two independent reviews | [Laboratory bootstrap](M0-02.md) |
-| M0-03 | review: returned by reviews 1–3, resubmitted 11 September 2026 on `task/M0-03-reference-adapter`; awaiting review 4 | [Reference adapter spike](M0-03.md) |
+| M0-03 | review: returned by reviews 1–4, resubmitted 11 September 2026 on `task/M0-03-reference-adapter`; awaiting review 5 | [Reference adapter spike](M0-03.md) |
 | M0-04 through M0-06 | planned | Waiting for prerequisites |
 | M1–M6 | planned | See milestone definitions |
 

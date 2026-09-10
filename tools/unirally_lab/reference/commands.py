@@ -352,10 +352,12 @@ def _prepare(rep: reportmod.Report, args: argparse.Namespace) -> Prepared:
 
 
 def _worker_command(p: Prepared, script: Path, samples_out: Path, state_in: Path | None = None,
-                    save_after: int | None = None, state_out: Path | None = None) -> list[str]:
+                    save_after: int | None = None, state_out: Path | None = None, sample_from: int | None = None) -> list[str]:
     cmd = [sys.executable, str(WORKER), "--core", p.core["library"], "--rom", str(p.rom), "--script", str(script),
            "--samples-out", str(samples_out), "--system-dir", str(samples_out.parent / "core-system"),
            "--serialization-method", p.serialization_method]
+    if sample_from is not None:
+        cmd += ["--sample-from-frame", str(sample_from)]
     if state_in is not None:
         cmd += ["--state-in", str(state_in)]
     if save_after is not None:
@@ -437,6 +439,18 @@ def compare_runs(x: dict[str, Any], y: dict[str, Any], from_frame: int = 0) -> d
             "first_differing_frame": first_diff, "av_identical": av_same,
             "final_state_identical": x["final"]["state_sha256"] == y["final"]["state_sha256"],
             "identical": first_diff is None and len(common) > 0 and x["final"]["state_sha256"] == y["final"]["state_sha256"]}
+
+
+def perturbation_verdict(ab: dict[str, Any]) -> bool:
+    """A vs B in a restore check: both runs sample every frame from the save
+    point on, so their frame sets must be equal and every frame identical."""
+    return bool(ab["identical"]) and not ab["only_in_x"] and not ab["only_in_y"]
+
+
+def continuation_verdict(bc: dict[str, Any], c: dict[str, Any]) -> bool:
+    """B vs C: every frame after the resume frame present in both, identical, same final state."""
+    return (bool(bc["identical"]) and not bc["only_in_x"] and not bc["only_in_y"]
+            and bool(c["frames"]) and c["frames"][0]["frame"] == c["start_frame"])
 
 
 def _samples_summary(s: dict[str, Any]) -> dict[str, Any]:
@@ -535,34 +549,36 @@ def cmd_restore_check(args: argparse.Namespace) -> int:
     art = _artifacts_dir(args, rep)
     state = art / f"state-after-{args.save_after}.bst"
     a_out, b_out, c_out = art / "uninterrupted-samples.json", art / "save-and-continue-samples.json", art / "restore-and-continue-samples.json"
-    a, status = _run_worker(rep, "uninterrupted_run", p, _worker_command(p, script, a_out), a_out, args.timeout, art)
+    # All three runs sample every frame from the save point on, so the
+    # comparisons below have the adapter's full (per-frame) resolution
+    # whatever the script's sample_every says (review 4).
+    dense = args.save_after
+    a, status = _run_worker(rep, "uninterrupted_run", p, _worker_command(p, script, a_out, sample_from=dense), a_out, args.timeout, art)
     if a is None:
         return _finish(rep, args, status)
-    b, status = _run_worker(rep, "save_and_continue_run", p, _worker_command(p, script, b_out, save_after=args.save_after, state_out=state), b_out, args.timeout, art)
+    b, status = _run_worker(rep, "save_and_continue_run", p, _worker_command(p, script, b_out, save_after=args.save_after, state_out=state, sample_from=dense), b_out, args.timeout, art)
     if b is None:
         return _finish(rep, args, status)
     rep.add_artifact("state", state)
-    c, status = _run_worker(rep, "restore_and_continue_run", p, _worker_command(p, script, c_out, state_in=state), c_out, args.timeout, art)
+    c, status = _run_worker(rep, "restore_and_continue_run", p, _worker_command(p, script, c_out, state_in=state, sample_from=dense), c_out, args.timeout, art)
     if c is None:
         return _finish(rep, args, status)
     _check_identity_and_region(rep, p, a, args)
 
-    # A vs B: the saving run additionally samples the save frame and the one
-    # after it, so compare on the frames both runs sampled plus the final state.
     ab = compare_runs(a, b)
-    ab_ok = ab["identical"] and not ab["only_in_x"] and set(ab["only_in_y"]) <= {args.save_after, args.save_after + 1}
+    ab_ok = perturbation_verdict(ab)
     rep.add_check("save_does_not_perturb", "passed" if ab_ok else "failed",
-                  detail=f"uninterrupted vs save-and-continue: {ab['compared']} common frames compared on WRAM+registers"
+                  detail=f"uninterrupted vs save-and-continue: {ab['compared']} frames compared on WRAM+registers, every frame from {args.save_after} on"
                   + ("" if ab["first_differing_frame"] is None else f"; first differing frame {ab['first_differing_frame']}")
                   + f"; final states {a['final']['state_sha256'][:16]} / {b['final']['state_sha256'][:16]}"
-                  + ("" if ab_ok or ab["first_differing_frame"] is not None or not ab["final_state_identical"] else f"; unexpected frame sets {ab['only_in_x']} / {ab['only_in_y']}"))
+                  + ("" if not (ab["only_in_x"] or ab["only_in_y"]) else f"; frame sets differ {ab['only_in_x']} / {ab['only_in_y']}"))
     restored_ok = bool(c.get("state_in", {}).get("matches_post_serialize"))
     rep.add_check("restore_matches_saved_state", "passed" if restored_ok else "failed",
                   detail=f"WRAM and registers right after restore equal the saving run's post-serialize sample after frame {args.save_after}: {restored_ok}")
     # B vs C: both runs force a sample at the resume frame and the last frame;
     # every frame C sampled must exist in B and match.
     bc = compare_runs(b, c, from_frame=c["start_frame"])
-    bc_ok = bc["identical"] and not bc["only_in_y"] and not bc["only_in_x"] and c["frames"] and c["frames"][0]["frame"] == c["start_frame"]
+    bc_ok = continuation_verdict(bc, c)
     rep.add_check("restore_continuation_identical", "passed" if bc_ok else "failed",
                   detail=f"frames {c['start_frame']}..{c['end_frame']} after restore in a fresh process: {bc['compared']} samples compared on WRAM+registers"
                   + ("" if bc["first_differing_frame"] is None else f"; first differing frame {bc['first_differing_frame']}")

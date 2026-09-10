@@ -118,7 +118,10 @@ def forced_sample_frames(script_frames: int, save_after: int | None, start: int)
     return {f for f in forced if 0 <= f < script_frames}
 
 
-def should_sample(frame: int, sample_every: int, forced: set[int]) -> bool:
+def should_sample(frame: int, sample_every: int, forced: set[int], dense_from: int | None = None) -> bool:
+    """Sample on the grid, at forced frames, and every frame from ``dense_from`` on."""
+    if dense_from is not None and frame >= dense_from:
+        return True
     return frame % sample_every == 0 or frame in forced
 
 
@@ -147,6 +150,9 @@ def run(args: argparse.Namespace) -> int:
         return EXIT_INVALID_INPUT
     if (args.save_after is None) != (args.state_out is None):
         print("--save-after and --state-out must be given together", file=sys.stderr)
+        return EXIT_INVALID_INPUT
+    if args.sample_from_frame is not None and args.sample_from_frame < 0:
+        print("--sample-from-frame must not be negative", file=sys.stderr)
         return EXIT_INVALID_INPUT
     if args.save_after is not None and not (0 <= args.save_after < script["frames"]):
         print("--save-after must lie inside the script's frame range", file=sys.stderr)
@@ -178,7 +184,7 @@ def run(args: argparse.Namespace) -> int:
                  "options": dict(core.options)},
         "rom": {"path": str(rom), "sha256": sha256_file(rom), "size": rom.stat().st_size},
         "script": {"path": str(script_path), "sha256": sha256_file(script_path), "frames": script["frames"],
-                   "sample_every": script.get("sample_every", 1)},
+                   "sample_every": script.get("sample_every", 1), "sample_from_frame": args.sample_from_frame},
         "frames": [],
     }
     try:
@@ -238,7 +244,7 @@ def run(args: argparse.Namespace) -> int:
         for port, buttons in inputs_for_frame(script, frame).items():
             core.set_inputs(port, buttons)
         output = core.run_frame()
-        if should_sample(frame, sample_every, forced):
+        if should_sample(frame, sample_every, forced, args.sample_from_frame):
             wram_sha = hashlib.sha256(core.wram()).hexdigest()
             regs_raw = core.registers_raw()
             state_digest.update(frame.to_bytes(4, "little") + bytes.fromhex(wram_sha) + regs_raw)
@@ -307,6 +313,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--state-in")
     parser.add_argument("--save-after", type=int)
     parser.add_argument("--state-out")
+    parser.add_argument("--sample-from-frame", type=int,
+                        help="sample every frame from this one on, regardless of sample_every (restore checks use it)")
     parser.add_argument("--serialization-method", default="Strict", choices=("Fast", "Strict"),
                         help="bsnes save-state synchronization method (default Strict; see R-0002)")
     try:

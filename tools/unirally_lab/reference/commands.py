@@ -416,6 +416,29 @@ def _check_identity_and_region(rep: reportmod.Report, p: Prepared, samples: dict
                   detail=f"core reports {region}, expected {args.expect_region}")
 
 
+def sample_key(f: dict[str, Any]) -> tuple[str, str]:
+    """The comparison domain for restore checks: work RAM and CPU registers."""
+    return f["wram_sha256"], json.dumps(f["registers"], sort_keys=True)
+
+
+def compare_runs(x: dict[str, Any], y: dict[str, Any], from_frame: int = 0) -> dict[str, Any]:
+    """Compare two sample sets frame by frame from ``from_frame`` on.
+
+    Runs may have sampled different frame sets (a saving run forces samples
+    around the save frame), so only frames present in both are compared; the
+    frame sets are reported so a caller can require them to line up.
+    """
+    fx = {f["frame"]: f for f in x["frames"] if f["frame"] >= from_frame}
+    fy = {f["frame"]: f for f in y["frames"] if f["frame"] >= from_frame}
+    common = sorted(set(fx) & set(fy))
+    first_diff = next((n for n in common if sample_key(fx[n]) != sample_key(fy[n])), None)
+    av_same = all(fx[n]["video"] == fy[n]["video"] and fx[n]["audio_sha256"] == fy[n]["audio_sha256"] for n in common)
+    return {"compared": len(common), "only_in_x": sorted(set(fx) - set(fy)), "only_in_y": sorted(set(fy) - set(fx)),
+            "first_differing_frame": first_diff, "av_identical": av_same,
+            "final_state_identical": x["final"]["state_sha256"] == y["final"]["state_sha256"],
+            "identical": first_diff is None and len(common) > 0 and x["final"]["state_sha256"] == y["final"]["state_sha256"]}
+
+
 def _samples_summary(s: dict[str, Any]) -> dict[str, Any]:
     return {"sample_digest": s["sample_digest"], "av_digest": s["av_digest"], "start_frame": s["start_frame"],
             "end_frame": s["end_frame"], "final": s["final"], "elapsed_seconds": s["elapsed_seconds"],
@@ -524,26 +547,30 @@ def cmd_restore_check(args: argparse.Namespace) -> int:
         return _finish(rep, args, status)
     _check_identity_and_region(rep, p, a, args)
 
-    def key(f: dict[str, Any]) -> tuple[str, str]:
-        return f["wram_sha256"], json.dumps(f["registers"], sort_keys=True)
-
-    rep.add_check("save_does_not_perturb", "passed" if a["sample_digest"] == b["sample_digest"] and a["final"]["state_sha256"] == b["final"]["state_sha256"] else "failed",
-                  detail=f"uninterrupted vs save-and-continue: sample digests {a['sample_digest'][:16]} / {b['sample_digest'][:16]}, final states {a['final']['state_sha256'][:16]} / {b['final']['state_sha256'][:16]}")
-    # Pair samples by frame number; both runs force samples at the save and resume frames.
-    by_frame_b = {f["frame"]: f for f in b["frames"] if f["frame"] >= c["start_frame"]}
-    pairs = [(by_frame_b[f["frame"]], f) for f in c["frames"] if f["frame"] in by_frame_b]
-    first_diff = next((fb["frame"] for fb, fc in pairs if key(fb) != key(fc)), None)
-    same_len = len(pairs) == len(c["frames"]) == len(by_frame_b) and pairs and pairs[0][1]["frame"] == c["start_frame"]
+    # A vs B: the saving run additionally samples the save frame and the one
+    # after it, so compare on the frames both runs sampled plus the final state.
+    ab = compare_runs(a, b)
+    ab_ok = ab["identical"] and not ab["only_in_x"] and set(ab["only_in_y"]) <= {args.save_after, args.save_after + 1}
+    rep.add_check("save_does_not_perturb", "passed" if ab_ok else "failed",
+                  detail=f"uninterrupted vs save-and-continue: {ab['compared']} common frames compared on WRAM+registers"
+                  + ("" if ab["first_differing_frame"] is None else f"; first differing frame {ab['first_differing_frame']}")
+                  + f"; final states {a['final']['state_sha256'][:16]} / {b['final']['state_sha256'][:16]}"
+                  + ("" if ab_ok or ab["first_differing_frame"] is not None or not ab["final_state_identical"] else f"; unexpected frame sets {ab['only_in_x']} / {ab['only_in_y']}"))
     restored_ok = bool(c.get("state_in", {}).get("matches_post_serialize"))
     rep.add_check("restore_matches_saved_state", "passed" if restored_ok else "failed",
                   detail=f"WRAM and registers right after restore equal the saving run's post-serialize sample after frame {args.save_after}: {restored_ok}")
-    rep.add_check("restore_continuation_identical", "passed" if same_len and first_diff is None and b["final"]["state_sha256"] == c["final"]["state_sha256"] else "failed",
-                  detail=f"frames {c['start_frame']}..{c['end_frame']} after restore in a fresh process: {len(pairs)} samples compared on WRAM+registers"
-                  + ("" if first_diff is None else f"; first differing frame {first_diff}")
+    # B vs C: both runs force a sample at the resume frame and the last frame;
+    # every frame C sampled must exist in B and match.
+    bc = compare_runs(b, c, from_frame=c["start_frame"])
+    bc_ok = bc["identical"] and not bc["only_in_y"] and not bc["only_in_x"] and c["frames"] and c["frames"][0]["frame"] == c["start_frame"]
+    rep.add_check("restore_continuation_identical", "passed" if bc_ok else "failed",
+                  detail=f"frames {c['start_frame']}..{c['end_frame']} after restore in a fresh process: {bc['compared']} samples compared on WRAM+registers"
+                  + ("" if bc["first_differing_frame"] is None else f"; first differing frame {bc['first_differing_frame']}")
+                  + ("" if not (bc["only_in_x"] or bc["only_in_y"]) else f"; frame sets differ {bc['only_in_x']} / {bc['only_in_y']}")
                   + f"; final states {b['final']['state_sha256'][:16]} / {c['final']['state_sha256'][:16]}")
-    av_same = all(fb["video"] == fc["video"] and fb["audio_sha256"] == fc["audio_sha256"] for fb, fc in pairs)
-    rep.add_check("restore_av_identical", "passed" if av_same else "failed", required=False,
+    rep.add_check("restore_av_identical", "passed" if bc["av_identical"] else "failed", required=False,
                   detail="video/audio output after a restore is not part of the serialized state; informational only")
+    rep.data["comparisons"] = {"uninterrupted_vs_save": ab, "save_vs_restore": bc}
     rep.data["samples"] = {"uninterrupted": _samples_summary(a), "save_and_continue": _samples_summary(b), "restore_and_continue": _samples_summary(c)}
     return _finish(rep, args, _status_from_checks(rep))
 

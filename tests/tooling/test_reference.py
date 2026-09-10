@@ -73,6 +73,61 @@ class ScriptContractTests(unittest.TestCase):
         self.assertEqual(worker.inputs_for_frame(script, 5), {0: set(), 1: {"b"}})
 
 
+class SamplingAndPairingTests(unittest.TestCase):
+    def test_forced_frames_cover_save_resume_and_last_frame(self) -> None:
+        self.assertEqual(worker.forced_sample_frames(300, None, 0), {299})
+        self.assertEqual(worker.forced_sample_frames(300, 150, 0), {150, 151, 299})
+        self.assertEqual(worker.forced_sample_frames(300, None, 151), {151, 299})
+        self.assertEqual(worker.forced_sample_frames(300, 298, 0), {298, 299})  # 299 + 1 is out of range
+        self.assertTrue(worker.should_sample(150, 100, {150}))
+        self.assertTrue(worker.should_sample(200, 100, set()))
+        self.assertFalse(worker.should_sample(151, 100, {150}))
+
+    @staticmethod
+    def make_run(frames, final="F", tweak=None):
+        out = {"frames": [{"frame": n, "wram_sha256": f"w{n}", "registers": {"pc": n}, "video": (1, 1, f"v{n}"), "audio_sha256": f"a{n}"} for n in frames],
+               "final": {"state_sha256": final}}
+        if tweak:
+            tweak(out)
+        return out
+
+    def test_sparse_saving_run_is_not_a_perturbation(self) -> None:
+        """The saving run samples extra frames around the save; that alone must not differ."""
+        a = self.make_run([0, 100, 200, 299])
+        b = self.make_run([0, 100, 150, 151, 200, 299])
+        r = commands.compare_runs(a, b)
+        self.assertTrue(r["identical"])
+        self.assertEqual(r["compared"], 4)
+        self.assertEqual(r["only_in_y"], [150, 151])
+        self.assertEqual(r["only_in_x"], [])
+
+    def test_real_difference_and_final_state_are_detected(self) -> None:
+        a = self.make_run([0, 100, 200, 299])
+
+        def poke(out):
+            out["frames"][2]["wram_sha256"] = "other"
+        r = commands.compare_runs(a, self.make_run([0, 100, 200, 299], tweak=poke))
+        self.assertFalse(r["identical"])
+        self.assertEqual(r["first_differing_frame"], 200)
+        r = commands.compare_runs(a, self.make_run([0, 100, 200, 299], final="G"))
+        self.assertFalse(r["identical"])
+        self.assertFalse(r["final_state_identical"])
+        self.assertIsNone(r["first_differing_frame"])
+
+    def test_restore_pairing_starts_at_the_resume_frame(self) -> None:
+        b = self.make_run([0, 100, 150, 151, 200, 299])
+        c = self.make_run([151, 200, 299])
+        r = commands.compare_runs(b, c, from_frame=151)
+        self.assertTrue(r["identical"])
+        self.assertEqual(r["compared"], 3)
+        self.assertEqual(r["only_in_x"], [])
+        missing = commands.compare_runs(b, self.make_run([200, 299]), from_frame=151)
+        self.assertEqual(missing["only_in_x"], [151])  # the resume frame was not sampled: must be reported
+
+    def test_no_common_frames_is_not_identical(self) -> None:
+        self.assertFalse(commands.compare_runs(self.make_run([0]), self.make_run([5]))["identical"])
+
+
 class StateSidecarTests(unittest.TestCase):
     ACTUAL = {"sha256": "s" * 64, "core_sha256": "c" * 64, "rom_sha256": "r" * 64, "script_sha256": "p" * 64, "serialization_method": "Strict"}
 

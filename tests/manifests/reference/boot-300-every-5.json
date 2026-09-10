@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "core": "bsnes",
+  "description": "boot-300 with sparse sampling (every 5th frame). Exercises save/restore checks whose forced samples around the save and resume frames are not on the sampling grid (M0-03 review 3).",
+  "frames": 300,
+  "sample_every": 5,
+  "inputs": [],
+  "trace_entries": 16
+}

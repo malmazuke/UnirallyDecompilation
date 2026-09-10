@@ -106,6 +106,22 @@ def validate_state_sidecar(meta: Any, actual: dict[str, Any], script_frames: int
     return after + 1, post
 
 
+def forced_sample_frames(script_frames: int, save_after: int | None, start: int) -> set[int]:
+    """Frames sampled regardless of ``sample_every``: the last frame, the save
+    frame and the one after it, and the resume frame after a restore, so that a
+    divergence right after a save or restore cannot fall between samples."""
+    forced = {script_frames - 1}
+    if save_after is not None:
+        forced |= {save_after, save_after + 1}
+    if start > 0:
+        forced.add(start)
+    return {f for f in forced if 0 <= f < script_frames}
+
+
+def should_sample(frame: int, sample_every: int, forced: set[int]) -> bool:
+    return frame % sample_every == 0 or frame in forced
+
+
 def inputs_for_frame(script: dict[str, Any], frame: int) -> dict[int, set[str]]:
     result: dict[int, set[str]] = {0: set(), 1: set()}
     for entry in script.get("inputs", []):
@@ -214,13 +230,7 @@ def run(args: argparse.Namespace) -> int:
                            "matches_post_serialize": wram_sha == post["wram_sha256"] and regs == post["registers"]}
 
     sample_every = script.get("sample_every", 1)
-    # Frames around a save or restore are always sampled so that a divergence
-    # at the resume frame cannot hide between sampling points (review 2).
-    forced = {script["frames"] - 1}
-    if args.save_after is not None:
-        forced |= {args.save_after, args.save_after + 1}
-    if args.state_in:
-        forced.add(start)
+    forced = forced_sample_frames(script["frames"], args.save_after, start)
     state_digest = hashlib.sha256()
     state_digest.update(b"initial" + bytes.fromhex(out["initial"]["wram_sha256"]) + bytes.fromhex(out["initial"]["cartridge_ram_sha256"]))
     av_digest = hashlib.sha256()
@@ -228,7 +238,7 @@ def run(args: argparse.Namespace) -> int:
         for port, buttons in inputs_for_frame(script, frame).items():
             core.set_inputs(port, buttons)
         output = core.run_frame()
-        if frame % sample_every == 0 or frame in forced:
+        if should_sample(frame, sample_every, forced):
             wram_sha = hashlib.sha256(core.wram()).hexdigest()
             regs_raw = core.registers_raw()
             state_digest.update(frame.to_bytes(4, "little") + bytes.fromhex(wram_sha) + regs_raw)

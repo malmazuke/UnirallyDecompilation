@@ -6,6 +6,7 @@
 *.sfc
 *.smc
 *.srm
+*.bst
 
 # Local runtimes and settings
 .venv/

@@ -11,7 +11,7 @@
       "describe": "nightly, after v115; commit dated 2026-05-23",
       "checkout_dir": "bsnes",
       "patch": "tools/unirally_lab/reference/patches/bsnes-lab-exports.patch",
-      "patch_sha256": "04267fc82746a6b99c0fc2887882895ce0980e00a2907fdc7434536e13d847d7",
+      "patch_sha256": "a719f5ffe2222dad4c1ab04336633319ad85004f74e32fc14893a058be333885",
       "build": {
         "command": [
           "make",
@@ -28,11 +28,12 @@
         },
         "outputs": [
           "bsnes/out",
-          "bsnes/obj"
+          "bsnes/obj",
+          "lab-core.json"
         ],
-        "notes": "local=false avoids -march=native so the library is portable across machines of the same architecture. The upstream default build profile (performance, -O3) is kept."
+        "notes": "local=false avoids -march=native so the library is portable across machines of the same architecture. The upstream default build profile (performance, -O3) is kept. `outputs` lists paths excluded from the patch comparison: build products and the lab-core.json manifest that `reference build` writes into the checkout."
       },
-      "patch_diff_command": "git -c diff.noprefix=false -c diff.mnemonicPrefix=false -c diff.renames=false -c core.abbrev=40 -c diff.algorithm=myers -c diff.suppressBlankEmpty=false diff --no-color --no-ext-diff --full-index --src-prefix=a/ --dst-prefix=b/ --no-renames -- . ':!bsnes/out' ':!bsnes/obj' (after git add -N -A with the same pathspec)"
+      "patch_diff_command": "git add -N -A -- . ':!bsnes/out' ':!bsnes/obj' ':!lab-core.json' && git -c diff.noprefix=false -c diff.mnemonicPrefix=false -c diff.renames=false -c core.abbrev=40 -c diff.algorithm=myers -c diff.suppressBlankEmpty=false diff --no-color --no-ext-diff --full-index --src-prefix=a/ --dst-prefix=b/ --no-renames -- . ':!bsnes/out' ':!bsnes/obj' ':!lab-core.json'; git reset -q"
     },
     "mesen": {
       "role": "evaluated in M0-03 as an investigation tool; no adapter is built for it",

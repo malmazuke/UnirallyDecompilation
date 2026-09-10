@@ -1,3 +1,57 @@
+diff --git a/bsnes/sfc/controller/controller.cpp b/bsnes/sfc/controller/controller.cpp
+index a68a03785d4e6e0ac991577a8e24214aaa16d6ab..191a60e727d7f3ce5ccc7f3a7dfcada52f243416 100644
+--- a/bsnes/sfc/controller/controller.cpp
++++ b/bsnes/sfc/controller/controller.cpp
+@@ -58,6 +58,7 @@ auto ControllerPort::unload() -> void {
+ }
+ 
+ auto ControllerPort::serialize(serializer& s) -> void {
++  if(device) device->serialize(s);  //unirally-lab
+ }
+ 
+ }
+diff --git a/bsnes/sfc/controller/controller.hpp b/bsnes/sfc/controller/controller.hpp
+index 96bc7c2e1392cb68a595f15ff6fc40399ef3c001..2514b0f032317c93beb39fc53dad2752bbe7b7bc 100644
+--- a/bsnes/sfc/controller/controller.hpp
++++ b/bsnes/sfc/controller/controller.hpp
+@@ -21,6 +21,7 @@ struct Controller {
+   virtual auto latch(bool data) -> void {}
+   virtual auto latch() -> void {}  //light guns
+   virtual auto draw(uint16_t* output, uint pitch, uint width, uint height) -> void {}  //light guns
++  virtual auto serialize(serializer&) -> void {}  //unirally-lab: controller state is part of save states
+ 
+   const uint port;
+ };
+diff --git a/bsnes/sfc/controller/gamepad/gamepad.cpp b/bsnes/sfc/controller/gamepad/gamepad.cpp
+index bdef37e744baa9f6da95e580dac4557db83f57dc..032dcf7d98c9e93e8379b1471ff29ebed283667e 100644
+--- a/bsnes/sfc/controller/gamepad/gamepad.cpp
++++ b/bsnes/sfc/controller/gamepad/gamepad.cpp
+@@ -46,3 +46,13 @@ auto Gamepad::latch(bool data) -> void {
+     r      = platform->inputPoll(port, ID::Device::Gamepad, R);
+   }
+ }
++
++//unirally-lab: the latch state and the buttons captured at the last latch were not serialized upstream,
++//so a state taken inside the auto-joypad poll window restored with the remaining bits reading as zero.
++auto Gamepad::serialize(serializer& s) -> void {
++  s.boolean(latched);
++  s.integer(counter);
++  s.boolean(b); s.boolean(y); s.boolean(select); s.boolean(start);
++  s.boolean(up); s.boolean(down); s.boolean(left); s.boolean(right);
++  s.boolean(a); s.boolean(x); s.boolean(l); s.boolean(r);
++}
+diff --git a/bsnes/sfc/controller/gamepad/gamepad.hpp b/bsnes/sfc/controller/gamepad/gamepad.hpp
+index b28c7ba274116f2dc975f37660a0a810732af74a..59963bf778354e411012578dd647bc6c64b44cbb 100644
+--- a/bsnes/sfc/controller/gamepad/gamepad.hpp
++++ b/bsnes/sfc/controller/gamepad/gamepad.hpp
+@@ -7,6 +7,7 @@ struct Gamepad : Controller {
+ 
+   auto data() -> uint2;
+   auto latch(bool data) -> void;
++  auto serialize(serializer&) -> void override;
+ 
+ private:
+   bool latched;
 diff --git a/bsnes/sfc/cpu/cpu.cpp b/bsnes/sfc/cpu/cpu.cpp
 index b6fec167ae25b01236e158bdbceae5c9b24ce4f4..bf49174b9eec866437b1a64d6cda291ca144616c 100644
 --- a/bsnes/sfc/cpu/cpu.cpp
@@ -170,37 +224,4 @@ index 0000000000000000000000000000000000000000..7283babe7e4eb36d7898be1178e7b272
 +RETRO_API uint64_t unirally_trace_total() { return UnirallyLab::traceTotal; }
 +RETRO_API size_t unirally_trace_entry_size() { return sizeof(UnirallyLab::TraceEntry); }
 +
-+}
-diff --git a/lab-core.json b/lab-core.json
-new file mode 100644
-index 0000000000000000000000000000000000000000..7cfd0929e6b7b8a1b1eaaf716d59d0961f62c7a4
---- /dev/null
-+++ b/lab-core.json
-@@ -0,0 +1,27 @@
-+{
-+  "api_version": 1,
-+  "build_command": [
-+    "make",
-+    "-C",
-+    "bsnes",
-+    "target=libretro",
-+    "binary=library",
-+    "local=false",
-+    "-j4"
-+  ],
-+  "build_seconds": 0.6,
-+  "built_utc": "2026-09-10T11:42:02Z",
-+  "commit": "7d5aa1e656b9171524d01b1b22917197d8121cb4",
-+  "compiler": "Apple clang version 17.0.0 (clang-1700.4.4.1)",
-+  "core": "bsnes",
-+  "library": "/Users/markfeaver/Projects/Unirally Decompilation/local/emulators/bsnes/bsnes/out/bsnes_libretro.dylib",
-+  "library_sha256": "b00ed0c05fdbb5d2733be882a98c7f5ddec417371da979ccba34d93783600596",
-+  "lock_sha256": "66e4a13445ac628686ceda33878cdc7ba46561d5603a29e82f6caf4897edf514",
-+  "machine": "arm64",
-+  "patch": "tools/unirally_lab/reference/patches/bsnes-lab-exports.patch",
-+  "patch_sha256": "27758024c1aaa1bc18059cdc49933510a95ff18133912df10ca775585a72a408",
-+  "platform": "macOS-15.7.2-arm64-arm-64bit-Mach-O",
-+  "repository": "https://github.com/bsnes-emu/bsnes.git",
-+  "schema_version": 1,
-+  "tree": "62631b8a2f01f663f1e1300987295af6bf8ea556"
 +}

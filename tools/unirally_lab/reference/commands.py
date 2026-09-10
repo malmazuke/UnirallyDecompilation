@@ -529,10 +529,11 @@ def cmd_restore_check(args: argparse.Namespace) -> int:
 
     rep.add_check("save_does_not_perturb", "passed" if a["sample_digest"] == b["sample_digest"] and a["final"]["state_sha256"] == b["final"]["state_sha256"] else "failed",
                   detail=f"uninterrupted vs save-and-continue: sample digests {a['sample_digest'][:16]} / {b['sample_digest'][:16]}, final states {a['final']['state_sha256'][:16]} / {b['final']['state_sha256'][:16]}")
-    tail_b = [f for f in b["frames"] if f["frame"] >= c["start_frame"]]
-    pairs = list(zip(tail_b, c["frames"]))
+    # Pair samples by frame number; both runs force samples at the save and resume frames.
+    by_frame_b = {f["frame"]: f for f in b["frames"] if f["frame"] >= c["start_frame"]}
+    pairs = [(by_frame_b[f["frame"]], f) for f in c["frames"] if f["frame"] in by_frame_b]
     first_diff = next((fb["frame"] for fb, fc in pairs if key(fb) != key(fc)), None)
-    same_len = len(tail_b) == len(c["frames"])
+    same_len = len(pairs) == len(c["frames"]) == len(by_frame_b) and pairs and pairs[0][1]["frame"] == c["start_frame"]
     restored_ok = bool(c.get("state_in", {}).get("matches_post_serialize"))
     rep.add_check("restore_matches_saved_state", "passed" if restored_ok else "failed",
                   detail=f"WRAM and registers right after restore equal the saving run's post-serialize sample after frame {args.save_after}: {restored_ok}")

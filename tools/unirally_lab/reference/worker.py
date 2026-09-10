@@ -214,6 +214,13 @@ def run(args: argparse.Namespace) -> int:
                            "matches_post_serialize": wram_sha == post["wram_sha256"] and regs == post["registers"]}
 
     sample_every = script.get("sample_every", 1)
+    # Frames around a save or restore are always sampled so that a divergence
+    # at the resume frame cannot hide between sampling points (review 2).
+    forced = {script["frames"] - 1}
+    if args.save_after is not None:
+        forced |= {args.save_after, args.save_after + 1}
+    if args.state_in:
+        forced.add(start)
     state_digest = hashlib.sha256()
     state_digest.update(b"initial" + bytes.fromhex(out["initial"]["wram_sha256"]) + bytes.fromhex(out["initial"]["cartridge_ram_sha256"]))
     av_digest = hashlib.sha256()
@@ -221,7 +228,7 @@ def run(args: argparse.Namespace) -> int:
         for port, buttons in inputs_for_frame(script, frame).items():
             core.set_inputs(port, buttons)
         output = core.run_frame()
-        if frame % sample_every == 0 or frame == script["frames"] - 1:
+        if frame % sample_every == 0 or frame in forced:
             wram_sha = hashlib.sha256(core.wram()).hexdigest()
             regs_raw = core.registers_raw()
             state_digest.update(frame.to_bytes(4, "little") + bytes.fromhex(wram_sha) + regs_raw)

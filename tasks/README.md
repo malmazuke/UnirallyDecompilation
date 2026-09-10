@@ -4,9 +4,9 @@ The coordinator maintains the status registry below. Work orders further below d
 
 | Task | Status | Record |
 | --- | --- | --- |
-| M0-00 | in_progress | [Repository setup](M0-00.md) |
-| M0-01 | blocked: local PAL ROM path needed | Not dispatched |
-| M0-02 | in_progress | [Laboratory bootstrap](M0-02.md) |
+| M0-00 | accepted | [Repository setup](M0-00.md) |
+| M0-01 | planned: ROM path supplied; user paused execution | Not dispatched |
+| M0-02 | planned: paused by user before implementation | [Laboratory bootstrap](M0-02.md) |
 | M0-03 through M0-06 | planned | Waiting for prerequisites |
 | M1–M6 | planned | See milestone definitions |
 

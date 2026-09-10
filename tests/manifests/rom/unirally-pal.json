@@ -1,0 +1,71 @@
+{
+  "checksum": {
+    "computed": 35539,
+    "header": 35539,
+    "matches": true
+  },
+  "copier_header": {
+    "note": "hashes above cover the whole file as supplied; rom_data hashes exclude the copier header",
+    "present": false,
+    "size": 0
+  },
+  "file": {
+    "crc32": "d8583ed7",
+    "md5": "2209427113f6535329c8b17ebab8a2e5",
+    "name": "Unirally (Europe).sfc",
+    "sha1": "d39ec113ef153ec9b7bacf12ed4a47f1a6d63a06",
+    "sha256": "a1105819d48c04d680c8292bbfa9abbce05224f1bc231afd66af43b7e0a1fd4e",
+    "size": 2097152
+  },
+  "header": {
+    "cartridge_type": 2,
+    "checksum": 35539,
+    "checksum_complement": 29996,
+    "complement_matches": true,
+    "country": "Europe",
+    "country_code": 2,
+    "developer_code": 51,
+    "extended_header": {
+      "cartridge_subtype": 0,
+      "expansion_ram_size_code": 0,
+      "game_code": "4L  ",
+      "maker_code": "01",
+      "special_version": 0
+    },
+    "map_mode": 48,
+    "map_mode_name": "LoROM FastROM",
+    "offset": 32704,
+    "ram_size_code": 3,
+    "rom_size_code": 11,
+    "score": 9,
+    "title": "UNIRALLY",
+    "title_raw_hex": "554e4952414c4c5920202020202020202020202020",
+    "vectors": {
+      "emu_abort": 65535,
+      "emu_cop": 65535,
+      "emu_irq_brk": 34179,
+      "emu_nmi": 65535,
+      "emu_reset": 34904,
+      "emu_unused0": 65535,
+      "emu_unused1": 65535,
+      "emu_unused2": 65535,
+      "native_abort": 65535,
+      "native_brk": 34175,
+      "native_cop": 65535,
+      "native_irq": 34179,
+      "native_nmi": 34183,
+      "native_reset_unused": 65535,
+      "native_unused0": 65535,
+      "native_unused1": 65535
+    },
+    "version": 0,
+    "video_standard": "PAL"
+  },
+  "header_candidates": {
+    "hirom": 0,
+    "lorom": 9
+  },
+  "header_location": "lorom",
+  "manifest_schema_version": 1,
+  "rom_data": null
+}

@@ -1,0 +1,139 @@
+#!/usr/bin/env python3
+"""Stable repository command entry point.
+
+Usage: python3 tools/project.py <subcommand> [options]
+
+Exit codes: 0 success, 1 check failure, 2 missing prerequisite,
+3 invalid input, 4 timeout. Every subcommand accepts --report <path>
+to write a JSON report; see tools/unirally_lab/report.py for the schema.
+"""
+
+from __future__ import annotations
+
+import argparse
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from unirally_lab import (  # noqa: E402
+    EXIT_FAILURE,
+    EXIT_INVALID_INPUT,
+    EXIT_MISSING_PREREQUISITE,
+    EXIT_OK,
+    __version__,
+    report as reportmod,
+    rom as rommod,
+)
+
+ROOT = reportmod.repo_root()
+DEFAULT_ROM_LOCATION = ROOT / "local" / "rom-location.txt"
+
+
+def _default_rom_path() -> Path | None:
+    if DEFAULT_ROM_LOCATION.is_file():
+        text = DEFAULT_ROM_LOCATION.read_text(encoding="utf-8").strip()
+        if text:
+            return Path(text).expanduser()
+    return None
+
+
+def cmd_rom_inspect(args: argparse.Namespace) -> int:
+    rep = reportmod.Report(sys.argv, task_id=args.task)
+    path = Path(args.path).expanduser() if args.path else _default_rom_path()
+    status = EXIT_OK
+    manifest = None
+
+    if path is None:
+        rep.add_check(
+            "rom_available", "missing",
+            detail="no --path and no local/rom-location.txt; supply the ROM path",
+        )
+        status = EXIT_MISSING_PREREQUISITE
+    else:
+        try:
+            manifest = rommod.inspect_rom(path)
+            rep.add_input("rom", path, manifest["file"]["sha256"], size=manifest["file"]["size"])
+            rep.add_check("rom_available", "passed", detail=str(path))
+        except rommod.RomError as exc:
+            missing = "not found" in str(exc) or "not a regular file" in str(exc)
+            rep.add_check("rom_available", "missing" if missing else "failed", detail=str(exc))
+            status = EXIT_MISSING_PREREQUISITE if missing else EXIT_INVALID_INPUT
+
+    if manifest is not None:
+        hdr = manifest["header"]
+        rep.add_check(
+            "header_complement", "passed" if hdr["complement_matches"] else "failed",
+            detail=f"{manifest['header_location']} @0x{hdr['offset']:X}",
+        )
+        chk = manifest["checksum"]
+        rep.add_check(
+            "internal_checksum", "passed" if chk["matches"] else "failed",
+            detail=f"header 0x{chk['header']:04x} computed 0x{chk['computed']:04x}",
+        )
+        if not (hdr["complement_matches"] and chk["matches"]):
+            status = EXIT_FAILURE
+
+        if args.expect:
+            try:
+                expected = rommod.load_manifest(Path(args.expect))
+            except rommod.RomError as exc:
+                rep.add_check("expected_manifest", "missing", detail=str(exc))
+                status = EXIT_MISSING_PREREQUISITE
+            else:
+                fields = rommod.compare_identity(manifest, expected)
+                mismatches = [f for f in fields if not f["matches"]]
+                rep.add_check(
+                    "identity_matches_expected", "passed" if not mismatches else "failed",
+                    detail=f"{len(fields) - len(mismatches)}/{len(fields)} identity fields match",
+                    fields=fields,
+                )
+                if mismatches:
+                    status = EXIT_FAILURE
+                    for f in mismatches:
+                        print(f"mismatch {f['field']}: expected {f['expected']!r}, observed {f['observed']!r}", file=sys.stderr)
+
+        if args.manifest_out:
+            out = Path(args.manifest_out)
+            rommod.write_manifest(manifest, out)
+            rep.add_artifact("rom_manifest", out)
+        if args.print:
+            import json
+            print(json.dumps(manifest, indent=2, sort_keys=True))
+
+    rep.finish("passed" if status == EXIT_OK else "failed")
+    rep.write(Path(args.report) if args.report else None)
+    reportmod.print_summary(rep)
+    return status
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(prog="project.py", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--version", action="version", version=f"unirally_lab {__version__}")
+    sub = parser.add_subparsers(dest="command", required=True)
+
+    rom = sub.add_parser("rom", help="original ROM identification")
+    romsub = rom.add_subparsers(dest="rom_command", required=True)
+    insp = romsub.add_parser("inspect", help="hash and identify a ROM image without modifying it")
+    insp.add_argument("--path", help="ROM file; defaults to the path in local/rom-location.txt")
+    insp.add_argument("--expect", help="tracked manifest to compare identity fields against")
+    insp.add_argument("--manifest-out", help="write the observed manifest JSON here")
+    insp.add_argument("--print", action="store_true", help="print the manifest to stdout")
+    insp.add_argument("--report", help="write the JSON run report here")
+    insp.add_argument("--task", help="task ID to record in the report")
+    insp.set_defaults(func=cmd_rom_inspect)
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = build_parser()
+    try:
+        args = parser.parse_args(argv)
+    except SystemExit as exc:
+        # argparse exits 2 on usage errors; map that to the invalid-input code.
+        return EXIT_INVALID_INPUT if exc.code not in (0, None) else EXIT_OK
+    return args.func(args)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

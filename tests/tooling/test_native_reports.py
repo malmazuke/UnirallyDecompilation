@@ -79,6 +79,8 @@ class NativeReportTests(unittest.TestCase):
         source = ROOT / "src" / "lab" / "lab_state.cpp"
         original = source.read_text()
         with tempfile.TemporaryDirectory() as tmp:
+            # Each test builds what it needs; test order and prior runs must not matter.
+            self.assertEqual(run_cli("build", "--preset", "lab-failure-probe").returncode, EXIT_OK)
             try:
                 source.write_text(original + "\nthis is not C++\n")
                 report = Path(tmp) / "test.json"

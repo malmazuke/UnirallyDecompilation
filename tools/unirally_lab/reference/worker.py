@@ -413,7 +413,10 @@ def run(args: argparse.Namespace) -> int:
 def _write_coverage(path: Path, coverage: coverage_drain.FrameDrain, out: dict[str, Any], frames: tuple[int, int],
                     failure: str | None = None) -> dict[str, Any]:
     """Write the coverage document (M1-01); returns its summary for the samples file."""
-    identity = {"rom": dict(out["rom"]), "core": dict(out["core"]), "script": dict(out["script"]),
+    # Identity without host paths so that two captures of one run are byte-identical.
+    identity = {"rom": {k: v for k, v in out["rom"].items() if k != "path"},
+                "core": {k: v for k, v in out["core"].items() if k != "library"},
+                "script": {k: v for k, v in out["script"].items() if k != "path"},
                 "status": "failed" if failure else "complete", "failure": failure}
     doc = coverage.document(identity, frames)
     path.parent.mkdir(parents=True, exist_ok=True)

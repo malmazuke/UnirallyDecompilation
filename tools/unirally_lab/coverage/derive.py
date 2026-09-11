@@ -175,7 +175,7 @@ class Derivation:
             self.edge_sources[key].add(pc)
             if kind == "unknown":
                 self.unknown_edges.append({"from": addr(pc), "from_region": mapping.classify(pc), "from_mode": mode_name(mode),
-                                           "opcode": None if opcode is None else TABLE[opcode][0], "to": addr(npc),
+                                           "from_decoded": opcode is not None, "to": addr(npc),
                                            "to_mode": mode_name(nmode), "count": count})
 
     # ------------------------------------------------------------- outputs
@@ -465,9 +465,11 @@ def summary_markdown(doc: dict[str, Any], comparison: dict[str, Any] | None = No
         for s in doc["non_rom_sites"]:
             lines.append(f"| {s['address']} | {s['region']} | {s['mode']} | {s['count']:,} | {s['first_frame']} |")
     if doc["unknown_edges"]:
-        lines += ["", f"## Unknown edges ({len(doc['unknown_edges'])})", "", "| From | Region | Opcode | To | Count |", "| --- | --- | --- | --- | --- |"]
+        lines += ["", f"## Unknown edges ({len(doc['unknown_edges'])})", "",
+                  "Steps whose predecessor could not be decoded (outside ROM) or is not a control-flow instruction and whose target is not a vector target.", "",
+                  "| From | Region | Decoded | To | Count |", "| --- | --- | --- | --- | --- |"]
         for e in doc["unknown_edges"][:64]:
-            lines.append(f"| {e['from']} | {e['from_region']} | {e['opcode']} | {e['to']} | {e['count']} |")
+            lines.append(f"| {e['from']} | {e['from_region']} | {'yes' if e['from_decoded'] else 'no'} | {e['to']} | {e['count']} |")
     if comparison is not None:
         lines += ["", f"## Compared to `{comparison['baseline_scenario']}`", "",
                   f"Bytes executed only here: {comparison['bytes_only_here']:,}; only in the baseline: {comparison['bytes_only_in_baseline']:,}; "

@@ -191,13 +191,15 @@ Maximal runs of consecutive executed byte addresses; `modes` is the union over i
 
 ## Unknown edges (5)
 
-| From | Region | Opcode | To | Count |
+Steps whose predecessor could not be decoded (outside ROM) or is not a control-flow instruction and whose target is not a vector target.
+
+| From | Region | Decoded | To | Count |
 | --- | --- | --- | --- | --- |
-| $00:0199 | wram | None | $00:0199 | 227 |
-| $00:0199 | wram | None | $00:019C | 12 |
-| $00:019C | wram | None | $80:AD79 | 6 |
-| $00:019C | wram | None | $83:96FB | 6 |
-| $00:0199 | wram | None | $00:0199 | 1 |
+| $00:0199 | wram | no | $00:0199 | 227 |
+| $00:0199 | wram | no | $00:019C | 12 |
+| $00:019C | wram | no | $80:AD79 | 6 |
+| $00:019C | wram | no | $83:96FB | 6 |
+| $00:0199 | wram | no | $00:0199 | 1 |
 
 ## Limits
 

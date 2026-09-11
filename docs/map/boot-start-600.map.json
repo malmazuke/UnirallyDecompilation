@@ -487,11 +487,11 @@
     {"address": "$00:0199", "count": 1, "data_bank": 128, "first_frame": 404, "mode": "NMX", "region": "wram", "wram_offset": 409}
   ],
   "unknown_edges": [
-    {"count": 227, "from": "$00:0199", "from_mode": "NMX", "from_region": "wram", "opcode": null, "to": "$00:0199", "to_mode": "NMX"},
-    {"count": 12, "from": "$00:0199", "from_mode": "NMX", "from_region": "wram", "opcode": null, "to": "$00:019C", "to_mode": "NMX"},
-    {"count": 6, "from": "$00:019C", "from_mode": "NMX", "from_region": "wram", "opcode": null, "to": "$80:AD79", "to_mode": "NMX"},
-    {"count": 6, "from": "$00:019C", "from_mode": "NMX", "from_region": "wram", "opcode": null, "to": "$83:96FB", "to_mode": "NMX"},
-    {"count": 1, "from": "$00:0199", "from_mode": "NMX", "from_region": "wram", "opcode": null, "to": "$00:0199", "to_mode": "NMX"}
+    {"count": 227, "from": "$00:0199", "from_decoded": false, "from_mode": "NMX", "from_region": "wram", "to": "$00:0199", "to_mode": "NMX"},
+    {"count": 12, "from": "$00:0199", "from_decoded": false, "from_mode": "NMX", "from_region": "wram", "to": "$00:019C", "to_mode": "NMX"},
+    {"count": 6, "from": "$00:019C", "from_decoded": false, "from_mode": "NMX", "from_region": "wram", "to": "$80:AD79", "to_mode": "NMX"},
+    {"count": 6, "from": "$00:019C", "from_decoded": false, "from_mode": "NMX", "from_region": "wram", "to": "$83:96FB", "to_mode": "NMX"},
+    {"count": 1, "from": "$00:0199", "from_decoded": false, "from_mode": "NMX", "from_region": "wram", "to": "$00:0199", "to_mode": "NMX"}
   ],
   "static_references": [
     {"address": "$00:0199", "executed": false, "kinds": ["code"], "references": 3, "referencing_instructions": 2, "region": "wram", "rom_offset": null},

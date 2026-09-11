@@ -64,5 +64,9 @@
       "description": "Raw diagnostic range $7E0000-$7E01FF (direct page and the top of the stack area). No gameplay interpretation; M1 defines fields."
     }
   ],
-  "regeneration_command": "python3 tools/project.py replay compare --manifest tests/manifests/replay/boot-start-600.json --against tests/manifests/replay/boot-start-600-start-moved-310.json"
+  "regeneration_command": "python3 tools/project.py replay compare --manifest tests/manifests/replay/boot-start-600.json --against tests/manifests/replay/boot-start-600-start-moved-310.json",
+  "expected": {
+    "sample_digest": "1636d0b2df94d8185f99e2f290cc481c7925d506865c1fe65ef97eeb621551a2",
+    "final_state_sha256": "1a6fbf6d24c532ffbee760bfeffec53b7b8ab691dcb71681759c646cc522ed78"
+  }
 }

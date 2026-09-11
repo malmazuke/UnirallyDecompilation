@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "scenario_id": "boot-start-600-start-removed",
-  "description": "Perturbation of boot-start-600: the Start press at frames 300-305 is removed (no controller input at all). Compared against boot-start-600 the first divergence is expected at frame 300 (R-0002 finding 6).",
-  "tested_behavior": "Laboratory only: the comparator detects a removed known-active input at the frame it was first applied.",
+  "scenario_id": "boot-start-600-from-state-150",
+  "description": "boot-start-600 resumed from a serialized state taken after frame 150 of tests/manifests/reference/boot-start-600.json (a save point outside the perturbing boot-sequence region 29-96, R-0002 finding 5). The state and its restore-check report are local-only (ignored local/states/); a fresh host regenerates them with the regeneration command, then frames 151-599 replay with Start held at 300-305.",
+  "tested_behavior": "Laboratory only: a validated state sidecar is accepted as a reference origin and repeated fresh-process restores sample identically.",
   "rom": {
     "manifest": "tests/manifests/rom/unirally-pal.json",
     "sha256": "a1105819d48c04d680c8292bbfa9abbce05224f1bc231afd66af43b7e0a1fd4e"
@@ -16,7 +16,16 @@
     "options": {}
   },
   "origin": {
-    "kind": "cold_start"
+    "kind": "state",
+    "path": "local/states/boot-start-600-150/state-after-150.bst",
+    "sha256": "893f08b82864a5cd57ef91ca5e4c96ac80fc2d55f2605f137729d47332c73491",
+    "script": "tests/manifests/reference/boot-start-600.json",
+    "script_sha256": "88a035b68eac50581b6c9c4964b1927963c6fa960fe5f7029b1425d17b4d0438",
+    "after_frame": 150,
+    "restore_check": {
+      "report": "local/states/boot-start-600-150/restore-check.json",
+      "save_after": 150
+    }
   },
   "run": {
     "frames": 600,
@@ -29,7 +38,15 @@
     "controllers": [
       {
         "port": 0,
-        "events": []
+        "events": [
+          {
+            "from": 300,
+            "to": 305,
+            "buttons": [
+              "start"
+            ]
+          }
+        ]
       },
       {
         "port": 1,
@@ -56,9 +73,9 @@
       "description": "Raw diagnostic range $7E0000-$7E01FF (direct page and the top of the stack area). No gameplay interpretation; M1 defines fields."
     }
   ],
-  "regeneration_command": "python3 tools/project.py replay compare --manifest tests/manifests/replay/boot-start-600.json --against tests/manifests/replay/boot-start-600-start-removed.json",
+  "regeneration_command": "python3 tools/project.py reference restore-check --script tests/manifests/reference/boot-start-600.json --save-after 150 --artifacts local/states/boot-start-600-150 --report local/states/boot-start-600-150/restore-check.json && python3 tools/project.py replay run --manifest tests/manifests/replay/boot-start-600-from-state-150.json",
   "expected": {
-    "sample_digest": "1f50d00cca244a9bf0807f25ee28df87b2e127e6232f5d1da22a57a4d100aa54",
+    "sample_digest": "a5a669d2671de7ab16054385c3b8dc38f556894640834edf3d0eadf5e18006d6",
     "final_state_sha256": "1a6fbf6d24c532ffbee760bfeffec53b7b8ab691dcb71681759c646cc522ed78"
   }
 }

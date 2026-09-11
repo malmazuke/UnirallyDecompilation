@@ -157,6 +157,48 @@ class SamplingAndPairingTests(unittest.TestCase):
         self.assertFalse(commands.continuation_verdict(commands.compare_runs(b, empty, 151), empty))
 
 
+class FieldCaptureTests(unittest.TestCase):
+    """Samples schema 2: declared work RAM ranges are captured per sampled frame."""
+
+    def test_samples_schema_is_2(self) -> None:
+        self.assertEqual(worker.SAMPLES_SCHEMA_VERSION, 2)
+        self.assertEqual(worker.WRAM_SIZE, 131072)
+
+    def test_valid_fields(self) -> None:
+        fields = worker.validate_fields([{"name": "a", "start": 0, "length": 256, "extra": "ignored"},
+                                         {"name": "b", "start": 0x73, "length": 1}, {"name": "c", "start": 0x1FF00, "length": 256}])
+        self.assertEqual(fields, [{"name": "a", "start": 0, "length": 256}, {"name": "b", "start": 0x73, "length": 1}, {"name": "c", "start": 0x1FF00, "length": 256}])
+        self.assertEqual(worker.validate_fields([]), [])
+
+    def test_invalid_fields_are_rejected(self) -> None:
+        bad = [
+            {"name": "a", "start": 0, "length": 1},  # not a list
+            [{"name": "", "start": 0, "length": 1}],
+            [{"name": "a", "start": 0, "length": 1}, {"name": "a", "start": 1, "length": 1}],
+            [{"name": "a", "start": -1, "length": 1}],
+            [{"name": "a", "start": 0, "length": 0}],
+            [{"name": "a", "start": 0x1FFFF, "length": 2}],
+            [{"name": "a", "start": True, "length": 1}],
+            [{"name": "a", "start": "0", "length": 1}],
+            ["a"],
+            [{"name": f"f{i}", "start": i, "length": 1} for i in range(worker.MAX_FIELDS + 1)],
+        ]
+        for data in bad:
+            with self.subTest(fields=data if not isinstance(data, list) or len(data) < 5 else "too many"):
+                with self.assertRaises(worker.ScriptError):
+                    worker.validate_fields(data)
+
+    def test_capture_slices_the_declared_ranges_as_hex(self) -> None:
+        wram = bytes(range(256)) * 512
+        fields = worker.validate_fields([{"name": "head", "start": 0, "length": 4}, {"name": "x73", "start": 0x73, "length": 2}])
+        self.assertEqual(worker.capture_fields(wram, fields), {"head": "00010203", "x73": "7374"})
+        self.assertEqual(worker.capture_fields(wram, []), {})
+
+    def test_forced_frames_follow_the_stop_frame(self) -> None:
+        # --stop-after-frame 149 runs 150 frames: the last executed frame is forced.
+        self.assertEqual(worker.forced_sample_frames(150, None, 0), {149})
+
+
 class StateSidecarTests(unittest.TestCase):
     ACTUAL = {"sha256": "s" * 64, "core_sha256": "c" * 64, "rom_sha256": "r" * 64, "script_sha256": "p" * 64, "serialization_method": "Strict"}
 
@@ -229,6 +271,23 @@ class WorkerErrorPathTests(unittest.TestCase):
         self.assertEqual(cmd[cmd.index("--save-after") + 1], "3")
         self.assertEqual(cmd[cmd.index("--sample-from-frame") + 1], "3")
         self.assertNotIn("--sample-from-frame", commands._worker_command(p, Path("/script.json"), Path("/out/samples.json")))
+
+    def test_stop_frame_and_fields_arguments_are_validated_before_loading_anything(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            common = [sys.executable, str(commands.WORKER), "--core", f"{tmp}/absent.dylib", "--rom", f"{tmp}/absent.sfc",
+                      "--script", str(SCRIPTS / "boot-300.json"), "--samples-out", f"{tmp}/s.json"]
+            for extra in (["--stop-after-frame", "300"], ["--stop-after-frame", "-1"], ["--fields", f"{tmp}/absent-fields.json"]):
+                with self.subTest(extra=extra):
+                    r = subprocess.run(common + extra, capture_output=True, text=True, timeout=60)
+                    self.assertEqual(r.returncode, EXIT_INVALID_INPUT, r.stderr)
+            bad_fields = Path(tmp) / "fields.json"
+            bad_fields.write_text(json.dumps([{"name": "a", "start": 0, "length": 0}]))
+            r = subprocess.run(common + ["--fields", str(bad_fields)], capture_output=True, text=True, timeout=60)
+            self.assertEqual(r.returncode, EXIT_INVALID_INPUT, r.stderr)
+            good_fields = Path(tmp) / "good.json"
+            good_fields.write_text(json.dumps([{"name": "a", "start": 0, "length": 1}]))
+            r = subprocess.run(common + ["--fields", str(good_fields), "--stop-after-frame", "299"], capture_output=True, text=True, timeout=60)
+            self.assertEqual(r.returncode, EXIT_MISSING_PREREQUISITE, r.stderr)  # arguments fine; the ROM is absent
 
     def test_save_arguments_must_pair(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

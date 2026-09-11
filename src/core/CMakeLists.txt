@@ -1,3 +1,7 @@
 add_library(unirally_sampling STATIC track_sampling.cpp track_progress.cpp)
 target_include_directories(unirally_sampling PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(unirally_sampling PUBLIC lab_options)
+
+add_library(unirally_input_timer STATIC input_timer.cpp)
+target_include_directories(unirally_input_timer PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(unirally_input_timer PUBLIC lab_options)

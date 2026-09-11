@@ -11,8 +11,10 @@ The coordinator maintains the status registry below. Work orders further below d
 | M0-04 | accepted: integrated 11 September 2026 after two independent reviews | [Replay manifest and comparator](M0-04.md) |
 | M0-05 | accepted: integrated 11 September 2026 after one independent review | [Resumable execution and review pilot](M0-05.md) |
 | M0-06 | accepted: integrated 11 September 2026 after one independent review; M0 accepted, tag `m0` | [M0 acceptance report](M0-06.md) |
-| M1-01 | claimed: 11 September 2026, worker dispatched on `task/M1-01-code-map` | [Observed code/data map](M1-01.md) |
-| M1-02 – M6 | planned | See milestone definitions |
+| M1-01 | accepted: integrated 11 September 2026 after one independent review | [Observed code/data map](M1-01.md) |
+| M1-02 | planned: next to be written by the coordinator (see `docs/STATE.md`) | Validated player-state schema and update timing |
+| M1-03 | planned: may run concurrently with M1-02 under the M0-05 conditions (disjoint paths) | Minimal track/asset decode |
+| M2 – M6 | planned | See milestone definitions |
 
 ## M0 — repeatable laboratory
 

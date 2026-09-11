@@ -8,7 +8,7 @@ The coordinator maintains the status registry below. Work orders further below d
 | M0-01 | accepted: integrated 10 September 2026 | [ROM identity manifest](M0-01.md) |
 | M0-02 | accepted: integrated 10 September 2026 after two independent reviews | [Laboratory bootstrap](M0-02.md) |
 | M0-03 | accepted: integrated 11 September 2026 after five independent reviews | [Reference adapter spike](M0-03.md) |
-| M0-04 | ready: prerequisites M0-02, M0-03 accepted; not claimed | [Replay manifest and comparator](M0-04.md) |
+| M0-04 | review: submitted 11 September 2026; awaiting independent review | [Replay manifest and comparator](M0-04.md) |
 | M0-05 and M0-06 | planned | Waiting for prerequisites |
 | M1–M6 | planned | See milestone definitions |
 

@@ -38,7 +38,7 @@ Select one primary adapter based on this spike. A second emulator is useful to i
 | `local/` | Ignored ROMs, extracted assets, persistent data, private test fixtures and runner state |
 | `artifacts/<run-id>/` | Ignored logs, snapshots, traces, reports and visual diffs |
 
-Directories are added when there is an implementation to put in them. Present after M0-02: `tools/`, `tests/tooling/` (Python checks for the tooling itself), `tests/synthetic/`, `tests/manifests/rom/`, `docs/research/`, `src/lab/` (a synthetic determinism probe used to validate the toolchain and reports; it is not game code and `src/core/` does not exist yet), `.github/workflows/` (ROM-free CI) and `tools/locks/` (pinned tool artifacts).
+Directories are added when there is an implementation to put in them. Present after M0-02: `tools/`, `tests/tooling/` (Python checks for the tooling itself), `tests/synthetic/`, `tests/manifests/rom/`, `docs/research/`, `src/lab/` (a synthetic determinism probe used to validate the toolchain and reports; it is not game code and `src/core/` does not exist yet), `.github/workflows/` (ROM-free CI) and `tools/locks/` (pinned tool artifacts). Added by M0-03: `tools/unirally_lab/reference/` and `tests/manifests/reference/` (reference scripts). Added by M0-04: `tools/unirally_lab/replay/`, `tools/unirally_lab/compare/` and `tests/manifests/replay/` (replay manifests); local-only states and their restore-check reports live under ignored `local/states/`.
 
 ## Stable command contract
 
@@ -51,8 +51,8 @@ Implement a thin repository CLI, tentatively `python3 tools/project.py`, so any 
 | `rom inspect --path <path>` | implemented (M0-01) | Hash original input, identify header/mapping/region candidates and emit manifest; do not silently normalize bytes; `--expect` rejects another revision |
 | `build --preset <name>` | implemented (M0-02) | Configure/build the specified CMake preset with the isolated toolchain and record exact configuration in `build/<preset>/lab-build-info.json` |
 | `test --suite synthetic` | implemented (M0-02) | Run ROM-free checks (Python tooling tests, ctest, fresh-process repeatability) and produce machine-readable results |
-| `reference capture --case <manifest>` | proposed | Reproduce the original run and save identified reference artifacts |
-| `compare --case <manifest>` | proposed | Run native/reference comparison and emit the first divergence and field summary |
+| `reference build|run|verify|restore-check` | implemented (M0-03) | Build the pinned core from `tools/locks/emulators.json`; run a reference script in a fresh worker process; repeat it in fresh processes; save, restore and compare the continuation (D-0001) |
+| `replay validate|run|compare --manifest <manifest>` | implemented (M0-04) | Validate a replay manifest (schema 1, ROM-free); reproduce its reference run in a fresh process; compare fresh-process runs of one manifest (or two manifests) on the declared fields and emit the first divergence with prior sample, inputs, field values, a work RAM localization and trace windows. Supersedes the proposed `reference capture --case` / `compare --case` for the reference side; native/reference comparison is added when native code exists (M2) |
 | `verify --task <id>` | proposed | Run that task's declared checks, validate required artifacts and report eligibility for review |
 | `package --preset <name>` | proposed | Later: assemble a runnable build with dependency notices and no unintended local inputs |
 
@@ -64,7 +64,7 @@ Use an agreed JSON report schema containing run ID, task ID, source commit, dirt
 
 The selected region is PAL Unirally. Choose its exact ROM revision before baseline capture. Record SHA-256 and file size, region, mapping and any header handling; retain original and normalized hashes separately if normalization is necessary. Do not infer region solely from the filename or hard-code NTSC timing. Persistent data, configuration and emulator version are part of the experiment.
 
-Each replay manifest records:
+Each replay manifest records (implemented as `tests/manifests/replay/*.json`, schema 1, validated by `tools/unirally_lab/replay/manifest.py`; the native-side items remain proposals until M2):
 
 - Scenario ID and tested behavior; ROM/emulator identity and adapter schema.
 - Initial reset procedure or snapshot hash, SRAM/configuration hashes and RNG state if known.

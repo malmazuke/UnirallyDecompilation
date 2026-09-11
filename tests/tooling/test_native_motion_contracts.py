@@ -79,6 +79,14 @@ class MotionArithmeticTests(unittest.TestCase):
         rewarded=reward_queue_step(queued,[],[73],[0])
         self.assertEqual((rewarded[0x11db],rewarded[0x11e1],rewarded[0x770825],rewarded[0x7e2102],rewarded[0xca7]),(78,80,6,3,40))
 
+    def test_reward_halves_prior_negative_boost_before_addition(self):
+        # Source-derived boundary $81:C286..C290; primary rewards are positive.
+        for boost,expected in [(65532,71),(65531,70),(65535,72),(32767,49224)]:
+            s={0xd11:0,0xd13:1,0xca7:0,0x11db:boost,0x11e1:7,0x770825:0,0x7e2102:6}
+            s.update({0xceb+i:0 for i in range(32)})
+            rewarded=reward_queue_step(s,[1],[73],[0])
+            with self.subTest(boost=boost):self.assertEqual(rewarded[0x11db],expected)
+
     def test_learned_feature_total_changes_next_ai_request(self):
         s=state();s.update({0xc6d:1,0x1275:1,0xfc7:0x2000})
         self.assertEqual(opponent_inputs(s,0)[0x333],1)

@@ -282,3 +282,13 @@ At initial candidate228286b the standard synthetic runner exposed a test-import
 error (`tools.unirally_lab` was not available on its module path); the followup
 uses the repository's `tools` path and `unirally_lab` convention. Direct unittest
 execution alone had not exposed this difference. No gameplay formula changed.
+
+Independent review also exposed an untested reward boundary: `$81:C286–C290`
+compares the existing horizontal boost with0xFFFF; if the subtraction's sign
+is negative it executes SEC/ROR, then stores the rotated word before adding
+the reward. The earlier queue model incorrectly cleared that word. The fixed
+model preserves the exact sign predicate and inserted high bit: e.g. boost-4
+plus authored reward73 becomes71. Authored checks cover odd negative values,
+-1 (the comparison excludes it), and the signed-overflow comparison boundary
+0x7FFF. This is source-derived boundary evidence; observed primary incoming
+reward boosts do not exercise it.

@@ -286,7 +286,7 @@ def reward_queue_step(state, event_codes, reward_words, event_classes):
         s[0x7e2102+event-1]=max(weight>>1,1)
         amount=signed(reward_words[event-1])
         # Original CMP #$FFFF / BPL uses the sign of word subtraction.
-        if signed(s[0x11db]+1)<0:s[0x11db]=0
+        if signed(s[0x11db]+1)<0:s[0x11db]=(s[0x11db]>>1)|0x8000
         if amount>=0:
             s[0x11db]=(s[0x11db]+amount)&65535
             s[0x11e1]=(s[0x11e1]+amount)&65535

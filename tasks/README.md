@@ -15,7 +15,7 @@ The coordinator maintains the status registry below. Work orders further below d
 | M1-02 | accepted: integrated 11 September 2026 after one independent review | [Validated player-state schema and update timing](M1-02.md) |
 | M1-03 | accepted: integrated 12 September 2026 after one independent review | [Minimal track/asset decode](M1-03.md) |
 | M1-04 | accepted: integrated 12 September 2026 after one independent review; M1 accepted, tag `m1` | [M1 acceptance report](M1-04.md) |
-| M2-01 | ready: record written 12 September 2026; next to be dispatched by the coordinator from `main` | [Native movement experiment](M2-01.md) |
+| M2-01 | claimed 12 September 2026 by Codex worker `native_movement`; `codex/M2-01-native-movement`, `.worktrees/m2-01`; handover audit incorporated | [Native movement experiment](M2-01.md) |
 | M2 – M6 | planned | See milestone definitions |
 
 ## M0 — repeatable laboratory

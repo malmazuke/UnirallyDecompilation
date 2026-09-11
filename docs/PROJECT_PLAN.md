@@ -15,6 +15,14 @@ Maintain two explicit behavior profiles within one codebase:
 
 Both profiles use deterministic simulation. Higher-resolution visuals and smoother display refresh must not silently change either profile's game speed or collision. Neither profile promises exhaustive equivalence merely because a finite suite passes.
 
+### Human-readable source and community contributions
+
+Human-readable, maintainable source is an explicit goal from the first native routine. A contributor should be able to understand an update, locate its supporting evidence, and change it while running the relevant checks. Use descriptive domain names where meanings are established, small functions with explicit state/input/content dependencies, documented units and integer semantics, and comments explaining unusual original behavior with ROM addresses and research links. Keep uncertain meanings visibly provisional; do not turn a guess into an authoritative name.
+
+Preserve verified Classic arithmetic and update order while improving structure. Keep processor bookkeeping and extraction offsets out of the public simulation interface where possible. A literal register-level translation may be a useful research intermediate, but delivering it as production code requires a documented reason and reviewable boundaries. Refactor in small steps under frozen differential tests; do not defer basic readability to a future wholesale rewrite.
+
+Community extensions build on the existing Classic/Extended separation and content boundaries. Stable mod APIs, plugin systems and broad engine abstractions wait for demonstrated requirements. This goal does not authorize publication or choose a distribution license. See [D-0003](decisions/D-0003-human-readable-native-code.md).
+
 ### Initial scope
 
 The user selected PAL Unirally (European/Australian version). Establish its exact revision and hash in M0. Start with one representative track segment, one rider and a short input recording covering acceleration, airborne movement, a trick and landing. The first native experiment can be headless. A playable version follows once the mechanics can be compared reliably.

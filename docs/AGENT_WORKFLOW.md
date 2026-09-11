@@ -95,7 +95,7 @@ Keep model name/version/runtime in execution metadata for reproducibility, but d
 
 ### Reviewer checklist
 
-Confirm the claimed behavior against the frozen reference and inspect whether the implementation covers the task's domain. Check that tests exercised the new code and did not use an emulator fallback for supposedly native logic. Run an independent boundary/withheld case where appropriate. Check for changed baselines, weakened comparisons, masked skips, undefined arithmetic and accidental content commits. Approve or return a specific reproducible failure; a second model's agreement alone is not validation.
+Confirm the claimed behavior against the frozen reference and inspect whether the implementation covers the task's domain. Check that tests exercised the new code and did not use an emulator fallback for supposedly native logic. Run an independent boundary/withheld case where appropriate. Check for changed baselines, weakened comparisons, masked skips, undefined arithmetic and accidental content commits. Review readability as well: meaningful names, explicit units and state dependencies, navigable evidence, and a justified boundary for any literal register-level translation (D-0003). Approve or return a specific reproducible failure; a second model's agreement alone is not validation.
 
 ## Durable records with minimal bureaucracy
 

@@ -4,6 +4,7 @@ Read `docs/STATE.md`, the relevant task record, and `docs/AGENT_WORKFLOW.md` bef
 
 - This is currently a planning repository. Build commands, test runners and scheduling described in the documents are proposed interfaces until implemented and recorded as such.
 - Keep verified observations, hypotheses and implementation decisions distinct. Support gameplay claims with a ROM identity, addresses or traces, a reproducible experiment and the precise tested domain.
+- Write native code for human contributors: descriptive names for established concepts, small explicit update functions, documented units/integer semantics, and evidence links for recovered behavior. Keep uncertain meanings provisional; defer speculative mod frameworks. Refactor under frozen differential checks (D-0003).
 - Preserve original integer arithmetic, ordering and timing when reconstructing behavior. Do not replace unknown mechanics with plausible inventions while describing the result as accurate.
 - Work only within the assigned task and ownership boundaries. For concurrent work, each worker uses a separate checkout/worktree; the coordinator owns the shared task registry and integration branch.
 - Update the handoff with the actual commit, commands, results, unresolved issues and next experiment. A fresh agent must be able to resume without the previous conversation.

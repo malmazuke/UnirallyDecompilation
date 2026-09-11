@@ -1,6 +1,6 @@
 # R-0010 — Native movement prerequisite investigation
 
-- Status: in progress; no native gameplay agreement claimed.
+- Status: blocked on research prerequisite M2-01A by coordinator reassessment; verified components submitted for independent review, no native gameplay agreement claimed.
 - Task: [M2-01](../../tasks/M2-01.md), dispatched base `a9f86e590e4be0d76369a975ece2d556883aa51f`.
 - ROM: PAL Unirally, SHA-256 `a1105819d48c04d680c8292bbfa9abbce05224f1bc231afd66af43b7e0a1fd4e`; unchanged bsnes commit `7d5aa1e656b9171524d01b1b22917197d8121cb4`, patch `a719f5ffe2222dad4c1ab04336633319ad85004f74e32fc14893a058be333885`, Strict serialization.
 - Domain: primary Crawler/DRAGSTER race; end-of-frame samples, first full native update intended at 1534 from initial observation 1533. Reference baseline is unchanged. Native sampling and progress components exist; autonomous movement is not implemented.
@@ -159,7 +159,7 @@ All exit 0. Capture access SHA-256 `bebe75c349332a55…`, 27,090,754 instruction
 13,466,478 accesses, 28,223 unresolved accesses and zero unresolved stores;
 original sample digest unchanged. Native pose/grid/bounds C++ tests 3/3 and
 reference-freeze/capture-input Python tests 7/7 pass. These are not the full
-M2-01 native movement acceptance tests. Full suite and sanitizers pending this
+M2-01 native movement acceptance tests. The final stable-source suite and sanitizer results below supersede this
 checkpoint; withheld native tests remain unrun.
 
 Independent coordinator evidence: separately reproduced the speed chain at
@@ -226,7 +226,7 @@ The sampler's original check after passing the suite used the misspelled preset
 `lab-sanitized` and returned exit 3; the corrected `lab-sanitize` built and ran
 all sampler checks without diagnostics. The task handoff lists final rechecks.
 
-## Next dependency contract to inventory
+## Remaining dependency boundary
 
 After gathering samples, `$81:8DBC` calls `$81:8F98` (opponent analog likewise).
 The caller publishes corrected position at `$81:8E17/8E1C`, horizontal/vertical
@@ -240,3 +240,151 @@ branches before implementation. Following it comes pose/orientation selection
 in `$83:EF54–F0F7` and `$83:ED7B–EF53`, which supplies the next pose-indexed
 collision points. No new static table format is presently a blocking unknown;
 the remaining risk is the coupled movement/contact state closure.
+
+
+## Coordinator reassessment and M2-01A handoff
+
+The coordinator stopped expansion at this boundary on 12 September 2026:
+required player riding speed depends on opponent jumps/contact/orientation that
+M1 explicitly left unvalidated. M2-01 is blocked on **M2-01A**, a separate
+research prerequisite owned by the coordinator. This is not a new undecoded
+bank-table format: sampling and transition tables now have narrow documented
+interpretations. The unresolved mechanism is the coupled contact/pose/opponent
+motion contract. No native contact update was added, no required player field
+was removed, and no native withheld case was run.
+
+The smallest next closure is the actual post-gather response and the next pose
+it selects, including the opponent jump state that changes that response:
+
+- `$81:8B75` preprocesses raw sample words and the per-tile table into ten-word
+  scratch arrays `$0230–0243`, `$0290–02A3`, `$02C0–02D3` before `$81:8F98`.
+  The native spatial sampler deliberately ends before this preprocessing.
+- The conservative access inventory for PCs `$81:8F98–982B` contains 105
+  distinct `(address,width)` spans, 54 read-only within that range. These include
+  scratch and stack locations; they are **not** 105 semantic state fields and
+  do not include callees outside the range (for example `$81:982C`). The ignored
+  artifact is `artifacts/m2-01/collision-response-access-inventory.json`, derived
+  from `sampling-access/access.json`. To regenerate the inventory, filter its
+  `accesses` rows by that inclusive PC range, group by `(address,width)`, and
+  collect kind/read/write PCs using the record's named `access_fields` and
+  `kind_names`; preserve its source hash and conservative scope.
+- In all 2,932 primary riding calls, `$81:980C` writes y scratch `$A7`.
+  `$81:970B` writes vertical velocity `$0FAB=0` and `$81:97E1` writes horizontal
+  velocity `$0FA9` in 2,889 calls. Normal-response ROM read sites `$81:96AC/B0`
+  each read `$00:822B/824B` 2,889 times. The velocity-matrix writers
+  `$81:95FB/9601` do not execute in riding frames 1534–2999, even though the
+  full-run coverage includes them before riding. Do not infer riding coverage
+  merely from the full-run map.
+- `$81:9248` writes `$0F33` 14 times across riding frames 1580–1751;
+  `$81:94CA` clears it once at 1617. These nonzero states and the next
+  pose/orientation prevent an always-grounded opponent approximation.
+
+### Focused primary capture and exact next experiment
+
+Run from the task checkout, with the existing private ROM and pinned core.
+This command regenerates all watches used in the focused investigation; no
+withheld fixture is involved:
+
+```python
+import subprocess
+addresses = [0xA5, 0xA7, 0x333, 0xF1F, 0xF33, 0xF51, 0xF85,
+             0xF91, 0xF93, 0xFA9, 0xFAB, 0x12D1]
+addresses += list(range(0x230, 0x244))
+addresses += list(range(0x290, 0x2A4))
+addresses += list(range(0x2C0, 0x2D4))
+pcs = [0x818F98, 0x81982B, 0x819248, 0x8194CA, 0x81970B,
+       0x81980C, 0x83E122, 0x83E21F, 0x82A914, 0x82A921,
+       0x82A92D, 0x82A935]
+cmd = ['python3', 'tools/project.py', 'access', 'capture', '--manifest',
+       'tests/manifests/replay/race-crawler-dragster-3000-fields.json',
+       '--out', 'artifacts/m2-01/contact-contract', '--from-frame', '1576',
+       '--to-frame', '1618', '--timeout', '120', '--report',
+       'artifacts/m2-01/contact-contract/report.json']
+for address in addresses:
+    cmd += ['--watch-address', hex(address)]
+for pc in pcs:
+    cmd += ['--watch-pc', hex(pc)]
+subprocess.run(cmd, check=True)
+```
+
+On clean source `ac586beb2f32a7837e4cbc42335d6173f53f108e`, exit 0,
+778,312 instructions and 388,664 accesses in frames 1576–1618; 1,038 unresolved
+accesses, **zero unresolved stores**, complete nontruncated watches. Original
+sample digest `72f618f2f7e3416e…` and final state remain unchanged.
+Access SHA-256 `8ff540061a4aeb680de3f07b7b5ca740d16bc2e8eca06a57143e73dfac5809c7`;
+report SHA-256 `bbd4ba8eada28a7d537cc95382046a4bbc67d6ad3c5c592a963655b9832b81c0`.
+The 86 entries and 86 returns delimit two calls per frame; caller order and
+scratch load/publication sites must identify the rider, not the shared scratch
+address alone. Watch register entries are entry-time observations, not an
+implicit snapshot of all scratch memory.
+
+The chronology to preserve when studying the jump/contact contract:
+
+| Writer and watched word | Exact focused observation | Interpretation limit |
+| --- | --- | --- |
+| `$83:E122 → $0333` | Writes 1 every frame 1577–1613; `$83:E21F` writes 0,1,0,1,0 on 1614–1618 | Opponent input generation; do not substitute player Right input |
+| `$82:A914 → $0F91` | Writes 1 once, at 1578 | Initial jump-related latch, distinct from subsequent counter progression |
+| `$82:A921 → $0F91` | Clears at 1580 | First later update; not the initial trigger |
+| `$82:A92D → $0F93` | Writes 1 through 9 at 1580,1582,…,1596; `$82:A935` clears it in the same frame 1596 | Alternating update schedule; these frames are not nine new jump triggers |
+| `$81:9248 → $0F33` | Writes 1 through 9 on every frame 1580–1588 | Separate contact-like state; semantic name still provisional |
+| `$81:94CA → $0F33` | Clears at 1617 | Recontact/reset path to explain from instructions, not yet a validated landing model |
+
+Next, correlate these writes by **sequence within each frame** with the two
+`$81:8F98` entries/returns, and recover which preprocessed words determine each
+branch. Trace the actual producer of `$0333`, the update-phase branch of
+`$82:A914–A935`, and the downstream pose selection `$83:EF54–F0F7` and
+`$83:ED7B–EF53`. Add watches for producers only when the current trace cannot
+resolve their last writer. State the full input/output contract and initial
+provenance before any native implementation. M2-01A must preregister a separate
+research variation before its capture; the two existing frozen movement
+withheld series remain sealed. Do not enlarge this into a broad AI engine.
+
+## Final stable-source component checks
+
+All checks below used clean, unchanged code commit
+`ac586beb2f32a7837e4cbc42335d6173f53f108e`. The later handoff adds documentation and the reviewer's authored ordering regression; production source is unchanged. Commands execute from the task root;
+ROM-dependent probes require the regenerated content/captures above.
+
+```sh
+python3 tools/project.py build --preset lab-debug
+python3 tools/project.py test --suite synthetic --report artifacts/m2-01/progress-checkpoint-suite.json
+python3 tools/project.py build --preset lab-sanitize --report artifacts/m2-01/progress-sanitize-build.json
+local/toolchain/cmake-3.31.10-darwin-arm64/bin/ctest --test-dir build/lab-sanitize -R 'sampling_|progress_' --output-on-failure
+python3 -m tools.unirally_lab.native.probe_sampling --access artifacts/m2-01/sampling-access/access.json --content-manifest tests/manifests/native/movement-sampling.content.json --content artifacts/m2-01/content-expanded --probe build/lab-sanitize/tests/native/sampling_probe --coarse-width 1024 --report artifacts/m2-01/sampling-reviewed-sanitize.json
+python3 -m tools.unirally_lab.native.probe_progress --sampling-output artifacts/m2-01/sampling-reviewed-sanitize.native.txt --sampling-report artifacts/m2-01/sampling-reviewed-sanitize.json --series artifacts/m2-01/movement-access/wram-series.bin --series-access artifacts/m2-01/movement-access/access.json --content-manifest tests/manifests/native/movement-progress.content.json --content artifacts/m2-01/progress-content/progress-transitions.bin --probe build/lab-sanitize/tests/native/progress_probe --report artifacts/m2-01/progress-reviewed-sanitize.json
+```
+
+| Evidence under `artifacts/m2-01/` | Result | Report SHA-256 |
+| --- | --- | --- |
+| `progress-checkpoint-suite.json` | 211/211 checks, exit 0 | `0d75784a23433cd4acefe59501c06aa55d32d69510de4abeb43b5573838c52a1` |
+| `progress-sanitize-build.json` | Build passes; four sampler/progress CTests pass without sanitizer diagnostics | `8886d47e165eff5846229e1368fed7bd1fb30d8ca419920e0b6822fe6f023187` |
+| `sampling-reviewed-sanitize.json` | 29,320/29,320 sample words, exit 0 | `4cc22bb6b9aad04453acc5b6e48c5fa3697a03ba9b6d1697e34db95dd0e62ff8` |
+| `progress-reviewed-sanitize.json` | 11,728/11,728 progress fields, exit 0 | `3a03aa3a55b63ec57c3859760923cc5f0badb1f67079f141c90affd3be4c8da8` |
+| `sampling-final-debug.json` | Fresh debug process, same sample output | `fe150b79b50f9c9797d063ae91ca71ee2d7094c8cf39673aa8cb76d8996d3d4b` |
+| `progress-final-debug.json` | Fresh debug process, same progress output | `64606dcc5981d46f08917282300043bb24007f362175af3f602d6b2580f0e5e1` |
+
+The final debug probes use the same two probe commands with
+`build/lab-debug`, report stems `sampling-final-debug`/`progress-final-debug`,
+and the matching sampler output/report as progress input. Their native stdout
+hashes equal the sanitizer runs: sampling
+`2cfc5eb7a7bfb63c5a47d44f3abcebd55f876e85258f632ab5b91e249b31ee56`,
+progress `acb7a65ca8306dcf99311aca6d2cd4e2ff9144e1a5c4ed06ad465a976e869bb8`.
+These are isolated output hashes, **not** hashes of complete future-affecting
+movement state. Full movement determinism, first-divergence reporting, primary
+and withheld native agreement, and M2-02 continuation remain untested because
+there is no autonomous movement update. No proposed `native compare` command
+is registered or represented as implemented.
+
+
+Independent follow-up review of `ac586beb` reproduced 211/211 checks and both
+29,320-word sampling and 11,728-field progress probes in debug and sanitizer
+builds, approving component integration with no blocking findings. The review
+artifacts are under `.worktrees/m2-01-sampling-review/artifacts/progress-review/`
+in the coordinator workspace; sampler report is its sibling
+`sampling-review/REVIEW.md`. Neither withheld movement series was opened.
+The reviewer showed that moving marker observation before progress advancement
+survived the old authored test but diverged on primary frame1576 (opponent
+previous tag2 versus reference0). The final authored regression now supplies a
+new marker in one frame and verifies it only advances the corresponding rider
+on its next active phase, including a serialization round-trip. Its data is
+synthetic, adapted from the reviewer's `progress-review/boundary.cpp`.

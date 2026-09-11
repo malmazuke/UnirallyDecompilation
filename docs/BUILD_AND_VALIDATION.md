@@ -1,6 +1,6 @@
 # Build, reference execution and validation
 
-This is the M0 implementation specification. Commands marked implemented below exist in `tools/project.py`; the rest remain proposals until a task record shows them running.
+This is the M0 implementation specification. Commands marked implemented in the stable-command table exist in `tools/project.py`; the separately listed research modules use `python3 -m`. Other commands remain proposals until a task record shows them running.
 
 ## Environment and dependencies
 
@@ -38,7 +38,16 @@ Select one primary adapter based on this spike. A second emulator is useful to i
 | `local/` | Ignored ROMs, extracted assets, persistent data, private test fixtures and runner state |
 | `artifacts/<run-id>/` | Ignored logs, snapshots, traces, reports and visual diffs |
 
-Directories are added when there is an implementation to put in them. Present after M0-02: `tools/`, `tests/tooling/` (Python checks for the tooling itself), `tests/synthetic/`, `tests/manifests/rom/`, `docs/research/`, `src/lab/` (a synthetic determinism probe used to validate the toolchain and reports; it is not game code and `src/core/` does not exist yet), `.github/workflows/` (ROM-free CI) and `tools/locks/` (pinned tool artifacts). Added by M0-03: `tools/unirally_lab/reference/` and `tests/manifests/reference/` (reference scripts). Added by M0-04: `tools/unirally_lab/replay/`, `tools/unirally_lab/compare/` and `tests/manifests/replay/` (replay manifests); local-only states and their restore-check reports live under ignored `local/states/`. Added by M1-01: `tools/unirally_lab/coverage/` (trace drain, 65816 opcode table, LoROM mapping, map derivation) and `docs/map/` (tracked observed code maps and summaries per scenario). Added by M1-02: `tools/unirally_lab/access/` (65816 effective-address decoder, streaming access derivation, capture and query commands), `tests/manifests/fields/` (validated field declarations) and `docs/state/` (the player-state schema).
+Directories are added when there is an implementation to put in them. Present after M0-02: `tools/`, `tests/tooling/` (Python checks for the tooling itself), `tests/synthetic/`, `tests/manifests/rom/`, `docs/research/`, `src/lab/` (a synthetic determinism probe used to validate the toolchain and reports; it is not game code), `.github/workflows/` (ROM-free CI) and `tools/locks/` (pinned tool artifacts). Added by M0-03: `tools/unirally_lab/reference/` and `tests/manifests/reference/` (reference scripts). Added by M0-04: `tools/unirally_lab/replay/`, `tools/unirally_lab/compare/` and `tests/manifests/replay/` (replay manifests); local-only states and their restore-check reports live under ignored `local/states/`. Added by M1-01: `tools/unirally_lab/coverage/` (trace drain, 65816 opcode table, LoROM mapping, map derivation) and `docs/map/` (tracked observed code maps and summaries per scenario). Added by M1-02: `tools/unirally_lab/access/` (65816 effective-address decoder, streaming access derivation, capture and query commands), `tests/manifests/fields/` (validated field declarations) and `docs/state/` (the player-state schema).
+
+M2-01's blocked component checkpoint adds `src/core/` (collision-point
+expansion, spatial sampling and progress recurrence), `tests/native/` (four
+ROM-free authored C++ checks plus two ROM-dependent probe executables),
+`tools/unirally_lab/native/` (reference-freeze utility and isolated component
+probes), and `tests/manifests/native/` (frozen reference projections and static
+content provenance). These components do not implement a rider update or a
+complete simulation. See [R-0010](research/R-0010-native-movement.md) and the
+[source guide](../src/core/README.md) for exact units and supported bounds.
 
 ## Stable command contract
 
@@ -60,6 +69,7 @@ Implement a thin repository CLI, tentatively `python3 tools/project.py`, so any 
 | `content provenance --access <dir>/access.json --out <dir> [--from-frame N] [--to-frame N]` | implemented (M1-03) | From an access record: every MDMAEN store expanded per enabled channel (frame, sequence, pc, direction, transfer mode, B-bus register, A-bus bank/address and region, size, ROM file offset) paired with the VRAM/CGRAM/OAM address in effect when the record watched `$2115`-`$2117`, `$2121`, `$2102`/`$2103`; every block move through `$00:0199` from its watched register log (grouped by the count register: source/destination offsets, length, destination bank, source banks or the ROM range); the VRAM and CGRAM bytes written through the data ports when `$2118`/`$2119`/`$2122` were watched; `provenance.json` (schema 1); checks that the MDMAEN count equals the record's `dma_triggers` and (optional) that every pairable transfer was paired |
 | `content decode --manifest <manifest> --out <dir> [--rom P] [--wram-dump P]` | implemented (M1-03) | Decode every item of a content manifest (schema 1: `raw` pieces by file offset and length, or `rnc` by source bank/address through the port of the ROM's `$81:B8E2` decompressor) from the ROM, write the bytes to the ignored output directory, and check length and SHA-256 against the manifest; with a work RAM dump, compare items that carry `runtime.work_ram_offset` byte for byte, tolerating only the listed `known_runtime_writes`; exit 1 on a mismatch, 2 without ROM/manifest/dump, 3 for an invalid manifest |
 | `content compare --manifest <manifest> --access <access.json> [--access <more>] --frame N --frame-image <png> --oam-dump <wram.bin> --scroll-dump <wram.bin> --out <dir> [--rect X Y W H] [--upload-frame N] [--bg1-scroll H V] [--bg2-scroll H V] [--colour-order bgr|rgb] [--max-mismatch-fraction F]` | implemented (M1-03) | Rebuild VRAM, CGRAM and OAM as the original had them at frame N (decoded items at their VRAM/CGRAM positions; ROM-to-VRAM DMAs and the tilemap staging DMAs of the record replayed with the previous frame's work RAM series; CGRAM/OAM port writes from the watch logs; scroll from the HDMA tables in the dump), render BG1, BG2 and sprites with the core's colour conversion, and compare pixel for pixel with the frame image over the rectangle; writes the render, the diff and a side-by-side PNG; reports the mismatch count and the omitted PPU features; fails only when `--max-mismatch-fraction` is exceeded |
+| `native compare --manifest <native case> [--from-frame N] [--to-frame N]` | proposed; not implemented | Complete autonomous native movement comparison remains blocked on M2-01A. Isolated sampler/progress results do not satisfy its required primary or withheld player projections |
 | `verify --task <id>` | proposed | Run that task's declared checks, validate required artifacts and report eligibility for review |
 | `package --preset <name>` | proposed | Later: assemble a runnable build with dependency notices and no unintended local inputs |
 
@@ -67,11 +77,34 @@ All commands must have bounded execution, useful help, noninteractive operation 
 
 Use an agreed JSON report schema containing run ID, task ID, source commit, dirty-diff digest if applicable, tool versions, input hashes, command, elapsed time, check outcomes and artifact hashes/locations. A check result applies only to the exact recorded source/input state. The schema is implemented in `tools/unirally_lab/report.py` (schema version 1): each check has an outcome of `passed`, `failed`, `skipped`, `missing` or `timeout` and a `required` flag; a run's `status` is `passed` only when every required check passed.
 
+## Isolated native research modules (M2-01 component checkpoint)
+
+These are invoked with `python3 -m tools.unirally_lab.native.<module>`, outside
+the stable CLI. They do not provide `tools/project.py native compare`.
+
+| Module | Implemented contract and limits |
+| --- | --- |
+| `freeze_reference --manifest <replay> --samples <first> <second> --out <new file>` | Administrative reference-only projection of two matching fresh-process captures; refuses overwriting an existing output. Dedicated freeze commit precedes native computation. This utility emits a projection rather than a standard check report; it does not validate a native result |
+| `probe_sampling --access <capture> --content-manifest <manifest> --content <dir> --probe <sampling_probe> --coarse-width 1024 --report <json>` | Identity-checks the primary capture/static content and compares ten sample words per call for both riders on frames 1534–2999. Incoming position/pose arguments come from the capture. Emits report and native stdout artifact; agreement validates only this component |
+| `probe_progress --sampling-output <native.txt> --sampling-report <report> --series <wram.bin> --series-access <capture> --content-manifest <manifest> --content <table.bin> --probe <progress_probe> --report <json>` | Validates native sample-output identity and primary series provenance; seeds progress once at 1533 and compares marker/tag/count/rejection for both riders through 2999. Explicit phase and 15-byte state round-trip every frame. Samples still depend on captured positions/poses; this is not autonomous movement or M2-02 acceptance |
+
+The two probes report execution/protocol failure as 1, missing files as 2,
+invalid experiment input as 3, and timeout as 4. Their exact regeneration and
+validation commands and artifact identities are in R-0010. Extracted tables
+and original captures stay ignored; missing content is a prerequisite failure.
+The existing `build --preset lab-debug` and `test --suite synthetic` commands
+include the authored tests in `tests/native/` and Python tooling checks without
+a ROM. `build --preset lab-sanitize` builds the same C++ component tests with
+sanitizers. The latest clean-source local suite passed 211 checks; the sampler
+checkpoint passed both CI platforms, while the final component candidate's CI
+and independent review are recorded by the coordinator. Full gameplay gates
+remain unrun, and component output hashes are not full movement-state hashes.
+
 ## ROM and replay identity
 
 The selected region is PAL Unirally. Choose its exact ROM revision before baseline capture. Record SHA-256 and file size, region, mapping and any header handling; retain original and normalized hashes separately if normalization is necessary. Do not infer region solely from the filename or hard-code NTSC timing. Persistent data, configuration and emulator version are part of the experiment.
 
-Each replay manifest records (implemented as `tests/manifests/replay/*.json`, schema 1, validated by `tools/unirally_lab/replay/manifest.py`; the native-side items remain proposals until M2):
+Each replay manifest records (implemented as `tests/manifests/replay/*.json`, schema 1, validated by `tools/unirally_lab/replay/manifest.py`; complete native replay execution remains proposed; M2-01 has reference projections and component-content manifests only):
 
 - Scenario ID and tested behavior; ROM/emulator identity and adapter schema.
 - Initial reset procedure or snapshot hash, SRAM/configuration hashes and RNG state if known.

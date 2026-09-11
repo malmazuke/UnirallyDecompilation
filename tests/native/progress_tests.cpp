@@ -37,6 +37,21 @@ int main() {
         require(bytes[0] == 0 && bytes[1] == 8 && bytes[4] == 10 && bytes[11] == 21 && bytes[14] == 0);
         unirally::update_track_progress(state, blank, tables);
         require(state.phase == 1 && state.riders[0].transition_count == 11 && state.riders[1].transition_count == 21);
+        // This frame's marker observation must not affect its earlier progress
+        // update. Reviewer-authored ordering boundary: each rider sees the new
+        // tag only on its next active phase ($82:8C4E–8C6B before $81:8BB5).
+        unirally::ProgressUpdateState delayed{{{{0x0400,2,0,false}, {0x0400,2,0,false}}}, 0};
+        std::array<unirally::TrackSamples,2> new_markers{};
+        new_markers[0][0] = 0x0800; new_markers[1][0] = 0x0800;
+        unirally::update_track_progress(delayed, new_markers, tables);
+        require(delayed.phase == 1 && delayed.riders[0].transition_count == 0 &&
+                delayed.riders[0].previous_tag == 2 && delayed.riders[0].marker_word == 0x0800);
+        unirally::update_track_progress(delayed, new_markers, tables);
+        require(delayed.phase == 0 && delayed.riders[0].transition_count == 0 &&
+                delayed.riders[1].transition_count == 1);
+        delayed = unirally::deserialize_progress(unirally::serialize_progress(delayed));
+        unirally::update_track_progress(delayed, new_markers, tables);
+        require(delayed.riders[0].transition_count == 1 && delayed.riders[1].transition_count == 1);
         unirally::TrackSamples markers{};
         markers[9] = 0x2400; markers[0] = 0x2800;
         unirally::observe_track_markers(state.riders[0], markers);

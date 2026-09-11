@@ -49,8 +49,8 @@ Every race frame (from 1334) the NMI code starts 26–28 DMA transfers on channe
 
 | Frame | Rectangle (x, y, w, h) | Pixels | Mismatches | Explanation |
 | --- | --- | --- | --- | --- |
-| 1600 | 120, 28, 136, 196 (right of the GO letter, below the HUD) | 26,656 | 490 (1.84 %) | the timer digits (BG3, not rendered) and the edge of the window-drawn letter G at the rectangle's left edge |
-| 2400 | 0, 28, 256, 196 (all but the HUD rows) | 50,176 | 791 (1.58 %) | the `RACE`/`+0:00:1` text (BG3, not rendered) |
+| 1600 | 120, 28, 136, 196 (right of the GO letter, below the HUD) | 26,656 | 490 (1.84 %) | a four-line band below the ribbon (rows 154–157) where HDMA channel 5 applies colour math and a fixed colour (declared omission; located by review 1), the timer digits (BG3, not rendered) and the edge of the window-drawn letter G at the rectangle's left edge |
+| 2400 | 0, 28, 256, 196 (all but the HUD rows) | 50,176 | 791 (1.58 %) | 512 pixels in a four-line band below the ribbon (rows 149–152) where HDMA channel 5 applies colour math and a fixed colour from the table at `$7E:2084` (declared omission; located by review 1), and the `RACE`/`+0:00:1` text (BG3, not rendered) |
 
 Omitted by the renderer (declared in every report): windows and colour math, BG3, per-scanline HDMA register changes (the tables carry one entry, so scroll is constant within the frame), mosaic/interlace/offset-per-tile, sprite-per-line limits and finer priority rules. Two facts were calibrated against the frame image and are recorded in the code: a background row is `VOFS + y + 1` (the PPU's first visible line is line 1), and a tile-map DMA in frame N copies the staging buffer as the game loop left it at the end of frame N − 1.
 

@@ -518,15 +518,21 @@ class StubWorker:
     ``timeout``, ``missing``, ``crash``, ``garbage``), ``pids`` the process
     identity each call reports, ``av`` a per-call video/audio tag that leaves
     work RAM, registers and the final state untouched, and ``divergent`` the
-    call indices whose work RAM differs from frame 2 on.
+    call indices whose work RAM differs from frame 2 on, and ``localize_defects``
+    the call indices whose result is inconsistent with what was asked of them:
+    ``short`` stops one frame before the requested ``--stop-after-frame``, and
+    ``dump_mismatch`` leaves a work RAM dump on disk that is not the one the
+    samples file records a digest of (the shape of a stale or orphaned file in
+    the artifacts directory, R-0004 G2/G3).
     """
 
-    def __init__(self, rom_sha256: str, outcomes=(), pids=None, av=None, divergent=()) -> None:
+    def __init__(self, rom_sha256: str, outcomes=(), pids=None, av=None, divergent=(), localize_defects=None) -> None:
         self.rom_sha256 = rom_sha256
         self.outcomes = list(outcomes)
         self.pids = list(pids) if pids is not None else None
         self.av = dict(av or {})
         self.divergent = set(divergent)
+        self.localize_defects = dict(localize_defects or {})
         self.calls: list[dict] = []
 
     def __call__(self, command, timeout, **kwargs):
@@ -546,16 +552,19 @@ class StubWorker:
             out.write_text("{ this is not json")
             return procs.RunResult(command, 0, "", "", 0.01)
         pid = self.pids[index] if self.pids is not None else 9000 + index
-        out.write_text(json.dumps(self.samples(a, pid, self.av.get(index, ""), index in self.divergent)))
+        out.write_text(json.dumps(self.samples(a, pid, self.av.get(index, ""), index in self.divergent,
+                                               self.localize_defects.get(index))))
         return procs.RunResult(command, 0, "", "", 0.01)
 
-    def samples(self, a: dict, pid: int, av_tag: str, divergent: bool) -> dict:
+    def samples(self, a: dict, pid: int, av_tag: str, divergent: bool, defect: str | None = None) -> dict:
         script = json.loads(Path(a["--script"]).read_text())
         ranges = json.loads(Path(a["--fields"]).read_text())
         start = 0
         if "--state-in" in a:
             start = json.loads(Path(a["--state-in"] + ".json").read_text())["after_frame"] + 1
         end = script["frames"] if "--stop-after-frame" not in a else int(a["--stop-after-frame"]) + 1
+        if defect == "short":  # the re-run stops before the frame it was asked to stop after
+            end -= 1
         every = script.get("sample_every", 1)
         wram = bytearray(STUB_WRAM_SIZE)
         frames = []
@@ -591,8 +600,9 @@ class StubWorker:
             dump = Path(a["--wram-dump-out"])
             dump.parent.mkdir(parents=True, exist_ok=True)
             dump.write_bytes(bytes(wram))
+            hashed = bytes(wram) if defect != "dump_mismatch" else bytes(wram) + b"\x00"
             samples["wram_dump"] = {"after_frame": end - 1, "path": str(dump),
-                                    "sha256": hashlib.sha256(bytes(wram)).hexdigest(), "size": len(wram)}
+                                    "sha256": hashlib.sha256(hashed).hexdigest(), "size": len(wram)}
         return samples
 
 
@@ -805,6 +815,32 @@ class StubbedCompareTests(unittest.TestCase):
                 self.assertEqual(failed["outcome"], expected)
                 self.assertFalse(failed["required"])
                 self.assertIn("skipped", report["divergence"]["localization"])
+
+    def test_an_inconsistent_localization_is_failed_not_passed(self) -> None:
+        """``divergence_localized`` fails when a re-run did complete but did not
+        reproduce what it was asked for: its last sample is not the divergence
+        frame, or the work RAM dump on disk is not the one it hashed. The verdict
+        still comes from the required field comparison (M0-05 review 1, minor 1)."""
+        for label, defects, differing in (("a re-run stopped one frame early", {2: "short"}, 0),
+                                          ("the dump on disk is not the hashed one", {3: "dump_mismatch"}, 1)):
+            with self.subTest(case=label):
+                stub = StubWorker(self.rom_sha, localize_defects=defects)
+                code, report = self.compare("--manifest", str(self.cold), "--against", str(self.removed), stub=stub,
+                                            artifacts=str(self.artifacts / f"inconsistent-{len(defects)}-{differing}"))
+                checks = self.checks(report)
+                self.assertEqual(code, EXIT_FAILURE)  # the divergence, not the inconsistent re-run
+                self.assertEqual(checks["fields_identical"]["outcome"], "failed")
+                self.assertEqual(len(stub.calls), 4)  # both re-runs completed
+                for name in ("localize_left", "localize_right"):
+                    self.assertEqual(checks[name]["outcome"], "passed", name)
+                loc = report["divergence"]["localization"]
+                self.assertNotIn("skipped", loc)
+                self.assertFalse(loc["consistent_with_first_runs"])
+                # an empty or unrepresentative work RAM diff must not read as a pass
+                self.assertEqual(loc["wram"]["differing_bytes"], differing)
+                self.assertEqual(checks["divergence_localized"]["outcome"], "failed")
+                self.assertFalse(checks["divergence_localized"]["required"])
+                self.assertIn(f"{differing} differing work RAM bytes", checks["divergence_localized"]["detail"])
 
     def test_worker_outcomes_map_to_the_command_exit_codes(self) -> None:
         for label, outcomes, code in (("timeout", ["timeout"], EXIT_TIMEOUT),

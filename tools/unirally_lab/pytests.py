@@ -43,6 +43,15 @@ class JsonResult(unittest.TestResult):
         super().addError(test, err)
         self._record(test, "failed", self._exc_info_to_string(err, test))
 
+    def addSubTest(self, test, subtest, err):  # noqa: N802
+        """A failing subtest is a failure of its own; unittest reports it here
+        instead of through addFailure/addError and then never calls addSuccess
+        for the enclosing test, so without this override the whole test
+        vanished from the records (M0-04 review 1, finding M2)."""
+        super().addSubTest(test, subtest, err)
+        if err is not None:
+            self._record(subtest, "failed", self._exc_info_to_string(err, test))
+
     def addSkip(self, test, reason):  # noqa: N802
         super().addSkip(test, reason)
         self._record(test, "skipped", reason)
@@ -64,7 +73,7 @@ def main(argv: list[str]) -> int:
     suite = unittest.defaultTestLoader.discover(str(start), top_level_dir=str(start))
     result = JsonResult()
     suite.run(result)
-    json.dump(result.records, sys.stdout)
+    json.dump({"records": result.records, "tests_run": result.testsRun, "successful": result.wasSuccessful()}, sys.stdout)
     sys.stdout.write("\n")
     return 0 if result.wasSuccessful() else 1
 

@@ -27,6 +27,59 @@ def run_cli(*args: str) -> subprocess.CompletedProcess:
     return subprocess.run([sys.executable, str(PROJECT), *args], capture_output=True, text=True, timeout=900)
 
 
+class PythonRunnerTests(unittest.TestCase):
+    """The Python runner must surface every failing test, including subtests,
+    and the test command must not report a run the runner counted as failed as
+    a pass (M0-04 review 1, finding M2: subtest errors vanished and the
+    runner's exit status was ignored, so a failing test read as 101/101)."""
+
+    PROBE = (
+        "import unittest\n"
+        "class T(unittest.TestCase):\n"
+        "    def test_sub(self):\n"
+        "        for i in (1, 2, 3):\n"
+        "            with self.subTest(i=i):\n"
+        "                self.assertEqual(i, 1)\n"
+        "    def test_sub_error(self):\n"
+        "        with self.subTest(k=1):\n"
+        "            raise RuntimeError('boom')\n"
+        "    def test_ok(self):\n"
+        "        pass\n"
+        "    def test_plain_failure(self):\n"
+        "        self.fail('plain')\n"
+        "    @unittest.skip('why')\n"
+        "    def test_skipped(self):\n"
+        "        pass\n"
+    )
+
+    def test_subtest_failures_are_recorded(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp) / "test_probe.py").write_text(self.PROBE)
+            r = subprocess.run([sys.executable, str(ROOT / "tools" / "unirally_lab" / "pytests.py"), tmp], capture_output=True, text=True, timeout=120)
+            self.assertEqual(r.returncode, 1, r.stderr)
+            summary = json.loads(r.stdout.strip().splitlines()[-1])
+            self.assertEqual(summary["tests_run"], 5)
+            self.assertFalse(summary["successful"])
+            outcomes = {rec["name"].split(".")[-1]: rec["outcome"] for rec in summary["records"]}
+            self.assertEqual(outcomes["test_ok"], "passed")
+            self.assertEqual(outcomes["test_plain_failure"], "failed")
+            self.assertEqual(outcomes["test_skipped"], "skipped")
+            self.assertEqual(outcomes["test_sub (i=2)"], "failed")
+            self.assertEqual(outcomes["test_sub (i=3)"], "failed")
+            self.assertEqual(outcomes["test_sub_error (k=1)"], "failed")
+            self.assertNotIn("test_sub", outcomes)  # no success record for a test whose subtests failed
+            self.assertIn("2 != 1", next(rec["detail"] for rec in summary["records"] if rec["name"].endswith("(i=2)")))
+
+    def test_all_passing_subtests_record_one_success(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp) / "test_probe.py").write_text(
+                "import unittest\nclass T(unittest.TestCase):\n    def test_sub(self):\n        for i in (1, 2):\n            with self.subTest(i=i):\n                self.assertTrue(i)\n")
+            r = subprocess.run([sys.executable, str(ROOT / "tools" / "unirally_lab" / "pytests.py"), tmp], capture_output=True, text=True, timeout=120)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            summary = json.loads(r.stdout.strip().splitlines()[-1])
+            self.assertEqual([(rec["name"].split(".")[-1], rec["outcome"]) for rec in summary["records"]], [("test_sub", "passed")])
+
+
 @unittest.skipUnless(toolchain.load_manifest(MANIFEST), "isolated toolchain not bootstrapped")
 class NativeReportTests(unittest.TestCase):
     def test_failure_and_timeout_are_distinguished(self) -> None:

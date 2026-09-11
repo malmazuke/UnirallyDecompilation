@@ -337,14 +337,23 @@ def cmd_test(args: argparse.Namespace) -> int:
         rep.add_check("python_tooling_tests", py.outcome, detail=py.tail(500))
     else:
         try:
-            records = json.loads(py.stdout.strip().splitlines()[-1])
-        except (ValueError, IndexError):
+            summary = json.loads(py.stdout.strip().splitlines()[-1])
+            records = summary["records"]
+            tests_run = summary["tests_run"]
+        except (ValueError, IndexError, KeyError, TypeError):
             rep.add_check("python_tooling_tests", "failed", detail=f"unparseable runner output: {py.tail(800)}")
-            records = []
-        for r in records:
-            rep.add_check(f"py:{r['name']}", r["outcome"], detail=r.get("detail") or None, elapsed=r.get("elapsed"))
-        if not records:
-            rep.add_check("python_tooling_tests", "failed", detail="no tests discovered")
+            records, tests_run = [], 0
+        else:
+            for r in records:
+                rep.add_check(f"py:{r['name']}", r["outcome"], detail=r.get("detail") or None, elapsed=r.get("elapsed"))
+            # The runner's own verdict is authoritative: a test that unittest
+            # counted as failed must fail this check even if no record says so
+            # (M0-04 review 1, finding M2: subtest failures were dropped).
+            failed = sum(1 for r in records if r["outcome"] == "failed")
+            ok = py.returncode == 0 and records and failed == 0
+            rep.add_check("python_tooling_tests", "passed" if ok else "failed",
+                          detail=f"{tests_run} tests run, {len(records)} records, {failed} failed; runner exit {py.returncode}"
+                                 + ("" if records else "; no tests discovered"))
 
     # 2. Native synthetic tests via ctest. The build is first brought up to
     # date incrementally so that every native outcome below belongs to the

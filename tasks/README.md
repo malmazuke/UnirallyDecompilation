@@ -12,8 +12,8 @@ The coordinator maintains the status registry below. Work orders further below d
 | M0-05 | accepted: integrated 11 September 2026 after one independent review | [Resumable execution and review pilot](M0-05.md) |
 | M0-06 | accepted: integrated 11 September 2026 after one independent review; M0 accepted, tag `m0` | [M0 acceptance report](M0-06.md) |
 | M1-01 | accepted: integrated 11 September 2026 after one independent review | [Observed code/data map](M1-01.md) |
-| M1-02 | planned: next to be written by the coordinator (see `docs/STATE.md`) | Validated player-state schema and update timing |
-| M1-03 | planned: may run concurrently with M1-02 under the M0-05 conditions (disjoint paths) | Minimal track/asset decode |
+| M1-02 | claimed: 11 September 2026 18:50 AEST, worker on `task/M1-02-player-state` in `.worktrees/m1-02` (part A builds the D-0002 access tool, part B the schema) | [Validated player-state schema and update timing](M1-02.md) |
+| M1-03 | planned: written; ready once M1-02 part A is committed and tested (sequenced after M1-02 because both need the same additive worker options; see the record) | [Minimal track/asset decode](M1-03.md) |
 | M2 – M6 | planned | See milestone definitions |
 
 ## M0 — repeatable laboratory

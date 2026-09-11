@@ -5,6 +5,14 @@ Usage: worker.py --core LIB --rom ROM --script S --samples-out OUT
                  [--system-dir D] [--state-in P] [--save-after N --state-out P]
                  [--fields F] [--stop-after-frame N] [--wram-dump-out P]
                  [--coverage-out P [--coverage-ring N]] [--frame-image N ...] [--frame-image-dir D]
+                 [--access-out P [--access-ring N] [--access-from-frame N] [--access-to-frame N]
+                  [--access-watch-address A ...] [--access-watch-pc P ...]
+                  [--wram-series-out P --wram-series-range START LENGTH [--wram-series-every N]]]
+
+The M1-02 options (``--access-*``, ``--wram-series-*``) are additive in the
+same way: the trace ring is drained per frame into the access derivation
+(``access.derive``) over the chosen frame window and the work RAM at the end
+of each drained frame is read; nothing else changes.
 
 The M1-01 options are additive: without ``--coverage-out`` and
 ``--frame-image`` every output, exit code and digest is as before. With
@@ -33,6 +41,7 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from unirally_lab import EXIT_FAILURE, EXIT_INVALID_INPUT, EXIT_MISSING_PREREQUISITE, EXIT_OK  # noqa: E402
+from unirally_lab.access import derive as access_derive  # noqa: E402
 from unirally_lab.coverage import drain as coverage_drain  # noqa: E402
 from unirally_lab.reference import bsnes  # noqa: E402
 
@@ -214,6 +223,32 @@ def run(args: argparse.Namespace) -> int:
     if any(a < 0 or a > 0xFFFFFF for a in args.coverage_watch or []):
         print("--coverage-watch addresses must be 24-bit", file=sys.stderr)
         return EXIT_INVALID_INPUT
+    if args.access_out and args.access_ring <= 0:
+        print("--access-ring must be positive", file=sys.stderr)
+        return EXIT_INVALID_INPUT
+    if any(a < 0 or a > 0xFFFFFF for a in (args.access_watch_address or []) + (args.access_watch_pc or [])):
+        print("--access-watch-address and --access-watch-pc must be 24-bit", file=sys.stderr)
+        return EXIT_INVALID_INPUT
+    if args.access_from_frame is not None and not (0 <= args.access_from_frame < script["frames"]):
+        print("--access-from-frame must lie inside the script's frame range", file=sys.stderr)
+        return EXIT_INVALID_INPUT
+    if args.access_to_frame is not None and not (0 <= args.access_to_frame < script["frames"]):
+        print("--access-to-frame must lie inside the script's frame range", file=sys.stderr)
+        return EXIT_INVALID_INPUT
+    if args.access_from_frame is not None and args.access_to_frame is not None and args.access_to_frame < args.access_from_frame:
+        print("--access-to-frame must not precede --access-from-frame", file=sys.stderr)
+        return EXIT_INVALID_INPUT
+    if (args.wram_series_out is None) != (args.wram_series_range is None):
+        print("--wram-series-out and --wram-series-range must be given together", file=sys.stderr)
+        return EXIT_INVALID_INPUT
+    if args.wram_series_range is not None:
+        ws, wl = args.wram_series_range
+        if ws < 0 or wl <= 0 or ws + wl > WRAM_SIZE or args.wram_series_every <= 0:
+            print("--wram-series-range must lie inside work RAM and --wram-series-every must be positive", file=sys.stderr)
+            return EXIT_INVALID_INPUT
+        if not args.access_out:
+            print("--wram-series-out requires --access-out", file=sys.stderr)
+            return EXIT_INVALID_INPUT
     frame_images = set(args.frame_image or [])
     if any(f < 0 or f >= script["frames"] for f in frame_images):
         print("--frame-image frames must lie inside the script's frame range", file=sys.stderr)
@@ -284,13 +319,22 @@ def run(args: argparse.Namespace) -> int:
                       "registers": core.registers(), "save_files_present": sorted(p.name for p in system_dir.iterdir())}
     trace_entries = script.get("trace_entries", 64)
     coverage: coverage_drain.FrameDrain | None = None
+    access: access_derive.AccessDrain | None = None
     ring_capacity = trace_entries
-    if args.coverage_out:
-        ring_capacity = max(trace_entries, args.coverage_ring)
+    if args.coverage_out or args.access_out:
+        ring_capacity = max(trace_entries, args.coverage_ring if args.coverage_out else 0, args.access_ring if args.access_out else 0)
         core.trace_enable(ring_capacity)
-        coverage = coverage_drain.FrameDrain(core, ring_capacity, args.coverage_watch)
+        if args.coverage_out:
+            coverage = coverage_drain.FrameDrain(core, ring_capacity, args.coverage_watch)
+        if args.access_out:
+            series = None
+            if args.wram_series_out:
+                series = (args.wram_series_range[0], args.wram_series_range[1], args.wram_series_every, Path(args.wram_series_out))
+            access = access_derive.AccessDrain(rom.read_bytes(), ring_capacity, args.access_watch_address, args.access_watch_pc, series)
     elif trace_entries:
         core.trace_enable(trace_entries)
+    access_seen_total = core.trace_total() if access is not None else 0
+    access_window: tuple[int, int] | None = None
     if frame_images:
         core.keep_frame = True
         image_dir = Path(args.frame_image_dir) if args.frame_image_dir else Path(args.samples_out).parent / "frames"
@@ -327,6 +371,14 @@ def run(args: argparse.Namespace) -> int:
         print(f"--stop-after-frame {args.stop_after_frame} lies before the first frame to run ({start})", file=sys.stderr)
         return EXIT_INVALID_INPUT
     forced = forced_sample_frames(end, args.save_after, start)
+    if access is not None:
+        access_window = (start if args.access_from_frame is None else max(start, args.access_from_frame),
+                         end - 1 if args.access_to_frame is None else min(end - 1, args.access_to_frame))
+        if access_window[1] < access_window[0]:
+            print(f"access window {access_window} is empty for frames {start}..{end - 1}", file=sys.stderr)
+            return EXIT_INVALID_INPUT
+        if access_window[0] == start:
+            access.set_previous_wram(core.wram())
     state_digest = hashlib.sha256()
     state_digest.update(b"initial" + bytes.fromhex(out["initial"]["wram_sha256"]) + bytes.fromhex(out["initial"]["cartridge_ram_sha256"]))
     av_digest = hashlib.sha256()
@@ -343,6 +395,27 @@ def run(args: argparse.Namespace) -> int:
                 core.unload()
                 shutil.rmtree(system_dir, ignore_errors=True)
                 return EXIT_FAILURE
+        if access is not None:
+            total_now = core.trace_total()
+            delta = total_now - access_seen_total
+            access_seen_total = total_now
+            if access_window[0] <= frame <= access_window[1]:
+                try:
+                    if delta > ring_capacity:
+                        raise access_derive.DrainOverflow(f"frame {frame}: {delta} instructions exceed the ring capacity {ring_capacity}; entries were lost")
+                    raw = core.trace_read_raw(ring_capacity) if delta else b""
+                    available = len(raw) // access_derive.TRACE_ENTRY_SIZE
+                    if available < delta:
+                        raise access_derive.DrainOverflow(f"frame {frame}: ring returned {available} entries for a delta of {delta}")
+                    access.drain_frame(frame, raw[(available - delta) * access_derive.TRACE_ENTRY_SIZE:], core.wram())
+                except access_derive.DrainOverflow as exc:
+                    print(f"access capture failed: {exc}", file=sys.stderr)
+                    _write_access(Path(args.access_out), access, out, (access_window[0], frame), failure=str(exc))
+                    core.unload()
+                    shutil.rmtree(system_dir, ignore_errors=True)
+                    return EXIT_FAILURE
+            elif frame == access_window[0] - 1:
+                access.set_previous_wram(core.wram())
         if frame in frame_images:
             if core.frame_raw is None:
                 out["frame_images"].append({"frame": frame, "path": None, "note": "no video output this frame"})
@@ -394,6 +467,8 @@ def run(args: argparse.Namespace) -> int:
         out["trace"] = {"instructions_executed": core.trace_total(), "window": window}
     if coverage is not None:
         out["coverage"] = _write_coverage(Path(args.coverage_out), coverage, out, (start, end - 1))
+    if access is not None:
+        out["access"] = _write_access(Path(args.access_out), access, out, access_window)
     final_state = core.serialize()
     out["final"] = {"wram_sha256": hashlib.sha256(core.wram()).hexdigest(),
                     "cartridge_ram_sha256": hashlib.sha256(core.cartridge_ram()).hexdigest(),
@@ -426,6 +501,22 @@ def _write_coverage(path: Path, coverage: coverage_drain.FrameDrain, out: dict[s
     path.write_text(json.dumps(doc, sort_keys=True, separators=(",", ":")) + "\n", encoding="utf-8")
     return {"path": str(path), "sha256": sha256_file(path), "instructions": coverage.total, "max_frame_delta": coverage.max_delta,
             "ring_capacity": coverage.capacity, "sites": len(coverage.sites), "pairs": len(coverage.pairs), "status": identity["status"]}
+
+
+def _write_access(path: Path, access: access_derive.AccessDrain, out: dict[str, Any], frames: tuple[int, int],
+                  failure: str | None = None) -> dict[str, Any]:
+    """Write the access record (M1-02); returns its summary for the samples file."""
+    identity = {"rom": {k: v for k, v in out["rom"].items() if k != "path"},
+                "core": {k: v for k, v in out["core"].items() if k not in ("library", "sha256")},
+                "script": {k: v for k, v in out["script"].items() if k != "path"},
+                "trace_total_at_end": out.get("trace", {}).get("instructions_executed"),
+                "status": "failed" if failure else "complete", "failure": failure}
+    doc = access.document(identity, frames)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(doc, sort_keys=True, separators=(",", ":")) + "\n", encoding="utf-8")
+    return {"path": str(path), "sha256": sha256_file(path), "instructions": access.total, "accesses": access.total_accesses,
+            "max_frame_delta": access.max_delta, "ring_capacity": access.capacity, "frames": list(frames), "status": identity["status"],
+            "library_sha256": out["core"]["sha256"]}
 
 
 def probe(args: argparse.Namespace) -> int:
@@ -468,6 +559,18 @@ def main(argv: list[str] | None = None) -> int:
                         help="M1-01: 24-bit address whose executions are counted per frame in the coverage document (repeatable)")
     parser.add_argument("--frame-image", type=int, action="append", help="M1-01: write this frame's video output as PNG (repeatable)")
     parser.add_argument("--frame-image-dir", help="M1-01: directory for --frame-image files (default <samples dir>/frames)")
+    parser.add_argument("--access-out", help="M1-02: derive the memory access record from the trace ring every frame and write it here")
+    parser.add_argument("--access-ring", type=int, default=262144, help="M1-02: ring capacity used with --access-out (default 262144)")
+    parser.add_argument("--access-from-frame", type=int, help="M1-02: first frame of the access derivation window (default: the first frame run)")
+    parser.add_argument("--access-to-frame", type=int, help="M1-02: last frame of the access derivation window (default: the last frame run)")
+    parser.add_argument("--access-watch-address", type=lambda v: int(v, 0), action="append",
+                        help="M1-02: 24-bit address whose accesses are logged per frame with values (repeatable)")
+    parser.add_argument("--access-watch-pc", type=lambda v: int(v, 0), action="append",
+                        help="M1-02: 24-bit pc whose registers are logged at every execution (repeatable)")
+    parser.add_argument("--wram-series-out", help="M1-02: binary file receiving the work RAM range of --wram-series-range every --wram-series-every frames")
+    parser.add_argument("--wram-series-range", type=lambda v: int(v, 0), nargs=2, metavar=("START", "LENGTH"),
+                        help="M1-02: work RAM offset and length of the series (with --wram-series-out)")
+    parser.add_argument("--wram-series-every", type=int, default=1, help="M1-02: frame stride of the series (default 1)")
     try:
         args = parser.parse_args(argv)
     except SystemExit as exc:

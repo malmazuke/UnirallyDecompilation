@@ -75,7 +75,7 @@ calls; they are not independent game-state records.
 | Previous pre-correction x,y | `$0EED,$0EEF` | `$04D7,$04DB` / `$04D9,$04DD` | Needed by recontact angle calculation; overwritten with current **uncorrected** x,y before correction; established |
 | Surface angle | `$0F17` | `$0B6E` / `$0B70` | Set to zero on flat support; preserved unsupported. Angle interpretation supported by consumer/math, domain value zero |
 | Angle sentinel flag | `$0F2B` | `$04EB` / `$04ED` | Low byte starts one each call; becomes zero for supported angle other than31; high byte remains zero here |
-| Response channels A,B | `$0F55,$0F57` | `$0BB3,$0BB7` / `$0BB5,$0BB9` | On continuous contact cleared when `$0300==0`, otherwise preserved; both zero throughout this domain. Neutral names until motion semantics establish more |
+| Response channels A,B | `$0F55,$0F57` | `$0BB3,$0BB7` / `$0BB5,$0BB9` | On continuous contact cleared when `$0300==0`, otherwise preserved; A stays zero; B is2 on the24 opponent unsupported calls1590–1613 and is preserved there. Neutral names until motion semantics establish more |
 | Orientation impulse | `$0FAD` | `$0D35` / `$0D37` | Preserved except recontact, which writes4; next motion phase consumes/damps it (motion worker contract). Numerical dependence established |
 | Mode flag | `$0F23` | `$0B93` / `$0B95` | Incoming zero in the supported flat paths; alternate modes are unsupported |
 | Prior x displacement | `$0F73` | `$0BBB` / `$0BBD` | Contact caller loads this separately from motion's reuse of same scratch; recontact value14 determines impulse4 |
@@ -280,3 +280,53 @@ coalescing, incomplete capture rejection, marker-only samples, wrapped height
 subtraction, tie metadata, unsupported geometry rejection, saturation and
 pre-correction publication. Deliberate changes to expected counter10 or saving
 corrected y are detected. Independent reviewer variation remains pending.
+
+## Native interface proposal for coordinator review
+
+Reuse `CollisionPoints` and `TrackSamples` from`track_sampling.hpp`. A proposed
+`FlatContactContent` contains two immutable byte spans: column records and tile
+flags. `summarize_flat_contact(content, points, samples, x, y)` returns a typed
+summary of support, penetration, selected descriptor/high byte and angle; it
+rejects the unimplemented geometry predicates listed above. Marker observation
+remains the existing `observe_track_markers` call on the same raw samples.
+
+Embed a `RiderContactState` member in the future rider record: unsupported count,
+previous unsupported count, duration, previous uncorrected x/y, surface angle,
+angle-sentinel flag, auxiliary flag, latest selected descriptor/high byte and
+recontact flag. Position and velocity stay in the rider's shared kinematics;
+response A/B and orientation impulse stay in its shared orientation state.
+Contact must preserve/update those fields, not own duplicate shadow copies.
+Use a temporary `ContactMotionInput`/`ContactMotionResult` value to pass current
+x/y, velocities, previous x displacement and orientation channels across the
+component boundary until the combined RiderState interface is agreed. This is
+an explicit function argument/result, not a persistent WRAM scratch bank.
+
+`resolve_flat_contact(contact_state, motion_input, summary, context)` returns
+corrected kinematics/orientation values. Context supplies phase`$0300`, rider
+identity and supported mode predicates; phase`$0302` used by track progress is
+a distinct field. Recontact's arithmetic should compute its coarse-angle
+category from actual displacement differences. Do not use frame1617 or the
+observed coordinates as a dispatch condition. The recovered category accepts
+the flat, nonnegative-displacement sentinel branch; a different category returns
+an explicit unsupported-domain result pending research. In particular, compare
+the computed surface/coarse-angle difference in five-unit steps, preserving the
+original stop-before-storing-zero angle endpoint. The original generic helper
+is not replaced by a coordinate lookup.
+
+Call order: integrate motion → publish new collision pose → expand points →
+sample track → observe markers/preprocess samples → resolve contact for each
+rider → retain contact outputs for next motion phase. Sampling and collision
+use current motion output, whereas recontact compares to the saved prior
+**pre-correction** positions. Serialization belongs to the later integrated
+rider state and must preserve contact counters, positions and orientation
+impulse without struct padding.
+
+Final clean-source regression at`f979f0e0bd13c2c4ba709cd3a69879f9ecbf2160`:
+218/218 checks pass, including206 Python tests and all existing C++ checks;
+report`artifacts/m2-01a-contact/final-synthetic-fixed.json`, SHA-256
+`2a0fb2f5b293b41a66840f61b2847b0786e0358b56a2f62292b21c8738a47f14`.
+The prior import-path failure is recorded in the handoff. A final persistent
+state audit corrected an earlier sentence that said both response channels
+were always zero: B is2 during opponent unsupported1590–1613 and is preserved.
+The documented update formula already preserved unsupported response state;
+no formula, capture, expectation or pass count changed with that correction.

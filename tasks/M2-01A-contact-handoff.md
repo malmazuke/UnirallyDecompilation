@@ -45,3 +45,24 @@ not put on its path. Existing tests explicitly prepend the tools directory and
 import`unirally_lab`; the new test now follows that convention. The failure was
 reported as a failure (200 tests including one failed import), not a pass.
 No gameplay/model/evidence change. Re-running after the import-only fix.
+
+## Submitted research result
+
+Implementation/tooling candidate: `f979f0e0bd13c2c4ba709cd3a69879f9ecbf2160`;
+base `ba71142a6d766216772360949dd8c04760fa9ffe`. Clean-source full suite at that
+candidate passes218/218 checks (206 Python tests); report SHA-256
+`2a0fb2f5b293b41a66840f61b2847b0786e0358b56a2f62292b21c8738a47f14`.
+This documentation follow-up records the result and corrects the response-B
+inventory: B is2 on24 unsupported opponent calls1590–1613, preserved by contact,
+then motion clears it before recontact. Update formula/evidence unchanged.
+R-0011-contact now includes a native interface proposal reusing the sampler
+structures and preserving contact-specific state inside future RiderState.
+
+All requested scoped research/tools/manifests/tests are committed; obtain the
+final documentation submission hash with`git rev-parse HEAD`. No frozen expected
+file, existing source/interface, ROM, extracted byte file or native gameplay
+simulation changed. Independent reviewer acceptance remains pending. Coordinator
+will authorize native port separately after review; this task does not accept
+M2-01A or M2-01. Stay available for review fixes/interface decisions. Exact next
+independent command is the full primary capture in R-0011-contact; existing local
+captures may accelerate an inspection but must not substitute for reproduction.

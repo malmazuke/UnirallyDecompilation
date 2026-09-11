@@ -292,3 +292,12 @@ plus authored reward73 becomes71. Authored checks cover odd negative values,
 -1 (the comparison excludes it), and the signed-overflow comparison boundary
 0x7FFF. This is source-derived boundary evidence; observed primary incoming
 reward boosts do not exercise it.
+
+A second review boundary concerns exact displacement/remainder cancellation.
+At `$83:EE43` the accumulated word is stored; if it is zero, EE48 branches to
+EE67 and skips division. The old Y still holds the signed distance, which is
+then stored as the animation increment. The square-root loop `$81:B7BE–B7EF`
+left X=0, so the later remainder publication is0. The model now preserves this
+branch: signed distance-1 plus prior remainder+1 yields increment-1 and new
+remainder0, rather than increment0. Both cancellation directions have authored
+checks. This source-derived corner was absent from both captured run domains.

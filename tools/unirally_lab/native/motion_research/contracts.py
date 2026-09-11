@@ -104,9 +104,13 @@ def pose_update(state, square_table, slope_table):
         if dx<0:distance=-distance
         s[0xf73]=distance & 65535
         accumulation=signed(s[0xf9f]+distance)
-        quotient,remainder=divmod(abs(accumulation),3)
-        if accumulation<0:quotient=-quotient
-        if dx<0:remainder=-remainder
+        if accumulation:
+            quotient,remainder=divmod(abs(accumulation),3)
+            if accumulation<0:quotient=-quotient
+            if dx<0:remainder=-remainder
+        else:
+            # EE48 skips division: Y retains signed distance; sqrt left X=0.
+            quotient,remainder=distance,0
         s[0xf9f]=remainder & 65535
         steering=quotient
         s[0xf99]=steering & 65535

@@ -60,6 +60,13 @@ class MotionArithmeticTests(unittest.TestCase):
         result=pose_update(s,[i*i for i in range(256)],[0]*128)
         self.assertEqual((result[0xf81],result[0xfad],result[0xfa1]),(51,1,51))
 
+    def test_pose_exact_remainder_cancellation_retains_signed_distance(self):
+        for old_x,new_x,old_remainder,expected in [(10,11,1,65535),(11,10,65535,1)]:
+            s=state();s.update({0xf9b:old_x,0xa5:new_x,0xf9f:old_remainder})
+            result=pose_update(s,[i*i for i in range(256)],[0]*128)
+            with self.subTest(old_x=old_x):
+                self.assertEqual((result[0xf99],result[0xf9f],result[0xf73]),(expected,0,1))
+
     def test_three_quarters_round_up_only_when_landing(self):
         s=state();s.update({0x33f:1,0x120b:3,0x136b:1,0xf67:3,0xf53:48,0xf33:9})
         airborne,events=completed_rotation(s)

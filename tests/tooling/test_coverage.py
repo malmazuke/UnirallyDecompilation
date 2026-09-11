@@ -384,6 +384,42 @@ class DeriveTests(unittest.TestCase):
         self.assertEqual(doc["unknown_edges"], [{"from": "$7E:0100", "from_region": "wram", "from_mode": "NMX", "from_decoded": False,
                                                  "to": "$00:8000", "to_mode": "NMX", "count": 1}])
 
+    def test_unknown_edge_from_a_rom_site(self) -> None:
+        """A step from a decoded ROM instruction that no control-flow opcode or vector explains is an
+        unknown edge from a ROM site: the case the tracked maps never show (R-0006 finding 7)."""
+        cov = json.loads(json.dumps(self.cov))
+        cov["pairs"].append([0x8004, 0, 0x7E, 0x8020, 0, 0x7E, 1])   # LDA #imm (3 bytes) stepping to $8020, not to $8007
+        doc, _ = derive.build_map(cov, self.rom, "synthetic", {}, "b" * 64, "cmd")
+        self.assertEqual(doc["totals"]["unknown_edges"], 1)
+        self.assertEqual(doc["totals"]["edges_by_kind"]["unknown"], 1)
+        self.assertEqual(doc["unknown_edges"], [{"from": "$00:8004", "from_region": "rom", "from_mode": "NMX", "from_decoded": True,
+                                                 "to": "$00:8020", "to_mode": "NMX", "count": 1}])
+        entries = {e["address"]: e for e in doc["entry_points"]}
+        self.assertEqual(entries["$00:8020"]["kinds"], {"JSR": 1, "unknown": 1})
+        self.assertEqual(doc["non_rom_sites"], [])
+        self.assertIn("| $00:8004 | rom | yes | $00:8020 | 1 |", derive.summary_markdown(doc, None))
+
+    def test_per_frame_summary(self) -> None:
+        """The per-frame vector summary behind ``nmi_vector_once_per_frame`` (M1-01 review 1)."""
+        s = derive.per_frame_summary([0, 0, 1, 1, 1], 10)
+        self.assertEqual(s, {"frames_with_zero": 2, "frames_with_one": 3, "frames_with_more": 0,
+                             "first_frame": 12, "once_per_frame_from": 12, "gaps_after_first": []})
+        # The race pattern: NMIs on, an NMI-off gap, then exactly one per frame to the end.
+        s = derive.per_frame_summary([0, 1, 1, 0, 0, 1, 1], 0)
+        self.assertEqual((s["first_frame"], s["once_per_frame_from"], s["gaps_after_first"]), (1, 5, [[3, 4]]))
+        s = derive.per_frame_summary([1, 1, 0, 1, 0, 1], 0)
+        self.assertEqual((s["once_per_frame_from"], s["gaps_after_first"]), (5, [[2, 2], [4, 4]]))
+        # No tail of ones: a silent last frame, or a silent series.
+        self.assertIsNone(derive.per_frame_summary([1, 1, 0], 0)["once_per_frame_from"])
+        self.assertEqual(derive.per_frame_summary([0, 0], 0), {"frames_with_zero": 2, "frames_with_one": 0, "frames_with_more": 0,
+                                                                 "first_frame": None, "once_per_frame_from": None, "gaps_after_first": []})
+        # Tightened: a frame with more than one entry anywhere voids the once-per-frame claim, wherever it is.
+        for series in ([0, 2, 1, 1], [1, 1, 2], [2, 1, 1, 1], [0, 1, 3, 0, 1]):
+            s = derive.per_frame_summary(series, 0)
+            self.assertEqual(s["frames_with_more"], 1, series)
+            self.assertIsNone(s["once_per_frame_from"], series)
+        self.assertEqual(derive.per_frame_summary([0, 2, 1, 1], 0)["first_frame"], 1)
+
     def test_interrupt_entry_takes_precedence_over_control_flow_opcode(self) -> None:
         cov = json.loads(json.dumps(self.cov))
         # An NMI arriving right after the JSR at $800A: the next traced pc is the handler, not $8020.

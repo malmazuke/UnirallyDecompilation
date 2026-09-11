@@ -318,13 +318,20 @@ class Derivation:
 
 
 def per_frame_summary(series: list[int], start: int) -> dict[str, Any]:
-    """Summary of a watched address's executions per frame (frames numbered from ``start``)."""
+    """Summary of a watched address's executions per frame (frames numbered from ``start``).
+
+    ``once_per_frame_from`` is the first frame of the tail in which every frame, to the end, holds
+    exactly one entry; it is reported only when no frame of the whole series holds more than one.
+    A frame without an entry is legitimate (the race scenario disables NMIs while it loads, R-0006
+    finding 11) and is listed in ``gaps_after_first``; a frame with two or more entries of an
+    interrupt vector target is not, and voids the once-per-frame claim wherever it occurs."""
     first = next((i for i, n in enumerate(series) if n), None)
     once_from = None
-    for i in range(len(series) - 1, -1, -1):
-        if series[i] != 1:
-            break
-        once_from = i
+    if all(n <= 1 for n in series):
+        for i in range(len(series) - 1, -1, -1):
+            if series[i] != 1:
+                break
+            once_from = i
     return {
         "frames_with_zero": sum(1 for n in series if n == 0),
         "frames_with_one": sum(1 for n in series if n == 1),

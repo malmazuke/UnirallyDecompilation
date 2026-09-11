@@ -110,7 +110,53 @@ def build_stream(chunks: int = 1) -> tuple[bytes, bytes]:
     return header + data, expected
 
 
+def build_long_stream() -> tuple[bytes, bytes]:
+    """An RNC method-1 asset whose three tables all use symbol 9, so that every count is
+    ``BASE[8] | 8 extra bits`` = 256 + n: a 300-byte literal run, a copy from 259 bytes back and a
+    copy of 258 bytes. The first port of the ROM's decoder mis-read the base table above 128
+    (R-0008 finding 3); the hand-built stream of ``build_stream`` never reaches symbol 9."""
+    bw = BitWriter()
+    bw.write(0, 2)
+    raw_codes = write_table(bw, [1, 0, 0, 0, 0, 0, 0, 0, 0, 1])   # symbols 0 (no bytes) and 9 (256 + 8 bits)
+    dist_codes = write_table(bw, [0, 0, 0, 0, 0, 0, 0, 0, 0, 1])  # symbol 9 only
+    len_codes = write_table(bw, [0, 0, 0, 0, 0, 0, 0, 0, 0, 1])   # symbol 9 only
+    bw.write(2, 16)                                               # literal, copy, literal
+    literal = bytes((i * 7 + 3) & 0xFF for i in range(300))
+    bw.write_code(raw_codes[9])
+    bw.write(44, 8)                                               # 256 + 44 = 300 bytes
+    bw.literal_bytes(literal)
+    bw.write_code(dist_codes[9])
+    bw.write(2, 8)                                                # distance 256 + 2 = 258 -> 259 bytes back
+    bw.write_code(len_codes[9])
+    bw.write(0, 8)                                                # length 256 + 0, plus 2 -> 258 bytes
+    bw.write_code(raw_codes[0])
+    data = bw.serialize()
+    expected = literal + literal[300 - 259:300 - 259 + 258]
+    header = b"RNC\x01" + struct.pack(">II", len(expected), len(data)) + b"\x00\x00\x00\x00\x00\x01"
+    return header + data, expected
+
+
 class RncTests(unittest.TestCase):
+    def test_symbols_at_or_above_nine_use_the_base_table(self) -> None:
+        asset, expected = build_long_stream()
+        self.assertEqual(len(expected), 558)
+        read = rnc.flat_reader(asset, bank=0x18, base=0x8000)
+        out, _end = rnc.decompress(read, 0x18, 0x8000)
+        self.assertEqual(out, expected)
+        self.assertEqual(rnc.BASE[8], 256)
+        # The stream discriminates: with a base table that repeats 128 above symbol 8 (the attempt-4
+        # defect of R-0008 finding 3) the same bytes decode to something else or not at all.
+        original = rnc.BASE
+        try:
+            rnc.BASE = tuple(min(1 << k, 128) for k in range(16))
+            try:
+                wrong = rnc.decompress(read, 0x18, 0x8000)[0]
+            except (ValueError, IndexError):
+                wrong = None
+            self.assertNotEqual(wrong, expected)
+        finally:
+            rnc.BASE = original
+
     def test_hand_built_stream_decodes(self) -> None:
         asset, expected = build_stream()
         read = rnc.flat_reader(asset, bank=0x18, base=0x8000)

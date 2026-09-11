@@ -407,6 +407,69 @@ class DerivationTests(unittest.TestCase):
         self.assertEqual(r.value([0x10, 0x11], 7), (0xBB11, 2))
 
 
+def run_unresolved_store():
+    """Two frames of a program whose indirect stores go through a pointer: in frame 0 an INC changes
+    the pointer bytes earlier in the same frame (the D-0002 residual: the stored value is exact, the
+    address is not), in frame 1 the pointer is untouched and the stores resolve from the end-of-frame image."""
+    rom = bytearray(0x10000)
+    rom[0:8] = bytes([
+        0xEE, 0x26, 0x01,   # 8000 INC $0126       RMW on the pointer bytes: their value is unknown from here on
+        0x92, 0x26,         # 8003 STA ($26)       store through the changed pointer -> unresolved store
+        0x87, 0x26,         # 8005 STA [$26]       long indirect store through the same pointer -> unresolved store
+        0xEA,               # 8007 NOP
+    ])
+    ring = StubRing()
+    ring.execute(0x8000, b=0x7E)
+    ring.execute(0x8003, a=0xBEEF, b=0x7E)
+    ring.execute(0x8005, a=0xCAFE, b=0x7E)
+    ring.execute(0x8007, b=0x7E)
+    eof = bytearray(derive.WRAM_SIZE)
+    eof[0x126:0x129] = bytes([0x00, 0x20, 0x7E])   # ($26) = $2000 in the data bank, [$26] = $7E:2000
+    d = derive.AccessDrain(bytes(rom), 64)
+    d.set_previous_wram(bytes(derive.WRAM_SIZE))
+    d.drain_frame(0, ring.raw(), bytes(eof))
+    ring.execute(0x8003, a=0xBEEF, b=0x7E)
+    ring.execute(0x8005, a=0xCAFE, b=0x7E)
+    d.drain_frame(1, ring.raw(), bytes(eof))
+    doc = d.document({"rom": {"sha256": "a" * 64, "size": len(rom)}, "core": {"name": "stub"}, "script": {"frames": 2}, "status": "complete"}, (0, 1))
+    return derive.validate_document(doc)
+
+
+class UnresolvedStoreTests(unittest.TestCase):
+    """The residual the D-0002 fallback condition rests on: a store through a pointer changed by a
+    read-modify-write instruction in the same frame is counted as an unresolved store, never guessed."""
+
+    def setUp(self) -> None:
+        self.doc = run_unresolved_store()
+        self.rows = {(r["pc"], r["kind"], r["address"]): r for r in acmd.access_rows(self.doc)}
+
+    def test_unresolved_stores_are_counted_per_pc(self) -> None:
+        residual = self.doc["residual"]
+        self.assertEqual(residual["unresolved_stores"], 2)
+        self.assertEqual(residual["unresolved_store_pcs"], [[0x8003, 1], [0x8005, 1]])
+        self.assertEqual(residual["unresolved_total"], 2)
+        self.assertEqual(self.doc["per_frame_unresolved"], [2, 0])
+        names = self.doc["addressing_names"]
+        res = {(pc, names[ad], label): n for pc, ad, label, n in self.doc["resolutions"] if ad >= 0}
+        self.assertEqual(res[(0x8003, "idp", "unresolved")], 1)
+        self.assertEqual(res[(0x8005, "ildp", "unresolved")], 1)
+        self.assertEqual(res[(0x8003, "idp", "end_of_frame")], 1)
+        self.assertEqual(res[(0x8005, "ildp", "end_of_frame")], 1)
+
+    def test_unresolved_stores_produce_no_access_row(self) -> None:
+        # Frame 1's resolved stores are the only rows at those pcs: one store each, first and last frame 1.
+        self.assertEqual(self.rows[(0x8000, "rmw", 0x7E0126)]["count"], 1)
+        for pc, value in ((0x8003, 0xBEEF), (0x8005, 0xCAFE)):
+            row = self.rows[(pc, "write", 0x7E2000)]
+            self.assertEqual((row["count"], row["values"], row["label"], row["first_frame"], row["last_frame"]), (1, [value], "end_of_frame", 1, 1))
+        # The pointer fetch itself is a direct-page read at a known address and is recorded in both frames.
+        self.assertEqual(sorted(k for k in self.rows if k[0] in (0x8003, 0x8005)),
+                         [(0x8003, "read", 0x0126), (0x8003, "write", 0x7E2000), (0x8005, "read", 0x0126), (0x8005, "write", 0x7E2000)])
+        self.assertEqual((self.rows[(0x8003, "read", 0x0126)]["count"], self.rows[(0x8003, "read", 0x0126)]["width"]), (2, 2))
+        self.assertEqual((self.rows[(0x8005, "read", 0x0126)]["count"], self.rows[(0x8005, "read", 0x0126)]["width"]), (2, 3))
+        self.assertEqual(self.doc["accesses_total"], 7)
+
+
 class WorkerAndCliTests(unittest.TestCase):
     def test_worker_rejects_bad_access_arguments(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

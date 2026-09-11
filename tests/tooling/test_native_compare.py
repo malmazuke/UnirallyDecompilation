@@ -96,6 +96,13 @@ class NativeCompareTests(unittest.TestCase):
         ref["projection"].pop()
         with self.assertRaises(cmp.ReferenceError): cmp.compare_rows(ref,ref["rows"],inputs)
 
+    def test_metadata_does_not_equate_booleans_and_integers(self):
+        for key, value in [("offset", False), ("length", True), ("signed", 0)]:
+            ref, _ = authored()
+            ref["projection"][0][key] = value
+            with self.subTest(key=key), self.assertRaises(cmp.ReferenceError):
+                cmp.validate_reference(ref)
+
     def test_real_primary_binding_and_manifest_tamper(self):
         expected=ROOT/"tests/manifests/native/primary.expected.json"
         replay=ROOT/"tests/manifests/native/primary.replay.json"

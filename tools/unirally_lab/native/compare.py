@@ -31,6 +31,19 @@ def _integer(value: Any) -> bool:
     return type(value) is int  # JSON booleans are not integer state samples.
 
 
+def _same_metadata(actual: Any, expected: Any) -> bool:
+    # Python equates True with 1; the JSON contract distinguishes their types.
+    if type(actual) is not type(expected):
+        return False
+    if isinstance(expected, dict):
+        return actual.keys() == expected.keys() and all(
+            _same_metadata(actual[key], value) for key, value in expected.items())
+    if isinstance(expected, list):
+        return len(actual) == len(expected) and all(
+            _same_metadata(left, right) for left, right in zip(actual, expected, strict=True))
+    return actual == expected
+
+
 def _validate_rows(rows: Any, initial: int, last: int,
                    error: type[ValueError]) -> None:
     if not isinstance(rows, list) or len(rows) != last - initial + 1:
@@ -57,9 +70,9 @@ def validate_reference(reference: Any) -> dict:
         raise ReferenceError("unsupported reference schema")
     if reference.get("kind") != "frozen_reference_projection":
         raise ReferenceError("expected a frozen reference projection")
-    if reference.get("projection") != PROJECTION or reference.get("columns") != COLUMNS:
+    if not _same_metadata(reference.get("projection"), PROJECTION) or not _same_metadata(reference.get("columns"), COLUMNS):
         raise ReferenceError("required projection cannot be changed or shortened")
-    if reference.get("diagnostic_only") != DIAGNOSTIC:
+    if not _same_metadata(reference.get("diagnostic_only"), DIAGNOSTIC):
         raise ReferenceError("diagnostic exclusions differ from the frozen contract")
     initial, first, last = (reference.get(key) for key in
                             ("initial_frame", "first_update_frame", "last_frame"))

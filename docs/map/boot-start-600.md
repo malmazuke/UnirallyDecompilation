@@ -1,6 +1,6 @@
 # Observed code map: `boot-start-600`
 
-Derived from an instruction-coverage capture of the reference core (bsnes `7d5aa1e656b9`, patch `a719f5ffe222`) on ROM SHA-256 `a1105819d48c04d6…` (2097152 bytes), frames 0–599, 8,514,628 executed instructions (largest frame 18,346, ring 262,144). Coverage file SHA-256 `8c5651b7b4ac12f6…`.
+Derived from an instruction-coverage capture of the reference core (bsnes `7d5aa1e656b9`, patch `a719f5ffe222`) on ROM SHA-256 `a1105819d48c04d6…` (2097152 bytes), frames 0–599, 8,514,628 executed instructions (largest frame 18,346, ring 262,144). Coverage file SHA-256 `1e6c02747d7c1003…`.
 
 Regenerate: `python3 tools/project.py coverage capture --manifest tests/manifests/replay/boot-start-600.json --out artifacts/coverage/boot-start-600 && python3 tools/project.py coverage map --coverage artifacts/coverage/boot-start-600/coverage.json --out docs/map/boot-start-600.map.json --summary docs/map/boot-start-600.md`
 
@@ -61,20 +61,20 @@ Only executed instructions and the header vectors classify bytes; nothing is inf
 
 ## Vectors
 
-| Vector | Value | Executed | Count | First frame | Modes |
-| --- | --- | --- | --- | --- | --- |
-| native_cop | $00:FFFF | no | 0 | - | - |
-| native_brk | $00:857F | no | 0 | - | - |
-| native_abort | $00:FFFF | no | 0 | - | - |
-| native_nmi | $00:8587 | yes | 350 | 250 | NMX, NmX, Nmx |
-| native_reserved | $00:FFFF | no | 0 | - | - |
-| native_irq | $00:8583 | no | 0 | - | - |
-| emu_cop | $00:FFFF | no | 0 | - | - |
-| emu_reserved | $00:FFFF | no | 0 | - | - |
-| emu_abort | $00:FFFF | no | 0 | - | - |
-| emu_nmi | $00:FFFF | no | 0 | - | - |
-| emu_reset | $00:8858 | yes | 1 | 0 | Emx |
-| emu_irq_brk | $00:8583 | no | 0 | - | - |
+| Vector | Value | Executed | Count | First frame | Modes | Per frame |
+| --- | --- | --- | --- | --- | --- | --- |
+| native_cop | $00:FFFF | no | 0 | - | - | - |
+| native_brk | $00:857F | no | 0 | - | - | - |
+| native_abort | $00:FFFF | no | 0 | - | - | - |
+| native_nmi | $00:8587 | yes | 350 | 250 | NMX, NmX, Nmx | 0/1/2+ in 250/350/0 frames; exactly one per frame from 250 |
+| native_reserved | $00:FFFF | no | 0 | - | - | - |
+| native_irq | $00:8583 | no | 0 | - | - | 0/1/2+ in 600/0/0 frames; exactly one per frame from None |
+| emu_cop | $00:FFFF | no | 0 | - | - | - |
+| emu_reserved | $00:FFFF | no | 0 | - | - | - |
+| emu_abort | $00:FFFF | no | 0 | - | - | - |
+| emu_nmi | $00:FFFF | no | 0 | - | - | - |
+| emu_reset | $00:8858 | yes | 1 | 0 | Emx | - |
+| emu_irq_brk | $00:8583 | no | 0 | - | - | 0/1/2+ in 600/0/0 frames; exactly one per frame from None |
 
 ## Executed ranges (75)
 

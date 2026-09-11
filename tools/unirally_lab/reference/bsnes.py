@@ -115,6 +115,10 @@ class BsnesCore:
         self.serialization_method: str | None = None
         self._inputs: dict[int, set[int]] = {0: set(), 1: set()}
         self._frame_video: tuple[int, int, str] | None = None
+        # M1-01 (additive): when ``keep_frame`` is set the XRGB8888 frame buffer
+        # of the last run_frame is retained as (width, height, pitch, bytes).
+        self.keep_frame = False
+        self.frame_raw: tuple[int, int, int, bytes] | None = None
         self._frame_audio = hashlib.sha256()
         self._frame_audio_frames = 0
         self.input_polls = 0
@@ -158,6 +162,8 @@ class BsnesCore:
             if data:
                 raw = C.string_at(data, pitch * height)
                 self._frame_video = (width, height, hashlib.sha256(raw).hexdigest())
+                if self.keep_frame:
+                    self.frame_raw = (width, height, pitch, raw)
 
         @C.CFUNCTYPE(None, C.c_int16, C.c_int16)
         def audio_cb(left, right):
@@ -251,6 +257,7 @@ class BsnesCore:
 
     def run_frame(self) -> FrameOutput:
         self._frame_video = None
+        self.frame_raw = None
         self._frame_audio = hashlib.sha256()
         self._frame_audio_frames = 0
         self._lib.retro_run()
@@ -298,14 +305,44 @@ class BsnesCore:
     def trace_total(self) -> int:
         return int(self._lib.unirally_trace_total())
 
-    def trace_read(self, max_entries: int) -> list[dict[str, int]]:
+    def trace_read_raw(self, max_entries: int) -> bytes:
+        """Up to ``max_entries`` of the ring as raw entries, oldest first (M1-01, additive)."""
         buf = C.create_string_buffer(_TRACE_ENTRY.size * max_entries)
         n = self._lib.unirally_trace_read(buf, max_entries)
-        out = []
-        for k in range(n):
-            pc, a, x, y, s, d, b, p, e, _, v, h = _TRACE_ENTRY.unpack_from(buf.raw, k * _TRACE_ENTRY.size)
-            out.append({"pc": pc, "a": a, "x": x, "y": y, "s": s, "d": d, "b": b, "p": p, "e": e, "vcounter": v, "hcounter": h})
-        return out
+        return buf.raw[:n * _TRACE_ENTRY.size]
+
+    def trace_read(self, max_entries: int) -> list[dict[str, int]]:
+        return trace_entries_from_raw(self.trace_read_raw(max_entries))
+
+    def trace_read_newest(self, entries: int, capacity: int) -> list[dict[str, int]]:
+        """The newest ``entries`` of a ring of ``capacity`` (the ring copies oldest first)."""
+        raw = self.trace_read_raw(capacity)
+        return trace_entries_from_raw(raw[max(0, len(raw) - entries * _TRACE_ENTRY.size):])
+
+
+def trace_entries_from_raw(raw: bytes) -> list[dict[str, int]]:
+    out = []
+    for pc, a, x, y, s, d, b, p, e, _, v, h in _TRACE_ENTRY.iter_unpack(raw):
+        out.append({"pc": pc, "a": a, "x": x, "y": y, "s": s, "d": d, "b": b, "p": p, "e": e, "vcounter": v, "hcounter": h})
+    return out
+
+
+def frame_png(width: int, height: int, pitch: int, raw: bytes) -> bytes:
+    """Encode an XRGB8888 frame buffer as an 8-bit RGB PNG (zlib only, no dependency)."""
+    import struct as _struct
+    import zlib
+
+    def chunk(kind: bytes, body: bytes) -> bytes:
+        return _struct.pack(">I", len(body)) + kind + body + _struct.pack(">I", zlib.crc32(kind + body) & 0xFFFFFFFF)
+
+    rows = bytearray()
+    for y in range(height):
+        row = raw[y * pitch:y * pitch + width * 4]
+        rows.append(0)  # filter: none
+        # little-endian XRGB8888 stores B, G, R, X per pixel
+        rows += bytes(v for px in range(width) for v in (row[px * 4 + 2], row[px * 4 + 1], row[px * 4]))
+    header = _struct.pack(">IIBBBBB", width, height, 8, 2, 0, 0, 0)
+    return b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", header) + chunk(b"IDAT", zlib.compress(bytes(rows), 9)) + chunk(b"IEND", b"")
 
 
 def library_name() -> str:

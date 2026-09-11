@@ -4,6 +4,13 @@
 Usage: worker.py --core LIB --rom ROM --script S --samples-out OUT
                  [--system-dir D] [--state-in P] [--save-after N --state-out P]
                  [--fields F] [--stop-after-frame N] [--wram-dump-out P]
+                 [--coverage-out P [--coverage-ring N]] [--frame-image N ...] [--frame-image-dir D]
+
+The M1-01 options are additive: without ``--coverage-out`` and
+``--frame-image`` every output, exit code and digest is as before. With
+``--coverage-out`` the trace ring is enlarged to ``--coverage-ring`` entries
+and drained after every frame (``coverage.drain``); the samples' 64-entry
+trace window is then the newest entries of that ring, as before.
 
 Exit codes follow the repository convention: 0 success, 1 run failure,
 2 missing core/ROM, 3 invalid script or arguments. Timeouts are enforced by
@@ -26,6 +33,7 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from unirally_lab import EXIT_FAILURE, EXIT_INVALID_INPUT, EXIT_MISSING_PREREQUISITE, EXIT_OK  # noqa: E402
+from unirally_lab.coverage import drain as coverage_drain  # noqa: E402
 from unirally_lab.reference import bsnes  # noqa: E402
 
 SCRIPT_SCHEMA_VERSION = 1
@@ -200,6 +208,13 @@ def run(args: argparse.Namespace) -> int:
     if args.stop_after_frame is not None and not (0 <= args.stop_after_frame < script["frames"]):
         print("--stop-after-frame must lie inside the script's frame range", file=sys.stderr)
         return EXIT_INVALID_INPUT
+    if args.coverage_out and args.coverage_ring <= 0:
+        print("--coverage-ring must be positive", file=sys.stderr)
+        return EXIT_INVALID_INPUT
+    frame_images = set(args.frame_image or [])
+    if any(f < 0 or f >= script["frames"] for f in frame_images):
+        print("--frame-image frames must lie inside the script's frame range", file=sys.stderr)
+        return EXIT_INVALID_INPUT
     fields: list[dict[str, Any]] = []
     if args.fields:
         try:
@@ -265,8 +280,19 @@ def run(args: argparse.Namespace) -> int:
                       "cartridge_ram_sha256": hashlib.sha256(core.cartridge_ram()).hexdigest(),
                       "registers": core.registers(), "save_files_present": sorted(p.name for p in system_dir.iterdir())}
     trace_entries = script.get("trace_entries", 64)
-    if trace_entries:
+    coverage: coverage_drain.FrameDrain | None = None
+    ring_capacity = trace_entries
+    if args.coverage_out:
+        ring_capacity = max(trace_entries, args.coverage_ring)
+        core.trace_enable(ring_capacity)
+        coverage = coverage_drain.FrameDrain(core, ring_capacity)
+    elif trace_entries:
         core.trace_enable(trace_entries)
+    if frame_images:
+        core.keep_frame = True
+        image_dir = Path(args.frame_image_dir) if args.frame_image_dir else Path(args.samples_out).parent / "frames"
+        image_dir.mkdir(parents=True, exist_ok=True)
+        out["frame_images"] = []
 
     start = 0
     if args.state_in:
@@ -305,6 +331,24 @@ def run(args: argparse.Namespace) -> int:
         for port, buttons in inputs_for_frame(script, frame).items():
             core.set_inputs(port, buttons)
         output = core.run_frame()
+        if coverage is not None:
+            try:
+                coverage.drain_frame(frame)
+            except coverage_drain.DrainOverflow as exc:
+                print(f"coverage capture failed: {exc}", file=sys.stderr)
+                _write_coverage(Path(args.coverage_out), coverage, out, (start, frame), failure=str(exc))
+                core.unload()
+                shutil.rmtree(system_dir, ignore_errors=True)
+                return EXIT_FAILURE
+        if frame in frame_images:
+            if core.frame_raw is None:
+                out["frame_images"].append({"frame": frame, "path": None, "note": "no video output this frame"})
+            else:
+                width, height, pitch, raw = core.frame_raw
+                image = image_dir / f"frame-{frame:05d}.png"
+                image.write_bytes(bsnes.frame_png(width, height, pitch, raw))
+                out["frame_images"].append({"frame": frame, "path": str(image), "width": width, "height": height,
+                                            "sha256": hashlib.sha256(image.read_bytes()).hexdigest()})
         if should_sample(frame, sample_every, forced, args.sample_from_frame):
             wram = core.wram()
             wram_sha = hashlib.sha256(wram).hexdigest()
@@ -343,7 +387,10 @@ def run(args: argparse.Namespace) -> int:
     if trace_entries:
         # Read at the end of the last frame: the final serialize below executes
         # a few more instructions under Strict synchronization (R-0002 finding 7).
-        out["trace"] = {"instructions_executed": core.trace_total(), "window": core.trace_read(trace_entries)}
+        window = core.trace_read_newest(trace_entries, ring_capacity) if coverage is not None else core.trace_read(trace_entries)
+        out["trace"] = {"instructions_executed": core.trace_total(), "window": window}
+    if coverage is not None:
+        out["coverage"] = _write_coverage(Path(args.coverage_out), coverage, out, (start, end - 1))
     final_state = core.serialize()
     out["final"] = {"wram_sha256": hashlib.sha256(core.wram()).hexdigest(),
                     "cartridge_ram_sha256": hashlib.sha256(core.cartridge_ram()).hexdigest(),
@@ -361,6 +408,18 @@ def run(args: argparse.Namespace) -> int:
     samples.parent.mkdir(parents=True, exist_ok=True)
     samples.write_text(json.dumps(out, indent=1, sort_keys=True) + "\n", encoding="utf-8")
     return EXIT_OK
+
+
+def _write_coverage(path: Path, coverage: coverage_drain.FrameDrain, out: dict[str, Any], frames: tuple[int, int],
+                    failure: str | None = None) -> dict[str, Any]:
+    """Write the coverage document (M1-01); returns its summary for the samples file."""
+    identity = {"rom": dict(out["rom"]), "core": dict(out["core"]), "script": dict(out["script"]),
+                "status": "failed" if failure else "complete", "failure": failure}
+    doc = coverage.document(identity, frames)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(doc, sort_keys=True, separators=(",", ":")) + "\n", encoding="utf-8")
+    return {"path": str(path), "sha256": sha256_file(path), "instructions": coverage.total, "max_frame_delta": coverage.max_delta,
+            "ring_capacity": coverage.capacity, "sites": len(coverage.sites), "pairs": len(coverage.pairs), "status": identity["status"]}
 
 
 def probe(args: argparse.Namespace) -> int:
@@ -396,6 +455,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--wram-dump-out", help="write the raw work RAM after the last executed frame here")
     parser.add_argument("--serialization-method", default="Strict", choices=("Fast", "Strict"),
                         help="bsnes save-state synchronization method (default Strict; see R-0002)")
+    parser.add_argument("--coverage-out", help="M1-01: drain the trace ring every frame and write the coverage document here")
+    parser.add_argument("--coverage-ring", type=int, default=262144,
+                        help="M1-01: ring capacity used with --coverage-out (default 262144; a frame executing more fails the run)")
+    parser.add_argument("--frame-image", type=int, action="append", help="M1-01: write this frame's video output as PNG (repeatable)")
+    parser.add_argument("--frame-image-dir", help="M1-01: directory for --frame-image files (default <samples dir>/frames)")
     try:
         args = parser.parse_args(argv)
     except SystemExit as exc:

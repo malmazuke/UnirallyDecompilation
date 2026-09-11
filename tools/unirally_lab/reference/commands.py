@@ -366,8 +366,11 @@ def _worker_command(p: Prepared, script: Path, samples_out: Path, state_in: Path
 
 
 def _run_worker(rep: reportmod.Report, name: str, p: Prepared, cmd: list[str], samples_out: Path, timeout: float,
-                log_dir: Path) -> tuple[dict[str, Any] | None, int]:
-    """Run the worker as a bounded fresh process; returns (samples, exit status)."""
+                log_dir: Path, required: bool = True) -> tuple[dict[str, Any] | None, int]:
+    """Run the worker as a bounded fresh process; returns (samples, exit status).
+
+    ``required=False`` records the run as an optional check (a supplementary
+    run whose failure must not change the command's verdict)."""
     result = run_bounded(cmd, timeout=timeout)
     log_dir.mkdir(parents=True, exist_ok=True)
     (log_dir / f"{name}.log").write_text(f"$ {' '.join(cmd)}\n--- stdout\n{result.stdout}\n--- stderr\n{result.stderr}\n", encoding="utf-8")
@@ -398,7 +401,7 @@ def _run_worker(rep: reportmod.Report, name: str, p: Prepared, cmd: list[str], s
         detail += f"; killed after --timeout {timeout}s"
     else:
         detail += f"; exit {result.returncode}; {result.tail(400)}"
-    rep.add_check(name, outcome, detail=detail)
+    rep.add_check(name, outcome, required=required, detail=detail)
     return samples, status
 
 

@@ -20,7 +20,7 @@ from pathlib import Path
 from typing import Any
 
 from ..reference import bsnes
-from ..reference.worker import WRAM_SIZE, validate_fields, validate_script
+from ..reference.worker import WRAM_SIZE, ScriptError, validate_fields, validate_script
 
 MANIFEST_SCHEMA_VERSION = 1
 ORIGIN_KINDS = ("cold_start", "state")
@@ -69,6 +69,18 @@ def load_manifest(path: Path) -> dict[str, Any]:
 
 
 def validate_manifest(data: Any) -> dict[str, Any]:
+    """Structural validation; every defect is reported as ManifestError (exit 3), never a traceback."""
+    try:
+        return _validate(data)
+    except ManifestError:
+        raise
+    except ScriptError as exc:  # from the shared field/script validators
+        raise ManifestError(str(exc)) from exc
+    except (KeyError, TypeError, AttributeError, ValueError) as exc:  # malformed nesting of an untrusted document
+        raise ManifestError(f"malformed manifest: {exc!r}") from exc
+
+
+def _validate(data: Any) -> dict[str, Any]:
     if not isinstance(data, dict) or data.get("schema_version") != MANIFEST_SCHEMA_VERSION:
         raise ManifestError(f"manifest schema_version must be {MANIFEST_SCHEMA_VERSION}")
     scenario = _require(data, "scenario_id", "manifest")

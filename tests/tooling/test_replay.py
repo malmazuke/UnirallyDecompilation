@@ -127,12 +127,21 @@ class ManifestSchemaTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             bad = Path(tmp) / "bad.json"
             bad.write_text(json.dumps({"schema_version": 1}))
+            bad_range = Path(tmp) / "bad-range.json"  # review 1, M1: escaped as a traceback (exit 1) before
+            m = primary()
+            m["fields"].append({"name": "neg", "kind": "wram_range", "start": -1, "length": 1})
+            bad_range.write_text(json.dumps(m))
+            nested = Path(tmp) / "nested.json"
+            nested.write_text(json.dumps({**primary(), "inputs": {"timing_unit": "frame", "injection_point": "x", "controllers": [0, 1]}}))
             report = Path(tmp) / "report.json"
             for sub in ("validate", "run", "compare"):
-                with self.subTest(command=sub):
-                    r = run_cli("replay", sub, "--manifest", str(bad), "--report", str(report))
-                    self.assertEqual(r.returncode, EXIT_INVALID_INPUT, r.stderr)
-                    self.assertEqual(json.loads(report.read_text())["status"], "failed")
+                for path in (bad, bad_range, nested):
+                    with self.subTest(command=sub, manifest=path.name):
+                        report.unlink(missing_ok=True)
+                        r = run_cli("replay", sub, "--manifest", str(path), "--report", str(report))
+                        self.assertEqual(r.returncode, EXIT_INVALID_INPUT, r.stderr)
+                        self.assertNotIn("Traceback", r.stderr)
+                        self.assertEqual(json.loads(report.read_text())["status"], "failed")
             r = run_cli("replay", "validate", "--manifest", str(Path(tmp) / "absent.json"))
             self.assertEqual(r.returncode, EXIT_INVALID_INPUT, r.stderr)
 
@@ -313,10 +322,11 @@ class OriginResolutionTests(unittest.TestCase):
         meta.update(overrides)
         self.state.with_suffix(".bst.json").write_text(json.dumps(meta))
 
-    def write_report(self, failing: str | None = None, state_sha: str | None = None) -> None:
+    def write_report(self, failing: str | None = None, state_sha: str | None = None, save_after: int = 150) -> None:
         checks = [{"name": c, "outcome": "failed" if c == failing else "passed", "required": True} for c in mf.RESTORE_CHECKS]
         rep = {"checks": checks, "inputs": {"script": {"sha256": self.script_sha}},
-               "artifacts": [{"kind": "state", "sha256": state_sha or self.state_sha}]}
+               "artifacts": [{"kind": "state", "sha256": state_sha or self.state_sha}],
+               "samples": {"restore_and_continue": {"start_frame": save_after + 1}}}
         self.report.write_text(json.dumps(rep))
 
     def manifest(self, **origin_overrides) -> dict:
@@ -396,6 +406,23 @@ class OriginResolutionTests(unittest.TestCase):
         side, checks = self.resolve(self.manifest())
         self.assertEqual(side.status, EXIT_FAILURE)
         self.assertIn("another", checks["x_origin_restore_check"]["detail"])
+
+    def test_restore_check_must_be_for_the_manifests_save_point(self) -> None:
+        """Editing after_frame in both sidecar and manifest must not be enough (review 1, m1):
+        the report's measured resume frame ties the evidence to the save point."""
+        self.write_sidecar(after_frame=151)
+        self.write_report(save_after=150)
+        side, checks = self.resolve(self.manifest(after_frame=151, restore_check={"report": "local/states/rc.json", "save_after": 151}))
+        self.assertEqual(side.status, EXIT_FAILURE)
+        self.assertIn("save point 150", checks["x_origin_restore_check"]["detail"])
+        self.write_report(save_after=151)
+        side, checks = self.resolve(self.manifest(after_frame=151, restore_check={"report": "local/states/rc.json", "save_after": 151}))
+        self.assertEqual(side.status, EXIT_OK)
+        report = self.report.read_text()
+        self.report.write_text(report.replace('"samples"', '"samples_gone"'))
+        side, checks = self.resolve(self.manifest(after_frame=151, restore_check={"report": "local/states/rc.json", "save_after": 151}))
+        self.assertEqual(side.status, EXIT_FAILURE)
+        self.assertIn("unreadable", checks["x_origin_restore_check"]["detail"])
 
 
 class CommandPrerequisiteTests(unittest.TestCase):

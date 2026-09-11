@@ -209,16 +209,22 @@ def _resolve_side(rep: reportmod.Report, root: Path, art: Path, side: Side) -> S
         outcomes = {c["name"]: c["outcome"] for c in rc["checks"]}
         rc_script = rc["inputs"]["script"]["sha256"]
         rc_state = next((a["sha256"] for a in rc["artifacts"] if a["kind"] == "state"), None)
+        # The resume frame of the restored run is measured by the worker, so the
+        # report's save point is start_frame - 1, not an editable sidecar field.
+        rc_after = rc["samples"]["restore_and_continue"]["start_frame"] - 1
     except (OSError, ValueError, KeyError, TypeError) as exc:
         rep.add_check(f"{side.label}_origin_restore_check", "failed", detail=f"unreadable restore-check report {report}: {exc}")
         side.status = EXIT_FAILURE
         return side
     failed = [c for c in mf.RESTORE_CHECKS if outcomes.get(c) != "passed"]
     belongs = rc_script == script_sha and rc_state == state_sha
-    ok = belongs and not failed
+    same_point = rc_after == origin["after_frame"]
+    ok = belongs and same_point and not failed
     rep.add_check(f"{side.label}_origin_restore_check", "passed" if ok else "failed",
-                  detail=f"{report}: " + ("all three required checks passed for this script and state" if ok else
-                                          ("report is for another script or state" if not belongs else f"checks not passed: {failed}")))
+                  detail=f"{report}: " + (f"all three required checks passed for this script and state at save point {rc_after}" if ok else
+                                          ("report is for another script or state" if not belongs else
+                                           f"report's save point {rc_after} != manifest after_frame {origin['after_frame']}" if not same_point else
+                                           f"checks not passed: {failed}")))
     rep.add_input(f"{side.label}_restore_check_report", report, refcmd.sha256_file(report))
     if not ok:
         side.status = EXIT_FAILURE
@@ -228,14 +234,14 @@ def _resolve_side(rep: reportmod.Report, root: Path, art: Path, side: Side) -> S
 
 
 def _run_side(rep: reportmod.Report, p: refcmd.Prepared, side: Side, name: str, art: Path, timeout: float,
-              stop_after: int | None = None, wram_dump: Path | None = None) -> tuple[dict[str, Any] | None, int]:
+              stop_after: int | None = None, wram_dump: Path | None = None, required: bool = True) -> tuple[dict[str, Any] | None, int]:
     samples_out = art / f"{name}-samples.json"
     cmd = refcmd._worker_command(p, side.script, samples_out, state_in=side.state_in) + ["--fields", str(side.fields)]
     if stop_after is not None:
         cmd += ["--stop-after-frame", str(stop_after)]
     if wram_dump is not None:
         cmd += ["--wram-dump-out", str(wram_dump)]
-    return refcmd._run_worker(rep, name, p, cmd, samples_out, timeout, art)
+    return refcmd._run_worker(rep, name, p, cmd, samples_out, timeout, art, required=required)
 
 
 def _artifacts_dir(args: argparse.Namespace, rep: reportmod.Report) -> Path:
@@ -300,7 +306,9 @@ def _localize(rep: reportmod.Report, p: refcmd.Prepared, left: Side, right: Side
     outs = {}
     for side, name in ((left, "left"), (right, "right")):
         dump = art / f"localize-{name}-wram-after-{frame}.bin"
-        samples, status = _run_side(rep, p, side, f"localize_{name}", art, timeout, stop_after=frame, wram_dump=dump)
+        # Optional runs: the divergence is already established; a failed or
+        # timed-out localization must not change the command's verdict (review 1, m2).
+        samples, status = _run_side(rep, p, side, f"localize_{name}", art, timeout, stop_after=frame, wram_dump=dump, required=False)
         if samples is None:
             return {"after_frame": frame, "skipped": f"{name} re-run did not complete (exit {status})"}
         dumps[name] = dump.read_bytes()
@@ -369,6 +377,9 @@ def cmd_compare(args: argparse.Namespace) -> int:
     rep.add_check("fresh_processes", "passed" if fresh else "failed",
                   detail=f"worker pids {pids}, comparator pid {os.getpid()}")
 
+    # Video/audio digests are valid within an uninterrupted run (D-0001), so they are a
+    # required comparison for cold starts and informational after a restore (review 1, m3).
+    av_required = all(s.manifest["origin"]["kind"] == "cold_start" for s in sides)
     comparisons = []
     divergence = None
     for name, samples in runs[1:]:
@@ -389,8 +400,8 @@ def cmd_compare(args: argparse.Namespace) -> int:
                              f"{pair}: first divergence at frame {fd['frame']} in {fd['differing_fields']}")
         rep.add_check(f"final_state_identical" if len(runs) == 2 else f"final_state_identical_{pair}", "passed" if result["final_state_identical"] else "failed",
                       detail=f"{pair}: {result['final_state_sha256']['left'][:16]} / {result['final_state_sha256']['right'][:16]}")
-        rep.add_check(f"av_identical" if len(runs) == 2 else f"av_identical_{pair}", "passed" if result["av_identical"] else "failed", required=False,
-                      detail=f"{pair}: video/audio digests over common frames; informational after a restore")
+        rep.add_check(f"av_identical" if len(runs) == 2 else f"av_identical_{pair}", "passed" if result["av_identical"] else "failed", required=av_required,
+                      detail=f"{pair}: video/audio digests over common frames" + ("" if av_required else "; informational after a restore"))
         if fd is not None and divergence is None:
             left_side = plan[0][0]
             right_side = next(s for s, n in plan if n == name)

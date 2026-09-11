@@ -1,0 +1,92 @@
+{
+  "description": "Static track block, collision pose records and sample templates used by the M2-01 prerequisite experiment. No native movement agreement claimed.",
+  "id": "movement-sampling",
+  "identifiers": {
+    "scenario": "race-crawler-dragster-3000-fields",
+    "track": "DRAGSTER",
+    "tour": "CRAWLER",
+    "domain": "collision sampling for both riders, primary frames 1534\u20132999"
+  },
+  "items": [
+    {
+      "expected": {
+        "length": 33815,
+        "sha256": "8f5cef67dc57977af8ff614b8178514a26e9fe0059e02ed27aad5978185580d4"
+      },
+      "id": "track-data",
+      "kind": "rnc",
+      "name": "CRAWLER tour / DRAGSTER track data (tile map, geometry, tile-set list)",
+      "runtime": {
+        "consumed_source_end": {
+          "address": 33155,
+          "bank": 24
+        },
+        "frames": [
+          1232,
+          1242
+        ],
+        "known_runtime_writes": [
+          11
+        ],
+        "loaded_by": "$82:E12B -> $82:B2DD -> $81:B8E2",
+        "work_ram": "$7F:0000",
+        "work_ram_offset": 65536
+      },
+      "source": {
+        "address": 32768,
+        "bank": 24,
+        "directory": "$82:B332 entry 0xC2 (asset $77:074A + $C2)",
+        "file_offset": 786432,
+        "header": {
+          "chunks": 4,
+          "leeway": 0,
+          "magic": "RNC",
+          "method": 1,
+          "packed_crc": 31926,
+          "packed_length": 369,
+          "unpacked_crc": 17926,
+          "unpacked_length": 33815
+        },
+        "packed_length": 387
+      }
+    },
+    {
+      "id": "collision-poses",
+      "name": "collision-poses",
+      "kind": "raw",
+      "pieces": [
+        {
+          "file_offset": 1081344,
+          "length": 32768
+        }
+      ],
+      "expected": {
+        "length": 32768,
+        "sha256": "9d1754d38c20cb2900239557550211ab6fc23d9b0237e17b78fb29f3bf272c32"
+      }
+    },
+    {
+      "id": "collision-templates",
+      "name": "collision-templates",
+      "kind": "raw",
+      "pieces": [
+        {
+          "file_offset": 1064095,
+          "length": 17249
+        }
+      ],
+      "expected": {
+        "length": 17249,
+        "sha256": "2f03a8cb985899436603ef36b233b28f7b4213e4ba106fca328a6b02cdb081c7"
+      }
+    }
+  ],
+  "kind": "content_manifest",
+  "rom": {
+    "sha256": "a1105819d48c04d680c8292bbfa9abbce05224f1bc231afd66af43b7e0a1fd4e",
+    "size": 2097152
+  },
+  "scenario_id": "race-crawler-dragster-3000",
+  "schema_version": 1,
+  "regeneration_command": "python3 tools/project.py content decode --manifest tests/manifests/native/movement-sampling.content.json --out artifacts/m2-01/content-expanded"
+}

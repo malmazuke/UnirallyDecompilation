@@ -1,0 +1,7 @@
+add_executable(sampling_probe sampling_probe.cpp)
+target_link_libraries(sampling_probe PRIVATE unirally_sampling)
+add_executable(sampling_tests sampling_tests.cpp)
+target_link_libraries(sampling_tests PRIVATE unirally_sampling)
+foreach(case pose grid bounds)
+  add_test(NAME sampling_${case} COMMAND sampling_tests ${case})
+endforeach()

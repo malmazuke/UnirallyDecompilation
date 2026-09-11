@@ -1,0 +1,3 @@
+add_library(unirally_sampling STATIC track_sampling.cpp)
+target_include_directories(unirally_sampling PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(unirally_sampling PUBLIC lab_options)

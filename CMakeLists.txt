@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 3.27)
 
 # Laboratory infrastructure build. src/lab is a synthetic determinism probe
 # used to validate the toolchain and report pipeline. It contains no
-# recovered game code. Native game code will live under src/core later.
+# recovered game code. src/core contains the M2-01 collision-sampling
+# prerequisite; it is not yet an autonomous native game update.
 project(unirally_lab VERSION 0.1.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -28,8 +29,10 @@ else()
 endif()
 
 add_subdirectory(src/lab)
+add_subdirectory(src/core)
 
 include(CTest)
 if(BUILD_TESTING)
   add_subdirectory(tests/synthetic)
+  add_subdirectory(tests/native)
 endif()

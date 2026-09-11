@@ -24,6 +24,32 @@ int main() {
         sample = unirally::sample_controller(buttons);
         require(sample.low_image == 240 && sample.high_image == 245);
 
+        // Separate bits catch swaps hidden when every button is held together.
+        struct ButtonCase {
+            bool unirally::ControllerButtons::* button;
+            unsigned low, high;
+        };
+        const std::array<ButtonCase, 12> single_buttons{{
+            {&unirally::ControllerButtons::a, 128, 0},
+            {&unirally::ControllerButtons::x, 64, 0},
+            {&unirally::ControllerButtons::left_shoulder, 32, 0},
+            {&unirally::ControllerButtons::right_shoulder, 16, 0},
+            {&unirally::ControllerButtons::b, 0, 128},
+            {&unirally::ControllerButtons::y, 0, 64},
+            {&unirally::ControllerButtons::select, 0, 32},
+            {&unirally::ControllerButtons::start, 0, 16},
+            {&unirally::ControllerButtons::up, 0, 8},
+            {&unirally::ControllerButtons::down, 0, 4},
+            {&unirally::ControllerButtons::left, 0, 2},
+            {&unirally::ControllerButtons::right, 0, 1},
+        }};
+        for (const auto& test : single_buttons) {
+            buttons = {};
+            buttons.*(test.button) = true;
+            sample = unirally::sample_controller(buttons);
+            require(sample.low_image == test.low && sample.high_image == test.high);
+        }
+
         unirally::RaceTimerDigits timer{0, 0, 9, 9, 4};
         const auto before = unirally::serialize_timer(timer);
         require(!unirally::advance_timer_digits(timer, false));

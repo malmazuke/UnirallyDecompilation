@@ -10,7 +10,7 @@ The coordinator maintains the status registry below. Work orders further below d
 | M0-03 | accepted: integrated 11 September 2026 after five independent reviews | [Reference adapter spike](M0-03.md) |
 | M0-04 | accepted: integrated 11 September 2026 after two independent reviews | [Replay manifest and comparator](M0-04.md) |
 | M0-05 | accepted: integrated 11 September 2026 after one independent review | [Resumable execution and review pilot](M0-05.md) |
-| M0-06 | ready: prerequisites M0-00 through M0-05 accepted; not claimed | [M0 acceptance report](M0-06.md) |
+| M0-06 | claimed 11 September 2026 (worker: fresh Claude Opus 5 session, worktree `.worktrees/m0-06`, branch `task/M0-06-acceptance-report`) | [M0 acceptance report](M0-06.md) |
 | M1–M6 | planned | See milestone definitions |
 
 ## M0 — repeatable laboratory

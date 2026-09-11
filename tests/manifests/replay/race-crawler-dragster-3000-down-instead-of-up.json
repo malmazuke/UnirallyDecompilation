@@ -114,5 +114,8 @@
     }
   ],
   "regeneration_command": "python3 tools/project.py replay compare --manifest tests/manifests/replay/race-crawler-dragster-3000-down-instead-of-up.json",
-  "expected": {}
+  "expected": {
+    "sample_digest": "8340e6a9c09d7d8a385429bd0962dff33076048db608719004ddd32806b20106",
+    "final_state_sha256": "0f3cc38bd5d644012f0c7afbbfaaec772cf3df5b520cbc0c5c7312d84ab322e3"
+  }
 }

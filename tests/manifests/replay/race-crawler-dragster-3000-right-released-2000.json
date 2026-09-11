@@ -114,5 +114,8 @@
     }
   ],
   "regeneration_command": "python3 tools/project.py replay compare --manifest tests/manifests/replay/race-crawler-dragster-3000-right-released-2000.json",
-  "expected": {}
+  "expected": {
+    "sample_digest": "a99d5fcbcd223ed1f95a269e8050a92bfe9bca2a10a46ec07cff2249a319d9a6",
+    "final_state_sha256": "325aba5494d2478d2e6882e7a755d68dca7eef5c08dd85342c788635264338ff"
+  }
 }

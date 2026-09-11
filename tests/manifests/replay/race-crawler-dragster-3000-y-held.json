@@ -121,5 +121,8 @@
     }
   ],
   "regeneration_command": "python3 tools/project.py replay compare --manifest tests/manifests/replay/race-crawler-dragster-3000-y-held.json",
-  "expected": {}
+  "expected": {
+    "sample_digest": "c9a0aa46f5c0d3a21e3d91325b797994440f7fe24598644c67ddba1ab7e530c4",
+    "final_state_sha256": "6a43e075b036becc77033dee1b1a39a445c69b48e4a14276d5fc760896170bad"
+  }
 }

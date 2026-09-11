@@ -129,7 +129,7 @@ def cmd_capture(args: argparse.Namespace) -> int:
     doc["scenario_id"] = manifest["scenario_id"]
     doc["manifest"] = {"path": str(Path(args.manifest)), "sha256": refcmd.sha256_file(Path(args.manifest))}
     doc["core"].update({"name": manifest["core"]["name"], "commit": p.core["commit"], "patch_sha256": p.core["patch_sha256"]})
-    doc["regeneration_command"] = " ".join(a for a in sys.argv if not a.startswith("--report") and not a.startswith("--task"))
+    doc["regeneration_command"] = regeneration_command(manifest["scenario_id"], args, watch_addresses, watch_pcs)
     access_out.write_text(json.dumps(doc, sort_keys=True, separators=(",", ":")) + "\n", encoding="utf-8")
     sha = refcmd.sha256_file(access_out)
     rep.add_artifact("access", access_out)
@@ -165,6 +165,23 @@ def cmd_capture(args: argparse.Namespace) -> int:
                           "wram_series": doc.get("wram_series"), "frame_images": samples.get("frame_images", [])}
     rep.data["samples"] = replaycmd._samples_summary(samples)
     return _finish(rep, args, replaycmd._status_from_checks(rep))
+
+
+def regeneration_command(scenario_id: str, args: argparse.Namespace, watch_addresses: list[int], watch_pcs: list[int]) -> str:
+    """The capture command in canonical form (no host paths) so two captures of one run are byte-identical."""
+    parts = [f"python3 tools/project.py access capture --manifest tests/manifests/replay/{scenario_id}.json --out artifacts/access/{scenario_id}"]
+    if args.from_frame is not None:
+        parts.append(f"--from-frame {args.from_frame}")
+    if args.to_frame is not None:
+        parts.append(f"--to-frame {args.to_frame}")
+    parts += [f"--watch-address 0x{a:06X}" for a in watch_addresses]
+    parts += [f"--watch-pc 0x{a:06X}" for a in watch_pcs]
+    if args.wram_series_range:
+        ws, wl = (parse_address(v) for v in args.wram_series_range)
+        parts.append(f"--wram-series-range 0x{ws:X} 0x{wl:X} --wram-series-every {args.wram_series_every or 1}")
+    if args.ring != DEFAULT_RING:
+        parts.append(f"--ring {args.ring}")
+    return " ".join(parts)
 
 
 # --------------------------------------------------------------- query

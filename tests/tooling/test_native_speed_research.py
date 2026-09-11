@@ -64,3 +64,19 @@ class SpeedResearchTests(unittest.TestCase):
         self.assertEqual(update(state, skip=1, cartridge_mode=2), state)
         with self.assertRaises(ValueError):
             update(state, cartridge_mode=2)
+
+
+class SpeedEvidenceTests(unittest.TestCase):
+    def test_mode_requires_one_known_read_with_correct_location_and_width(self):
+        from unirally_lab.native.speed_research.probe import cartridge_mode
+        row = [50, 0x82a81a, 'read', 0x77074a, 2, 0x1200]
+        valid = [(50, 'r', row)]
+        self.assertEqual(cartridge_mode(valid, 40, 60), 0)
+        malformed = [[], valid + valid]
+        for index, value in [(3, 0x770750), (4, 1), (5, None), (5, False), (5, -1), (5, 65536)]:
+            changed = row.copy()
+            changed[index] = value
+            malformed.append([(50, 'r', changed)])
+        for events in malformed:
+            with self.subTest(events=events), self.assertRaises(ValueError):
+                cartridge_mode(events, 40, 60)

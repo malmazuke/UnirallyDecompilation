@@ -45,6 +45,17 @@ def read_word(memory, address, events=(), start=0, end=0):
     return int.from_bytes(pair, 'little')
 
 
+def cartridge_mode(events, start, end):
+    reads = [row for sequence, kind, row in events
+             if start <= sequence < end and kind == 'r' and row[1] == 0x82a81a]
+    if len(reads) != 1:
+        raise ValueError("speed call must contain exactly one cartridge-mode read")
+    row = reads[0]
+    if row[3] != 0x77074a or row[4] != 2 or type(row[5]) is not int or not 0 <= row[5] <= 65535:
+        raise ValueError("cartridge-mode read must identify a known word at $77:074A")
+    return row[5] & 255
+
+
 def validate_domain(access, series):
     expected = {"start": 1534, "end": 2999, "count": 1466}
     if access.get("frames") != expected or any(type(value) is not int for value in access["frames"].values()):
@@ -93,9 +104,9 @@ def compare(access, series, rom):
             selector = get(0xff9)
             if selector not in (0, 2):
                 raise ValueError('invalid rider selector')
-            mode_reads = [row[5] for seq, kind, row in events
-                          if start <= seq < end and kind == 'r' and row[1] == 0x82a81a]
-            mode = (mode_reads[0] & 255) if mode_reads else 0
+            if get(0x547 + selector) != 0:
+                raise ValueError("the primary capture contract excludes skipped speed calls")
+            mode = cartridge_mode(events, start, end)
             state = SpeedState(get(0xfa9), get(0xfab), get(0x11d7), get(0x11dd), get(0x343 + selector))
             context = SpeedContext(selector // 2, get(0x547 + selector), get(0x1225 + selector),
                                    get(0x1513 if selector == 0 else 0x150b) & 255,

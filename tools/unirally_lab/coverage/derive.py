@@ -219,9 +219,10 @@ class Derivation:
     def entry_points(self) -> list[dict[str, Any]]:
         by_target: dict[int, dict[str, Any]] = {}
         for (target, kind, mode), count in self.edges.items():
-            e = by_target.setdefault(target, {"address": addr(target), "region": mapping.classify(target),
-                                              "rom_offset": mapping.rom_offset(target, self.size), "vector": self.vector_targets.get(target),
+            e = by_target.setdefault(target, {"address": addr(target), "vector": self.vector_targets.get(target),
                                               "kinds": {}, "modes": 0, "count": 0, "sources": 0})
+            if mapping.classify(target) != mapping.REGION_ROM:
+                e["region"] = mapping.classify(target)
             e["kinds"][kind] = e["kinds"].get(kind, 0) + count
             e["modes"] |= 1 << mode
             e["count"] += count
@@ -236,13 +237,19 @@ class Derivation:
 
     def vector_table(self) -> list[dict[str, Any]]:
         out = []
+        watch = self.cov.get("watch", {}).get("per_frame", {})
+        start = self.cov["frames"]["start"]
         for v in self.vectors:
             target = v["target"]
             executed = target in self.instr_count and v["value"] not in (0x0000, 0xFFFF)
-            out.append({**v, "target": addr(target), "executed": executed,
-                        "count": self.instr_count.get(target, 0) if executed else 0,
-                        "first_frame": self.instr_first.get(target) if executed else None,
-                        "modes": modes_list(self.instr_modes.get(target, 0)) if executed else []})
+            entry = {**v, "target": addr(target), "executed": executed,
+                     "count": self.instr_count.get(target, 0) if executed else 0,
+                     "first_frame": self.instr_first.get(target) if executed else None,
+                     "modes": modes_list(self.instr_modes.get(target, 0)) if executed else []}
+            series = watch.get(str(target))
+            if series is not None and v["value"] not in (0x0000, 0xFFFF):
+                entry["per_frame"] = per_frame_summary(series, start)
+            out.append(entry)
         return out
 
     def banks(self) -> list[dict[str, Any]]:
@@ -288,7 +295,7 @@ class Derivation:
         out = []
         for target in sorted(self.static_refs):
             e = self.static_refs[target]
-            out.append({"address": e["address"], "region": e["region"], "rom_offset": e["rom_offset"], "kinds": sorted(e["kinds"]),
+            out.append({"address": e["address"], "region": e["region"], "kinds": sorted(e["kinds"]),
                         "references": e["references"], "referencing_instructions": len(e["from"]),
                         "executed": target in self.instr_count})
         return out
@@ -308,6 +315,34 @@ class Derivation:
                 entry["overlap"] = True
             out.append(entry)
         return out
+
+
+def per_frame_summary(series: list[int], start: int) -> dict[str, Any]:
+    """Summary of a watched address's executions per frame (frames numbered from ``start``)."""
+    first = next((i for i, n in enumerate(series) if n), None)
+    once_from = None
+    for i in range(len(series) - 1, -1, -1):
+        if series[i] != 1:
+            break
+        once_from = i
+    return {
+        "frames_with_zero": sum(1 for n in series if n == 0),
+        "frames_with_one": sum(1 for n in series if n == 1),
+        "frames_with_more": sum(1 for n in series if n > 1),
+        "first_frame": None if first is None else start + first,
+        "once_per_frame_from": None if once_from is None else start + once_from,
+        "gaps_after_first": [] if first is None else ranges_of_frames([start + i for i in range(first, len(series)) if series[i] == 0]),
+    }
+
+
+def ranges_of_frames(frames: list[int]) -> list[list[int]]:
+    out: list[list[int]] = []
+    for f in frames:
+        if out and f == out[-1][1] + 1:
+            out[-1][1] = f
+        else:
+            out.append([f, f])
+    return out
 
 
 def address_set_from_ranges(ranges: list[dict[str, Any]]) -> set[int]:
@@ -393,10 +428,10 @@ def dump_map(doc: dict[str, Any]) -> str:
         if isinstance(value, list) and value and isinstance(value[0], dict):
             lines.append(f'  {json.dumps(key)}: [')
             for j, item in enumerate(value):
-                lines.append("    " + json.dumps(item, sort_keys=True, separators=(", ", ": ")) + ("," if j < len(value) - 1 else ""))
+                lines.append("    " + json.dumps(item, sort_keys=True, separators=(",", ":")) + ("," if j < len(value) - 1 else ""))
             lines.append(f"  ]{comma}")
         else:
-            lines.append(f'  {json.dumps(key)}: {json.dumps(value, sort_keys=True, separators=(", ", ": "))}{comma}')
+            lines.append(f'  {json.dumps(key)}: {json.dumps(value, sort_keys=True, separators=(",", ":"))}{comma}')
     lines.append("}")
     return "\n".join(lines) + "\n"
 
@@ -448,9 +483,12 @@ def summary_markdown(doc: dict[str, Any], comparison: dict[str, Any] | None = No
     lines += ["", "## Edges by kind", "", "| Kind | Steps |", "| --- | --- |"]
     for k, n in t["edges_by_kind"].items():
         lines.append(f"| {k} | {n:,} |")
-    lines += ["", "## Vectors", "", "| Vector | Value | Executed | Count | First frame | Modes |", "| --- | --- | --- | --- | --- | --- |"]
+    lines += ["", "## Vectors", "", "| Vector | Value | Executed | Count | First frame | Modes | Per frame |", "| --- | --- | --- | --- | --- | --- | --- |"]
     for v in doc["vectors"]:
-        lines.append(f"| {v['name']} | {v['target']} | {'yes' if v['executed'] else 'no'} | {v['count']} | {v['first_frame'] if v['first_frame'] is not None else '-'} | {', '.join(v['modes']) or '-'} |")
+        pf = v.get("per_frame")
+        per = "-" if pf is None else (f"0/1/2+ in {pf['frames_with_zero']}/{pf['frames_with_one']}/{pf['frames_with_more']} frames; exactly one per frame from {pf['once_per_frame_from']}"
+                                       + (f"; no entry in frames {pf['gaps_after_first']}" if pf["gaps_after_first"] else ""))
+        lines.append(f"| {v['name']} | {v['target']} | {'yes' if v['executed'] else 'no'} | {v['count']} | {v['first_frame'] if v['first_frame'] is not None else '-'} | {', '.join(v['modes']) or '-'} | {per} |")
     lines += ["", f"## Executed ranges ({len(doc['ranges'])})", "",
               "Maximal runs of consecutive executed byte addresses; `modes` is the union over instructions starting in the run.", "",
               "| Start | End | Bytes | ROM offset | Instructions | Executions | Modes | First frame |", "| --- | --- | --- | --- | --- | --- | --- | --- |"]
@@ -478,8 +516,12 @@ def summary_markdown(doc: dict[str, Any], comparison: dict[str, Any] | None = No
                   f"### Ranges executed only here ({len(comparison['new_ranges'])})", "", "| Start | End | Bytes |", "| --- | --- | --- |"]
         for r in comparison["new_ranges"]:
             lines.append(f"| {r['start']} | {r['end']} | {r['bytes']} |")
-        lines += ["", f"### Entry points only here ({len(comparison['new_entry_points'])})", "", "| Address | Kinds | Modes | Count | First frame |", "| --- | --- | --- | --- | --- |"]
-        for e in comparison["new_entry_points"]:
+        new = comparison["new_entry_points"]
+        called = [e for e in new if set(e["kinds"]) - {"branch"}]
+        lines += ["", f"### Entry points only here ({len(new)}; {len(called)} reached by a call, jump, return or interrupt, {len(new) - len(called)} only by branches)", "",
+                  "Branch-only targets lie inside the ranges above and are listed in the JSON map only.", "",
+                  "| Address | Kinds | Modes | Count | First frame |", "| --- | --- | --- | --- | --- |"]
+        for e in called:
             lines.append(f"| {e['address']} | {e['kinds']} | {', '.join(e['modes'])} | {e['count']:,} | {e['first_frame']} |")
     lines += ["", "## Limits", "",
               "- Coverage is of this scenario's frames only; an unexecuted byte is unclassified, not data.",

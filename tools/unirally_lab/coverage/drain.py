@@ -60,11 +60,15 @@ def keys_from_raw(raw: bytes) -> list[int]:
 
 
 class FrameDrain:
-    def __init__(self, source: TraceSource, capacity: int) -> None:
+    def __init__(self, source: TraceSource, capacity: int, watch: list[int] | None = None) -> None:
         if capacity <= 0:
             raise ValueError("ring capacity must be positive")
         self.source = source
         self.capacity = capacity
+        # Watched 24-bit addresses (vector targets): executions per frame, so
+        # that "once per frame" claims are checked per frame, not from totals.
+        self.watch: list[int] = sorted(set(watch or []))
+        self.watch_per_frame: dict[int, list[int]] = {a: [] for a in self.watch}
         self.sites: Counter[int] = Counter()
         self.first_frame: dict[int, int] = {}
         self.pairs: Counter[tuple[int, int]] = Counter()
@@ -90,6 +94,8 @@ class FrameDrain:
         self.total += delta
         if delta > self.max_delta:
             self.max_delta = delta
+        for a in self.watch:
+            self.watch_per_frame[a].append(0)
         if delta == 0:
             return 0
         raw = self.source.trace_read_raw(self.capacity)
@@ -97,9 +103,16 @@ class FrameDrain:
         if available < delta:
             raise DrainOverflow(f"frame {frame}: ring returned {available} entries for a delta of {delta}")
         keys = keys_from_raw(raw[(available - delta) * TRACE_ENTRY_SIZE:])
-        self.sites.update(keys)
-        for key in set(keys):
+        frame_counts = Counter(keys)
+        self.sites.update(frame_counts)
+        for key in frame_counts:
             self.first_frame.setdefault(key, frame)
+        if self.watch:
+            watched = set(self.watch)
+            for key, n in frame_counts.items():
+                pc = key & _PC_MASK
+                if pc in watched:
+                    self.watch_per_frame[pc][-1] += n
         if self.first_key is None:
             self.first_key = keys[0]
         if self.last_key is not None:
@@ -124,6 +137,7 @@ class FrameDrain:
             "first_site": None if self.first_key is None else list(split_key(self.first_key)),
             "last_site": None if self.last_key is None else list(split_key(self.last_key)),
             "tail_sites": [list(split_key(k)) for k in self.tail],
+            "watch": {"addresses": list(self.watch), "per_frame": {str(a): list(self.watch_per_frame[a]) for a in self.watch}},
             "site_fields": ["pc", "mode", "data_bank", "count", "first_frame"],
             "sites": sites,
             "pair_fields": ["pc", "mode", "data_bank", "next_pc", "next_mode", "next_data_bank", "count"],

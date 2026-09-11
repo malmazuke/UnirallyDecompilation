@@ -211,6 +211,9 @@ def run(args: argparse.Namespace) -> int:
     if args.coverage_out and args.coverage_ring <= 0:
         print("--coverage-ring must be positive", file=sys.stderr)
         return EXIT_INVALID_INPUT
+    if any(a < 0 or a > 0xFFFFFF for a in args.coverage_watch or []):
+        print("--coverage-watch addresses must be 24-bit", file=sys.stderr)
+        return EXIT_INVALID_INPUT
     frame_images = set(args.frame_image or [])
     if any(f < 0 or f >= script["frames"] for f in frame_images):
         print("--frame-image frames must lie inside the script's frame range", file=sys.stderr)
@@ -285,7 +288,7 @@ def run(args: argparse.Namespace) -> int:
     if args.coverage_out:
         ring_capacity = max(trace_entries, args.coverage_ring)
         core.trace_enable(ring_capacity)
-        coverage = coverage_drain.FrameDrain(core, ring_capacity)
+        coverage = coverage_drain.FrameDrain(core, ring_capacity, args.coverage_watch)
     elif trace_entries:
         core.trace_enable(trace_entries)
     if frame_images:
@@ -461,6 +464,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--coverage-out", help="M1-01: drain the trace ring every frame and write the coverage document here")
     parser.add_argument("--coverage-ring", type=int, default=262144,
                         help="M1-01: ring capacity used with --coverage-out (default 262144; a frame executing more fails the run)")
+    parser.add_argument("--coverage-watch", type=lambda v: int(v, 0), action="append",
+                        help="M1-01: 24-bit address whose executions are counted per frame in the coverage document (repeatable)")
     parser.add_argument("--frame-image", type=int, action="append", help="M1-01: write this frame's video output as PNG (repeatable)")
     parser.add_argument("--frame-image-dir", help="M1-01: directory for --frame-image files (default <samples dir>/frames)")
     try:

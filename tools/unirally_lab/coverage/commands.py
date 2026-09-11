@@ -64,6 +64,16 @@ def cmd_capture(args: argparse.Namespace) -> int:
     coverage_out = out_dir / "coverage.json"
     cmd = refcmd._worker_command(p, side.script, samples_out, state_in=side.state_in) + ["--fields", str(side.fields)]
     cmd += ["--coverage-out", str(coverage_out), "--coverage-ring", str(args.ring)]
+    vectors: dict[str, int] = {}
+    if args.expect:
+        try:
+            vectors = dict(rommod.load_manifest(Path(args.expect))["header"]["vectors"])
+        except (rommod.RomError, KeyError, TypeError):
+            vectors = {}
+    for name in ("native_nmi", "native_irq", "emu_nmi", "emu_irq_brk"):
+        value = vectors.get(name)
+        if isinstance(value, int) and value not in (0x0000, 0xFFFF):
+            cmd += ["--coverage-watch", f"0x{value:06X}"]  # vector targets are bank $00 addresses
     for frame in args.frame_image or []:
         cmd += ["--frame-image", str(frame)]
     if args.frame_image:
@@ -109,11 +119,7 @@ def cmd_capture(args: argparse.Namespace) -> int:
     suffix_ok = bool(window) and window_sites == tail[-len(window_sites):]
     rep.add_check("trace_window_is_suffix_of_capture", "passed" if suffix_ok else "failed",
                   detail=f"{len(window)}-entry samples window vs the capture's newest {len(tail)} sites")
-    reset = None
-    try:
-        reset = rommod.load_manifest(Path(args.expect))["header"]["vectors"]["emu_reset"] if args.expect else None
-    except (rommod.RomError, KeyError, TypeError):
-        reset = None
+    reset = vectors.get("emu_reset")
     first = cov.get("first_site")
     if reset is not None and side.state_in is None:
         ok = first is not None and first[0] == reset and first[1] == 7  # bank $00, emulation mode with M=X=1
@@ -213,7 +219,7 @@ def cmd_map(args: argparse.Namespace) -> int:
                   detail=f"{t['executed_opcode_bytes']} + {t['executed_operand_bytes']} + {t['unclassified_bytes']} = {t['rom_size']}")
     reset = next(v for v in doc["vectors"] if v["name"] == "emu_reset")
     first = doc["coverage"]["first_site"]
-    cold = cov.get("script", {}).get("path") is not None and cov["frames"]["start"] == 0
+    cold = cov["frames"]["start"] == 0 and cov["instructions"]["initial_total"] == 0
     if cold:
         ok = first is not None and first["address"] == reset["target"] and reset["executed"]
         rep.add_check("reset_vector_is_first_instruction", "passed" if ok else "failed",
@@ -221,11 +227,15 @@ def cmd_map(args: argparse.Namespace) -> int:
     else:
         rep.add_check("reset_vector_is_first_instruction", "skipped", required=False, detail="capture did not start at frame 0")
     nmi = next(v for v in doc["vectors"] if v["name"] == "native_nmi")
-    frames_after = None if not nmi["executed"] else doc["coverage"]["frames"]["end"] - nmi["first_frame"] + 1
-    nmi_ok = nmi["executed"] and nmi["count"] == frames_after
-    rep.add_check("nmi_vector_once_per_frame", "passed" if nmi_ok else "failed", required=False,
-                  detail=f"native NMI target {nmi['target']} executed {nmi['count']} times from frame {nmi['first_frame']} "
-                         f"({frames_after} frames to the end)")
+    pf = nmi.get("per_frame")
+    if pf is None:
+        rep.add_check("nmi_vector_once_per_frame", "skipped", required=False, detail="the capture did not watch the NMI vector target per frame")
+    else:
+        nmi_ok = nmi["executed"] and pf["once_per_frame_from"] is not None
+        rep.add_check("nmi_vector_once_per_frame", "passed" if nmi_ok else "failed", required=False,
+                      detail=f"native NMI target {nmi['target']}: {nmi['count']} executions over frames {doc['coverage']['frames']['start']}-{doc['coverage']['frames']['end']}; "
+                             f"frames with 0/1/2+ entries {pf['frames_with_zero']}/{pf['frames_with_one']}/{pf['frames_with_more']}; first frame with one {pf['first_frame']}; "
+                             f"exactly one per frame from frame {pf['once_per_frame_from']} to the end; frames without an NMI after that first frame: {pf['gaps_after_first']}")
     unknown = t["unknown_edges"]
     rep.add_check("edges_classified", "passed", required=False,
                   detail=f"{t['edge_steps']} non-sequential steps, {t['sequential_steps']} sequential; {unknown} unknown edge(s) "

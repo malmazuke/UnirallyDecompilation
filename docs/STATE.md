@@ -11,7 +11,9 @@ Updated: 11 September 2026.
 - `src/lab/` is a synthetic C++20 determinism probe, not game code. Its 1000-step state hash `0be347c529fadda9` is identical on macOS arm64 (AppleClang, Homebrew clang, with sanitizers) and Linux x86_64 (GCC 13.3, with sanitizers).
 - ROM-free CI (`.github/workflows/synthetic.yml`) runs on `ubuntu-24.04` and `macos-15` for pushes to `main` and `task/**`; both are green at the M0-02 candidate. No private-fixture runner exists.
 - Reference adapter (M0-03, [D-0001](decisions/D-0001-reference-emulator.md), [R-0002](research/R-0002-reference-adapter-determinism.md)): a pinned **bsnes** libretro core (commit `7d5aa1e656b9`, tracked patch `tools/unirally_lab/reference/patches/`) driven from Python in fresh worker processes; `python3 tools/project.py reference build|run|verify|restore-check`. On this ROM three fresh processes give identical per-frame work RAM, registers, video and audio (memory/register sample digest `f210eecacf63cbeb…` for `tests/manifests/reference/boot-300.json`); the core reports PAL; inputs are delivered per frame; a save/restore in a fresh process continues identically at every save point of both tracked scripts, while saving at boot-sequence points 29–96 (with holes) perturbs the run, which `restore-check` detects. Video/audio are not restorable. Mesen Community Edition is pinned as an investigation tool only.
-- Remote: private `git@github.com:malmazuke/UnirallyDecompilation.git`. No recovered code, comparator, scheduler or replay manifest exists yet.
+- Replay manifests and comparator (M0-04, [R-0003](research/R-0003-replay-comparator.md)): `tests/manifests/replay/*.json` (manifest schema 1: scenario, ROM and core identity, cold-start or validated-state origin, both controllers' frame-timed inputs, declared fields, regeneration command, expected digests) drive `python3 tools/project.py replay validate|run|compare`. Every reference execution is a separate worker process (reference samples schema 2 adds declared work RAM ranges, a stop frame, a WRAM dump and process identity; the M0-03 sample digest is unchanged). On this ROM two fresh runs of `boot-start-600` are identical (sample digest `583d1ec544ec61a2…`); removing or moving the Start press at frames 300–305 is reported as a first divergence at frame 300 and localized to one work RAM byte, `$7E0073` (`0x10` held, `0x00` not), with identical final states; absent ROM/state/evidence exit 2, an unreachable manifest exits 4, invalid manifests exit 3. Two independent reviews with their own withheld perturbations agreed with manual frame-by-frame comparisons. A state is a valid origin only with its restore-check report at the same save point.
+- The Python test runner now records failing subtests and `test --suite synthetic` fails when the runner does (a defect since M0-02 that let three erroring subtests read as 101/101 was found by the first M0-04 review; the truthful suite has 106 checks, 98 Python tests).
+- Remote: private `git@github.com:malmazuke/UnirallyDecompilation.git`. No recovered code or scheduler exists yet.
 - An unused worktree `.worktrees/native` on branch `task/M0-02-native` (at `7ce358e`, no commits) remains; the user can remove it.
 
 ## Scope
@@ -25,7 +27,7 @@ First implementation milestone: M0 repeatable laboratory. First gameplay feasibi
 | Item | Status |
 | --- | --- |
 | PAL baseline | Identified (M0-01); execution behaviour to be confirmed in M0-03 |
-| Model-independent repository state and task handoffs | Core process requirement; exercised by independent review sessions in M0-01/M0-02 and five in M0-03 |
+| Model-independent repository state and task handoffs | Core process requirement; exercised by independent review sessions in M0-01/M0-02, five in M0-03 and two in M0-04 |
 | Differential validation against the original | Core accuracy strategy |
 | C++20/CMake/Python/SDL3 | C++20, CMake presets and Python tooling validated by M0-02 on macOS and Linux; SDL3 not yet exercised |
 | Primary reference emulator and pinned revision | Decided in M0-03: bsnes `7d5aa1e656b9` with laboratory patch, `Strict` state synchronization ([D-0001](decisions/D-0001-reference-emulator.md)) |
@@ -35,14 +37,14 @@ First implementation milestone: M0 repeatable laboratory. First gameplay feasibi
 
 ## Next work
 
-M0-04 (replay manifest and comparator) is ready: version manifests over the M0-03 samples/script schemas, compare repeated reference runs, perturb a known active input (Start at frame 300) and emit a first-divergence report. See [the task registry](../tasks/README.md) and [M0-04](../tasks/M0-04.md).
+M0-05 (resumable execution and review pilot) is ready: a fresh session reproduces the M0-04 baseline from the records alone, adds the ROM-free stubbed-worker test for `replay compare`'s wiring that review 2 noted, exercises interrupted-run recovery and failed-test reporting, and records process gaps before wider concurrency. See [the task registry](../tasks/README.md) and [M0-05](../tasks/M0-05.md).
 
 Implementation choices should be made through bounded experiments. Remote hosting beyond the private repository, release license/distribution arrangements, online service topology, public accounts/ranking and paid execution budgets remain undecided and do not block M0. A Linux build of the pinned core (ROM-free) is a natural CI addition when convenient.
 
 ## Milestone status
 
-M0: M0-00 through M0-03 accepted (see registry for the current state). M1–M6: not started. No game accuracy claims or calendar/cost estimate have been established.
+M0: M0-00 through M0-04 accepted (see registry for the current state). M1–M6: not started. No game accuracy claims or calendar/cost estimate have been established.
 
 ## Handoff
 
-The next agent should read this file, `AGENTS.md`, and the selected task. Reproduce a recorded check first: `python3 tools/project.py doctor && python3 tools/project.py bootstrap && python3 tools/project.py build --preset lab-debug && python3 tools/project.py test --suite synthetic`; with the ROM available also `python3 tools/project.py reference build && python3 tools/project.py reference verify --script tests/manifests/reference/boot-300.json`. Preserve the PAL choice. Update this summary only with observed results and decisions; leave execution details in task records.
+The next agent should read this file, `AGENTS.md`, and the selected task. Reproduce a recorded check first: `python3 tools/project.py doctor && python3 tools/project.py bootstrap && python3 tools/project.py build --preset lab-debug && python3 tools/project.py test --suite synthetic`; with the ROM available also `python3 tools/project.py reference build && python3 tools/project.py reference verify --script tests/manifests/reference/boot-300.json` and `python3 tools/project.py replay compare --manifest tests/manifests/replay/boot-start-600.json` (exit 0, sample digest `583d1ec544ec61a2…`). Preserve the PAL choice. Update this summary only with observed results and decisions; leave execution details in task records.

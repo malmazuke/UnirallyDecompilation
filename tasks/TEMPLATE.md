@@ -46,6 +46,7 @@ Link concise evidence records and full local artifacts. Do not paste an entire t
 - Unavailable/skipped checks:
 - Exact next experiment/command:
 - Remaining dependencies:
+- Runtime needs (network, build time, fixtures, memory):
 - Elapsed work and provider usage when known:
 
 ## Review and integration

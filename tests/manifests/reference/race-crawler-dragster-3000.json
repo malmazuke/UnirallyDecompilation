@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "core": "bsnes",
+  "description": "Cold start, 3000 PAL frames: the M1-01 race scenario (1P, MIKE, CRAWLER tour, DRAGSTER track, Race; Right held 1500-2999, Up 2200-2259). Equivalent to tests/manifests/replay/race-crawler-dragster-3000.json.",
+  "frames": 3000,
+  "sample_every": 1,
+  "inputs": [
+    {
+      "from": 300,
+      "to": 305,
+      "buttons": [
+        "start"
+      ],
+      "port": 0
+    },
+    {
+      "from": 620,
+      "to": 625,
+      "buttons": [
+        "start"
+      ],
+      "port": 0
+    },
+    {
+      "from": 750,
+      "to": 755,
+      "buttons": [
+        "start"
+      ],
+      "port": 0
+    },
+    {
+      "from": 900,
+      "to": 905,
+      "buttons": [
+        "start"
+      ],
+      "port": 0
+    },
+    {
+      "from": 1050,
+      "to": 1055,
+      "buttons": [
+        "start"
+      ],
+      "port": 0
+    },
+    {
+      "from": 1200,
+      "to": 1205,
+      "buttons": [
+        "start"
+      ],
+      "port": 0
+    },
+    {
+      "from": 1500,
+      "to": 2999,
+      "buttons": [
+        "right"
+      ],
+      "port": 0
+    },
+    {
+      "from": 2200,
+      "to": 2259,
+      "buttons": [
+        "up"
+      ],
+      "port": 0
+    }
+  ],
+  "trace_entries": 64
+}

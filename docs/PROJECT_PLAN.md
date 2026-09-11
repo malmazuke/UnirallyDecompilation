@@ -66,6 +66,17 @@ M0–M3 form the first investment decision. Measure progress before estimating M
 
 For M4, inventory actual game features from evidence; the table does not assert that every named system has already been confirmed in this ROM. For M3, maintain a scoped inventory so a polished demo cannot be mistaken for the full game.
 
+### Next-stage estimate, revised from observed effort
+
+Revised 11 September 2026 from the M0-01 to M0-05 handoffs; the figures and their derivation are in [R-0005](research/R-0005-m0-acceptance.md). Observed: about **9 h 55 min of worker sessions** across five accepted tasks, plus **11 review rounds** (at least 1 h; five of the sessions recorded no duration), of which **6 returned a material finding**. Two patterns, both from this small sample:
+
+- Fix rounds after the first candidate cost roughly as much as the first candidate (M0-03: 1 h 45 min, then 2 h 35 min of fixes; M0-04: 1 h 30 min, then 30 min).
+- The tasks that touched a real unknown needed the most review rounds. M0-03 took five, and each one found a defect in how a *check* was defined rather than in the emulator. Pure tooling tasks (M0-02, M0-04) settled in two.
+
+M1's three tasks each face a real unknown (what the ROM executes, where player state lives, how a track is encoded), so M0-03 is the closer analogue than M0-02. Taking about 2 h for a first candidate plus a comparable amount of fixes, M1-01 to M1-03 are estimated at roughly **12 h of worker sessions and 6 to 15 review rounds** — with the spread, not the midpoint, as the honest figure: a single task that turns out to need a different capture method can absorb the whole estimate on its own, as M0-03 did.
+
+These are effort figures for planning task order and concurrency. They are not a calendar date, a delivery promise or a cost: sessions are not metered here, no spend is authorized by this plan, and five tasks on one host by two models is too small a sample to extrapolate to M2 and beyond. Re-estimate M2 from M1's observed figures rather than from this one.
+
 ## Future features without premature implementation
 
 ### Online play

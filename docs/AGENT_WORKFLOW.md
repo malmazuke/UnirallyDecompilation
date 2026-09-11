@@ -60,6 +60,10 @@ Notify the user when a milestone is accepted, a scope/budget decision is needed,
 
 Routine integration can proceed automatically only when the task is in scope, a reviewer has accepted the evidence, and the exact merge candidate passes its required checks. Public release, deployment and new service spending remain distinct actions requiring the user's authorization; do not infer those from the aspiration to have online play.
 
+### Internal prerequisites and continuity
+
+When a worker reaches an internal dependency, it checkpoints the evidence and informs the coordinator. The coordinator amends scope or creates and dispatches the smallest prerequisite, then resumes the dependent task after review. A ready prerequisite is work to do, not a reason to end the user request. The 45-minute sessions above are checkpoint/reassessment intervals; they do not create a user-imposed total budget. Do not invent a total stopping budget when the user has not supplied one. Preserve actual spending restrictions and runtime limits, and escalate only dependencies that require the user's access, input or authority.
+
 ## Source control and integration
 
 At implementation start, initialize a local Git repository if none exists. Record the first planning baseline, then use a stable `main` and short-lived task branches such as `task/M0-02-reference-adapter`. Create one worktree or checkout per active worker; respect any repository/workspace manager already in use.

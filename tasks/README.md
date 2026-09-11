@@ -16,7 +16,7 @@ The coordinator maintains the status registry below. Work orders further below d
 | M1-03 | accepted: integrated 12 September 2026 after one independent review | [Minimal track/asset decode](M1-03.md) |
 | M1-04 | accepted: integrated 12 September 2026 after one independent review; M1 accepted, tag `m1` | [M1 acceptance report](M1-04.md) |
 | M2-01 | blocked on M2-01A; sampling/progress component checkpoint reviewed; full native movement not accepted | [Native movement experiment](M2-01.md) |
-| M2-01A | ready: contact/pose/opponent-motion research prerequisite; dispatch from integrated main | [Close riding dependencies](M2-01A.md) |
+| M2-01A | claimed: contact_contract and motion_contract in disjoint worktrees; coordinator continues to M2-01 after review | [Close riding dependencies](M2-01A.md) |
 | M2-02, M3 – M6 | planned | See milestone definitions |
 
 ## M0 — repeatable laboratory

@@ -26,3 +26,10 @@ Next: independent review including a crafted carry/precedence boundary, then
 coordinator integration with reviewed contact/motion evidence. Autonomous native
 movement, withheld runs and full-state serialization remain pending. The two
 frozen withheld outputs remain unopened. No user intervention is required.
+
+Clean submission checks at `510ba04966ff7bba28b081ac4a6f1a827bd152ac`:
+`test --suite synthetic` passed222/222, no missing/skipped checks, dirty=false,
+source unchanged throughout. Report SHA-256
+`e4986a61e165869d97fbe834bfe185c9152c71857ac7e4d6f4ac549f7397b0f6`.
+Debug and sanitizer probes re-run on that clean source retain the same13,194
+matches and output digest above. This follow-up adds only the result record.

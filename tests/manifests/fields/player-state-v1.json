@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "kind": "field_declarations",
+  "name": "player-state-v1",
+  "scenario_id": "race-crawler-dragster-3000",
+  "description": "Validated player-state fields of the race scenario (M1-02, R-0007), as replay-manifest fields (work RAM offsets in bank $7E).",
+  "record": "docs/state/player-state.md",
+  "fields": [
+    {
+      "name": "joy1l_image",
+      "kind": "wram_range",
+      "start": 785,
+      "length": 1,
+      "description": "Image of JOY1L ($4218) stored once per frame by $80:87EC: A=0x80 X=0x40 L=0x20 R=0x10 (validated by the a/x/l/r-held variants)"
+    },
+    {
+      "name": "joy1h_image",
+      "kind": "wram_range",
+      "start": 787,
+      "length": 1,
+      "description": "Image of JOY1H ($4219) stored once per frame by $80:87F2: B=0x80 Y=0x40 Up=0x08 Down=0x04 Left=0x02 Right=0x01 (validated by the b/y/left/down variants and the Right-removed run)"
+    },
+    {
+      "name": "axis_v",
+      "kind": "wram_range",
+      "start": 789,
+      "length": 1,
+      "description": "Derived vertical input: 0 up, 1 neutral, 2 down; written once per frame by $82:AB36"
+    },
+    {
+      "name": "axis_h",
+      "kind": "wram_range",
+      "start": 793,
+      "length": 1,
+      "description": "Derived horizontal input: 0 left, 1 neutral, 2 right; written once per frame by $82:AB52"
+    },
+    {
+      "name": "pos_x",
+      "kind": "wram_range",
+      "start": 1045,
+      "length": 4,
+      "description": "u16 track x position of rider 0 (player) at $0415 and rider 1 (opponent) at $0417; each written once per frame from frame 1329 by $82:8DB9 / $82:92A7 and copied by $81:8E17 / $81:8F6B; pos[f+1]-pos[f] equals displacement_x[f+1] in all 565 checked riding frames"
+    },
+    {
+      "name": "displacement_x",
+      "kind": "wram_range",
+      "start": 3003,
+      "length": 2,
+      "description": "s16 x displacement applied in the frame, written once per frame by $82:8DF8"
+    },
+    {
+      "name": "throttle",
+      "kind": "wram_range",
+      "start": 3051,
+      "length": 2,
+      "description": "s16 throttle integrator: +16 per frame while Right is held (saturating at 432 in this scenario), -16 with Left, 0 on release; written once per frame by $82:8DBF"
+    },
+    {
+      "name": "speed",
+      "kind": "wram_range",
+      "start": 1211,
+      "length": 2,
+      "description": "s16 speed magnitude (0x1C8 = 456 at the GO, 481 at frame 2000); drops by exactly 1 per frame after Right is released; written once per riding frame by $82:8E9A (copied by $81:8E22); the byte $04BA before it is touched only through [dp] pointers and is not part of this field"
+    },
+    {
+      "name": "timer",
+      "kind": "wram_range",
+      "start": 3609,
+      "length": 20,
+      "description": "Race timer as one digit per 4-byte slot: $0E19 minutes, $0E1D tens of seconds, $0E21 seconds, $0E25 tenths, $0E29 frames within the tenth (0-4: five PAL frames per tenth, origin frame 1534 of the race scenario); writers $81:C6C9/$81:C6ED (frames), $81:C6FF/$81:C70D (tenths), $81:C714/$81:C722 (seconds)"
+    },
+    {
+      "name": "jump_height",
+      "kind": "wram_range",
+      "start": 829,
+      "length": 2,
+      "description": "u16 rider height value 1079 at rest; rises during a B jump (b-held variant) while pos_x is unchanged; written by $81:A594 and updated by $81:B3EA"
+    },
+    {
+      "name": "camera_x",
+      "kind": "wram_range",
+      "start": 8230,
+      "length": 2,
+      "description": "u16 background scroll x = pos_x - 936 in this scenario; written once per frame by $81:AE87 (long store to $7E:2026)"
+    }
+  ]
+}

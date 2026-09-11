@@ -1,8 +1,12 @@
 """Authored boundaries for the isolated contact research checker."""
 import copy
 import unittest
-from tools.unirally_lab.native.contact_research.preprocess import preprocess, reduce_samples
-from tools.unirally_lab.native.contact_research.summarize import verify_call, events_for_frame, calls
+import sys
+from pathlib import Path
+
+sys.path.insert(0,str(Path(__file__).resolve().parents[2]/"tools"))
+from unirally_lab.native.contact_research.preprocess import preprocess, reduce_samples
+from unirally_lab.native.contact_research.summarize import verify_call, events_for_frame, calls
 
 
 class ContactResearchTests(unittest.TestCase):

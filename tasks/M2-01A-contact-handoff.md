@@ -38,3 +38,10 @@ Next command: clean-source full synthetic suite after scoped candidate commit;
 then send exact candidate and handoff for independent review. Broader geometry,
 upward support and other landing buckets remain unsupported, explicitly bounded
 out rather than invented. No native gameplay implementation or withheld run.
+
+Final-suite attempt at7271b3d failed: the new test module imported`tools.unirally_lab`,
+which direct unittest discovery permits but the project's subprocess runner does
+not put on its path. Existing tests explicitly prepend the tools directory and
+import`unirally_lab`; the new test now follows that convention. The failure was
+reported as a failure (200 tests including one failed import), not a pass.
+No gameplay/model/evidence change. Re-running after the import-only fix.

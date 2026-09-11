@@ -2,7 +2,7 @@
 
 Read `docs/STATE.md`, the relevant task record, and `docs/AGENT_WORKFLOW.md` before implementation. Consult `docs/PROJECT_PLAN.md` for scope and `docs/BUILD_AND_VALIDATION.md` for acceptance evidence.
 
-- This is currently a planning repository. Build commands, test runners and scheduling described in the documents are proposed interfaces until implemented and recorded as such.
+- Implementation is underway. Consult docs/BUILD_AND_VALIDATION.md for the implemented command inventory; unimplemented interfaces and scheduling remain proposals, not available capabilities.
 - Keep verified observations, hypotheses and implementation decisions distinct. Support gameplay claims with a ROM identity, addresses or traces, a reproducible experiment and the precise tested domain.
 - Write native code for human contributors: descriptive names for established concepts, small explicit update functions, documented units/integer semantics, and evidence links for recovered behavior. Keep uncertain meanings provisional; defer speculative mod frameworks. Refactor under frozen differential checks (D-0003).
 - Preserve original integer arithmetic, ordering and timing when reconstructing behavior. Do not replace unknown mechanics with plausible inventions while describing the result as accurate.

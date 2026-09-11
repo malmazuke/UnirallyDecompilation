@@ -13,7 +13,7 @@ The coordinator maintains the status registry below. Work orders further below d
 | M0-06 | accepted: integrated 11 September 2026 after one independent review; M0 accepted, tag `m0` | [M0 acceptance report](M0-06.md) |
 | M1-01 | accepted: integrated 11 September 2026 after one independent review | [Observed code/data map](M1-01.md) |
 | M1-02 | accepted: integrated 11 September 2026 after one independent review | [Validated player-state schema and update timing](M1-02.md) |
-| M1-03 | ready: M1-02 is integrated; next to be dispatched by the coordinator from `main` | [Minimal track/asset decode](M1-03.md) |
+| M1-03 | claimed: 11 September 2026 22:35 AEST, worker on `task/M1-03-track-decode` in `.worktrees/m1-03` | [Minimal track/asset decode](M1-03.md) |
 | M2 – M6 | planned | See milestone definitions |
 
 ## M0 — repeatable laboratory

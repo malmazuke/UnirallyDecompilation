@@ -297,7 +297,10 @@ def build_scene(manifest: dict[str, Any], rom: bytes, ports: dict[str, Any], wat
         elif r["a_bus_region"] == "wram" and series is not None and series_meta is not None and (r["a_bus"] & 0xFFFF) in stage_sources:
             start = series_meta["start"]
             length = series_meta["length"]
-            idx = series_meta["frames"].index(r["frame"]) if r["frame"] in series_meta["frames"] else None
+            # The DMA runs in the vblank at the start of its frame; the staging buffer it copies is the
+            # one the previous frame's game loop left, i.e. the series entry of frame - 1 (calibrated, R-0008).
+            src_frame = r["frame"] - 1
+            idx = series_meta["frames"].index(src_frame) if src_frame in series_meta["frames"] else None
             if idx is not None:
                 chunk = series[idx * length:(idx + 1) * length]
                 off = (r["a_bus"] & 0xFFFF) - start

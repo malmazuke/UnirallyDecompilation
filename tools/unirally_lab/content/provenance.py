@@ -140,11 +140,18 @@ def block_moves(doc: dict[str, Any], pc: int = 0x000199) -> list[dict[str, Any]]
                    "caller_dbr": b, "destination_bank": None, "source_banks": None}
             out.append(cur)
         prev_a = a
+    # Sources in ROM are aggregated by the record as ranges per (pc, mode, addressing, kind), not per byte.
+    rom_range = None
+    for row in doc.get("rom_reads", []):
+        if row[0] == pc and kinds[row[3]] == "block_read":
+            rom_range = [row[5], row[6]] if rom_range is None else [min(rom_range[0], row[5]), max(rom_range[1], row[6])]
     for t in out:
         banks: set[int] = set()
         for k in range(t["length"]):
             banks |= src_banks.get((t["source_offset"] + k) & 0xFFFF, set())
         t["source_banks"] = sorted(banks)
+        t["source"] = "work RAM" if banks else ("rom (within the record's block-read range of the pc)" if rom_range else "unresolved")
+        t["rom_block_read_range"] = rom_range
         t["complete"] = t["length"] == t["count_register"] + 1
     return out
 

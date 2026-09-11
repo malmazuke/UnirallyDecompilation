@@ -1,0 +1,35 @@
+{
+  "description": "Original progress transition tables; isolated M2-01 dependency.",
+  "id": "movement-progress",
+  "identifiers": {
+    "scenario": "race-crawler-dragster-3000-fields",
+    "track": "DRAGSTER",
+    "tour": "CRAWLER",
+    "domain": "collision sampling for both riders, primary frames 1534\u20132999"
+  },
+  "items": [
+    {
+      "id": "progress-transitions",
+      "name": "Five ordered progress transition tables at $80:84CB",
+      "kind": "raw",
+      "pieces": [
+        {
+          "file_offset": 1227,
+          "length": 80
+        }
+      ],
+      "expected": {
+        "length": 80,
+        "sha256": "8a90513f349bc7836513d3495a9bbb90563b9eb7a716fd4aff5b9a4c74fc83df"
+      }
+    }
+  ],
+  "kind": "content_manifest",
+  "rom": {
+    "sha256": "a1105819d48c04d680c8292bbfa9abbce05224f1bc231afd66af43b7e0a1fd4e",
+    "size": 2097152
+  },
+  "scenario_id": "race-crawler-dragster-3000",
+  "schema_version": 1,
+  "regeneration_command": "python3 tools/project.py content decode --manifest tests/manifests/native/movement-progress.content.json --out artifacts/m2-01/progress-content"
+}

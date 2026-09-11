@@ -9,12 +9,15 @@ import json
 from pathlib import Path
 import sys
 import unittest
+from unittest import mock
+import subprocess
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "tools"))
 from unirally_lab.native.freeze_reference import freeze, project
-from unirally_lab.native.probe_sampling import capture_cases
+from unirally_lab.native.probe_sampling import capture_cases, run_probe, NativeProbeFailure, validate_primary_access
 from unirally_lab.replay.manifest import derive_script, range_fields
+from unirally_lab.reference.bsnes import DEFAULT_OPTIONS
 
 
 class FreezeTests(unittest.TestCase):
@@ -76,3 +79,45 @@ class SamplingProbeTests(unittest.TestCase):
         for frames in ({"start": 1534, "end": 1534, "count": 1}, {"start": 1534, "end": 2999, "count": 1466}):
             with self.assertRaises(ValueError):
                 capture_cases({"watch_addresses": {}, "frames": frames, "watch_pcs": {str(0x818B6A): []}}, 1024)
+
+
+class NativeProcessTests(unittest.TestCase):
+    def test_nonzero_exit_keeps_native_execution_failure(self):
+        with mock.patch("unirally_lab.native.probe_sampling.subprocess.run", return_value=subprocess.CompletedProcess([], 1, "", "deliberate failure")):
+            with self.assertRaisesRegex(NativeProbeFailure, "native process exit 1"):
+                run_probe(["fake"], "", 1, 10)
+
+    def test_empty_and_malformed_native_output_are_execution_failures(self):
+        for output in ["", "bad\n", "1 2\n"]:
+            with mock.patch("unirally_lab.native.probe_sampling.subprocess.run", return_value=subprocess.CompletedProcess([], 0, output, "")):
+                with self.assertRaises(NativeProbeFailure):
+                    run_probe(["fake"], "", 1, 10)
+
+
+class PrimaryIdentityTests(unittest.TestCase):
+    def fixture(self):
+        relative = "tests/manifests/replay/race-crawler-dragster-3000-fields.json"
+        path = ROOT / relative
+        manifest = json.loads(path.read_text())
+        return {"scenario_id": manifest["scenario_id"],
+                "manifest": {"path":relative,"sha256":hashlib.sha256(path.read_bytes()).hexdigest()},
+                "core": {key:manifest["core"][key] for key in ["name","commit","patch_sha256","serialization_method"]} | {"options":DEFAULT_OPTIONS,"api_version":1},
+                "rom":manifest["rom"],
+                "script":{"frames":3000,"sample_every":1,"sample_from_frame":None,"sha256":hashlib.sha256((json.dumps(derive_script(manifest),indent=2,sort_keys=True)+"\n").encode()).hexdigest()},
+                "status":"complete","failure":None,"watch_pcs_truncated":False,
+                "instructions":{"max_frame_delta":100},"ring_capacity":200}
+
+    def test_primary_reference_identity(self):
+        validate_primary_access(self.fixture())
+
+    def test_changed_core_inputs_or_incomplete_capture_are_rejected(self):
+        mutations = [lambda d:d["core"].update(commit="0"*40),
+                     lambda d:d["core"].update(serialization_method="Fast"),
+                     lambda d:d["script"].update(sha256="wrong"),
+                     lambda d:d.update(scenario_id="another-case"),
+                     lambda d:d.update(status="failed"),
+                     lambda d:d.update(watch_pcs_truncated=True)]
+        for mutation in mutations:
+            with self.subTest(mutation=mutation):
+                access=self.fixture(); mutation(access)
+                with self.assertRaises(ValueError): validate_primary_access(access)

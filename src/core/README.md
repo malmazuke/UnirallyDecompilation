@@ -39,3 +39,12 @@ The three C++ tests use authored data for pose reflection/overflow, four grid
 quadrants, and unsupported or missing inputs. The Python checks guard the
 reference freeze and prevent incomplete captures from passing the probe. No
 ROM or extracted table is included in those tests.
+
+`track_progress.hpp/.cpp` observes marker words and advances a transition
+counter through the original ordered tables. `ProgressUpdateState` stores both
+riders' marker/tag/count/rejection state and the explicit alternating `$0302`
+phase. `serialize_progress`/`deserialize_progress` define a 15-byte representation
+without padding or host byte-order assumptions. The isolated recurrence matches
+both riders through frame 2999 from one frame-1533 seed, but its sampled words
+still originate from captured positions/poses. See R-0010 for commands and the
+post-gather collision-response dependency that remains before autonomous riding.

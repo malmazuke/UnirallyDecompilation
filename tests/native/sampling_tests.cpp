@@ -42,6 +42,11 @@ int main(int argc, char** argv) {
             points[0] = {8,8}; points[1] = {16,8}; points[2] = {8,16}; points[3] = {16,16};
             const auto values = unirally::sample_track({track, {}, {}}, points, 48, 48, 2);
             require(values[0] == 15 && values[1] == 112 && values[2] == 203 && values[3] == 300);
+            // 192 - 64 wraps to 0x80, so BMI chooses the left quadrant.
+            // Ordinary unsigned comparison would select block 1, returning 100.
+            points[0] = {192,0};
+            const auto wrapped = unirally::sample_track({track, {}, {}}, points, 0, 0, 2);
+            require(wrapped[0] == 0);
         } else if (name == "bounds") {
             bool missing = false, edge = false;
             try { (void)unirally::collision_points({{}, {}, {}}, 0, false); }

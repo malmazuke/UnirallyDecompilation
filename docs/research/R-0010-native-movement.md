@@ -3,7 +3,7 @@
 - Status: in progress; no native gameplay agreement claimed.
 - Task: [M2-01](../../tasks/M2-01.md), dispatched base `a9f86e590e4be0d76369a975ece2d556883aa51f`.
 - ROM: PAL Unirally, SHA-256 `a1105819d48c04d680c8292bbfa9abbce05224f1bc231afd66af43b7e0a1fd4e`; unchanged bsnes commit `7d5aa1e656b9171524d01b1b22917197d8121cb4`, patch `a719f5ffe2222dad4c1ab04336633319ad85004f74e32fc14893a058be333885`, Strict serialization.
-- Domain: primary Crawler/DRAGSTER race; end-of-frame samples, first native update intended at 1534 from initial observation 1533. Reference baseline is unchanged. Native implementation has not begun.
+- Domain: primary Crawler/DRAGSTER race; end-of-frame samples, first full native update intended at 1534 from initial observation 1533. Reference baseline is unchanged. Native sampling and progress components exist; autonomous movement is not implemented.
 
 ## Coordinator-approved scope amendment (12 September 2026)
 
@@ -37,7 +37,7 @@ evidence, rather than a partial gameplay acceptance.
    after comparing a transition encoded in bits 10–12 of `$0FB5` with the ROM
    transition table at `$80:84CB`. `$81:8BC6` fills `$0FB5` from sampled track
    words, which `$81:8B66` gathers from `$7F:800F,X` into `$0260,Y`.
-   The exact spatial gather and opponent motion remain under investigation.
+   The spatial gather is now reproduced (findings 4–6); autonomous opponent motion remains under investigation.
    This is a concrete dependency beyond a player-only isolated update.
 4. **The pose/table concern is resolved for the sampling component.** The
    preliminary sprite-only interpretation was wrong: `$81:8DB6` calls
@@ -129,11 +129,12 @@ bytes, full disassembly, extracted content or emulator states are tracked.
 
 ## Not established
 
-No native simulation, comparison, serialization, sanitizer result or native
-withheld-case agreement exists yet. The exact full riding dependency closure,
-track-grid gather and opponent input/motion are not yet recovered. The five
-timer digits and input axes have not yet been implemented. Frozen values are
-observations and do not satisfy gameplay acceptance by themselves.
+No autonomous native movement simulation, native movement comparison or native
+withheld-case agreement exists yet. Sampling and progress are recovered as
+isolated components, with explicit 15-byte progress serialization and sampler
+sanitizer evidence. The full riding dependency closure, collision response and
+opponent input/motion remain unfinished. Timer digits and input axes are not
+implemented. Frozen observations do not satisfy gameplay acceptance.
 
 ## Sampling checkpoint
 
@@ -168,3 +169,74 @@ It also independently projected all 1,467 primary rows from both its pre-freeze
 captures, matching the primary expected-file SHA-256
 `5b6b2f6f2d513d1ef2b230f21b0774229bdbc6a207ff4a530245e8c7051fb640` without
 using the freeze utility. No withheld output was inspected in either check.
+
+## Progress recurrence and component review fixes
+
+`track_progress.cpp` implements `$82:979A–981D`. The next tag is
+`(marker_word & 0x1C00) >> 9`. A zero previous tag or unchanged tag causes no
+counter step. Otherwise lookup the previous tag's byte offset in the four
+ordered tables at `$80:84CB`, `$80:84DB`, `$80:84EB`, `$80:84FB`: matching the
+new tag changes the u16 counter by +1,+2,-1,-2, respectively. A negative table
+word stops lookup and rejects; reaching the fifth table cannot accept because
+both of its paths reject, so the native implementation directly rejects there.
+A rejection preserves the old tag. Success remembers the new tag and clears
+rejection. The static 80-byte table region is extracted through
+`movement-progress.content.json` from ROM file offset `0x0004CB`.
+
+Marker observation scans gathered samples from index 9 to 0, retaining the last
+word whose low ten bits are zero and whose bits 10–12 are neither zero nor
+all set (`$81:8BB5–8BC6`). The marker persists if no sample supplies one.
+
+**Subframe schedule:** `$83:CCB8–CCBE` computes `u8(1 - previous_phase)` into
+`$0302`; the player dispatch `$82:8C4E–8C6B` advances progress on phase 1 and
+the opponent dispatch on phase 0. A first hypothesis advancing both each frame
+produced 159 mismatches, first opponent at 1577; reading the phase branch fixed
+that error. This is not absolute frame parity: `ProgressUpdateState.phase` is
+initialized once from `$0302` at frame 1533, persisted and serialized, then
+updated by subtraction. Both marker observations still run every frame.
+
+The native recurrence on native sampled words matches all four fields
+(marker/tag/count/rejection) for both riders on 1534–2999: 11,728 values.
+Initial fields at frame 1533 are zero for both riders; initial phase is 1.
+`ProgressBytes` is exactly 15 explicit bytes: little-endian marker, tag, count,
+one rejection byte, repeated per rider, then one phase byte. Invalid flag/phase
+values and incorrect length are rejected. The probe round-trips this encoding
+after every frame; it is a component continuation check, not M2-02 acceptance.
+
+```sh
+python3 tools/project.py content decode --manifest tests/manifests/native/movement-progress.content.json --out artifacts/m2-01/progress-content
+python3 -m tools.unirally_lab.native.probe_sampling --access artifacts/m2-01/sampling-access/access.json --content-manifest tests/manifests/native/movement-sampling.content.json --content artifacts/m2-01/content-expanded --probe build/lab-debug/tests/native/sampling_probe --coarse-width 1024 --report artifacts/m2-01/sampling-probe-reviewed.json
+python3 -m tools.unirally_lab.native.probe_progress --sampling-output artifacts/m2-01/sampling-probe-reviewed.native.txt --sampling-report artifacts/m2-01/sampling-probe-reviewed.json --series artifacts/m2-01/movement-access/wram-series.bin --series-access artifacts/m2-01/movement-access/access.json --content-manifest tests/manifests/native/movement-progress.content.json --content artifacts/m2-01/progress-content/progress-transitions.bin --probe build/lab-debug/tests/native/progress_probe --report artifacts/m2-01/progress-probe-reviewed.json
+```
+
+Every incoming sample position/pose is still captured. Progress itself evolves
+from one seed; this does not remove the oracle dependency from the *whole*
+movement experiment, so no movement agreement is claimed.
+
+Independent component review of `611c396`: reviewer reproduced the capture
+digest and all 29,320 words in debug/sanitizer builds, plus 206/206 checks. CI
+run 34654922992 passed Linux (including sanitizer stage) and macOS on that
+checkpoint. Its findings led to: an authored wrapped-sign test (point x=192,
+boundary=64, BMI selects the left quadrant); execution/protocol errors mapped
+to exit 1 before attempting output comparison; strict primary reference identity
+checks (core/patch/options/serialization, ROM, manifest, script, completeness,
+nontruncated watches); and corrected stale status prose. New tests reject changed
+identity, missing output and malformed output. No reference expectation changed.
+The sampler's original check after passing the suite used the misspelled preset
+`lab-sanitized` and returned exit 3; the corrected `lab-sanitize` built and ran
+all sampler checks without diagnostics. The task handoff lists final rechecks.
+
+## Next dependency contract to inventory
+
+After gathering samples, `$81:8DBC` calls `$81:8F98` (opponent analog likewise).
+The caller publishes corrected position at `$81:8E17/8E1C`, horizontal/vertical
+velocity at `$81:8E22/8E28`, and contact/airborne-like state `$054B` from `$0F33`
+(the latter meaning remains provisional). Original player y before collision
+can differ from its end-of-frame y (861 vs 859 at frame 1600), so the response
+cannot be omitted. The opponent has additional nonzero `$0F33` states and
+velocity changes which later affect the player's speed through progress.
+Inventory this post-gather response's incoming fields, outputs and actual
+branches before implementation. Following it comes pose/orientation selection
+in `$83:EF54–F0F7` and `$83:ED7B–EF53`, which supplies the next pose-indexed
+collision points. No new static table format is presently a blocking unknown;
+the remaining risk is the coupled movement/contact state closure.

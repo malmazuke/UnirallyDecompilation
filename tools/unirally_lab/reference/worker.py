@@ -11,8 +11,9 @@ Usage: worker.py --core LIB --rom ROM --script S --samples-out OUT
 
 The M1-02 options (``--access-*``, ``--wram-series-*``) are additive in the
 same way: the trace ring is drained per frame into the access derivation
-(``access.derive``) over the chosen frame window and the work RAM at the end
-of each drained frame is read; nothing else changes.
+(``access.derive``) over the chosen frame window, the work RAM at the end of
+each drained frame is read, and the optional work RAM series records its
+range at the end of every executed frame on the stride; nothing else changes.
 
 The M1-01 options are additive: without ``--coverage-out`` and
 ``--frame-image`` every output, exit code and digest is as before. With
@@ -399,6 +400,8 @@ def run(args: argparse.Namespace) -> int:
             total_now = core.trace_total()
             delta = total_now - access_seen_total
             access_seen_total = total_now
+            if access.series is not None:
+                access.series_frame(frame, core.wram())
             if access_window[0] <= frame <= access_window[1]:
                 try:
                     if delta > ring_capacity:

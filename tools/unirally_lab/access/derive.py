@@ -289,7 +289,6 @@ class AccessDrain:
         self.total_accesses += len(keys)
         self.per_frame_accesses.append(len(keys))
         self.per_frame_unresolved.append(unresolved)
-        self._series_frame(frame, wram_end)
         self.prev_wram = bytes(wram_end)
         return n
 
@@ -507,11 +506,14 @@ class AccessDrain:
             return
         log.append([frame, a, x, y, s, d, b, p, e])
 
-    def _series_frame(self, frame: int, wram: bytes) -> None:
+    def series_frame(self, frame: int, wram: bytes) -> None:
+        """Append the declared work RAM range for ``frame`` when it lies on the stride (frames counted from 0).
+
+        The worker calls this for every executed frame, inside or outside the derivation window."""
         if self.series is None:
             return
         start, length, every, path = self.series
-        if (frame - self.frames[0]) % every:
+        if frame % every:
             return
         if self._series_fh is None:
             path.parent.mkdir(parents=True, exist_ok=True)

@@ -383,8 +383,31 @@ artifacts are under `.worktrees/m2-01-sampling-review/artifacts/progress-review/
 in the coordinator workspace; sampler report is its sibling
 `sampling-review/REVIEW.md`. Neither withheld movement series was opened.
 The reviewer showed that moving marker observation before progress advancement
-survived the old authored test but diverged on primary frame1576 (opponent
-previous tag2 versus reference0). The final authored regression now supplies a
+survived the old authored test but diverged on primary frame 1576 (opponent
+previous tag 2 versus reference 0). The final authored regression now supplies a
 new marker in one frame and verifies it only advances the corresponding rider
 on its next active phase, including a serialization round-trip. Its data is
 synthetic, adapted from the reviewer's `progress-review/boundary.cpp`.
+
+
+### Final authored-regression recheck
+
+Clean checkpoint `131ecd03eccdd809f76bc094b8a1791578672e04` adds the ordering
+regression and handoff documentation; production source is unchanged from
+independently approved `ac586beb`. Final debug/sanitizer builds pass and the
+full suite remains 211/211. Commands are the final-check commands above with
+report paths `final-build-debug.json`, `final-build-sanitize.json` and
+`final-suite.json`. The four sanitizer component CTests pass without diagnostics.
+Their build/report SHA-256 values are respectively
+`193cc8dc7b001c2cea7c358c500add95076512de9afb096de8589597091e3d0e`,
+`c8cc429895eef8ecc3813b4c7722a8bcfd60698b88c318cdbbe5ac0b737b479e`,
+and `0d1219ef3189f212f5c54d44ba1762a24493cfd986039b10f132dc43db2fca1f`.
+
+The reviewer's ignored `mutant-order.cpp` (same implementation except observing
+both new marker arrays before advancing the active rider) was compiled against
+the promoted `tests/native/progress_tests.cpp`. It exits 1 with
+`progress expectation failed`; the original passes. Command and observed exit
+are recorded in `artifacts/m2-01/progress-order-mutation.json`, SHA-256
+`dd7c21c59a3afc2a34a12bf2f0be2f650f15c10dc8e4a927a3a9228becd8af3e`.
+This deliberate mutant failure is the expected regression outcome, not a
+production test failure. The final evidence-only commit does not change code.

@@ -29,7 +29,7 @@ What would falsify the laboratory claims: a repeated run diverging (finding 1), 
 
 ## Independent check
 
-None yet beyond the two variants (removed and moved) agreeing on the first frame and the byte, and the localization re-run agreeing with the first runs' samples (`consistent_with_first_runs`). The reviewer should run an own perturbation (another frame, another port, a second button) and check the reported frame against a manual comparison of the samples files.
+Review 1 (fresh independent session, own clone, 11 September 2026) reproduced findings 1–3 and 5 on a core it built itself from the lock, and compared the tool's divergence reports with its own frame-by-frame script over the samples files for nine withheld perturbations; the tool agreed in every case. Its unclaimed observations, recorded here as reviewer observations on this ROM and core (not yet reproduced by a second party): Start held on port 1 at frames 300–305 changes only offset `0x0075` (with `0x0073` as well when compared against the port-0 run); Start together with A at frames 400–403 leaves work RAM, registers and the final state identical for the whole 600 frames; Start with B and Y at frames 450–453 diverges at frame 450 in all three fields (18 bytes of the declared range, 5 registers) and the final states differ; Start at 200–205 alone is identical to no input (as in R-0002 finding 6); with `sample_every` 7 the first reported divergence is frame 301, the first sampled frame at or after the true one. The reviewer also confirmed that `fresh_processes` fails when the worker PIDs coincide.
 
 ## Implementation consequence
 

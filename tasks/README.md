@@ -15,8 +15,9 @@ The coordinator maintains the status registry below. Work orders further below d
 | M1-02 | accepted: integrated 11 September 2026 after one independent review | [Validated player-state schema and update timing](M1-02.md) |
 | M1-03 | accepted: integrated 12 September 2026 after one independent review | [Minimal track/asset decode](M1-03.md) |
 | M1-04 | accepted: integrated 12 September 2026 after one independent review; M1 accepted, tag `m1` | [M1 acceptance report](M1-04.md) |
-| M2-01 | claimed 12 September 2026 by Codex worker `native_movement`; `codex/M2-01-native-movement`, `.worktrees/m2-01`; handover audit incorporated | [Native movement experiment](M2-01.md) |
-| M2 – M6 | planned | See milestone definitions |
+| M2-01 | blocked on M2-01A; sampling/progress component checkpoint reviewed; full native movement not accepted | [Native movement experiment](M2-01.md) |
+| M2-01A | ready: contact/pose/opponent-motion research prerequisite; dispatch from integrated main | [Close riding dependencies](M2-01A.md) |
+| M2-02, M3 – M6 | planned | See milestone definitions |
 
 ## M0 — repeatable laboratory
 
@@ -43,6 +44,7 @@ The synthetic executable in M0-02 is infrastructure validation, not game progres
 | M1-03 | Minimal track/asset decode | M1-01 | Decode one representative segment and needed rider frames; compare against original runtime rendering/collision use; record compression/offset provenance |
 | M1-04 | M1 acceptance report | M1-01 through M1-03 | Evidence for every M1 gate (validated addresses and meanings for the selected sequence, the state sampling point, an experiment behind each critical finding, explicit unknowns); machine/tool identities and reproducible commands; missing checks explicitly block acceptance; update the M2 estimate from observed M1 effort |
 | M2-01 | Native movement/trick experiment | M1-02, required M1-03 data | Freeze primary and withheld reference cases before tuning; exact gameplay-field agreement; explicit arithmetic and observed update order; useful mismatch reports (record: [M2-01](M2-01.md)) |
+| M2-01A | Contact/pose/opponent-motion contract needed by player speed | M1 and reviewed M2-01 component checkpoint (not M2-01 acceptance) | Trace required state and arithmetic, reproduce a preregistered research variation, close the opponent-jump/contact dependency; independent review; no native gameplay acceptance implied |
 | M2-02 | State restore and portability check | M2-01 | Fresh-process and restore/continue hashes agree; same native replay agrees on macOS and Linux; document full serialized-state inventory |
 | M3-01 | One complete playable native track | M2, expanded track decode | Native gameplay, controls, minimal renderer and completion; whole-track comparisons plus real play; declared remaining visual/audio omissions |
 

@@ -90,3 +90,29 @@ Current commands running: sanitizer build, contact CTest groups and both native
 probes. Next: finish results, document new interface/probe commands, inspect diff,
 commit scoped candidate and run clean-source full suite. No native gameplay or
 withheld series comparison has run. This remains a captured-input component.
+
+## Native component submitted
+
+Exact implementation candidate: `d031a0eed7f0cb8895ae9b78052fcaac0c29c05c`,
+clean during all final checks. The documentation submission following it changes
+only this handoff and R-0011-contact. Clean suite222/222 (207 Python tests); clean
+debug and sanitizer probes match70,368 primary and2,064 variation outputs each;
+three sanitizer contact CTest groups pass without diagnostics. All hashes and
+commands are in R-0011-contact's final sections. Debug/sanitizer output files are
+byte-identical for each case. Native captures use explicit phase/auxiliary/option
+watches and preserve original identity and primary expected digests.
+
+New library`unirally_contact` links the existing`unirally_sampling`; CMake adds
+contact_probe/contact_tests and three test groups. No existing sampler interface
+changed. No complete RiderState or serialization has been introduced: contact
+persistence is a small member ready for composition with shared motion fields.
+Guard failure is transactional; no coordinates/frame tuple drives dispatch.
+Reviewer research findings are fixed (nonempty-range validation and explicit
+cartridge-option context guard). Native review is still required. No hidden
+movement case or reference expectation was read/altered. No new failed native
+comparison arose; first valid native executions matched both cases.
+
+Next independent action: build this candidate in the reviewer worktree and run
+the documented capture/probe pair with its own research variation, plus contact
+CTest under sanitizer. Coordinator owns integration and final acceptance;
+worker remains available for specific review fixes.

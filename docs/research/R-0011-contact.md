@@ -406,3 +406,23 @@ negative and inconsistent-count ranges before iteration; the reviewer fixture
 returns exit3/status invalid. An authored regression covers these cases. Valid
 research checks are unchanged; this fixes evidence validation, not gameplay.
 Native review and full-game integration remain separate required gates.
+
+## Clean native candidate evidence
+
+Candidate `d031a0eed7f0cb8895ae9b78052fcaac0c29c05c` passed all222 synthetic checks (207 Python tests and existing/new native checks). Both debug/sanitizer original comparisons pass with the source clean. Sanitizer contact CTest groups pass3/3 without diagnostics.
+
+| Report | SHA-256 |
+| --- | --- |
+| `native-clean-suite.json` | `ed6593e701386b6745fac5a8a628b1306f8ecd68ca44517df02292a77546b098` |
+| `native-clean-primary-debug.json` | `e4cf59489f9f5dfa122d3f75f31eedd65d1f67422030412124419feb2aae3979` |
+| `native-clean-release-debug.json` | `b33663d5e15081c40358c94e8b10b2023132e136f6d6cc5d8dfdabf8121a4852` |
+| `native-clean-primary-sanitize.json` | `095a50b2e1c09d0193635fb28ba44964c896ce77a59f6eedb85f359f0ef725e5` |
+| `native-clean-release-sanitize.json` | `4fe2c97790c5239dfd2ac5dc282ef2039672b7971ac61dd050842c7b901b3e51` |
+
+`native-primary/access.json`: SHA-256 `06d4862939c184e535669b741b82040193f248a57c8d28f415d9378e8354b303`.
+
+`native-release/access.json`: SHA-256 `f51b63f9682a50ab86c6d5de9d564eae7ddda8222b52024d54f3b3db48968cc8`.
+
+Native primary outputs are byte-identical in debug/sanitizer: SHA-256 `6bb5c2c6d19a7101cb0691439978b282c1433ef199d1cf27b94b89dcbb77bc12`.
+
+Native release outputs are byte-identical in debug/sanitizer: SHA-256 `8e3fd846092605a44926e3dda94e842ad3204b3383a32dff12da23db563e3840`.

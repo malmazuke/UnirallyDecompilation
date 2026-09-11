@@ -25,6 +25,7 @@ from typing import Any, Protocol
 from .opcodes import mode_from_flags
 
 COVERAGE_SCHEMA_VERSION = 1
+TAIL_SITES = 64
 TRACE_ENTRY_SIZE = 22
 # pc:u32 a,x,y,s,d:u16 b,p,e,reserved:u8 v,h:u16 (22 bytes) -> we need pc, b, p, e.
 _PC_B_P_E = struct.Struct("<I10xBBB5x")
@@ -72,6 +73,7 @@ class FrameDrain:
         self.max_delta = 0
         self.first_key: int | None = None
         self.last_key: int | None = None
+        self.tail: list[int] = []  # the newest TAIL_SITES keys, for comparison with the samples' trace window
         self._seen_total = source.trace_total()
         self.initial_total = self._seen_total
 
@@ -104,6 +106,7 @@ class FrameDrain:
             self.pairs[(self.last_key, keys[0])] += 1
         self.pairs.update(zip(keys, keys[1:]))
         self.last_key = keys[-1]
+        self.tail = (self.tail + keys[-TAIL_SITES:])[-TAIL_SITES:]
         return delta
 
     def document(self, identity: dict[str, Any], frames: tuple[int, int]) -> dict[str, Any]:
@@ -120,6 +123,7 @@ class FrameDrain:
                              "per_frame": list(self.per_frame)},
             "first_site": None if self.first_key is None else list(split_key(self.first_key)),
             "last_site": None if self.last_key is None else list(split_key(self.last_key)),
+            "tail_sites": [list(split_key(k)) for k in self.tail],
             "site_fields": ["pc", "mode", "data_bank", "count", "first_frame"],
             "sites": sites,
             "pair_fields": ["pc", "mode", "data_bank", "next_pc", "next_mode", "next_data_bank", "count"],

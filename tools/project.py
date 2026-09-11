@@ -26,6 +26,7 @@ from unirally_lab import (  # noqa: E402
     report as reportmod,
     rom as rommod,
 )
+from unirally_lab.coverage import commands as coverage_commands  # noqa: E402
 from unirally_lab.reference import commands as reference_commands  # noqa: E402
 from unirally_lab.replay import commands as replay_commands  # noqa: E402
 
@@ -151,6 +152,7 @@ def build_parser() -> argparse.ArgumentParser:
     lab_commands.register(sub)
     reference_commands.register(sub)
     replay_commands.register(sub)
+    coverage_commands.register(sub)
     return parser
 
 

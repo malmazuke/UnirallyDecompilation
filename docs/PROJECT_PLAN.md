@@ -68,7 +68,7 @@ For M4, inventory actual game features from evidence; the table does not assert 
 
 ### Next-stage estimate, revised from observed effort
 
-Revised 11 September 2026 from the M0-01 to M0-05 handoffs; the figures and their derivation are in [R-0005](research/R-0005-m0-acceptance.md). Observed: about **9 h 55 min of worker sessions** across five accepted tasks, plus **11 review rounds** (at least 1 h; five of the sessions recorded no duration), of which **6 returned a material finding**. Two patterns, both from this small sample:
+Revised 11 September 2026 from the M0-01 to M0-05 handoffs; the figures and their derivation are in [R-0005](research/R-0005-m0-acceptance.md). Observed: about **9 h 55 min of worker sessions** across five accepted tasks, plus **11 review rounds** (at least 1 h; six of the sessions recorded no duration), of which **6 returned a material finding**. Two patterns, both from this small sample:
 
 - Fix rounds after the first candidate cost roughly as much as the first candidate (M0-03: 1 h 45 min, then 2 h 35 min of fixes; M0-04: 1 h 30 min, then 30 min).
 - The tasks that touched a real unknown needed the most review rounds. M0-03 took five, and each one found a defect in how a *check* was defined rather than in the emulator. Pure tooling tasks (M0-02, M0-04) settled in two.

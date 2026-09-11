@@ -13,7 +13,8 @@ The coordinator maintains the status registry below. Work orders further below d
 | M0-06 | accepted: integrated 11 September 2026 after one independent review; M0 accepted, tag `m0` | [M0 acceptance report](M0-06.md) |
 | M1-01 | accepted: integrated 11 September 2026 after one independent review | [Observed code/data map](M1-01.md) |
 | M1-02 | accepted: integrated 11 September 2026 after one independent review | [Validated player-state schema and update timing](M1-02.md) |
-| M1-03 | ready: M1-02 is integrated; next to be dispatched by the coordinator from `main` | [Minimal track/asset decode](M1-03.md) |
+| M1-03 | accepted: integrated 12 September 2026 after one independent review | [Minimal track/asset decode](M1-03.md) |
+| M1-04 | planned: M1 acceptance report, next to be written by the coordinator (see `docs/STATE.md`) | M1 acceptance report |
 | M2 – M6 | planned | See milestone definitions |
 
 ## M0 — repeatable laboratory
@@ -39,6 +40,7 @@ The synthetic executable in M0-02 is infrastructure validation, not game progres
 | M1-01 | Observed code/data map for the selected scenario | M0 | Trace-driven map with processor-mode context, entry points and coverage limitations; unexecuted bytes remain unclassified |
 | M1-02 | Validated player-state schema and update timing | M1-01 | Locate relevant writes; validate position/speed/trick/timer interpretations with controlled inputs; define the exact capture phase and PAL cadence |
 | M1-03 | Minimal track/asset decode | M1-01 | Decode one representative segment and needed rider frames; compare against original runtime rendering/collision use; record compression/offset provenance |
+| M1-04 | M1 acceptance report | M1-01 through M1-03 | Evidence for every M1 gate (validated addresses and meanings for the selected sequence, the state sampling point, an experiment behind each critical finding, explicit unknowns); machine/tool identities and reproducible commands; missing checks explicitly block acceptance; update the M2 estimate from observed M1 effort |
 | M2-01 | Native movement/trick experiment | M1-02, required M1-03 data | Freeze primary and withheld reference cases before tuning; exact gameplay-field agreement; explicit arithmetic and observed update order; useful mismatch reports |
 | M2-02 | State restore and portability check | M2-01 | Fresh-process and restore/continue hashes agree; same native replay agrees on macOS and Linux; document full serialized-state inventory |
 | M3-01 | One complete playable native track | M2, expanded track decode | Native gameplay, controls, minimal renderer and completion; whole-track comparisons plus real play; declared remaining visual/audio omissions |

@@ -1,0 +1,871 @@
+{
+ "description": "Content the validated race scenario draws for the DRAGSTER track of the CRAWLER tour with MIKE: identifiers, ROM offsets, sizes, transformation and digests of the decoded bytes; no content is tracked.",
+ "id": "dragster-segment",
+ "identifiers": {
+  "rider": "MIKE",
+  "segment": "the tile map region visible at frames 1600 and 2400",
+  "tile_sets": [
+   1,
+   2,
+   20,
+   36,
+   22,
+   24
+  ],
+  "tour": "CRAWLER",
+  "track": "DRAGSTER",
+  "track_asset": "$82:B332/0xC2"
+ },
+ "items": [
+  {
+   "expected": {
+    "length": 33815,
+    "sha256": "8f5cef67dc57977af8ff614b8178514a26e9fe0059e02ed27aad5978185580d4"
+   },
+   "id": "track-data",
+   "kind": "rnc",
+   "name": "CRAWLER tour / DRAGSTER track data (tile map, geometry, tile-set list)",
+   "runtime": {
+    "consumed_source_end": {
+     "address": 33155,
+     "bank": 24
+    },
+    "frames": [
+     1232,
+     1242
+    ],
+    "known_runtime_writes": [
+     11
+    ],
+    "loaded_by": "$82:E12B -> $82:B2DD -> $81:B8E2",
+    "work_ram": "$7F:0000",
+    "work_ram_offset": 65536
+   },
+   "source": {
+    "address": 32768,
+    "bank": 24,
+    "directory": "$82:B332 entry 0xC2 (asset $77:074A + $C2)",
+    "file_offset": 786432,
+    "header": {
+     "chunks": 4,
+     "leeway": 0,
+     "magic": "RNC",
+     "method": 1,
+     "packed_crc": 31926,
+     "packed_length": 369,
+     "unpacked_crc": 17926,
+     "unpacked_length": 33815
+    },
+    "packed_length": 387
+   }
+  },
+  {
+   "expected": {
+    "length": 2560,
+    "sha256": "5a45c158da5565b8f05872a2f23a9e5dcaa59a5a19d461700b624df67a2eff38"
+   },
+   "id": "bg1-tileset",
+   "kind": "raw",
+   "name": "DRAGSTER track ribbon: 20 16x16 4bpp tiles (tile sets 1, 2, 20, 36, 22, 24 of the $82:B7DD directory)",
+   "pieces": [
+    {
+     "file_offset": 721024,
+     "length": 64,
+     "source": "$16:8080",
+     "vram_word": 8192
+    },
+    {
+     "file_offset": 721088,
+     "length": 64,
+     "source": "$16:80C0",
+     "vram_word": 8448
+    },
+    {
+     "file_offset": 721152,
+     "length": 64,
+     "source": "$16:8100",
+     "vram_word": 8224
+    },
+    {
+     "file_offset": 721216,
+     "length": 64,
+     "source": "$16:8140",
+     "vram_word": 8480
+    },
+    {
+     "file_offset": 743680,
+     "length": 64,
+     "source": "$16:D900",
+     "vram_word": 8256
+    },
+    {
+     "file_offset": 743936,
+     "length": 64,
+     "source": "$16:DA00",
+     "vram_word": 8512
+    },
+    {
+     "file_offset": 743744,
+     "length": 64,
+     "source": "$16:D940",
+     "vram_word": 8288
+    },
+    {
+     "file_offset": 744000,
+     "length": 64,
+     "source": "$16:DA40",
+     "vram_word": 8544
+    },
+    {
+     "file_offset": 743808,
+     "length": 64,
+     "source": "$16:D980",
+     "vram_word": 8320
+    },
+    {
+     "file_offset": 744064,
+     "length": 64,
+     "source": "$16:DA80",
+     "vram_word": 8576
+    },
+    {
+     "file_offset": 743872,
+     "length": 64,
+     "source": "$16:D9C0",
+     "vram_word": 8352
+    },
+    {
+     "file_offset": 744128,
+     "length": 64,
+     "source": "$16:DAC0",
+     "vram_word": 8608
+    },
+    {
+     "file_offset": 753536,
+     "length": 64,
+     "source": "$16:FF80",
+     "vram_word": 8384
+    },
+    {
+     "file_offset": 754048,
+     "length": 64,
+     "source": "$17:8180",
+     "vram_word": 8640
+    },
+    {
+     "file_offset": 753600,
+     "length": 64,
+     "source": "$16:FFC0",
+     "vram_word": 8416
+    },
+    {
+     "file_offset": 754112,
+     "length": 64,
+     "source": "$17:81C0",
+     "vram_word": 8672
+    },
+    {
+     "file_offset": 753664,
+     "length": 64,
+     "source": "$17:8000",
+     "vram_word": 8704
+    },
+    {
+     "file_offset": 754176,
+     "length": 64,
+     "source": "$17:8200",
+     "vram_word": 8960
+    },
+    {
+     "file_offset": 753728,
+     "length": 64,
+     "source": "$17:8040",
+     "vram_word": 8736
+    },
+    {
+     "file_offset": 754240,
+     "length": 64,
+     "source": "$17:8240",
+     "vram_word": 8992
+    },
+    {
+     "file_offset": 753792,
+     "length": 64,
+     "source": "$17:8080",
+     "vram_word": 8768
+    },
+    {
+     "file_offset": 754304,
+     "length": 64,
+     "source": "$17:8280",
+     "vram_word": 9024
+    },
+    {
+     "file_offset": 753856,
+     "length": 64,
+     "source": "$17:80C0",
+     "vram_word": 8800
+    },
+    {
+     "file_offset": 754368,
+     "length": 64,
+     "source": "$17:82C0",
+     "vram_word": 9056
+    },
+    {
+     "file_offset": 753920,
+     "length": 64,
+     "source": "$17:8100",
+     "vram_word": 8832
+    },
+    {
+     "file_offset": 754432,
+     "length": 64,
+     "source": "$17:8300",
+     "vram_word": 9088
+    },
+    {
+     "file_offset": 753984,
+     "length": 64,
+     "source": "$17:8140",
+     "vram_word": 8864
+    },
+    {
+     "file_offset": 754496,
+     "length": 64,
+     "source": "$17:8340",
+     "vram_word": 9120
+    },
+    {
+     "file_offset": 754560,
+     "length": 64,
+     "source": "$17:8380",
+     "vram_word": 8896
+    },
+    {
+     "file_offset": 754624,
+     "length": 64,
+     "source": "$17:83C0",
+     "vram_word": 9152
+    },
+    {
+     "file_offset": 744704,
+     "length": 64,
+     "source": "$16:DD00",
+     "vram_word": 8928
+    },
+    {
+     "file_offset": 744960,
+     "length": 64,
+     "source": "$16:DE00",
+     "vram_word": 9184
+    },
+    {
+     "file_offset": 744768,
+     "length": 64,
+     "source": "$16:DD40",
+     "vram_word": 9216
+    },
+    {
+     "file_offset": 745024,
+     "length": 64,
+     "source": "$16:DE40",
+     "vram_word": 9472
+    },
+    {
+     "file_offset": 744832,
+     "length": 64,
+     "source": "$16:DD80",
+     "vram_word": 9248
+    },
+    {
+     "file_offset": 745088,
+     "length": 64,
+     "source": "$16:DE80",
+     "vram_word": 9504
+    },
+    {
+     "file_offset": 744896,
+     "length": 64,
+     "source": "$16:DDC0",
+     "vram_word": 9280
+    },
+    {
+     "file_offset": 745152,
+     "length": 64,
+     "source": "$16:DEC0",
+     "vram_word": 9536
+    },
+    {
+     "file_offset": 745728,
+     "length": 64,
+     "source": "$16:E100",
+     "vram_word": 9312
+    },
+    {
+     "file_offset": 745792,
+     "length": 64,
+     "source": "$16:E140",
+     "vram_word": 9568
+    }
+   ],
+   "runtime": {
+    "tile_set_ids": [
+     1,
+     2,
+     20,
+     36,
+     22,
+     24
+    ],
+    "vram": "words $2000-$25E0 (BG12NBA $12), DMA channel 0 at $82:E1FB (top rows) and $82:E263 (bottom rows), frame 1242"
+   }
+  },
+  {
+   "expected": {
+    "length": 2048,
+    "sha256": "1a5b6538fa669bf9861e01554160b946c0d058d03955fffddf89d9c17827b84c"
+   },
+   "id": "bg3-font",
+   "kind": "raw",
+   "name": "HUD font (BG3, 2bpp)",
+   "pieces": [
+    {
+     "file_offset": 376000,
+     "length": 2048
+    }
+   ],
+   "runtime": {
+    "vram": "byte 0x0000, written through $2118/$2119 by the copier $82:B1DB/$82:B296 in frames 1214-1219 (directory $82:B332 entries 0x81, 0x70)"
+   },
+   "vram_byte": 0
+  },
+  {
+   "expected": {
+    "length": 992,
+    "sha256": "d50aaa4efde3d4b5eec805a69470faa368596087f5588d7d8940c95226bcb8a2"
+   },
+   "id": "bg2-tiles",
+   "kind": "raw",
+   "name": "background wall pattern tiles (BG2, 4bpp)",
+   "pieces": [
+    {
+     "file_offset": 360448,
+     "length": 992
+    }
+   ],
+   "runtime": {
+    "vram": "byte 0x2000, written through $2118/$2119 by the copier $82:B1DB/$82:B296 in frames 1214-1219 (directory $82:B332 entries 0x81, 0x70)"
+   },
+   "vram_byte": 8192
+  },
+  {
+   "expected": {
+    "length": 8192,
+    "sha256": "574a44e71c96b210f5613f9b42e2de80e69e1aa64aaf59b8a3b3952f5f30d6b5"
+   },
+   "id": "bg2-tilemap",
+   "kind": "raw",
+   "name": "background wall 64x64 tile map (BG2SC $73)",
+   "pieces": [
+    {
+     "file_offset": 378048,
+     "length": 8192
+    }
+   ],
+   "runtime": {
+    "vram": "byte 0xE000, written through $2118/$2119 by the copier $82:B1DB/$82:B296 in frames 1214-1219 (directory $82:B332 entries 0x81, 0x70)"
+   },
+   "vram_byte": 57344
+  },
+  {
+   "expected": {
+    "length": 352,
+    "sha256": "d98f7dfd1f0cd056aca52f2317a80609854738cc7b7e1c1e10f69ccdfea150ac"
+   },
+   "id": "palette",
+   "kind": "raw",
+   "name": "race palette pieces (CGRAM) as copied by $82:B183 in frames 1219-1220",
+   "pieces": [
+    {
+     "cgram_byte": 0,
+     "file_offset": 505696,
+     "length": 192
+    },
+    {
+     "cgram_byte": 224,
+     "file_offset": 505152,
+     "length": 32
+    },
+    {
+     "cgram_byte": 256,
+     "file_offset": 506272,
+     "length": 32
+    },
+    {
+     "cgram_byte": 352,
+     "file_offset": 131456,
+     "length": 32
+    },
+    {
+     "cgram_byte": 480,
+     "file_offset": 131968,
+     "length": 32
+    },
+    {
+     "cgram_byte": 384,
+     "file_offset": 132000,
+     "length": 32
+    }
+   ],
+   "runtime": {
+    "cgram": "CGADD order at frames 1219-1220: $70, $00-$50, $B0, $F0, $C0, $80 (directory $82:B332 entries 0x93, 0xA4-0xA9, 0x06, 0x16-0x17, 0xB6); colour 0 and colours 96-111 are rewritten every race frame by $82:D38E-$82:D48A"
+   }
+  },
+  {
+   "expected": {
+    "length": 640,
+    "sha256": "bb95427aa2a307c9874b6140b145dce5a4e279112d57a5efcae77eb444951a72"
+   },
+   "id": "tile-tables",
+   "kind": "raw",
+   "name": "per-tile column tables of the six tile sets ($17:A000 index, 2 bytes per 16x16 column)",
+   "pieces": [
+    {
+     "file_offset": 762020,
+     "length": 32
+    },
+    {
+     "file_offset": 762052,
+     "length": 32
+    },
+    {
+     "file_offset": 767684,
+     "length": 128
+    },
+    {
+     "file_offset": 770948,
+     "length": 288
+    },
+    {
+     "file_offset": 767940,
+     "length": 128
+    },
+    {
+     "file_offset": 768196,
+     "length": 32
+    }
+   ],
+   "runtime": {
+    "loaded_by": "$82:E2CD-$82:E30C at frame 1242",
+    "read_by": "$81:8CDD, $81:8CBB during riding",
+    "work_ram": "$7E:A000",
+    "work_ram_offset": 40960
+   }
+  },
+  {
+   "expected": {
+    "length": 20,
+    "sha256": "590e52f2640bb1b70f602622aa07285ed51d7c4b84707b4d77c5cc33fc230846"
+   },
+   "id": "tile-flags",
+   "kind": "raw",
+   "name": "per-tile flag bytes of the six tile sets ($17:C4E4 + (table - $A0A4)/32)",
+   "pieces": [
+    {
+     "file_offset": 771300,
+     "length": 1
+    },
+    {
+     "file_offset": 771301,
+     "length": 1
+    },
+    {
+     "file_offset": 771477,
+     "length": 4
+    },
+    {
+     "file_offset": 771579,
+     "length": 9
+    },
+    {
+     "file_offset": 771485,
+     "length": 4
+    },
+    {
+     "file_offset": 771493,
+     "length": 1
+    }
+   ],
+   "runtime": {
+    "loaded_by": "$82:E30E-$82:E346 at frame 1242",
+    "read_by": "$81:8C0C, $81:82D9 during riding",
+    "work_ram": "$7E:C000",
+    "work_ram_offset": 49152
+   }
+  },
+  {
+   "expected": {
+    "length": 864,
+    "sha256": "09aace3bf5456501545f996ca780adac03f50b30a48ab8b5085184b3c24bdc39"
+   },
+   "id": "rider-tiles-1600",
+   "kind": "raw",
+   "name": "MIKE's sprite tiles uploaded in frame 1600 (8x8 4bpp, one DMA each)",
+   "pieces": [
+    {
+     "file_offset": 1299520,
+     "length": 32,
+     "source": "$27:D440",
+     "vram_word": 24608
+    },
+    {
+     "file_offset": 1299552,
+     "length": 32,
+     "source": "$27:D460",
+     "vram_word": 24624
+    },
+    {
+     "file_offset": 1292576,
+     "length": 32,
+     "source": "$27:B920",
+     "vram_word": 26800
+    },
+    {
+     "file_offset": 1355680,
+     "length": 32,
+     "source": "$29:AFA0",
+     "vram_word": 26816
+    },
+    {
+     "file_offset": 1292640,
+     "length": 32,
+     "source": "$27:B960",
+     "vram_word": 26832
+    },
+    {
+     "file_offset": 1299584,
+     "length": 32,
+     "source": "$27:D480",
+     "vram_word": 24864
+    },
+    {
+     "file_offset": 1299616,
+     "length": 32,
+     "source": "$27:D4A0",
+     "vram_word": 24880
+    },
+    {
+     "file_offset": 1299648,
+     "length": 32,
+     "source": "$27:D4C0",
+     "vram_word": 24896
+    },
+    {
+     "file_offset": 1292672,
+     "length": 32,
+     "source": "$27:B980",
+     "vram_word": 27056
+    },
+    {
+     "file_offset": 1355712,
+     "length": 32,
+     "source": "$29:AFC0",
+     "vram_word": 27072
+    },
+    {
+     "file_offset": 1355744,
+     "length": 32,
+     "source": "$29:AFE0",
+     "vram_word": 27088
+    },
+    {
+     "file_offset": 1299680,
+     "length": 32,
+     "source": "$27:D4E0",
+     "vram_word": 25136
+    },
+    {
+     "file_offset": 1414560,
+     "length": 32,
+     "source": "$2B:95A0",
+     "vram_word": 25152
+    },
+    {
+     "file_offset": 1284736,
+     "length": 32,
+     "source": "$27:9A80",
+     "vram_word": 25168
+    },
+    {
+     "file_offset": 1277952,
+     "length": 32,
+     "source": "$27:8000",
+     "vram_word": 27296
+    },
+    {
+     "file_offset": 1292768,
+     "length": 32,
+     "source": "$27:B9E0",
+     "vram_word": 27312
+    },
+    {
+     "file_offset": 1292800,
+     "length": 32,
+     "source": "$27:BA00",
+     "vram_word": 27328
+    },
+    {
+     "file_offset": 1292832,
+     "length": 32,
+     "source": "$27:BA20",
+     "vram_word": 27344
+    },
+    {
+     "file_offset": 1299776,
+     "length": 32,
+     "source": "$27:D540",
+     "vram_word": 25392
+    },
+    {
+     "file_offset": 1414592,
+     "length": 32,
+     "source": "$2B:95C0",
+     "vram_word": 25408
+    },
+    {
+     "file_offset": 1414624,
+     "length": 32,
+     "source": "$2B:95E0",
+     "vram_word": 25424
+    },
+    {
+     "file_offset": 1292864,
+     "length": 32,
+     "source": "$27:BA40",
+     "vram_word": 27552
+    },
+    {
+     "file_offset": 1292896,
+     "length": 32,
+     "source": "$27:BA60",
+     "vram_word": 27568
+    },
+    {
+     "file_offset": 1414656,
+     "length": 32,
+     "source": "$2B:9600",
+     "vram_word": 25664
+    },
+    {
+     "file_offset": 1285056,
+     "length": 32,
+     "source": "$27:9BC0",
+     "vram_word": 25680
+    },
+    {
+     "file_offset": 1277952,
+     "length": 32,
+     "source": "$27:8000",
+     "vram_word": 27808
+    },
+    {
+     "file_offset": 1292928,
+     "length": 32,
+     "source": "$27:BA80",
+     "vram_word": 27824
+    }
+   ],
+   "runtime": {
+    "vram": "OBJ name base $6000 words (OBSEL $83), DMA channel 0 from the unrolled sequence $82:B907-$82:BDC0"
+   }
+  },
+  {
+   "expected": {
+    "length": 672,
+    "sha256": "23118ba7bedbb293308fa6835c80a4f0d5650370ba71786247dcbd27f7045289"
+   },
+   "id": "rider-tiles-2400",
+   "kind": "raw",
+   "name": "MIKE's sprite tiles uploaded in frame 2400 (8x8 4bpp, one DMA each)",
+   "pieces": [
+    {
+     "file_offset": 1896064,
+     "length": 32,
+     "source": "$39:EE80",
+     "vram_word": 26784
+    },
+    {
+     "file_offset": 1469504,
+     "length": 32,
+     "source": "$2C:EC40",
+     "vram_word": 24848
+    },
+    {
+     "file_offset": 1679424,
+     "length": 32,
+     "source": "$33:A040",
+     "vram_word": 24864
+    },
+    {
+     "file_offset": 1469568,
+     "length": 32,
+     "source": "$2C:EC80",
+     "vram_word": 24880
+    },
+    {
+     "file_offset": 1277984,
+     "length": 32,
+     "source": "$27:8020",
+     "vram_word": 27024
+    },
+    {
+     "file_offset": 1896096,
+     "length": 32,
+     "source": "$39:EEA0",
+     "vram_word": 27040
+    },
+    {
+     "file_offset": 1896128,
+     "length": 32,
+     "source": "$39:EEC0",
+     "vram_word": 27056
+    },
+    {
+     "file_offset": 1469600,
+     "length": 32,
+     "source": "$2C:ECA0",
+     "vram_word": 25136
+    },
+    {
+     "file_offset": 1679456,
+     "length": 32,
+     "source": "$33:A060",
+     "vram_word": 25152
+    },
+    {
+     "file_offset": 1679488,
+     "length": 32,
+     "source": "$33:A080",
+     "vram_word": 25168
+    },
+    {
+     "file_offset": 1469696,
+     "length": 32,
+     "source": "$2C:ED00",
+     "vram_word": 25184
+    },
+    {
+     "file_offset": 1469600,
+     "length": 32,
+     "source": "$2C:ECA0",
+     "vram_word": 27312
+    },
+    {
+     "file_offset": 1679456,
+     "length": 32,
+     "source": "$33:A060",
+     "vram_word": 27328
+    },
+    {
+     "file_offset": 1679488,
+     "length": 32,
+     "source": "$33:A080",
+     "vram_word": 27344
+    },
+    {
+     "file_offset": 1469696,
+     "length": 32,
+     "source": "$2C:ED00",
+     "vram_word": 27360
+    },
+    {
+     "file_offset": 1679520,
+     "length": 32,
+     "source": "$33:A0A0",
+     "vram_word": 25408
+    },
+    {
+     "file_offset": 1679552,
+     "length": 32,
+     "source": "$33:A0C0",
+     "vram_word": 25424
+    },
+    {
+     "file_offset": 1469792,
+     "length": 32,
+     "source": "$2C:ED60",
+     "vram_word": 25440
+    },
+    {
+     "file_offset": 1679520,
+     "length": 32,
+     "source": "$33:A0A0",
+     "vram_word": 27584
+    },
+    {
+     "file_offset": 1679552,
+     "length": 32,
+     "source": "$33:A0C0",
+     "vram_word": 27600
+    },
+    {
+     "file_offset": 1469792,
+     "length": 32,
+     "source": "$2C:ED60",
+     "vram_word": 27616
+    }
+   ],
+   "runtime": {
+    "vram": "OBJ name base $6000 words (OBSEL $83), DMA channel 0 from the unrolled sequence $82:B907-$82:BDC0"
+   }
+  }
+ ],
+ "kind": "content_manifest",
+ "rom": {
+  "sha256": "a1105819d48c04d680c8292bbfa9abbce05224f1bc231afd66af43b7e0a1fd4e",
+  "size": 2097152
+ },
+ "scenario_id": "race-crawler-dragster-3000",
+ "scene": {
+  "backdrop": 0,
+  "bg1": {
+   "bpp": 4,
+   "hdma_scroll_table": 8262,
+   "map_byte": 6144,
+   "sc_register": 12,
+   "tall": false,
+   "tile_byte": 16384,
+   "tiles16": true,
+   "wide": false
+  },
+  "bg2": {
+   "bpp": 4,
+   "hdma_scroll_table": 8280,
+   "map_byte": 57344,
+   "sc_register": 115,
+   "tall": true,
+   "tile_byte": 8192,
+   "tiles16": false,
+   "wide": true
+  },
+  "bg3": {
+   "bpp": 2,
+   "map_byte": 12288,
+   "rendered": false,
+   "sc_register": 24,
+   "tile_byte": 0
+  },
+  "bg_mode": 1,
+  "bgmode_register": 25,
+  "first_race_frame": 1329,
+  "oam_shadow": 5003,
+  "obsel": 131,
+  "regeneration": "python3 tools/project.py content decode --manifest tests/manifests/content/dragster-segment.json --out artifacts/content/dragster-segment",
+  "tilemap_staging": {
+   "column": 1113,
+   "row": 1079
+  }
+ },
+ "schema_version": 1
+}

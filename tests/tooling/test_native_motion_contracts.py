@@ -4,18 +4,21 @@ import hashlib
 import json
 from pathlib import Path
 import unittest
+import sys
 
-from tools.unirally_lab.native.motion_research.contracts import (
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tools"))
+
+from unirally_lab.native.motion_research.contracts import (
     completed_rotation, gravity_update, integrate_position, jump_update,
     opponent_inputs, pose_update, reward_queue_step, throttle_update,
 )
-from tools.unirally_lab.native.motion_research.probe import (
+from unirally_lab.native.motion_research.probe import (
     WORD_ADDRESSES, snapshot, validate_identity,
 )
-from tools.unirally_lab.native.motion_research.capture import WATCH_ADDRESSES
-from tools.unirally_lab.access.derive import wram_offset
-from tools.unirally_lab.reference.bsnes import DEFAULT_OPTIONS
-from tools.unirally_lab.replay.manifest import derive_script
+from unirally_lab.native.motion_research.capture import WATCH_ADDRESSES
+from unirally_lab.access.derive import wram_offset
+from unirally_lab.reference.bsnes import DEFAULT_OPTIONS
+from unirally_lab.replay.manifest import derive_script
 
 
 def state():
@@ -116,11 +119,21 @@ class MotionEvidenceTests(unittest.TestCase):
             'status':'complete','failure':None,'watch_pcs_truncated':False,'instructions':{'max_frame_delta':10},'ring_capacity':20,
             'watch_addresses':{str(wram_offset(a) if wram_offset(a) is not None else a):{} for a in WATCH_ADDRESSES},
             'wram_series':{'start':0,'length':0x2200,'every':1,'frames':list(range(3000)),'bytes':3000*0x2200},
-            'frames':{'start':1533,'end':1700},
+            'frames':{'start':1533,'end':1700,'count':168},
         }
         validate_identity(access)
         for section,key,value in [('core','commit','changed'),('script','sha256','0'*64),('wram_series','start',1)]:
             bad=copy.deepcopy(access);bad[section][key]=value
             with self.subTest(section=section),self.assertRaises(ValueError):validate_identity(bad)
+        for frames in [
+            {'start':1600,'end':1700,'count':101},
+            {'start':1533,'end':1532,'count':0},
+            {'start':1533,'end':3000,'count':1468},
+            {'start':1533,'end':1700,'count':0},
+            {'start':1533,'end':1700.0,'count':168},
+            {'start':1533,'end':1700,'count':True},
+        ]:
+            bad=copy.deepcopy(access);bad['frames']=frames
+            with self.subTest(frames=frames),self.assertRaises(ValueError):validate_identity(bad)
         del access['watch_addresses'][str(0xfe3)]
         with self.assertRaisesRegex(ValueError,'missing motion watches'):validate_identity(access)

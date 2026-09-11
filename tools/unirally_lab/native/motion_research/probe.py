@@ -58,7 +58,13 @@ def validate_identity(access):
     if not required<=set(map(int,access['watch_addresses'])):raise ValueError('missing motion watches; regenerate with the current capture tool')
     meta=access['wram_series']
     if meta['start']!=0 or meta['length']!=0x2200 or meta['every']!=1 or meta['frames']!=list(range(3000)) or meta['bytes']!=3000*0x2200:raise ValueError('unexpected series layout')
-    if access['frames']['start']<1533 or access['frames']['end']>2999:raise ValueError('outside recovered motion domain')
+    frames=access['frames']
+    if any(type(frames[key]) is not int for key in ('start','end','count')):
+        raise ValueError('frame range must contain integers')
+    if frames['start']!=1533:
+        raise ValueError('evolving reward queue requires the established 1533 window start')
+    if not frames['start']<=frames['end']<=2999 or frames['count']!=frames['end']-frames['start']+1:
+        raise ValueError('empty, reversed, out-of-domain or count-inconsistent frame range')
 
 
 def compare(access,series,rom):

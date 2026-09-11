@@ -1,6 +1,6 @@
 # R-0011 motion — opponent input, pose and integration
 
-Work in progress, M2-01A motion subassignment; no autonomous gameplay claim.
+Review candidate, M2-01A motion subassignment; no autonomous gameplay claim.
 ROM and core identity unchanged from R-0010. Base `ba71142a6d766216772360949dd8c04760fa9ffe`.
 
 ## Preregistered experiment (before new captures)
@@ -270,3 +270,15 @@ pose publication → both collision/sample/contact updates. Marker progress uses
 its previously recovered active-phase ordering. Dynamic outputs from contact
 feed the next frame; captured function arguments in these probes must never
 become runtime per-frame inputs.
+
+### Evidence-harness domain checks
+
+The evolving queue/learned-feature probe requires a capture starting at1533;
+later starts cannot reuse the established zero feature total. The direct1533
+SRAM observation and absence of a feature-total write during1533 establish the
+initial zero used before that frame's queue call. The harness rejects reversed,
+empty, noninteger, out-of-domain and count-inconsistent capture ranges.
+At initial candidate228286b the standard synthetic runner exposed a test-import
+error (`tools.unirally_lab` was not available on its module path); the followup
+uses the repository's `tools` path and `unirally_lab` convention. Direct unittest
+execution alone had not exposed this difference. No gameplay formula changed.

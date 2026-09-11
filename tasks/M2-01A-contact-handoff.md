@@ -66,3 +66,27 @@ will authorize native port separately after review; this task does not accept
 M2-01A or M2-01. Stay available for review fixes/interface decisions. Exact next
 independent command is the full primary capture in R-0011-contact; existing local
 captures may accelerate an inspection but must not substitute for reproduction.
+
+## Native continuation checkpoint 1
+
+Coordinator amendment090e758 authorizes new flat_contact source, contact native
+tests/probe and CMake registration. Branch starts from280e282 research head.
+New C++ component and typed interface are implemented. First valid debug probe
+matches70,368 outputs across2,932 primary calls, composing native pose expansion,
+track sampling, preprocessing and response from captured incoming motion/state.
+Focused release variation matches2,064 outputs across86 calls. Three authored
+C++ test groups pass (sampling, response, boundaries). Fresh native-input captures
+add explicit phase0300, auxiliary flag and cartridge-option watches; original
+primary sample/final hashes unchanged. Paths`artifacts/m2-01a-contact/native-*`.
+
+Reviewer fixes: calls() now rejects reversed/empty/noninteger/inconsistent frame
+ranges before a comparison can pass without calls; authored regression passes.
+ContactContext has explicit`cartridge_options & 8 == 0` plus opponent guard for
+recontact, corresponding to94A8/94AF/94B4. Source rejects unsupported algorithm
+branches before committing any state mutation. No frame or coordinate-tuple
+lookup exists. Motion worker/coordinator have concrete header/field mapping.
+
+Current commands running: sanitizer build, contact CTest groups and both native
+probes. Next: finish results, document new interface/probe commands, inspect diff,
+commit scoped candidate and run clean-source full suite. No native gameplay or
+withheld series comparison has run. This remains a captured-input component.

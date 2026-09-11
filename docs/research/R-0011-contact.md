@@ -25,7 +25,7 @@ No M2-01 withheld series will be opened or used.
 ROM SHA-256 `a1105819d48c04d680c8292bbfa9abbce05224f1bc231afd66af43b7e0a1fd4e`;
 bsnes `7d5aa1e656b9171524d01b1b22917197d8121cb4`, patch
 `a719f5ffe2222dad4c1ab04336633319ad85004f74e32fc14893a058be333885`,
-Strict serialization, unchanged default options. Native simulation is not run.
+Strict serialization, unchanged default options. No autonomous native simulation is run.
 The initial observation remains end-of-frame 1533; all claims below concern
 contact calls during primary 1534–2999 unless a narrower interval is named.
 Whole-run coverage includes startup paths which do **not** run in this domain.
@@ -185,7 +185,11 @@ The original routine then executes one of these primary-domain paths:
    `(14>>4)+1=1` and impulse `(14>>2)+1=4` at `$81:93F9/9428`. Duration37 is
    below120, so A is cleared at `$81:9474`; B stays0. The sample-high flag`$80`
    is absent. The cartridge option check does not select its alternate branch,
-   and rider selector`$0FF9=2` takes the opponent path. Negative sentinel causes
+   and rider selector`$0FF9=2` takes the opponent path. Explicitly, `$81:94A8`
+   loads `$77:0750`; bit`$0008` tested at`$81:94AF` is clear, so`$81:94B4`
+   reads the nonzero opponent selector and bypasses the`$132B` replacement at
+   `$81:94B9`. Native context must guard that clear bit and opponent identity.
+   Negative sentinel causes
    count/duration to clear at `$81:94C7/94CA`, **preserving vx448 and vy222**.
    This is not the continuous-contact vertical reset. The static coefficient
    transform at`$81:950C–960D` never executes during primary1534–2999.
@@ -330,3 +334,75 @@ state audit corrected an earlier sentence that said both response channels
 were always zero: B is2 during opponent unsupported1590–1613 and is preserved.
 The documented update formula already preserved unsupported response state;
 no formula, capture, expectation or pass count changed with that correction.
+
+## Native contact component (coordinator-authorized continuation)
+
+The coordinator authorized `src/core/flat_contact.*` and its isolated probe after
+independent reproduction of the research contract. `flat_contact.hpp` implements
+the interface above: `RiderContactState` holds contact persistence, `ContactMotion`
+is an explicit shared-motion input/output value, and `ContactContext` separates
+phase0300, mode, rider identity and cartridge options. Existing sampler/progress
+interfaces are unchanged. The function validates unsupported predicates before
+publishing any mutation, including the cartridge option bit and landing category.
+
+The coarse landing helper executes bounded repeated subtraction and tests the
+first five-unit bucket; it contains no frame number, observed coordinate tuple
+or table of per-frame outcomes. The response-magnitude branch also requires
+`3 <= previous_x_displacement < 32`, keeping the original successful lower
+branch of the response-A cap comparison. A different category, displacement
+quadrant, response magnitude, long airborne duration or option/player path is
+reported unsupported. The temporary response-A value is legitimately omitted
+because this supported path always clears it before publication. Orientation
+impulse uses `(previous_x_displacement >> 2) + 1`; the authored different-tuple
+case proves a result other than the observed original impulse4.
+
+The C++ probe performs native pose expansion and track sampling, then native
+sample preprocessing/reduction and contact response. Only incoming motion and
+persistent state are captured per call. All24 output values per call are
+compared to the original: corrected x/y, velocities, response A/B, impulse,
+count/prior count/duration, previous uncorrected x/y, surface angle, angle flag,
+auxiliary flag, selected descriptor/high byte, recontact flag and six summary
+values. Primary2932calls give**70,368 matching values**; release1570 variation
+86calls gives**2,064 matching values**, in both debug and sanitizer builds.
+This still is not autonomous native gameplay: the incoming per-call position,
+velocity, pose, phase and persistent state come from the original for this
+component experiment.
+
+The native-input captures add explicit watches for phase0300, auxiliary flag
+and cartridge options to the earlier compact watch list. The original reads the
+option byte every frame; the probe requires a known unchanging observed value
+within that frame rather than inventing zero. Phase is the known prior write
+at`$83:CCED` before contact, not inferred frame parity. Primary sample/final
+hashes remain identical. Capture/probe commands:
+
+```sh
+python3 -m tools.unirally_lab.native.contact_research.capture --compact --from-frame 1534 --to-frame 2999 --out artifacts/m2-01a-contact/native-primary
+python3 -m tools.unirally_lab.native.contact_research.capture --compact --manifest tests/manifests/native/contact-research/contact/release-1570.json --out artifacts/m2-01a-contact/native-release
+python3 tools/project.py build --preset lab-debug
+python3 -m tools.unirally_lab.native.contact_research.probe --access artifacts/m2-01a-contact/native-primary/access.json --pose-content ../m2-01/artifacts/m2-01/content-expanded --tile-content artifacts/m2-01a-contact/content --probe build/lab-debug/tests/native/contact_probe --report artifacts/m2-01a-contact/native-primary-debug.json
+python3 -m tools.unirally_lab.native.contact_research.probe --access artifacts/m2-01a-contact/native-release/access.json --pose-content ../m2-01/artifacts/m2-01/content-expanded --tile-content artifacts/m2-01a-contact/content --probe build/lab-debug/tests/native/contact_probe --report artifacts/m2-01a-contact/native-release-debug.json
+python3 tools/project.py build --preset lab-sanitize
+local/toolchain/cmake-3.31.10-darwin-arm64/bin/ctest --test-dir build/lab-sanitize -R '^contact_' --output-on-failure
+```
+
+Repeat each probe with`build/lab-sanitize/tests/native/contact_probe` and a new
+report path. On another host use that bootstrap's ctest path. Existing content
+regeneration commands are above/R-0010; no old worktree is required if paths are
+adjusted to regenerated inputs. Each probe report records exact source/diff,
+input hashes, native executable hash, first divergence and output artifact.
+
+Three authored C++ test groups exercise sample marker exclusion, signed-byte
+winner initialization, equal-depth metadata ordering, wrapped byte-height
+subtraction, count saturation/duration wrap, phase gating, preserved airborne
+channels, pre-correction position order, non-original landing tuple/impulse,
+zero-displacement loop termination and eleven rejected response predicates.
+Rejected updates must leave state unchanged. Invalid geometry and missing
+content are tested separately. No expected original value was changed during
+implementation; the first valid native primary/variation executions matched.
+
+The independent research reviewer found that a reversed frame range could
+produce a vacuous pass. `summarize.calls` now rejects noninteger, empty/reversed,
+negative and inconsistent-count ranges before iteration; the reviewer fixture
+returns exit3/status invalid. An authored regression covers these cases. Valid
+research checks are unchanged; this fixes evidence validation, not gameplay.
+Native review and full-game integration remain separate required gates.

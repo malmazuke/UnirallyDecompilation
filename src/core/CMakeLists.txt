@@ -1,3 +1,7 @@
 add_library(unirally_sampling STATIC track_sampling.cpp track_progress.cpp)
 target_include_directories(unirally_sampling PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(unirally_sampling PUBLIC lab_options)
+
+add_library(unirally_contact STATIC flat_contact.cpp)
+target_include_directories(unirally_contact PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(unirally_contact PUBLIC unirally_sampling lab_options)

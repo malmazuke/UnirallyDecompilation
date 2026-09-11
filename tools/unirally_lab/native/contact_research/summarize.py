@@ -15,12 +15,12 @@ from ...replay.manifest import derive_script
 from ...reference.bsnes import DEFAULT_OPTIONS
 
 FIELDS = {0xA5:'x',0xA7:'y',0xF33:'unsupported_count',0xFBF:'unsupported_duration',
-          0xFA9:'vx',0xFAB:'vy',0xF55:'response_a',0xF57:'response_b',0xFAD:'response_impulse',
+          0xF4F:'previous_unsupported_count',0xFA9:'vx',0xFAB:'vy',0xF55:'response_a',0xF57:'response_b',0xFAD:'response_impulse',
           0xF17:'surface_angle',0xF2B:'angle_sentinel',0xF51:'reflection',0xF85:'pose',
           0xF73:'displacement_x',0xF23:'mode',0xEED:'previous_x',0xEEF:'previous_y',
           0x1279:'recontact',0xF13:'selected_word',0x2EC:'selected_high',0xF5D:'special',
           0x28:'vertical_correction',0x2A:'angle',0x2C:'horizontal_correction',
-          0x20:'vertical_axis',0x24:'horizontal_axis',0xDE7:'tile_flags'}
+          0xEF1:'auxiliary_flag',0x20:'vertical_axis',0x24:'horizontal_axis',0xDE7:'tile_flags'}
 PUBLICATION_PCS = {0x818DC7:0xFBF,0x818F1B:0xFBF,0x818E03:0xF33,0x818F57:0xF33,
                    0x818E15:0xA5,0x818F69:0xA5,0x818E1A:0xA7,0x818F6E:0xA7,
                    0x818E1F:0xFA9,0x818F73:0xFA9,0x818E25:0xFAB,0x818F79:0xFAB}
@@ -43,7 +43,9 @@ def word(memory, address):
 
 
 def snapshot(memory):
-    return {name:word(memory,address) for address,name in FIELDS.items()}
+    result={name:word(memory,address) for address,name in FIELDS.items()}
+    result['phase']=memory.get(0x300)
+    return result
 
 
 def validate_identity(access):
@@ -69,7 +71,11 @@ def validate_identity(access):
 def calls(access):
     if access['status'] != 'complete' or access['watch_pcs_truncated']:
         raise ValueError('complete nontruncated capture required')
-    first,last=access['frames']['start'],access['frames']['end']
+    frames=access['frames']
+    first,last=frames['start'],frames['end']
+    count=frames['count']
+    if any(type(value) is not int for value in (first,last,count)) or first < 0 or last < first or count != last-first+1:
+        raise ValueError('capture requires a nonempty integer frame range with consistent count')
     result=[]
     for frame in range(first,last+1):
         memory={}; active=None; rider=0
@@ -140,7 +146,14 @@ def main():
     parser.add_argument('--access',type=Path,required=True)
     parser.add_argument('--report',type=Path,required=True)
     args=parser.parse_args()
-    raw=args.access.read_bytes();access=json.loads(raw);validate_identity(access);observations=calls(access)
+    try:
+        raw=args.access.read_bytes();access=json.loads(raw);validate_identity(access);observations=calls(access)
+    except (FileNotFoundError,ValueError,KeyError) as error:
+        missing=isinstance(error,FileNotFoundError)
+        args.report.parent.mkdir(parents=True,exist_ok=True)
+        args.report.write_text(json.dumps({'status':'missing' if missing else 'invalid','error':str(error)},indent=2)+'\n')
+        print(str(error))
+        return 2 if missing else 3
     counts=Counter();failures=[];total=0
     for call in observations:
         branch,checks=verify_call(call);call['branch']=branch;counts[branch]+=1

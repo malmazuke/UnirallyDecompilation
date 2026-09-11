@@ -39,6 +39,15 @@ class ContactResearchTests(unittest.TestCase):
     def test_incomplete_capture_rejected(self):
         with self.assertRaises(ValueError):calls({'status':'complete','watch_pcs_truncated':True})
 
+    def test_empty_or_inconsistent_frame_ranges_rejected(self):
+        for frames in [{'start':1619,'end':1618,'count':0},
+                       {'start':1,'end':2,'count':1},
+                       {'start':True,'end':2,'count':2},
+                       {'start':-1,'end':0,'count':2}]:
+            with self.subTest(frames=frames):
+                with self.assertRaises(ValueError):
+                    calls({'status':'complete','watch_pcs_truncated':False,'frames':frames})
+
     def test_counter_cap_and_precorrection_position_are_checked_independently(self):
         incoming={'unsupported_count':9,'unsupported_duration':65535,'vx':321,'vy':-1&65535,'x':100,'y':1}
         output={'previous_x':100,'previous_y':1}

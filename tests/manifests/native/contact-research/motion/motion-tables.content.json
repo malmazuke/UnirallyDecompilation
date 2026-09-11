@@ -1,0 +1,80 @@
+{
+  "description": "Static M2-01A motion tables; only rotation reward event1 is recovered.",
+  "id": "motion-tables",
+  "identifiers": {
+    "scenario": "race-crawler-dragster-3000-fields",
+    "track": "DRAGSTER",
+    "tour": "CRAWLER",
+    "domain": "collision sampling for both riders, primary frames 1534\u20132999"
+  },
+  "items": [
+    {
+      "id": "pose-slopes",
+      "name": "pose-slopes",
+      "kind": "raw",
+      "pieces": [
+        {
+          "file_offset": 8,
+          "length": 128
+        }
+      ],
+      "expected": {
+        "length": 128,
+        "sha256": "f6b1ea6a34c78336ca25449c8ddbd23e2417ef829ec09765e695f957cd714584"
+      }
+    },
+    {
+      "id": "displacement-table",
+      "name": "displacement-table",
+      "kind": "raw",
+      "pieces": [
+        {
+          "file_offset": 777588,
+          "length": 512
+        }
+      ],
+      "expected": {
+        "length": 512,
+        "sha256": "27894923de2aaeb58ca24dedbddadcf0d4d154fbc61ea484e7c248d066e24e1b"
+      }
+    },
+    {
+      "id": "rotation-reward",
+      "name": "rotation-reward",
+      "kind": "raw",
+      "pieces": [
+        {
+          "file_offset": 50323,
+          "length": 2
+        }
+      ],
+      "expected": {
+        "length": 2,
+        "sha256": "8509b81230019d2ad970d970f791dfbdc8caf54f5c594fcd327cef9feed206c1"
+      }
+    },
+    {
+      "id": "rotation-class",
+      "name": "rotation-class",
+      "kind": "raw",
+      "pieces": [
+        {
+          "file_offset": 50442,
+          "length": 1
+        }
+      ],
+      "expected": {
+        "length": 1,
+        "sha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+      }
+    }
+  ],
+  "kind": "content_manifest",
+  "rom": {
+    "sha256": "a1105819d48c04d680c8292bbfa9abbce05224f1bc231afd66af43b7e0a1fd4e",
+    "size": 2097152
+  },
+  "scenario_id": "race-crawler-dragster-3000",
+  "schema_version": 1,
+  "regeneration_command": "python3 tools/project.py content decode --manifest tests/manifests/native/contact-research/motion/motion-tables.content.json --out artifacts/m2-01a-motion/content"
+}

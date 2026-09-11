@@ -18,3 +18,14 @@ and a boundary, then readable native port integrated with contact/motion.
 Research receives captured arguments and cannot accept autonomous movement.
 Mode2/42 vertical cap remains explicitly unsupported. No withheld series opened,
 no user-only prerequisite and no extra service/purchase required.
+
+Native continuation: independently reviewed research arithmetic was ported to
+`src/core/speed_limits.*`, with shared velocity references, separate persistent
+modifiers and immutable static tables. Debug/sanitizer probes each match all
+14,660 primary outputs; stdout SHA-256
+`5b80992c39655f17a36f310205ac4238226bf1b70d124190327812ab0aa55583`.
+Native boundary CTest covers cap/decay ordering, signed caps, wrapped progress,
+GO override, negative-one friction and atomic rejection. The research helper's
+missing-mode evidence finding is fixed at5b43934 and independently confirmed.
+Native review and clean-source final checks follow this submission. No original
+content bytes are tracked and no future expected values enter the component.

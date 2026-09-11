@@ -104,3 +104,29 @@ progress-before-cap, exclusive limit, wrapped progress differences, GO override,
 fast decay, negative friction boundary, skip and unsupported cartridge modes.
 No frozen withheld movement output was opened. Independent review and clean
 suite results are recorded in the task handoff.
+
+## Native component
+
+`src/core/speed_limits.*` now implements the same arithmetic using explicit
+unsigned words and semantic context/modifier records. The caller supplies its
+single shared motion velocity fields by reference. Static tables are immutable
+spans; unsupported cartridge modes and malformed table lengths reject before
+any state mutation. The component owns no emulator or frame lookup.
+
+The C++ component matches all 14,660 original output values on the full primary
+capture in debug and sanitizer builds. Its stdout SHA-256 is
+`5b80992c39655f17a36f310205ac4238226bf1b70d124190327812ab0aa55583`.
+
+```
+python3 tools/project.py build --preset lab-debug --report artifacts/speed/native-build.json
+python3 -m tools.unirally_lab.native.speed_research.probe --native-probe build/lab-debug/tests/native/speed_limits_probe --report artifacts/speed/native-debug.json
+python3 tools/project.py build --preset lab-sanitize --report artifacts/speed/native-sanitize-build.json
+python3 -m tools.unirally_lab.native.speed_research.probe --native-probe build/lab-sanitize/tests/native/speed_limits_probe --report artifacts/speed/native-sanitize.json
+```
+
+Independent research review reproduced the entire capture/model and counter
+recurrence, plus its own signed-subtraction, mask and cap-order mutations.
+It found that missing cartridge-mode evidence incorrectly defaulted to zero;
+commit5b43934 fixes this with an exactly-one-known-word requirement and regression
+cases. The reviewer confirmed the mutation now rejects. A native review and
+integration check remain necessary; isolated agreement is not autonomous motion.

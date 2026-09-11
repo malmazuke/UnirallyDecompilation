@@ -1,5 +1,8 @@
 """Compare speed arithmetic using original call arguments; no native runtime."""
+import argparse
 import hashlib
+import subprocess
+import tempfile
 import json
 from pathlib import Path
 from collections import Counter
@@ -70,7 +73,7 @@ def validate_domain(access, series):
         raise ValueError("truncated series")
 
 
-def compare(access, series, rom):
+def compare(access, series, rom, native_probe=None):
     validate_document(access)
     validate_primary_access(access)
     validate_domain(access, series)
@@ -83,6 +86,7 @@ def compare(access, series, rom):
     counts = Counter()
     mismatches = []
     contexts = {}
+    native_inputs, native_expected = [], []
     for frame in range(1534, 3000):
         events = ordered_events(access, frame)
         counter_rows = access['watch_addresses'][str(0x127f)][str(frame)]
@@ -115,6 +119,8 @@ def compare(access, series, rom):
             actual = update_speed(state, context, masks, decay)
             expected = SpeedState(*(read_word(after, a) for a in
                                     [0xfa9, 0xfab, 0x11d7, 0x11dd, 0x343 + selector]))
+            native_inputs.append(" ".join(str(value) for value in [*vars(state).values(), *vars(context).values()]))
+            native_expected.append(list(vars(expected).values()))
             counts['calls'] += 1
             counts['values'] += 5
             counts['start_override_calls'] += bool(context.start_override)
@@ -126,22 +132,46 @@ def compare(access, series, rom):
                 mismatches.append({'frame': frame, 'rider': selector // 2,
                                    'actual': vars(actual), 'expected': vars(expected),
                                    'input': vars(state), 'context': vars(context)})
-    return {'kind': 'isolated_speed_research', 'counts': counts, 'mismatches': mismatches,
+    native_result = {"status": "not run"}
+    if native_probe is not None:
+        with tempfile.TemporaryDirectory() as directory:
+            mask_path, decay_path = Path(directory) / 'masks.bin', Path(directory) / 'decrements.bin'
+            mask_path.write_bytes(masks)
+            decay_path.write_bytes(rom[0x524:0x536])
+            process = subprocess.run([str(native_probe.resolve()), str(mask_path), str(decay_path)],
+                                     input="\n".join(native_inputs) + "\n", text=True,
+                                     capture_output=True, timeout=30)
+        if process.returncode:
+            raise RuntimeError(f'native speed probe failed: {process.stderr}')
+        try:
+            native_rows = [[int(value) for value in line.split()] for line in process.stdout.splitlines()]
+        except ValueError as error:
+            raise RuntimeError('malformed native speed output') from error
+        if native_rows != native_expected:
+            raise RuntimeError('native speed output differs from captured contract')
+        native_result = {"status": "passed", "values": len(native_expected) * 5,
+                         "stdout_sha256": hashlib.sha256(process.stdout.encode()).hexdigest()}
+    return {'kind': 'isolated_speed_research', 'native': native_result, 'counts': counts, 'mismatches': mismatches,
             'status': 'passed' if not mismatches else 'failed',
             'context_domains': {key: sorted(values) for key, values in contexts.items()},
             'autonomous_movement': 'not tested'}
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--native-probe', type=Path)
+    parser.add_argument('--report', type=Path, default=Path('artifacts/speed/comparison.json'))
+    args = parser.parse_args()
     capture = Path('artifacts/speed/primary')
     access_path = capture / 'access.json'
     access = json.loads(access_path.read_text())
     series = (capture / 'wram-series.bin').read_bytes()
     rom = Path(Path('local/rom-location.txt').read_text().strip()).read_bytes()
-    result = compare(access, series, rom)
+    result = compare(access, series, rom, args.native_probe)
     result['access_sha256'] = hashlib.sha256(access_path.read_bytes()).hexdigest()
     result['series_sha256'] = hashlib.sha256(series).hexdigest()
-    Path('artifacts/speed/comparison.json').write_text(json.dumps(result, indent=2) + '\n')
+    args.report.write_text(json.dumps(result, indent=2) + '\n')
+    print(result['native'])
     print(result['status'], result['counts'], result['mismatches'][:3])
     print({key: (min(values), max(values)) for key, values in result['context_domains'].items()})
     raise SystemExit(bool(result['mismatches']))

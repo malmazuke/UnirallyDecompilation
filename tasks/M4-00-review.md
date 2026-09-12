@@ -111,3 +111,27 @@ ancestry are correct; this finding does not question accepted M3.
 Next action: correct F1 and F2 on a new immutable documentation candidate, then
 perform a focused independent re-review before coordinator acceptance. No
 implementation or private input is needed for these corrections.
+
+## Focused re-review — corrections approved
+
+- Exact corrected candidate: `c1c5d3f3c656ecb23afd1c5834c4c40b50a832c6`.
+- Reviewer: same independent OpenAI Astra/high reviewer, 13 September 2026;
+  scope limited to F1/F2 and the exact `4f7c520..c1c5d3f` diff.
+- **F1 resolved:** the AI row now cites the observed `$77:0825` reward update,
+  its effect on later jump requests, and native update/consumption/canonical
+  continuation. The persistence row explicitly preserves that bounded in-race
+  meaning while leaving cross-session progression and other SRAM semantics
+  unobserved. This agrees with the R-0011-motion evidence and accepted source
+  inspected above; the limited no-RNG observation is not generalized.
+- **F2 resolved:** the task's full base hash is now
+  `09ce40e9f591ffa828db2e2b54cd13eaa88a0d58`, independently rechecked against
+  `git rev-parse 'm3^{commit}'`.
+- The correction changes only those two inventory rows, the task base and
+  task review/attempt bookkeeping. `git diff --check 4f7c520..c1c5d3f` passes;
+  the worktree was clean. No ROM or full-suite execution was needed or run.
+
+**Current verdict: approve M4-00 candidate `c1c5d3f` for coordinator integration.**
+Both returned findings are closed; the earlier verified README, task-boundary
+and hygiene checks remain applicable. This is approval of the documentation
+inventory, not implementation acceptance for M4-01 or M4-02. The coordinator
+still owns integration checks and the task's accepted status.

@@ -52,15 +52,15 @@ First implementation milestone: M0 repeatable laboratory. First gameplay feasibi
 
 ## Next work
 
-**Resume from [the usage checkpoint](../tasks/M2-01-usage-checkpoint.md).** The
-three child sessions hit provider usage limits before final review/assembly
-finished. Branches and a motion handoff draft are preserved; no M2 acceptance
-is claimed. D-0004 now defaults to Sol/medium, one child, bounded frontier review
-and recorded quota guardrails. This continuation stays with OpenAI; only the user
-may move it to another provider. No reset credit was redeemed. Earlier active
-assignments below describe pending work, not currently running workers.
-
-The continuation runs through **[M2-01A](../tasks/M2-01A.md)** into **[M2-01](../tasks/M2-01.md)** without user intervention. Contact research and its native component have independent approval; input/timer and strict comparison components are approved; speed arithmetic and evidence checks are approved and its C++ port is submitted; motion/pose/AI/reward research is in final independent review. These branches are not yet accepted as an integrated game update. Coordinator integration and the native comparison command remain unfinished; the next agent follows the checkpoint without asking the user to choose the next step.
+**M2 continuation resumed on Astra with sequential Sol review.** The recovered
+motion approval is closed with224/224 final checks; native speed has fresh Sol
+approval and debug/sanitizer evidence. Contact and input/timer remain approved.
+Combined research/components at7ce2ba5 pass259/259 local checks. Native comparison
+command at20d3816 passes256/256 and is in independent review. Main integration/CI
+and semantic native movement implementation remain pending. See [M2-01A](../tasks/M2-01A.md)
+and [the recovery checkpoint](../tasks/M2-01-usage-checkpoint.md) for exact branches
+and evidence. Current quota baseline is3% weekly used, latest observation6%,
+with discretionary checkpoint at13%; no provider switch or reset redemption.
 
 The dependency includes a real feedback path: opponent quarter-turn tracking enqueues a landing reward, its delayed consumer changes speed boosts and a cartridge-RAM feature total, and that total changes later AI jump requests. Motion research now inventories these states along with the exact GO brake/throttle transition. Native code will evolve them from one validated end-of-frame1533 seed. Frozen withheld outputs remain unopened until the full native routine is fixed.
 

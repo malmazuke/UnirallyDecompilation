@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "scenario_id": "race-crawler-dragster-12000-review-release-3213-fields",
+  "description": "Reviewer-owned M3-01 low-speed finish perturbation, frozen before reference execution. It is identical to the accepted continuous-Right input except that Right is released for crossing frame 3213 and resumed at frame 3214.",
+  "tested_behavior": "Prediction frozen before execution: the reference first differs from the accepted continuous input at frame 3213; the one-frame crossing release changes the player's post-crossing low-speed tail without changing the menu path or opponent input. Native comparison must either agree exactly with the independently frozen reference projection or report the first gameplay divergence.",
+  "rom": {
+    "manifest": "tests/manifests/rom/unirally-pal.json",
+    "sha256": "a1105819d48c04d680c8292bbfa9abbce05224f1bc231afd66af43b7e0a1fd4e"
+  },
+  "core": {
+    "name": "bsnes",
+    "lock": "tools/locks/emulators.json",
+    "commit": "7d5aa1e656b9171524d01b1b22917197d8121cb4",
+    "patch_sha256": "a719f5ffe2222dad4c1ab04336633319ad85004f74e32fc14893a058be333885",
+    "serialization_method": "Strict",
+    "options": {}
+  },
+  "origin": {"kind": "cold_start"},
+  "run": {"frames": 12000, "sample_every": 1, "trace_entries": 64},
+  "inputs": {
+    "timing_unit": "frame",
+    "injection_point": "Buttons are presented on the libretro input callback before retro_run of frames `from`..`to` inclusive (0-based after power-on), then withdrawn before the next frame; see R-0002 finding 6.",
+    "controllers": [
+      {
+        "port": 0,
+        "events": [
+          {"from": 300, "to": 305, "buttons": ["start"]},
+          {"from": 620, "to": 625, "buttons": ["start"]},
+          {"from": 750, "to": 755, "buttons": ["start"]},
+          {"from": 900, "to": 905, "buttons": ["start"]},
+          {"from": 1050, "to": 1055, "buttons": ["start"]},
+          {"from": 1200, "to": 1205, "buttons": ["start"]},
+          {"from": 1500, "to": 3212, "buttons": ["right"]},
+          {"from": 2200, "to": 2259, "buttons": ["up"]},
+          {"from": 3214, "to": 11999, "buttons": ["right"]}
+        ]
+      },
+      {"port": 1, "events": []}
+    ]
+  },
+  "fields": [
+    {"name": "wram_sha256", "kind": "wram_sha256"},
+    {"name": "registers", "kind": "registers"},
+    {"name": "joy1l_image", "kind": "wram_range", "start": 785, "length": 1},
+    {"name": "joy1h_image", "kind": "wram_range", "start": 787, "length": 1},
+    {"name": "axis_v", "kind": "wram_range", "start": 789, "length": 1},
+    {"name": "axis_h", "kind": "wram_range", "start": 793, "length": 1},
+    {"name": "pos_x", "kind": "wram_range", "start": 1045, "length": 4},
+    {"name": "displacement_x", "kind": "wram_range", "start": 3003, "length": 2},
+    {"name": "throttle", "kind": "wram_range", "start": 3051, "length": 2},
+    {"name": "speed", "kind": "wram_range", "start": 1211, "length": 2},
+    {"name": "timer", "kind": "wram_range", "start": 3609, "length": 20},
+    {"name": "jump_height", "kind": "wram_range", "start": 829, "length": 2},
+    {"name": "camera_x", "kind": "wram_range", "start": 8230, "length": 2}
+  ],
+  "regeneration_command": "python3 tools/project.py replay compare --manifest tests/manifests/replay/race-crawler-dragster-12000-review-release-3213-fields.json --runs 2",
+  "expected": {
+    "sample_digest": "ea96f0fdf6c26072b40478e36f23ff3cda7e955bfebbcd4487f1825c390ac2a7",
+    "final_state_sha256": "c7f7e7a68b705b828175a7f6d2a5dccf1e992e6ebd8f0c69d98a82fdb79ce8de"
+  }
+}

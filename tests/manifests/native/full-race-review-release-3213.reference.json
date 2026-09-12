@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "kind": "frozen_full_race_finish_reference",
+  "rom_sha256": "a1105819d48c04d680c8292bbfa9abbce05224f1bc231afd66af43b7e0a1fd4e",
+  "core_commit": "7d5aa1e656b9171524d01b1b22917197d8121cb4",
+  "sample_phase": "end_of_pal_frame",
+  "post_player_finish_delay_updates": 240,
+  "fields": [
+    {"name": "rider_finished", "addresses": [3839, 3841], "width": 2, "writer_pc": 8487483},
+    {"name": "finish_time_centiseconds", "addresses": [7800661, 7800767], "width": 2, "writer_pcs": [8487242, 8487299]},
+    {"name": "finish_time_copy", "addresses": [7800681, 7800787], "width": 2, "writer_pcs": [8487395, 8487401]},
+    {"name": "finish_time_digits", "addresses": [3647, 3649, 3651, 3653, 3655, 3657, 3659, 3661, 3663, 3665], "width": 2, "writer_pcs": [8487105, 8487122, 8487139, 8487156, 8487178]},
+    {"name": "player_finish_delay", "address": 3855, "width": 2, "writer_pc": 8644637}
+  ],
+  "cases": [
+    {
+      "name": "review_release_3213",
+      "replay": "tests/manifests/replay/race-crawler-dragster-12000-review-release-3213-fields.json",
+      "sample_digest": "ea96f0fdf6c26072b40478e36f23ff3cda7e955bfebbcd4487f1825c390ac2a7",
+      "access_sha256": "53c5797c61b3e797ad1ad563bd055d1e2813f09c7d283e1e2f143fd85437d16b",
+      "player": {"finish_frame": 3213, "finish_time_centiseconds": 3357, "digits": [0, 3, 3, 5, 7]},
+      "opponent": {"finish_frame": 3214, "finish_time_centiseconds": 3358, "digits": [0, 3, 3, 5, 8]},
+      "outcome": "player_won",
+      "delay": {"first_frame": 3214, "last_frame": 3453, "first_value": 1, "last_value": 240},
+      "first_result_transition_frame": 3454,
+      "first_stable_result_frame": 3679
+    }
+  ]
+}

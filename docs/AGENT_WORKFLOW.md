@@ -28,10 +28,11 @@ Anthropic tasks retain Anthropic models as specified in D-0004.
 Use frontier models for bounded difficult questions and milestone audits.
 Project `.codex/config.toml` supplies defaults for new Codex sessions/children;
 explicit runtime settings may override them, so record the actual model.
-The initial budget reserves 20% of weekly allowance and checkpoints discretionary
-implementation after a 10 percentage-point increase from its recorded session
-baseline. These are agent-enforced limits, not an implemented metering service.
-No automatic reset redemption or purchases are authorized.
+The budget reserves 20% of weekly allowance and checkpoints discretionary
+implementation after a 20 percentage-point increase from its recorded session
+baseline. This is the doubled quota and guardrail for tasks started after 12
+September 2026. These are agent-enforced limits, not an implemented metering
+service. No automatic reset redemption or purchases are authorized.
 
 ## Task lifecycle
 

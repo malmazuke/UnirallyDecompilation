@@ -87,10 +87,12 @@ and this session's cross-model cache behavior has not been established.
   provider/window, timestamp, used/remaining percentages and reset, or `unknown`.
   Compare aggregate work across parent and children; account-wide deltas may
   include unrelated work and cannot be attributed precisely to this project.
-- Initial conservative policy: reserve the final 20% of a weekly allowance for
-  review/recovery; limit discretionary implementation to a 10 percentage-point
-  increase from a recorded work-session start. Do not reset that baseline by
-  spawning a child, rotating tasks or starting another automatic session. At
+- Updated policy for tasks started after 12 September 2026: reserve the final
+  20% of a weekly allowance for review/recovery; limit discretionary
+  implementation to a 20 percentage-point increase from a recorded
+  work-session start. This doubles the former 10-point task quota and its
+  enforcement guardrail; the recovery reserve is unchanged. Do not reset that
+  baseline by spawning a child, rotating tasks or starting another automatic session. At
   either threshold, checkpoint and end discretionary implementation with the
   resource condition recorded. Do not switch providers to bypass the limit.
   These are project defaults chosen in response to the user's request, not
@@ -126,6 +128,11 @@ agent time and observed quota delta in the task. After three comparable bounded
 tasks, compare accepted outcomes per allowance consumed and adjust the defaults.
 Do not benchmark with extra artificial workloads or infer efficiency from wall
 clock time alone.
+
+User adjustment, 12 September 2026: double the quota for all future tasks,
+including the guardrail. This changes the per-task discretionary allowance from
+10 to 20 percentage points. It does not authorize reset redemption, purchases,
+provider switching or use of the final 20% review/recovery reserve.
 
 Official references checked on 12 September 2026:
 [Codex subagent configuration](https://learn.chatgpt.com/docs/agent-configuration/subagents)

@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "scenario_id": "dragster-complete-race",
+  "samples": {
+    "continuous": "22e9babdcb867936245e7c4a52fdf53a1bf8dc9433e91b77066818a4fc3484d6",
+    "variation": "d24a12347bcda3352244ecdb1d5e1ffc88985827a7725ac00da5a9f8ec866c74"
+  },
+  "first_divergence_frame": 3000,
+  "finish": {
+    "player_address": 3839,
+    "opponent_address": 3841,
+    "flag_writer_pc": 8487483,
+    "counter_address": 3855,
+    "counter_writer_pc": 8644637,
+    "counter_updates": 240,
+    "continuous": {
+      "player_frame": 3213,
+      "opponent_frame": 3214,
+      "counter_first": 3214,
+      "counter_last": 3453
+    },
+    "variation": {
+      "player_frame": 3318,
+      "opponent_frame": 3214,
+      "counter_first": 3319,
+      "counter_last": 3558
+    }
+  },
+  "coverage_delta": {
+    "baseline_scenario": "race-crawler-dragster-3000",
+    "bytes_only_here": 3467,
+    "bytes_only_in_baseline": 0,
+    "new_ranges": 92,
+    "new_entry_points": 180
+  },
+  "content_delta": {
+    "channel_transfers": 9817,
+    "block_moves": 5,
+    "block_move_bytes": 80,
+    "destinations_pairable": 9817,
+    "destinations_paired": 9814
+  },
+  "decoded_track_length": 33815
+}

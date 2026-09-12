@@ -60,6 +60,17 @@ struct RewardQueueState {
     std::uint16_t cooldown{}, feature_total{};
     std::uint8_t event_one_weight{};
 };
+enum class RacePhase : std::uint8_t { Racing=0, FinishDelay=1, ResultLoading=2, ResultScreen=3 };
+enum class RaceOutcome : std::uint8_t { Pending=0, PlayerWon=1, PlayerLost=2 };
+struct RaceFinishState {
+    std::array<bool,2> rider_finished{};
+    std::array<std::uint16_t,2> finish_time_centiseconds{};
+    std::array<std::array<std::uint16_t,5>,2> finish_time_digits{};
+    std::array<std::uint16_t,2> finish_animation_countdown{};
+    std::uint16_t player_finish_delay{}, result_loading_updates{};
+    RacePhase phase{RacePhase::Racing};
+    RaceOutcome outcome{RaceOutcome::Pending};
+};
 struct MovementState {
     std::uint32_t frame{};
     ControllerSample player_input{};
@@ -69,6 +80,7 @@ struct MovementState {
     RewardQueueState rewards{};
     std::uint16_t countdown{};
     std::uint8_t contact_phase{}, progress_phase{}, animation_counter{}, update_counter{};
+    RaceFinishState finish{};
 };
 
 struct MovementContent {
@@ -85,6 +97,12 @@ struct MovementContent {
 
 inline constexpr std::array<std::uint8_t, 8> movement_state_magic{
     'U', 'R', 'M', 'V', '0', '0', '0', '1'};
+inline constexpr std::array<std::uint8_t, 8> movement_state_magic_v2{
+    'U', 'R', 'M', 'V', '0', '0', '0', '2'};
+
+// $83:E90D-$83:E932 non-crossing finish-display velocity adjustment.
+// Input/output are signed 16-bit bit patterns in 1/32 units per update.
+std::uint16_t finish_speed_toward_zero(std::uint16_t velocity);
 
 // Fixed-order little-endian encoding. It contains semantic continuation fields
 // only: no WRAM image, CPU registers, frame-indexed events or captured calls.
@@ -92,9 +110,8 @@ std::vector<std::uint8_t> serialize_movement_state(const MovementState& state);
 MovementState deserialize_movement_state(std::span<const std::uint8_t> bytes);
 
 // Advance one PAL game update in the recovered CRAWLER/DRAGSTER domain. This
-// semantic path currently closes input, GO launch, horizontal acceleration,
-// speed limiting/integration and timer order. Later contact/pose/AI work extends
-// this same state transition; no reference row or frame-indexed event enters it.
+// semantic path closes the frozen CRAWLER/DRAGSTER gameplay and finish/result
+// continuation. No reference row or frame-indexed event enters it.
 void update_movement(MovementState& state, const ControllerButtons& player_buttons,
                      const MovementContent& content);
 

@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "kind": "native_full_race_case",
+  "case_name": "continuous_right",
+  "runtime": {"path": "local/native/dragster-idle/runtime.json", "sha256": "a38d58f2295c5be0569e83b4d77d995eceb031b5ff93118123af06002ab637da"},
+  "replay": {"path": "tests/manifests/replay/race-crawler-dragster-12000-continuous-right-fields.json", "sha256": "442368a8319d4bf599a8d6e464ef9c6237ea4971d1dd7ad906c7f1c74851e285"},
+  "expected": {"path": "tests/manifests/native/full-race-continuous.expected.json", "sha256": "748ae6edc9c8a1d7f2c3bedfe811a9bcbcb8972a50ed67bc69a39a5868102042"},
+  "finish_contract": {"path": "tests/manifests/native/full-race-finish.reference.json", "sha256": "648c2e3d65480a533f7c2a13963208edd3adc863250748b52a59414596ca2589"}
+}

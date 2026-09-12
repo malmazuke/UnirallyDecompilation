@@ -29,3 +29,8 @@ withheld validation. Frozen reference values do not eliminate native content
 prerequisites. The utility only projects reference samples; there is no native
 simulation or `native compare` command yet. Source identities, detailed capture
 commands and the current prerequisite investigation are in R-0010.
+
+M3-01 adds two `native_full_race_case` manifests. Each binds the original replay,
+the pre-implementation frozen gameplay projection, the finish-state reference
+contract, and the accepted ignored M2 runtime. `native finish-check` consumes
+those bindings without loading a ROM or invoking the reference emulator.

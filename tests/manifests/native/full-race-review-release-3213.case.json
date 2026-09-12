@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "kind": "native_full_race_case",
+  "case_name": "review_release_3213",
+  "runtime": {"path": "local/native/dragster-idle/runtime.json", "sha256": "a38d58f2295c5be0569e83b4d77d995eceb031b5ff93118123af06002ab637da"},
+  "replay": {"path": "tests/manifests/replay/race-crawler-dragster-12000-review-release-3213-fields.json", "sha256": "efe72add691e6afced51a3fb380fd65827048aed1d5c57e54a88dc1665ee7103"},
+  "expected": {"path": "tests/manifests/native/full-race-review-release-3213.expected.json", "sha256": "ac367372f2881f07f3c3e9ff8eb763070432210202bf819ee358f5fae4a6f690"},
+  "finish_contract": {"path": "tests/manifests/native/full-race-review-release-3213.reference.json", "sha256": "1e4123f238bdb3da7ed971454f83123b1ef01cf91602bfd48eaad509c8685d0d"}
+}

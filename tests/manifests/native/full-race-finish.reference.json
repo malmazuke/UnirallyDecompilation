@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "kind": "frozen_full_race_finish_reference",
+  "rom_sha256": "a1105819d48c04d680c8292bbfa9abbce05224f1bc231afd66af43b7e0a1fd4e",
+  "core_commit": "7d5aa1e656b9171524d01b1b22917197d8121cb4",
+  "sample_phase": "end_of_pal_frame",
+  "post_player_finish_delay_updates": 240,
+  "fields": [
+    {"name": "rider_finished", "addresses": [3839, 3841], "width": 2, "writer_pc": 8487483},
+    {"name": "finish_time_centiseconds", "addresses": [7800661, 7800767], "width": 2, "writer_pcs": [8487242, 8487299]},
+    {"name": "finish_time_copy", "addresses": [7800681, 7800787], "width": 2, "writer_pcs": [8487395, 8487401]},
+    {"name": "finish_time_digits", "addresses": [3647, 3649, 3651, 3653, 3655, 3657, 3659, 3661, 3663, 3665], "width": 2, "writer_pcs": [8487105, 8487122, 8487139, 8487156, 8487178]},
+    {"name": "player_finish_delay", "address": 3855, "width": 2, "writer_pc": 8644637}
+  ],
+  "cases": [
+    {
+      "name": "continuous_right",
+      "replay": "tests/manifests/replay/race-crawler-dragster-12000-continuous-right-fields.json",
+      "sample_digest": "22e9babdcb867936245e7c4a52fdf53a1bf8dc9433e91b77066818a4fc3484d6",
+      "access_sha256": "f4d9b77d0ce9c1c0d4faf39b20dddbdd29c4fdc0ef13f6f56f93640549777d26",
+      "wram_series_sha256": "acb04381e1ec7b6ce8ec86928e79229f4a48b10e871abd6078abeb26b06b95a5",
+      "player": {"finish_frame": 3213, "finish_time_centiseconds": 3357, "digits": [0, 3, 3, 5, 7]},
+      "opponent": {"finish_frame": 3214, "finish_time_centiseconds": 3358, "digits": [0, 3, 3, 5, 8]},
+      "outcome": "player_won",
+      "delay": {"first_frame": 3214, "last_frame": 3453, "first_value": 1, "last_value": 240},
+      "first_result_transition_frame": 3454,
+      "first_stable_result_frame": 3679
+    },
+    {
+      "name": "release_3000_3299",
+      "replay": "tests/manifests/replay/race-crawler-dragster-12000-release-3000-3299-fields.json",
+      "sample_digest": "d24a12347bcda3352244ecdb1d5e1ffc88985827a7725ac00da5a9f8ec866c74",
+      "access_sha256": "f9a7c25022b2820206d4d6674e5ef6d5cec4138566df6a912200331a19a291a8",
+      "wram_series_sha256": "ad6950f9d74908d7727714c2848b5eb4b17144638f2853d8019c54515eabd818",
+      "player": {"finish_frame": 3318, "finish_time_centiseconds": 3566, "digits": [0, 3, 5, 6, 6]},
+      "opponent": {"finish_frame": 3214, "finish_time_centiseconds": 3358, "digits": [0, 3, 3, 5, 8]},
+      "outcome": "player_lost",
+      "delay": {"first_frame": 3319, "last_frame": 3558, "first_value": 1, "last_value": 240},
+      "first_result_transition_frame": 3559,
+      "first_stable_result_frame": 3800
+    }
+  ]
+}

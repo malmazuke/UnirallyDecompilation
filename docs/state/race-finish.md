@@ -35,8 +35,12 @@ The shared race-timer digits at `$7E0E19`–`$7E0E29` continue advancing during
 the 240-frame finish display. They are not the stored player time printed on
 the results screen: continuous results show `0:33.57`, while the shared digits
 reach 0:38.3 plus 4/5; the variation results show `0:35.66`, while the shared
-digits continue to 0:40.4 plus 4/5. The per-rider stored-time layout is not yet
-identified.
+digits continue to 0:40.4 plus 4/5. The per-rider stored-time layout was not yet
+identified by M3-00. M3-01's additive [R-0013](../research/R-0013-native-finish-reference-freeze.md)
+locates the interleaved digit words at `$7E0E3F`–`$7E0E51` and persisted u16
+centisecond values at `$77:0755/$77:07BF` (with identical copies at
+`$77:0769/$77:07D3`). The tested player values are 3357 and 3566; the opponent
+value is 3358 in both.
 
 ## State-format consequence
 
@@ -45,6 +49,12 @@ flags nor this delay. A native complete-race task must revise the format
 explicitly and serialize both rider flags, the delay, any future-affecting
 stored finish times/result outcome, and the presentation phase. Appending a
 hidden global or reusing the emulator's work RAM would violate the M2 boundary.
+
+The M3-01 candidate keeps `URMV0001` byte-identical before a finish and appends
+the named fields in 369-byte `URMV0002` after the first rider crosses. The
+additive `native finish-check` rejects a revision regression, verifies stored
+times/outcome/delay/transition state each frame, and compares restored canonical
+suffixes around both crossings and both delay-completion boundaries.
 
 This record does not establish ranking rules. The variation visibly says
 `LOSER`, but its later `DRAGSTER COMPLETE` screen still decorates MIKE's row;

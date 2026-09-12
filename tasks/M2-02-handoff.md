@@ -42,27 +42,28 @@ domain; other modes remain outside the claim.
 ## Exact local evidence
 
 Primary restore frames1631 and2200 pass through frame2999 with five fresh
-processes; report `artifacts/m2-02-primary-verified/report.json`, SHA-256
-`be9e34df71bfddda980fcc6ed55846955da6e76dca64ae7ff55c14c90e611d3f`.
+processes; final exact-candidate report
+`artifacts/m2-02-final-primary/report.json`, SHA-256
+`7c0169cbbf072b4bd3ce811aed77edccb848b7211e25156a2c1c84fc9a448344`.
 Saved-state hashes are `61b35389...9da9` and `336136d4...3eb1`; both restored
 suffixes end at `aecc6f2b...c605` exactly like the uninterrupted process.
 
 Release-2347 restore frames2761 and2787 bracket the idle/contact displacement
-boundary and pass through2999 with five fresh processes; report
-`artifacts/m2-02-release-verified/report.json`, SHA-256
-`5c941f58a29eaf0d04b6e6f56ce577508a4819887f3c1ca10991e6233d55a90b`.
+boundary and pass through2999 with five fresh processes; final exact-candidate
+report `artifacts/m2-02-final-release/report.json`, SHA-256
+`c9b5d703d0e193b9365fc2db68a801d32e9e2a5534c998eae9f43ba644b6fd33`.
 Both baselines also remain identical to all13 frozen reference projections.
 Runtime metadata remains `a38d58f2...37da`; seed remains `7cd034fc...b4ab`.
 
 ## Clean candidate validation
 
-Implementation commit `c4c88a4efb2afe3f3bc88662dcb27d7f732f79d9`
+Implementation commit `f7a3386edd4806a9ef97bcbc404af763dca1181b`
 passes the complete ROM-free suite **281/281** on clean source; report
-`artifacts/m2-02-clean-synthetic.json`, SHA-256
-`c13f6af3340214462dc285bcd491147d53feebf8f34b6ce39af0f8051c5851f6`.
+`artifacts/m2-02-final-synthetic.json`, SHA-256
+`da2b8a5786825f94b540b7a7775304749d2b89bc3f254ba4c23a709e4e9b824c`.
 The three movement CTests pass under sanitizers with no diagnostics; sanitizer
 build report SHA-256 is
-`baf065e4bd8758ac0b6f53d5f443d261ef512563bedf3b6e01ba85677569b312`.
+`c668cea682dd18906666a94989d81440078808906347a146edb55b3767f1bd3d`.
 Focused command tests pass19/19. No gameplay source or frozen expectation changed.
 
 ## Remaining gates

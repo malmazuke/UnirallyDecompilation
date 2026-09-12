@@ -1,5 +1,6 @@
 #include "content_pack.hpp"
 
+#include <algorithm>
 #include <array>
 #include <fstream>
 #include <iterator>
@@ -14,6 +15,8 @@ public:
     std::uint16_t u16(){require(2);const auto v=static_cast<std::uint16_t>(bytes_[at_]|(static_cast<unsigned>(bytes_[at_+1])<<8U));at_+=2;return v;}
     std::uint32_t u32(){const auto lo=u16();return static_cast<std::uint32_t>(lo)|(static_cast<std::uint32_t>(u16())<<16U);}
     std::uint64_t u64(){const auto lo=u32();return static_cast<std::uint64_t>(lo)|(static_cast<std::uint64_t>(u32())<<32U);}
+    std::array<std::uint8_t,32> digest(){std::array<std::uint8_t,32> value{};for(auto& byte:value){byte=u8();}return value;}
+    std::uint8_t u8(){require(1);return bytes_[at_++];}
     std::string text(){const auto width=u16();require(width);std::string value(bytes_.begin()+static_cast<std::ptrdiff_t>(at_),bytes_.begin()+static_cast<std::ptrdiff_t>(at_+width));at_+=width;if(value.empty())throw std::invalid_argument("Classic pack contains an empty identity");return value;}
     void skip(std::size_t width){require(width);at_+=width;}
     std::size_t offset()const{return at_;}
@@ -22,13 +25,33 @@ private:
     std::span<const std::uint8_t> bytes_;std::size_t at_{};
 };
 
-const std::array<std::pair<std::string_view,std::size_t>,13> required{{
-    {"physics.track.dragster.data",33815},{"physics.rider.collision-poses",32768},
-    {"physics.rider.collision-templates",17249},{"physics.track.progress-transitions",80},
-    {"physics.track.dragster.tile-columns",640},{"physics.track.dragster.tile-flags",20},
-    {"physics.speed.masks",9},{"physics.speed.decrements",18},{"physics.rider.pose-slopes",128},
-    {"physics.rider.displacement-table",512},{"physics.rider.idle-pose-table",64},
-    {"physics.reward.rotation-value",2},{"physics.reward.rotation-class",1}}};
+struct RequiredEntry {std::string_view id;std::size_t size;std::string_view sha256;};
+const std::array<RequiredEntry,13> required{{
+    {"physics.track.dragster.data",33815,"8f5cef67dc57977af8ff614b8178514a26e9fe0059e02ed27aad5978185580d4"},
+    {"physics.rider.collision-poses",32768,"9d1754d38c20cb2900239557550211ab6fc23d9b0237e17b78fb29f3bf272c32"},
+    {"physics.rider.collision-templates",17249,"2f03a8cb985899436603ef36b233b28f7b4213e4ba106fca328a6b02cdb081c7"},
+    {"physics.track.progress-transitions",80,"8a90513f349bc7836513d3495a9bbb90563b9eb7a716fd4aff5b9a4c74fc83df"},
+    {"physics.track.dragster.tile-columns",640,"bb95427aa2a307c9874b6140b145dce5a4e279112d57a5efcae77eb444951a72"},
+    {"physics.track.dragster.tile-flags",20,"590e52f2640bb1b70f602622aa07285ed51d7c4b84707b4d77c5cc33fc230846"},
+    {"physics.speed.masks",9,"0ca19a78da56137e0926c4ba602d8041648a422b9cf5d0a7c3de4a30998cf58b"},
+    {"physics.speed.decrements",18,"c1fab1d9aa1e691d34c1a78e8658cfd52b8334cc5bdec8efb23bedc672988068"},
+    {"physics.rider.pose-slopes",128,"f6b1ea6a34c78336ca25449c8ddbd23e2417ef829ec09765e695f957cd714584"},
+    {"physics.rider.displacement-table",512,"27894923de2aaeb58ca24dedbddadcf0d4d154fbc61ea484e7c248d066e24e1b"},
+    {"physics.rider.idle-pose-table",64,"05d2af9f8c0d1d8d8dd1915086f4f4c58456510f3daf357dbd7fdd66e4a8031e"},
+    {"physics.reward.rotation-value",2,"8509b81230019d2ad970d970f791dfbdc8caf54f5c594fcd327cef9feed206c1"},
+    {"physics.reward.rotation-class",1,"6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"}}};
+
+std::array<std::uint8_t,32> hex_digest(std::string_view text) {
+    if(text.size()!=64)throw std::logic_error("invalid compiled Classic SHA-256");
+    const auto nibble=[](char value)->std::uint8_t{
+        if(value>='0'&&value<='9')return static_cast<std::uint8_t>(value-'0');
+        if(value>='a'&&value<='f')return static_cast<std::uint8_t>(value-'a'+10);
+        throw std::logic_error("invalid compiled Classic SHA-256 digit");
+    };
+    std::array<std::uint8_t,32> out{};
+    for(std::size_t i=0;i<out.size();++i)out[i]=static_cast<std::uint8_t>((nibble(text[i*2])<<4U)|nibble(text[i*2+1]));
+    return out;
+}
 
 std::array<std::uint8_t,32> sha256(std::span<const std::uint8_t> source) {
     constexpr std::array<std::uint32_t,64> constants{{
@@ -68,7 +91,10 @@ ClassicContentPack::ClassicContentPack(const std::filesystem::path& path) {
     if(bytes_.size()<12 || std::string(bytes_.begin(),bytes_.begin()+8)!="URCP0001")throw std::invalid_argument("Classic pack magic is unsupported");
     Reader in(bytes_);in.skip(8);
     if(in.u32()!=1)throw std::invalid_argument("Classic pack schema is unsupported");
-    in.skip(64); // source ROM and extraction-rules SHA-256; command validates both.
+    const auto source_identity=in.digest();
+    const auto rules_identity=in.digest();
+    if(source_identity!=hex_digest("a1105819d48c04d680c8292bbfa9abbce05224f1bc231afd66af43b7e0a1fd4e"))throw std::invalid_argument("Classic pack source ROM identity is unsupported");
+    if(rules_identity!=hex_digest("f500d016726495c435be81c6d3e05b9fa64b38edb8e322788c37927e1022a620"))throw std::invalid_argument("Classic pack extraction-rules identity is unsupported");
     if(in.text()!="classic.pal.crawler.dragster.v1")throw std::invalid_argument("Classic pack profile is unsupported");
     if(in.text()!="classic.crawler.dragster.race-start.v1")throw std::invalid_argument("Classic pack start state is unsupported");
     const auto count=in.u16();
@@ -76,20 +102,25 @@ ClassicContentPack::ClassicContentPack(const std::filesystem::path& path) {
     std::vector<Row> rows;rows.reserve(count);
     for(unsigned index=0;index<count;++index){
         auto id=in.text();const auto offset=in.u64();const auto size=in.u64();
-        std::array<std::uint8_t,32> digest{};
-        for(auto& byte:digest){byte=bytes_.at(in.offset());in.skip(1);}
+        const auto digest=in.digest();
         if(entries_.contains(id))throw std::invalid_argument("Classic pack contains a duplicate logical ID");
         entries_.emplace(id,Entry{});rows.push_back({std::move(id),offset,size,digest});
     }
     std::uint64_t cursor=in.offset();
+    if(entries_.size()!=required.size())throw std::invalid_argument("Classic pack inventory is incomplete");
+    for(const auto& expected:required){
+        const auto found=entries_.find(std::string(expected.id));
+        if(found==entries_.end())throw std::invalid_argument("Classic pack required logical entry is missing");
+        const auto row=std::find_if(rows.begin(),rows.end(),[&](const Row& value){return value.id==expected.id;});
+        if(row==rows.end()||row->size!=expected.size||row->digest!=hex_digest(expected.sha256))throw std::invalid_argument("Classic pack required entry identity is unsupported: "+std::string(expected.id));
+    }
     for(const auto& row:rows){
         if(row.offset!=cursor || row.size>std::numeric_limits<std::size_t>::max() || row.offset>bytes_.size() || row.size>bytes_.size()-static_cast<std::size_t>(row.offset))throw std::invalid_argument("Classic pack payload layout is invalid");
         const auto payload=std::span<const std::uint8_t>(bytes_).subspan(static_cast<std::size_t>(row.offset),static_cast<std::size_t>(row.size));
         if(sha256(payload)!=row.digest)throw std::invalid_argument("Classic pack entry payload hash differs: "+row.id);
         entries_.at(row.id)={static_cast<std::size_t>(row.offset),static_cast<std::size_t>(row.size)};cursor+=row.size;
     }
-    if(cursor!=bytes_.size() || entries_.size()!=required.size())throw std::invalid_argument("Classic pack inventory is incomplete or has trailing data");
-    for(const auto& [id,size]:required){const auto found=entries_.find(std::string(id));if(found==entries_.end()||found->second.size!=size)throw std::invalid_argument("Classic pack required logical entry is missing or wrong-sized");}
+    if(cursor!=bytes_.size())throw std::invalid_argument("Classic pack has trailing data");
 }
 
 std::span<const std::uint8_t> ClassicContentPack::entry(const std::string& logical_id) const {

@@ -1,6 +1,6 @@
 # M2-01 movement implementation — semantic autonomous update
 
-Status: claimed by movement_impl (Sol/medium), after reviewer finished.
+Status: review checkpoint; movement_impl (Sol/medium) stopped at the usage guardrail.
 Provider: OpenAI. Coordinator Astra (current-session exception); worker Sol,
 medium reasoning, compact fresh context. No additional child workers.
 Base: `f6ca7f1c6e90aad896f5694a4493b13ff101e509`, branch
@@ -92,3 +92,16 @@ validated single-seed preparation; then one native update if quota allows.
 Do not attempt a full uncheckpointed rewrite. Current quota10% used; whole-run
 boundary13% still applies. No recursive workers. Coordinator handles PR2 CI and
 review integration while this independent implementation proceeds.
+
+## Preserved result
+
+Code476834d9767dc55dbb3de26a4e44fa5e42903d87; documentation-only completion
+f0150710f9f9b6fb1ae0d37bffc05794ee673a1b, clean isolated branch. Semantic state,
+295-byte serialization and approved end1533 importer implemented; full12-file
+runtime preparation is draft. Debug build, CTest1/1, Python2/2 and py_compile
+passed; no full suite, sanitizer or independent review yet. Actual seed hash
+1264e64d82314ae5c276515a81202d65aab5ff2b801c5de26548e750d000fdbb.
+Next: independently review state inventory/Python-to-C++ decoding, especially
+three zero-at-seed displacement-history fields whose addresses need verification,
+then complete runtime/case generation and the first native update. No autonomous
+movement or withheld comparison was performed. Read worker handoff on its branch.

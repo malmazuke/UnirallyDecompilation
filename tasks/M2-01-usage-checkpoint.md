@@ -1,5 +1,27 @@
 # M2-01 — Usage interruption and routing checkpoint
 
+## Latest continuation checkpoint
+
+The resumed run completed the missing reviews and integrated M2-01A through
+PR2 (692ad1c, macOS/Linux CI34665548538), then integrated the independently
+reviewed native comparison command through PR3 (628efd7,268 checks and
+CI34665661785). M2-01A is accepted; M2-01 gameplay is not.
+
+Sol movement_impl's code checkpoint476834d and final handoff f015071 live in
+`.worktrees/m2-01-movement`, branch codex/M2-01-movement. State/serialization and
+single-seed import have targeted tests; complete runtime preparation and state
+inventory need independent review. See [the current assignment](M2-01-movement.md)
+and its branch handoff. Neither withheld output was opened. No worker remains
+active. Next work is that review, then runtime/case generation and native update.
+
+This run sampled weekly usage3% at start and13% at the stopping threshold,
+with87% weekly allowance remaining. Discretionary implementation stopped under
+D-0004; review/integration and durable recording were closed afterward. No
+provider switch, reset redemption or purchase occurred. Earlier interruption
+notes below are historical and do not describe current account exhaustion.
+
+## Earlier interruption
+
 Recorded 12 September 2026. M2-01 and M2-01A remain unaccepted. This record
 supersedes their earlier concurrency/unlimited-session allocations with
 [D-0004](../docs/decisions/D-0004-model-and-usage-budget.md), not their scope or

@@ -219,3 +219,12 @@ Local broad debug and sanitizer suites passed on the uncommitted correction
 finish/presentation reruns, commit IDs and hashes are recorded in M3-03 after
 the coherent correction commit. Fresh sequential re-review and hosted results
 remain required; this response does not approve the task.
+
+The exact behavioral correction is
+`3509ae99ed5102d8d7e2afdbea9d7e4ecbeda4da`. Both complete app suites,
+debug/sanitizer dummy smokes, the 2,146-update continuous-right run, and the
+private finish/presentation gates passed at that SHA. The exact continuous run
+again recorded 1,419 fallback frames and zero identical consecutive fallback
+redraws while Racing. `tasks/M3-03.md` contains the exact commands and report
+hashes. This documentation-only follow-up does not replace the required fresh
+review or hosted macOS/Linux evidence.

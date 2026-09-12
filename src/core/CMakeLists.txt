@@ -9,3 +9,7 @@ target_link_libraries(unirally_input_timer PUBLIC lab_options)
 add_library(unirally_contact STATIC flat_contact.cpp)
 target_include_directories(unirally_contact PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(unirally_contact PUBLIC unirally_sampling lab_options)
+
+add_library(unirally_speed_limits STATIC speed_limits.cpp)
+target_include_directories(unirally_speed_limits PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(unirally_speed_limits PUBLIC lab_options)

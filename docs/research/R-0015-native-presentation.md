@@ -307,3 +307,30 @@ the extraction and presentation manifests therefore additively freeze it as
 `presentation.result.classic.palette-tail.v1`; no reference case or 15% limit
 changes. The resulting twenty-five-entry extraction rules have SHA-256
 `70712c470db436ad95b02d3a6d51f737be7bb5b27689ca0d99a8297bac31d768`.
+
+The renderer consumer now reconstructs all 256 CGRAM entries in observed
+order: the stable 0--107 DMA, the stable-frame 108--111 cycle, retained
+112--127, frame-3560 writes to 128--191, retained race values at 192--207,
+and frame-3561 writes to 208--255. This improves frame 3679 from
+54,532/57,344 (95.10%) to 51,593/57,344 (89.97%).
+
+A final scroll-order capture then watched both mirrored scroll ports and the
+four writer PCs over frames 3556--3559. It passed every required identity and
+completeness check; `access.json` has SHA-256 beginning `906a4f8f56156408`.
+At frame 3559 `$80:F553` writes BG1 vertical low byte 82 and zero high byte,
+then `$80:F63E` writes low byte 78 and zero high byte. Thus the stable final
+vertical scroll is 78, not 82 or 76. The frame-3558 BG1 horizontal pair is
+zero. BG1SC `$02` selects a 32-by-64 map at word zero, BG12NBA `$23` selects
+BG1 8bpp tiles at word `$3000`, and TMW/TSW remain zero; none of these checks
+supports changing the current addressing or window enable.
+
+The stable-only log also closes display brightness: INIDISP advances through
+2, 4, 6, 8, 10, 12 and finally 14 at frame 3568, with no later write. Applying
+bsnes' per-channel `round(brightness * channel / 15)` rule reduces the exact
+frame-3679 mismatch to 37,872/57,344 (66.04%). Title and text placement and
+colours visibly align, but the broad BG1 field still differs and the frozen
+15% gate remains failed. The next bounded evidence step is to compare the
+visible BG1 map tile IDs 284--319 and their priority bits against the ordered
+`$82:B296` retained-VRAM source/destination runs, particularly the character
+origin `(map tile + $180) & $3FF`; only after that association should the
+eleven already captured result OBJ descriptors be composed on main/subscreen.

@@ -73,7 +73,7 @@ int main() {
   const auto before = unirally::serialize_movement_state(state);
   std::vector<std::uint8_t> bg1(2560), bg2(992), bg2_map(8192), palette(352),
       font(2048), rider(3456), result(5224), go_window, winner_window,
-      result_base_vram(41536), result_palette(216);
+      result_base_vram(41536), result_palette(216), result_palette_tail(128);
   const auto empty_window_table = [] {
     std::vector<std::uint8_t> table;
     for (const unsigned lines : {127U, 97U}) {
@@ -88,7 +88,8 @@ int main() {
   const unirally::PresentationContent content{track,   bg1,  bg2,   bg2_map,
                                               palette, font, rider, result,
                                               go_window, winner_window,
-                                              result_base_vram, result_palette};
+                                              result_base_vram, result_palette,
+                                              result_palette_tail};
   const auto first = unirally::render_dragster_headless({state, 0, 0, 0, 0, 0},
                                                         content),
              second = unirally::render_dragster_headless({state, 0, 0, 0, 0, 0},

@@ -56,6 +56,7 @@ struct PresentationContent {
   std::span<const std::uint8_t> palette, font, rider_tiles, result_assets;
   std::span<const std::uint8_t> go_window, winner_window;
   std::span<const std::uint8_t> result_base_vram, result_palette;
+  std::span<const std::uint8_t> result_palette_tail;
 };
 RgbFrame render_dragster_headless(const PresentationSample &,
                                   const PresentationContent &);

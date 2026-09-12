@@ -59,7 +59,8 @@ int main(int argc, char **argv) try {
       content.entry("presentation.effect.go-window.v1"),
       content.entry("presentation.effect.winner-window.v1"),
       content.entry("presentation.result.classic.base-vram.v1"),
-      content.entry("presentation.result.classic.palette.v1")};
+      content.entry("presentation.result.classic.palette.v1"),
+      content.entry("presentation.result.classic.palette-tail.v1")};
   const auto frame = unirally::render_dragster_headless(
       {state, camera, static_cast<std::int16_t>(sx),
        static_cast<std::int16_t>(sy), static_cast<std::int16_t>(bg2x),

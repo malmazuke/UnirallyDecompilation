@@ -123,6 +123,17 @@ std::array<std::uint8_t, 3> colour_word_rgb(std::uint16_t value) {
           channel8((value >> 10U) & 31U)};
 }
 
+std::uint16_t apply_snes_brightness(std::uint16_t colour_value,
+                                    unsigned brightness) {
+  const auto scale = [brightness](unsigned channel) {
+    return (brightness * channel + 7U) / 15U;
+  };
+  return static_cast<std::uint16_t>(scale(colour_value & 31U) |
+                                    (scale((colour_value >> 5U) & 31U) << 5U) |
+                                    (scale((colour_value >> 10U) & 31U)
+                                     << 10U));
+}
+
 std::array<std::uint8_t, 512>
 build_race_cgram(const PresentationSample &sample,
                  std::span<const std::uint8_t> packed_palette) {
@@ -481,6 +492,21 @@ void render_result_background(RgbFrame &frame,
   constexpr std::array<std::uint8_t, 8> cycle{
       0x52, 0x4a, 0x31, 0x46, 0x10, 0x42, 0xb5, 0x56};
   std::copy(cycle.begin(), cycle.end(), cgram.begin() + 216);
+
+  // Replay the observed CPU palette writers after the 216-byte DMA. Byte
+  // destinations are twice CGADD; repeated source blocks are intentional.
+  std::copy_n(content.result_palette_tail.begin(), 32, cgram.begin() + 224);
+  std::copy_n(content.palette.begin() + 256, 32, cgram.begin() + 256);
+  for (const std::size_t destination : {288U, 320U, 352U}) {
+    std::copy_n(content.palette.begin() + 288, 32,
+                cgram.begin() + static_cast<std::ptrdiff_t>(destination));
+  }
+  for (std::size_t block = 0; block < 3; ++block) {
+    std::copy_n(content.result_palette_tail.begin() +
+                    static_cast<std::ptrdiff_t>(32 + block * 32),
+                32, cgram.begin() +
+                        static_cast<std::ptrdiff_t>(416 + block * 32));
+  }
   for (int y = 0; y < 224; ++y)
     for (int x = 0; x < 256; ++x) {
       const auto bg1 = result_bg1_pixel(vram, x, y);
@@ -495,7 +521,11 @@ void render_result_background(RgbFrame &frame,
                     : colour_word(cgram, above.palette_index);
       // TS enables only OBJ. Where the bounded result renderer omits an OBJ,
       // the subscreen is transparent and bsnes disables halve/subscreen blend.
-      pixel(frame, x, y, colour_word_rgb(main_colour));
+      // The result fade reaches and retains INIDISP brightness 14 at frame
+      // 3568; frame 3679 has no later write. bsnes rounds each five-bit
+      // channel after multiplying by brightness / 15.
+      pixel(frame, x, y,
+            colour_word_rgb(apply_snes_brightness(main_colour, 14)));
     }
 }
 
@@ -693,7 +723,8 @@ RgbFrame render_dragster_headless(const PresentationSample &s,
       content.result_assets.size() != 5224 || content.go_window.size() != 898 ||
       content.winner_window.size() != 898 ||
       content.result_base_vram.size() != 41536 ||
-      content.result_palette.size() != 216)
+      content.result_palette.size() != 216 ||
+      content.result_palette_tail.size() != 128)
     throw std::invalid_argument(
         "Classic presentation entry size is unsupported");
   if (s.movement.finish.phase == RacePhase::ResultScreen) {

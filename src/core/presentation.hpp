@@ -26,6 +26,10 @@ struct RiderFrameSelection {
   std::string_view logical_id;
   bool reflected;
 };
+struct RiderArtPose {
+  std::uint16_t pose_index{};
+  bool reflected{};
+};
 RiderFrameSelection rider_frame_for_pose(std::uint16_t pose_index,
                                          bool reflected);
 // Exact $81:B3CF/$81:B3D3 decoded-track gather: $000F+X, then X += stride.
@@ -60,4 +64,9 @@ struct PresentationContent {
 };
 RgbFrame render_dragster_headless(const PresentationSample &,
                                   const PresentationContent &);
+// Presentation-only rider atlas override. Gameplay state still controls the
+// scene palette, window effects, positions, camera and HUD.
+RgbFrame render_dragster_headless_with_rider_art(
+    const PresentationSample &, const PresentationContent &,
+    const std::array<RiderArtPose, 2> &);
 } // namespace unirally

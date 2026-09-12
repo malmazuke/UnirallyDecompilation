@@ -1,0 +1,3 @@
+add_executable(frontend_contract_tests frontend_contract_tests.cpp)
+target_link_libraries(frontend_contract_tests PRIVATE unirally_frontend)
+add_test(NAME frontend_scheduler_input_display_contract COMMAND frontend_contract_tests)

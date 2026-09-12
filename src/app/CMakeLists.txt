@@ -1,0 +1,26 @@
+add_library(unirally_frontend STATIC frontend.cpp)
+target_include_directories(unirally_frontend PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(unirally_frontend PUBLIC unirally_presentation lab_options)
+
+if(LAB_BUILD_APP)
+  include(FetchContent)
+  file(READ "${PROJECT_SOURCE_DIR}/tools/locks/frontend.json" FRONTEND_LOCK)
+  string(JSON SDL_VERSION GET "${FRONTEND_LOCK}" dependencies sdl3 version)
+  string(JSON SDL_SOURCE_URL GET "${FRONTEND_LOCK}" dependencies sdl3 source_url)
+  string(JSON SDL_SOURCE_SHA256 GET "${FRONTEND_LOCK}" dependencies sdl3 sha256)
+  message(STATUS "Pinned local SDL ${SDL_VERSION}: ${SDL_SOURCE_SHA256}")
+  set(SDL_SHARED ON CACHE BOOL "" FORCE)
+  set(SDL_STATIC OFF CACHE BOOL "" FORCE)
+  set(SDL_TEST_LIBRARY OFF CACHE BOOL "" FORCE)
+  set(SDL_TESTS OFF CACHE BOOL "" FORCE)
+  set(SDL_EXAMPLES OFF CACHE BOOL "" FORCE)
+  set(SDL_DISABLE_INSTALL ON CACHE BOOL "" FORCE)
+  set(SDL_DISABLE_INSTALL_DOCS ON CACHE BOOL "" FORCE)
+  FetchContent_Declare(SDL3
+    URL "${SDL_SOURCE_URL}"
+    URL_HASH "SHA256=${SDL_SOURCE_SHA256}"
+    DOWNLOAD_EXTRACT_TIMESTAMP TRUE)
+  FetchContent_MakeAvailable(SDL3)
+  add_executable(unirally WIN32 sdl_main.cpp)
+  target_link_libraries(unirally PRIVATE unirally_frontend SDL3::SDL3)
+endif()

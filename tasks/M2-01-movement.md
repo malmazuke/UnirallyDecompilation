@@ -1,12 +1,12 @@
 # M2-01 movement implementation — semantic autonomous update
 
-Status: active; primary and cadence-17 exact, release-2347 idle-pose prerequisite open.
+Status: implementation complete; exact-candidate independent review pending.
 Provider: OpenAI. Coordinator Astra (current-session exception); worker Sol,
 medium reasoning, compact fresh context. No additional child workers.
 Base: `f6ca7f1c6e90aad896f5694a4493b13ff101e509`, branch
 `codex/M2-01-movement`, isolated `.worktrees/m2-01-movement`.
-Same work-session quota baseline3%, discretionary boundary13%, reserve20%;
-checkpoint at least every10min and before expensive experiments. No purchases.
+The user explicitly lifted the session percentage ceiling on 12 September 2026;
+the OpenAI provider, checkpoint, no-purchase and no-credit rules remain unchanged.
 
 ## Outcome and ownership
 
@@ -102,3 +102,22 @@ feedback changes y/contact and produces the required displacement 3 at 2788.
 Those persistent fields and arithmetic are not yet in canonical state. The next
 bounded prerequisite is to recover `$82:A0B7–A237`, add only its future-affecting
 semantic state, and rerun release-2347 before exact-candidate review.
+
+## 12 September 2026 idle-pose closure
+
+The bounded source review recovered `$82:A0B7-$82:A236` and the preceding
+`$81:8625-$81:8672` damping path. The semantic state now contains nine
+future-affecting words per rider, all imported from established persistent
+addresses. The canonical seed is333 bytes, SHA-256
+`7cd034fcdee04e8f306712707c01c05ae02a50f2e91668127a7c3ef64492b4ab`.
+The runtime adds the identity-bound64-byte signed table from ROM file offset
+`0x1B4`; runtime metadata SHA-256 is
+`a38d58f2295c5be0569e83b4d77d995eceb031b5ff93118123af06002ab637da`.
+
+Release-2347 now passes all13 fields for every update through2999, as do the
+unchanged primary and cadence-17 cases; every command uses two fresh processes
+and the canonical states are byte-identical. Reports are
+`idle-release-4/report.json`, `idle-primary-final/report.json`, and
+`idle-cadence-final/report.json` under ignored `artifacts/m2-01-movement/`.
+The ROM-free synthetic suite passes273/273 and sanitizer movement tests pass2/2.
+An exact-candidate independent review remains the sole pre-integration gate.

@@ -30,6 +30,7 @@ STATIC_CONTENT = {
     "speed-decrements.bin":(18,"c1fab1d9aa1e691d34c1a78e8658cfd52b8334cc5bdec8efb23bedc672988068"),
     "pose-slopes.bin":(128,"f6b1ea6a34c78336ca25449c8ddbd23e2417ef829ec09765e695f957cd714584"),
     "displacement-table.bin":(512,"27894923de2aaeb58ca24dedbddadcf0d4d154fbc61ea484e7c248d066e24e1b"),
+    "idle-pose-table.bin":(64,"05d2af9f8c0d1d8d8dd1915086f4f4c58456510f3daf357dbd7fdd66e4a8031e"),
     "rotation-reward.bin":(2,"8509b81230019d2ad970d970f791dfbdc8caf54f5c594fcd327cef9feed206c1"),
     "rotation-class.bin":(1,"6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"),
 }
@@ -73,6 +74,11 @@ def rider_seed(w: Writer, ram: bytes, rider: int) -> None:
           word(ram,0x411+p),word(ram,0x211e+p),word(ram,0x2122+p),
           word(ram,0x2126+p),word(ram,0xb9f+p),word(ram,0xfe5+p))
     w.u8(flag(word(ram,0xea3+p)),flag(word(ram,0xba7+p)))
+    # Persistent idle-pose oscillator loaded at $82:8A34-$82:8B1C and written
+    # back at $82:8D3A-$82:8E1C (opponent paths use the adjacent stride).
+    w.u16(word(ram,0xe8b+p),word(ram,0xe77+p),word(ram,0xe83+p),
+          word(ram,0xe7f+p),word(ram,0xe87+p),word(ram,0xbd7+p),
+          word(ram,0xd5b+p),word(ram,0xd6b+p),word(ram,0xbdf+p))
     w.u16(word(ram,0xd25+p),word(ram,0x1203+p),word(ram,0x1207+p),
           word(ram,0x120b+p),word(ram,0x120f+p))
     w.u8(flag(word(ram,0x136b+p)),flag(word(ram,0x33f+p)))
@@ -88,7 +94,7 @@ def canonical_seed(wram: bytes, sram: bytes) -> bytes:
     out.data.extend(wram[0xceb:0xd0b]); out.u8(wram[0xd11],wram[0xd13])
     out.u16(word(wram,0xca7),word(sram,0x825)); out.u8(wram[0x2102])
     out.u16(word(wram,0x11c5)); out.u8(wram[0x300],wram[0x302],wram[0x4c7],wram[0x127f])
-    if len(out.data)!=297: raise AssertionError("canonical movement width changed")
+    if len(out.data)!=333: raise AssertionError("canonical movement width changed")
     return bytes(out.data)
 
 def validate_observation(wram_path:Path,sram_path:Path,report_path:Path)->tuple[bytes,bytes]:

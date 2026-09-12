@@ -14,11 +14,14 @@ class NativeSeedPreparationTests(unittest.TestCase):
         for address,value in ((0x211e,0x1234),(0x2122,0x5678),(0x2126,0x9abc),
                               (0x2120,0x1357),(0x2124,0x2468),(0x2128,0xabcd)):
             wram[address:address+2]=value.to_bytes(2,"little")
+        for address,value in zip((0xe8b,0xe77,0xe83,0xe7f,0xe87,0xbd7,0xd5b,0xd6b,0xbdf),range(1,10)):
+            wram[address:address+2]=value.to_bytes(2,"little")
         state=canonical_seed(bytes(wram),sram)
-        self.assertEqual(len(state),297)
+        self.assertEqual(len(state),333)
         self.assertEqual(state[:12],b"URMV0001\xfd\x05\x00\x00")
         self.assertEqual(state[90:96],bytes.fromhex("34127856bc9a"))
-        self.assertEqual(state[200:206],bytes.fromhex("57136824cdab"))
+        self.assertEqual(state[102:120],b"".join(value.to_bytes(2,"little") for value in range(1,10)))
+        self.assertEqual(state[218:224],bytes.fromhex("57136824cdab"))
 
     def test_bad_seed_shape_and_identity_reject(self):
         with self.assertRaisesRegex(ValueError,"128 KiB"):canonical_seed(b"",b"")

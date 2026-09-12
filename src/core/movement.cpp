@@ -37,6 +37,10 @@ void write_rider(std::vector<std::uint8_t>& out, const RiderMovementState& r) {
     for(auto v:r.pose.displacement_history) put16(out,v);
     put16(out,r.pose.rolling_level); put16(out,r.pose.alternate_animation_phase);
     put_bool(out,r.pose.rolling); put_bool(out,r.pose.reflected);
+    for(auto v:{r.idle_pose.active,r.idle_pose.wobble_offset,r.idle_pose.bias,
+                r.idle_pose.velocity,r.idle_pose.previous_bias,
+                r.idle_pose.direction_adjustment,r.idle_pose.cycle_latched,
+                r.idle_pose.cycle_counter,r.idle_pose.orientation_reference}) put16(out,v);
     for(auto v:{r.quarter_turn.previous_quadrant,r.quarter_turn.forward_turns,r.quarter_turn.reverse_turns,r.quarter_turn.forward_quarters,r.quarter_turn.reverse_quarters}) put16(out,v);
     put_bool(out,r.quarter_turn.initialized); put_bool(out,r.quarter_turn.reflected_at_start);
     for(auto v:{r.residue_x,r.residue_y,r.throttle,r.previous_brake,r.launch_override,r.small_motion_counter}) put16(out,v);
@@ -51,6 +55,10 @@ void read_rider(Reader& in, RiderMovementState& r) {
     for(auto& v:r.pose.displacement_history) v=in.u16();
     r.pose.rolling_level=in.u16(); r.pose.alternate_animation_phase=in.u16();
     r.pose.rolling=in.flag(); r.pose.reflected=in.flag();
+    for(auto* v:{&r.idle_pose.active,&r.idle_pose.wobble_offset,&r.idle_pose.bias,
+                 &r.idle_pose.velocity,&r.idle_pose.previous_bias,
+                 &r.idle_pose.direction_adjustment,&r.idle_pose.cycle_latched,
+                 &r.idle_pose.cycle_counter,&r.idle_pose.orientation_reference}) *v=in.u16();
     for(auto* v:{&r.quarter_turn.previous_quadrant,&r.quarter_turn.forward_turns,&r.quarter_turn.reverse_turns,&r.quarter_turn.forward_quarters,&r.quarter_turn.reverse_quarters}) *v=in.u16();
     r.quarter_turn.initialized=in.flag(); r.quarter_turn.reflected_at_start=in.flag();
     for(auto* v:{&r.residue_x,&r.residue_y,&r.throttle,&r.previous_brake,&r.launch_override,&r.small_motion_counter}) *v=in.u16();
@@ -168,6 +176,120 @@ void update_gravity(RiderMovementState& rider) {
     rider.motion.y=add_word(rider.motion.y,1);
 }
 
+void decay_idle_wobble(RiderMovementState& rider) {
+    // $81:8625-$81:8672 preserves an offset produced by the preceding idle
+    // update for one frame. Otherwise it approaches zero by five, or by two
+    // while the contact response word is nonzero, and then clears the marker.
+    auto& idle=rider.idle_pose;
+    if(idle.active==0) {
+        auto offset=static_cast<std::int16_t>(idle.wobble_offset);
+        if(offset>=512 || offset<-512) {
+            idle.wobble_offset=0;
+        } else if(offset!=0) {
+            const int step=rider.motion.response_a!=0?2:5;
+            offset=static_cast<std::int16_t>(
+                offset>0?std::max(0,static_cast<int>(offset)-step)
+                        :std::min(0,static_cast<int>(offset)+step));
+            idle.wobble_offset=static_cast<std::uint16_t>(offset);
+        }
+    }
+    idle.active=0;
+}
+
+void clear_idle_cycle(IdlePoseState& idle) {
+    // The reset path intentionally preserves wobble_offset and
+    // orientation_reference ($0F37/$0F83).
+    idle.bias=idle.velocity=idle.previous_bias=idle.direction_adjustment=0;
+    idle.active=idle.cycle_latched=idle.cycle_counter=0;
+}
+
+void update_idle_pose(RiderMovementState& rider,bool race_active,bool opponent,
+                      std::uint8_t animation_counter,
+                      std::span<const std::uint8_t> table) {
+    if(table.size()!=64) throw std::invalid_argument("idle pose table has the wrong size");
+    auto& idle=rider.idle_pose;
+    if(!race_active || static_cast<std::int16_t>(rider.motion.previous_x_displacement)>=2 ||
+       static_cast<std::int16_t>(rider.contact.unsupported_count)>=2) {
+        clear_idle_cycle(idle);
+        return;
+    }
+    if(idle.cycle_latched==0) {
+        const auto next=add_word(idle.cycle_counter,1);
+        if(static_cast<std::int16_t>(next)<120) idle.cycle_counter=next;
+    }
+    idle.orientation_reference=rider.pose.reflected_orientation;
+    if(idle.orientation_reference!=0 && rider.pose.reflected) {
+        idle.orientation_reference=static_cast<std::uint16_t>(64-idle.orientation_reference);
+    }
+    if(static_cast<std::int16_t>(rider.pose.pose_index)>=0x0aec) {
+        clear_idle_cycle(idle);
+        return;
+    }
+    idle.active=1;
+
+    const auto reference=static_cast<std::int16_t>(idle.orientation_reference);
+    auto bias=static_cast<std::int16_t>(idle.bias);
+    if(bias!=0) {
+        if(reference!=0) {
+            idle.direction_adjustment=1;
+        } else if(bias>0) {
+            idle.bias=static_cast<std::uint16_t>(bias-1);
+            idle.direction_adjustment=1;
+        } else {
+            idle.bias=0;
+            idle.direction_adjustment=0;
+        }
+    } else {
+        idle.bias=0;
+        idle.direction_adjustment=0;
+    }
+
+    auto velocity=static_cast<std::int16_t>(idle.velocity);
+    int candidate=velocity;
+    // $0FF9 selects the counter pair at $04C7/$04C9. The opponent word is the
+    // modulo-32 complement used by the original's second rider pass.
+    const auto rider_counter=opponent
+        ? static_cast<std::uint8_t>((32U-animation_counter)&31U)
+        : animation_counter;
+    const bool increase=reference==0 ? (rider_counter&0x10U)!=0
+                                     : reference>=32;
+    if(increase) {
+        candidate=velocity+1+static_cast<std::int16_t>(idle.direction_adjustment);
+        if(candidate<17) idle.velocity=static_cast<std::uint16_t>(candidate);
+    } else {
+        candidate=velocity-1-static_cast<std::int16_t>(idle.direction_adjustment);
+        if(candidate>=-16) idle.velocity=static_cast<std::uint16_t>(candidate);
+    }
+
+    if(animation_counter==0) {
+        idle.bias=static_cast<std::uint16_t>(candidate);
+        if(static_cast<std::int16_t>(idle.cycle_counter)>=60 && idle.cycle_latched==0) {
+            idle.cycle_latched=1;
+            idle.cycle_counter=0;
+        }
+        if(idle.previous_bias==idle.bias) idle.bias=0;
+        idle.previous_bias=idle.bias;
+    }
+
+    velocity=static_cast<std::int16_t>(idle.velocity);
+    bool use_table=false;
+    if(velocity==0) {
+        use_table=reference<9 || reference>=58;
+    } else if(velocity<0) {
+        if(reference<32) {
+            if(reference>=9) idle.velocity=static_cast<std::uint16_t>(-1);
+        } else if(reference<58) {
+            use_table=true;
+        }
+    } else if(reference>=9 && reference<32) {
+        use_table=true;
+    }
+    const auto delta=use_table
+        ? static_cast<std::int8_t>(table[static_cast<unsigned>(reference)])
+        : static_cast<std::int16_t>(idle.velocity);
+    idle.wobble_offset=add_word(idle.wobble_offset,static_cast<std::uint16_t>(delta));
+}
+
 void integrate_motion(RiderMovementState& rider) {
     auto axis=[](std::uint16_t& position,std::uint16_t velocity,std::uint16_t& residue) {
         const auto total=static_cast<std::int32_t>(static_cast<std::int16_t>(velocity))+
@@ -250,7 +372,10 @@ void update_pose(RiderMovementState& rider,std::uint8_t counter,std::uint8_t con
         }
     }
     rider.pose.orientation=orientation&63U;
-    const int combined=static_cast<int>(rider.pose.orientation)+
+    // $83:F09E-$83:F0B9 applies signed truncation toward zero to the idle
+    // oscillator before the contact impulse and reflection operations.
+    const int wobble=static_cast<std::int16_t>(rider.idle_pose.wobble_offset)/16;
+    const int combined=static_cast<int>(rider.pose.orientation)+wobble+
         (static_cast<std::int16_t>(rider.motion.orientation_impulse)>>1);
     rider.pose.reflected_orientation=static_cast<std::uint16_t>(combined)&63U;
     if((counter&1U)==0 && rider.motion.orientation_impulse) {
@@ -445,6 +570,13 @@ MovementState deserialize_movement_state(std::span<const std::uint8_t> bytes) {
     if(s.contact_phase>1 || s.progress_phase>1 || s.animation_counter>31 ||
        s.player_input.vertical>2 || s.player_input.horizontal>2 ||
        s.rewards.read_cursor>31 || s.rewards.write_cursor>31) throw std::invalid_argument("movement state contains an out-of-domain counter");
+    for(const auto& rider:s.riders) {
+        if(rider.idle_pose.active>1 || rider.idle_pose.direction_adjustment>1 ||
+           rider.idle_pose.cycle_latched>1 || rider.idle_pose.cycle_counter>=120 ||
+           rider.idle_pose.orientation_reference>=64) {
+            throw std::invalid_argument("movement state contains an out-of-domain idle pose field");
+        }
+    }
     (void)serialize_timer(s.timer); // Reuse the reviewed digit-domain validation.
     in.require_end(); return s;
 }
@@ -499,6 +631,7 @@ void update_movement(MovementState& state, const ControllerButtons& player_butto
         static_cast<std::uint16_t>(state.rewards.cooldown-2U):0;
     for(unsigned index=0;index<state.riders.size();++index) {
         auto& rider=state.riders[index];
+        decay_idle_wobble(rider);
         const auto horizontal=index==0?state.player_input.horizontal:2U;
         int animation_override=index==active?
             stationary_animation_override(rider,static_cast<std::uint8_t>(horizontal)):0;
@@ -523,6 +656,8 @@ void update_movement(MovementState& state, const ControllerButtons& player_butto
         update_rolling_mode(rider);
         update_gravity(rider);
         integrate_motion(rider);
+        update_idle_pose(rider,state.countdown==0,index==1,state.animation_counter,
+                         content.idle_pose_table);
         update_pose(rider,state.animation_counter,state.contact_phase,content,animation_override,
                     use_throttle_target);
     }

@@ -69,10 +69,11 @@ int main(int argc,char** argv) try {
     const auto flags=read_bytes(content/"tile-flags.bin");
     const auto slopes=read_bytes(content/"pose-slopes.bin");
     const auto displacement=read_bytes(content/"displacement-table.bin");
+    const auto idle_pose=read_bytes(content/"idle-pose-table.bin");
     const auto reward=read_bytes(content/"rotation-reward.bin");
     const auto reward_class=read_bytes(content/"rotation-class.bin");
     const unirally::MovementContent movement_content{{track,poses,templates},{columns,flags},
-                                                       transitions,slopes,displacement,reward,reward_class,
+                                                       transitions,slopes,displacement,idle_pose,reward,reward_class,
                                                        {masks,decrements}};
     std::ifstream stream(inputs);
     if (!stream) throw std::runtime_error("cannot open controller input stream");

@@ -9,8 +9,8 @@
     "sha256": "ba7f6048c3ff4c574fc8754e50537fad03dd04ae5e6349e20c2e224981bdac12"
   },
   "runtime": {
-    "path": "local/native/dragster/runtime.json",
-    "sha256": "e8d2898408d369b2ed1b9ca91a8891acb88d938fb49d96c05e1ef94d78a4fe89"
+    "path": "local/native/dragster-idle/runtime.json",
+    "sha256": "a38d58f2295c5be0569e83b4d77d995eceb031b5ff93118123af06002ab637da"
   },
   "schema_version": 1
 }

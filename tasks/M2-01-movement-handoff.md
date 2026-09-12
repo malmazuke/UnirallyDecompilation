@@ -139,3 +139,22 @@ current seed must still be imported from their established storage), add
 authored arithmetic/serialization tests, then rerun release-2347. Only after it
 passes should a fresh independent reviewer test the exact candidate and own an
 additional withheld variation. M2-01 remains active, not accepted.
+
+## Idle-pose implementation submission
+
+The user lifted the session percentage ceiling and work continued without a
+reset or credit redemption. Source disassembly plus a new focused original
+access capture (`release-idle-source-detail/access.json`, SHA-256 prefix
+`11029d4acb9eef97`) established the exact idle recurrence and persistent
+addresses. The first translation preserved the old release divergence; two
+branch corrections were required from source evidence: zero `$0F81` is stored
+into `$0F83`, and zero velocity selects the signed lookup when reference is
+`<9` or `>=58`. No expected row was changed.
+
+The resulting333-byte seed is `7cd034fcdee04e8f...b4ab`; the13-file runtime is
+`a38d58f2295c5be0...37da`. Primary, cadence-17 and release-2347 all pass every
+required field through2999 in two fresh deterministic processes. Full synthetic
+passes273/273; debug and sanitizer movement CTests pass2/2. Reports are under
+`artifacts/m2-01-movement/{idle-primary-final,idle-cadence-final,idle-release-4}`
+and `idle-{synthetic,sanitize-build}.json`. Exact-candidate review in a separate
+checkout is next; do not treat this implementation submission alone as accepted.

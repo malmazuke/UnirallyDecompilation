@@ -38,6 +38,7 @@ int main() {
     std::array<std::uint8_t,20> flags{};
     std::array<std::uint8_t,128> slopes{};
     std::array<std::uint8_t,512> displacement{};
+    std::array<std::uint8_t,64> idle_pose{};
     std::array<std::uint8_t,2> reward{};
     std::array<std::uint8_t,1> reward_class{};
     // Authored empty geometry: coarse cells point at zero-filled sample blocks.
@@ -45,7 +46,7 @@ int main() {
     unirally::ControllerButtons buttons{};
     buttons.right = true;
     unirally::update_movement(state,buttons,
-        {{track,poses,templates},{columns,flags},transitions,slopes,displacement,reward,reward_class,
+        {{track,poses,templates},{columns,flags},transitions,slopes,displacement,idle_pose,reward,reward_class,
          {masks,decrements}});
     require(state.frame == 1534 && state.countdown == 68, "frame/countdown");
     require(state.contact_phase == 0 && state.progress_phase == 0, "phases");
@@ -58,4 +59,26 @@ int main() {
     require(state.riders[1].motion.x == 1102 && state.riders[1].residue_x == 8, "opponent position/residue");
     require(state.riders[1].motion.velocity_x == 456 && state.riders[1].launch_override == 256, "opponent launch");
     require(state.timer.subframe == 0, "timer");
+
+    // $82:A0B7-$82:A236: at rest, a zero orientation reference selects the
+    // animation-counter half-cycle. Counter 16 starts the positive recurrence.
+    unirally::MovementState idle{};
+    idle.frame=2000; idle.animation_counter=15; idle.countdown=0;
+    idle.contact_phase=1; idle.progress_phase=1;
+    idle.rewards.write_cursor=1; idle.rewards.event_one_weight=4;
+    for(auto& rider:idle.riders) {
+        rider.motion.y=64; rider.pose.previous_y=64;
+        rider.pose.reflected=true; rider.idle_pose.orientation_reference=1;
+    }
+    idle_pose[0]=1;
+    unirally::ControllerButtons neutral{};
+    unirally::update_movement(idle,neutral,
+        {{track,poses,templates},{columns,flags},transitions,slopes,displacement,idle_pose,reward,reward_class,
+         {masks,decrements}});
+    require(idle.riders[0].idle_pose.active==1 &&
+            idle.riders[0].idle_pose.orientation_reference==0,
+            "idle pose activation/reference");
+    require(idle.riders[0].idle_pose.velocity==1 &&
+            idle.riders[0].idle_pose.wobble_offset==1,
+            "idle pose positive recurrence");
 }

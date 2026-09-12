@@ -27,6 +27,13 @@ struct PoseState {
     std::uint16_t rolling_level{}, alternate_animation_phase{};
     bool rolling{}, reflected{};
 };
+// $82:A0B7-$82:A236. Names describe the observed recurrence without assigning
+// an unverified gameplay meaning to the oscillator's control words.
+struct IdlePoseState {
+    std::uint16_t active{}, wobble_offset{}, bias{}, velocity{};
+    std::uint16_t previous_bias{}, direction_adjustment{}, cycle_latched{};
+    std::uint16_t cycle_counter{}, orientation_reference{};
+};
 struct QuarterTurnState {
     std::uint16_t previous_quadrant{}, forward_turns{}, reverse_turns{};
     std::uint16_t forward_quarters{}, reverse_quarters{};
@@ -39,6 +46,7 @@ struct RiderMovementState {
     TrackProgress progress{};
     JumpState jump{};
     PoseState pose{};
+    IdlePoseState idle_pose{};
     QuarterTurnState quarter_turn{};
     std::uint16_t residue_x{}, residue_y{}, throttle{}, previous_brake{};
     std::uint16_t launch_override{}, small_motion_counter{};
@@ -69,6 +77,7 @@ struct MovementContent {
     std::span<const std::uint8_t> progress_transitions;
     std::span<const std::uint8_t> pose_slopes;
     std::span<const std::uint8_t> displacement_table;
+    std::span<const std::uint8_t> idle_pose_table;
     std::span<const std::uint8_t> rotation_reward;
     std::span<const std::uint8_t> rotation_class;
     SpeedDecayContent speed_decay{};

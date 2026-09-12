@@ -1,5 +1,5 @@
 {
-  "description": "Static M2-01A motion tables; only rotation reward event1 is recovered.",
+  "description": "Static M2-01A motion tables; rotation reward event1 and the bounded idle-pose lookup are recovered.",
   "id": "motion-tables",
   "identifiers": {
     "scenario": "race-crawler-dragster-3000-fields",
@@ -36,6 +36,21 @@
       "expected": {
         "length": 512,
         "sha256": "27894923de2aaeb58ca24dedbddadcf0d4d154fbc61ea484e7c248d066e24e1b"
+      }
+    },
+    {
+      "id": "idle-pose-table",
+      "name": "idle-pose-table",
+      "kind": "raw",
+      "pieces": [
+        {
+          "file_offset": 436,
+          "length": 64
+        }
+      ],
+      "expected": {
+        "length": 64,
+        "sha256": "05d2af9f8c0d1d8d8dd1915086f4f4c58456510f3daf357dbd7fdd66e4a8031e"
       }
     },
     {

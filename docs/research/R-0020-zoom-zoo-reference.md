@@ -1,6 +1,8 @@
 # R-0020 — ZOOM ZOO reference discovery and coverage delta
 
 - Task: [M4-02](../../tasks/M4-02.md)
+- Status: accepted reference evidence; integrated as `77885be` after approved
+  focused re-review
 - Evidence date: 13 September 2026
 - Base: task evidence base `2b40aea`; claimed branch head `1c8657e`
 - ROM: supported headerless 2 MiB PAL image, SHA-256

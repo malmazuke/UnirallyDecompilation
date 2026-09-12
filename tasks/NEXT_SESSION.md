@@ -1,9 +1,9 @@
-# Coordinator handover — M4-01 accepted, M4-02 ready
+# Coordinator handover — M4-02 accepted, M4-03 ready
 
-Milestone M3 is accepted on 13 September 2026 and tagged `m3`. M4-00 and M4-01
-are accepted. Read [M4-01](M4-01.md),
-[R-0019](../docs/research/R-0019-dragster-loser-result.md) and its returned
-[review](M4-01-review.md) plus approved [re-review](M4-01-rereview.md).
+Milestone M3 is accepted on 13 September 2026 and tagged `m3`. M4-00 through
+M4-02 are accepted. Read [M4-02](M4-02.md),
+[R-0020](../docs/research/R-0020-zoom-zoo-reference.md), its returned
+[review](M4-02-review.md) and approved [re-review](M4-02-rereview.md).
 
 The accepted scope is the identified PAL one-player CRAWLER/DRAGSTER slice:
 supported-ROM extraction creates a validated local Classic pack, later launches
@@ -12,17 +12,18 @@ CPU execution, and live macOS controls/presentation plus exact macOS/Linux gates
 pass. Audio, unrecovered intermediate rider artwork, other tracks/riders/modes,
 menus/progression, local multiplayer and public packaging remain omissions.
 
-M4-01 closes the stable release-3000 loser result with an additive authenticated
-visual contract and no pack change. The observed screen retains the winner
-layout, displays `MIKE 0:35.66`, and differs at exactly six result-map bytes.
-Behavioral correction `a3106f4` rejects the reviewer's impossible counter-241
-publication state; focused re-review approved it. Merge `3058eb9` passes local
-debug/sanitizer 315/315, exact winner/loser visuals, release/restores, and hosted
-macOS/Linux run 34719187215.
+M4-02 freezes a deterministic 3,300-frame ZOOM ZOO reference path while
+retaining the displayed 1P/MIKE/CRAWLER/BRONSEN/three-lap Race context. Its
+scenario-level coverage delta and targeted load/access evidence identify a
+6,599-byte packed `0xC3` object that decodes to 50,665 ignored bytes. Review
+reproduced the behavior with an adjacent release boundary and returned only a
+missing exact regeneration command; correction `6f38439` was approved. Merge
+`77885be` passes local replay/coverage/content/native gates and 315/315; hosted
+run 34722527701 passes macOS/Linux including Linux SDL sanitizers.
 
-Start ready [M4-02](M4-02.md) with its bounded Astra/high planning consultation,
-then return execution to Sol/medium. Its first evidence gate injects one short
-Down press at the CRAWLER track screen and observes selection, opponent and
-event/rule coupling before any tracked replay is frozen. Preserve every frozen
-M3/M4-01 identity and regression. Publishing, deploying, spending money or
-redeeming usage credits still requires separate authority.
+Start ready [M4-03](M4-03.md) with its bounded Astra/high planning consultation,
+then return execution to Sol/medium. Recover and validate the ZOOM ZOO decoded
+layout, tile-set selection, rolling gather and bounded collision/physics inputs
+against runtime reads before any native or Classic-pack expansion. Preserve all
+frozen M3/M4 identities. Publishing, deploying, spending money or redeeming
+usage credits still requires separate authority.

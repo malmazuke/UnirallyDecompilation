@@ -33,9 +33,14 @@ std::vector<std::uint16_t> gather_dragster_bg1(std::span<const std::uint8_t>,
                                                std::uint16_t source_x,
                                                std::uint16_t stride_bytes,
                                                std::size_t word_count);
-// Observed $8000 region: 30 columns of 16 little-endian map words.
+// Rejected diagnostic interpretation retained for its bounded gather test.
 std::array<std::uint16_t, 30 * 16>
     expand_dragster_bg1(std::span<const std::uint8_t>);
+// Stateless form of the observed rolling $81:B270 map construction. Scroll
+// units are pixels; each selector covers a 64 by 64 pixel metatile.
+std::array<std::uint16_t, 32 * 32>
+build_dragster_bg1_map(std::span<const std::uint8_t>, std::int16_t scroll_x,
+                       std::int16_t scroll_y);
 struct RgbFrame {
   static constexpr std::size_t width = 256, height = 224;
   std::array<std::uint8_t, width * height * 3> pixels{};

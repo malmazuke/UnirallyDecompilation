@@ -45,6 +45,42 @@ std::array<std::uint8_t, 3> colour(const std::array<std::uint8_t, 512> &cgram,
           channel8((value >> 10U) & 31U)};
 }
 
+std::array<std::uint8_t, 512>
+build_race_cgram(const PresentationSample &sample,
+                 std::span<const std::uint8_t> packed_palette) {
+  std::array<std::uint8_t, 512> cgram{};
+  constexpr std::array<std::size_t, 6> targets{{0, 224, 256, 352, 480, 384}};
+  constexpr std::array<std::size_t, 6> lengths{{192, 32, 32, 32, 32, 32}};
+  std::size_t source{};
+  for (std::size_t piece = 0; piece < targets.size(); ++piece) {
+    std::copy_n(packed_palette.begin() + static_cast<std::ptrdiff_t>(source),
+                lengths[piece],
+                cgram.begin() + static_cast<std::ptrdiff_t>(targets[piece]));
+    source += lengths[piece];
+  }
+  static constexpr std::array<std::uint8_t, 32> racing_cycle{
+      16, 66, 181, 86, 107, 45, 0, 0, 255, 127, 0, 0, 148, 82, 255, 127,
+      106, 73, 164, 48, 65, 20, 164, 48, 106, 73, 81, 102, 122, 127,
+      81, 102};
+  static constexpr std::array<std::uint8_t, 32> finish_cycle{
+      16, 66, 0, 0, 255, 127, 181, 86, 107, 45, 0, 0, 148, 82, 255, 127,
+      81, 102, 122, 127, 81, 102, 106, 73, 164, 48, 65, 20, 164, 48,
+      106, 73};
+  const bool late_finish =
+      sample.movement.riders[1].pose.pose_index == 0x08d5 ||
+      sample.movement.riders[0].pose.pose_index == 0x04fe;
+  const auto &cycle = late_finish ? finish_cycle : racing_cycle;
+  std::copy(cycle.begin(), cycle.end(), cgram.begin() + 192);
+  if (late_finish) {
+    cgram[0] = 173;
+    cgram[1] = 125;
+  } else {
+    cgram[0] = 255;
+    cgram[1] = 127;
+  }
+  return cgram;
+}
+
 std::uint8_t tile_pixel(const std::array<std::uint8_t, 65536> &vram,
                         std::size_t tile_byte, std::uint16_t tile, int x,
                         int y) {
@@ -102,7 +138,7 @@ std::uint8_t background_pixel(const std::array<std::uint8_t, 65536> &vram,
 
 void render_race_background(RgbFrame &frame, const PresentationSample &sample,
                             const PresentationContent &content,
-                            const std::array<std::uint16_t, 480> &map) {
+                            const std::array<std::uint16_t, 1024> &map) {
   std::array<std::uint8_t, 65536> vram{};
   std::copy(content.bg2_tiles.begin(), content.bg2_tiles.end(),
             vram.begin() + 0x2000);
@@ -117,23 +153,14 @@ void render_race_background(RgbFrame &frame, const PresentationSample &sample,
     std::copy_n(content.bg1_tiles.begin() +
                     static_cast<std::ptrdiff_t>(piece * 64),
                 64, vram.begin() + bg1_words[piece] * 2);
-  for (std::size_t y = 0; y < 16; ++y)
-    for (std::size_t x = 0; x < 30; ++x) {
+  for (std::size_t y = 0; y < 32; ++y)
+    for (std::size_t x = 0; x < 32; ++x) {
       const auto at = 0x1800U + (y * 32U + x) * 2U;
-      const auto entry = map[y * 30 + x];
+      const auto entry = map[y * 32 + x];
       vram[at] = static_cast<std::uint8_t>(entry);
       vram[at + 1] = static_cast<std::uint8_t>(entry >> 8U);
     }
-  std::array<std::uint8_t, 512> cgram{};
-  constexpr std::array<std::size_t, 6> targets{{0, 224, 256, 352, 480, 384}};
-  constexpr std::array<std::size_t, 6> lengths{{192, 32, 32, 32, 32, 32}};
-  std::size_t source{};
-  for (std::size_t piece = 0; piece < targets.size(); ++piece) {
-    std::copy_n(content.palette.begin() + static_cast<std::ptrdiff_t>(source),
-                lengths[piece],
-                cgram.begin() + static_cast<std::ptrdiff_t>(targets[piece]));
-    source += lengths[piece];
-  }
+  const auto cgram = build_race_cgram(sample, content.palette);
   rect(frame, 0, 0, 256, 224, colour(cgram, 0));
   for (int y = 0; y < 224; ++y)
     for (int x = 0; x < 256; ++x) {
@@ -147,6 +174,84 @@ void render_race_background(RgbFrame &frame, const PresentationSample &sample,
                            sample.bg1_scroll_x, sample.bg1_scroll_y, x, y);
       if (bg1)
         pixel(frame, x, y, colour(cgram, bg1));
+    }
+}
+
+struct RiderAtlasGroup {
+  std::size_t first_tile;
+  std::span<const std::uint16_t> vram_words;
+};
+
+RiderAtlasGroup rider_atlas_group(const PresentationSample &sample) {
+  static constexpr std::array<std::uint16_t, 27> frame1600{
+      24608, 24624, 26800, 26816, 26832, 24864, 24880, 24896, 27056,
+      27072, 27088, 25136, 25152, 25168, 27296, 27312, 27328, 27344,
+      25392, 25408, 25424, 27552, 27568, 25664, 25680, 27808, 27824};
+  static constexpr std::array<std::uint16_t, 20> frame2000{
+      24848, 24864, 24880, 27024, 27040, 27056, 25136, 25152, 25168,
+      25184, 27312, 27328, 27344, 27360, 25408, 25424, 25440, 27584,
+      27600, 27616};
+  static constexpr std::array<std::uint16_t, 21> frame2400{
+      26784, 24848, 24864, 24880, 27024, 27040, 27056, 25136, 25152,
+      25168, 25184, 27312, 27328, 27344, 27360, 25408, 25424, 25440,
+      27584, 27600, 27616};
+  static constexpr std::array<std::uint16_t, 21> frame3213{
+      24608, 24848, 24864, 24880, 27024, 27040, 27056, 25136, 25152,
+      25168, 25184, 27312, 27328, 27344, 27360, 25408, 25424, 25440,
+      27584, 27600, 27616};
+  static constexpr std::array<std::uint16_t, 19> frame3453{
+      24624, 24640, 24880, 24896, 25136, 25152, 25376, 25392, 25408,
+      27552, 27568, 27584, 25648, 25664, 25680, 27792, 27808, 27824,
+      27840};
+  const auto player = sample.movement.riders[0].pose.pose_index;
+  const auto opponent = sample.movement.riders[1].pose.pose_index;
+  if (player == 0x04f9 && opponent == 0x0263)
+    return {0, frame1600};
+  if (player == 0x0855 && opponent == 0x0895)
+    return {27, frame2000};
+  if (player == 0x0895 && opponent == 0x0895)
+    return {47, frame2400};
+  if (player == 0x0855 && opponent == 0x08d5)
+    return {68, frame3213};
+  if (player == 0x04fe && opponent == 0x037c)
+    return {89, frame3453};
+  throw std::invalid_argument("unsupported Classic rider atlas combination");
+}
+
+void load_rider_tiles(std::array<std::uint8_t, 65536> &vram,
+                      const PresentationSample &sample,
+                      std::span<const std::uint8_t> atlas) {
+  const auto group = rider_atlas_group(sample);
+  for (std::size_t tile = 0; tile < group.vram_words.size(); ++tile) {
+    const auto source = (group.first_tile + tile) * 32U;
+    const auto destination = static_cast<std::size_t>(group.vram_words[tile]) * 2U;
+    std::copy_n(atlas.begin() + static_cast<std::ptrdiff_t>(source), 32,
+                vram.begin() + static_cast<std::ptrdiff_t>(destination));
+  }
+}
+
+void render_rider(RgbFrame &frame, const std::array<std::uint8_t, 65536> &vram,
+                  const std::array<std::uint8_t, 512> &cgram, int x, int y,
+                  std::uint16_t base_tile, std::uint8_t attributes) {
+  constexpr std::size_t object_tile_base = 0xc000;
+  for (int tile_y = 0; tile_y < 8; ++tile_y)
+    for (int tile_x = 0; tile_x < 8; ++tile_x) {
+      const int source_x = 7 - tile_x;
+      const auto tile_offset = static_cast<unsigned>(source_x + (tile_y << 4));
+      const auto tile = static_cast<std::uint16_t>(
+          (base_tile & 0x100U) |
+          ((static_cast<unsigned>(base_tile) + tile_offset) & 0xffU));
+      for (int pixel_y = 0; pixel_y < 8; ++pixel_y)
+        for (int pixel_x = 0; pixel_x < 8; ++pixel_x) {
+          const auto value = tile_pixel(vram, object_tile_base, tile,
+                                        7 - pixel_x, pixel_y);
+          if (value == 0)
+            continue;
+          const auto palette = static_cast<std::uint8_t>(
+              128U + ((attributes >> 1U) & 7U) * 16U + value);
+          pixel(frame, x + tile_x * 8 + pixel_x, y + tile_y * 8 + pixel_y,
+                colour(cgram, palette));
+        }
     }
 }
 } // namespace
@@ -214,6 +319,49 @@ expand_dragster_bg1(std::span<const std::uint8_t> track) {
       out[y * 30 + x] = word(track, base + x * column_bytes + y * 2);
   return out;
 }
+
+std::array<std::uint16_t, 1024>
+build_dragster_bg1_map(std::span<const std::uint8_t> track,
+                       std::int16_t scroll_x, std::int16_t scroll_y) {
+  constexpr int horizontal_origin_tiles = 16;
+  constexpr int vertical_origin_tiles = 10;
+  constexpr std::size_t selector_base = 0x5831;
+  constexpr std::size_t selector_plane_bytes = 0x800;
+  constexpr std::size_t definition_base = 0x800f;
+
+  const int first_tile_x = static_cast<std::uint16_t>(scroll_x) / 16;
+  const int first_tile_y = static_cast<std::uint16_t>(scroll_y) / 16;
+  std::array<std::uint16_t, 1024> map{};
+  for (int ring_y = 0; ring_y < 32; ++ring_y) {
+    const int global_y =
+        first_tile_y + ((ring_y - first_tile_y) & 31);
+    const int relative_y = global_y - vertical_origin_tiles;
+    if (relative_y < 0)
+      continue;
+    const auto selector_plane = static_cast<std::size_t>(relative_y / 4);
+    const auto definition_y = static_cast<std::size_t>(relative_y & 3);
+    if (selector_plane >= 5)
+      continue;
+    for (int ring_x = 0; ring_x < 32; ++ring_x) {
+      const int global_x =
+          first_tile_x + ((ring_x - first_tile_x) & 31);
+      const int relative_x = global_x - horizontal_origin_tiles;
+      if (relative_x < 0)
+        continue;
+      const auto selector_column = static_cast<std::size_t>(relative_x / 4);
+      const auto definition_x = static_cast<std::size_t>(relative_x & 3);
+      const auto selector_at = selector_base +
+                               selector_plane * selector_plane_bytes +
+                               selector_column * 2U;
+      const auto selector = word(track, selector_at);
+      const auto definition_at = definition_base + selector * 32U +
+                                 definition_y * 8U + definition_x * 2U;
+      map[static_cast<std::size_t>(ring_y * 32 + ring_x)] =
+          word(track, definition_at);
+    }
+  }
+  return map;
+}
 RgbFrame render_dragster_headless(const PresentationSample &s,
                                   const PresentationContent &content) {
   if (content.bg1_tiles.size() != 2560 || content.bg2_tiles.size() != 992 ||
@@ -222,7 +370,8 @@ RgbFrame render_dragster_headless(const PresentationSample &s,
       content.result_assets.size() != 5224)
     throw std::invalid_argument(
         "Classic presentation entry size is unsupported");
-  const auto map = expand_dragster_bg1(content.track);
+  const auto map = build_dragster_bg1_map(content.track, s.bg1_scroll_x,
+                                          s.bg1_scroll_y);
   RgbFrame f{};
   render_race_background(f, s, content, map);
   const auto &t = s.movement.timer;
@@ -231,16 +380,17 @@ RgbFrame render_dragster_headless(const PresentationSample &s,
   for (std::size_t i = 0; i < 4; ++i)
     rect(f, 8 + static_cast<int>(i) * 9, 8, 3 + static_cast<int>(d[i] % 5), 10,
          {238, 238, 224});
-  for (std::size_t i = 0; i < 2; ++i) {
-    const auto &r = s.movement.riders[i];
-    (void)rider_frame_for_pose(r.pose.pose_index, r.pose.reflected);
-    const int x = 128 +
-                  (static_cast<std::int16_t>(r.motion.x) - s.camera_x) / 32,
-              y = static_cast<std::int16_t>(r.motion.y) / 32 - 12;
-    const auto c = i ? std::array<std::uint8_t, 3>{220, 72, 70}
-                     : std::array<std::uint8_t, 3>{250, 220, 48};
-    rect(f, x - 8, y - 8, 16, 16, c);
-    rect(f, x - 3, y - 13, 6, 5, c);
+  std::array<std::uint8_t, 65536> rider_vram{};
+  load_rider_tiles(rider_vram, s, content.rider_tiles);
+  const auto rider_cgram = build_race_cgram(s, content.palette);
+  for (std::size_t rider_index = 0; rider_index < 2; ++rider_index) {
+    const auto &rider = s.movement.riders[rider_index];
+    (void)rider_frame_for_pose(rider.pose.pose_index, rider.pose.reflected);
+    const int x = static_cast<std::int16_t>(rider.motion.x) - s.camera_x - 832;
+    const int y = static_cast<std::int16_t>(rider.motion.y) - 752;
+    render_rider(f, rider_vram, rider_cgram, x, y,
+                 rider_index == 0 ? 0 : 136,
+                 rider_index == 0 ? 0x66 : 0x68);
   }
   if (s.movement.finish.phase == RacePhase::ResultScreen) {
     rect(f, 36, 48, 184, 112, {12, 18, 38});

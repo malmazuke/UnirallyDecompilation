@@ -18,7 +18,7 @@ std::vector<std::uint8_t> read(const std::filesystem::path &p) {
 } // namespace
 int main(int argc, char **argv) try {
   std::filesystem::path pack, state_path, out_path;
-  int camera{}, sx{}, sy{};
+  int camera{}, sx{}, sy{}, bg2x{}, bg2y{};
   for (int i = 1; i < argc; i += 2) {
     if (i + 1 >= argc)
       throw std::invalid_argument("presentation runner requires option values");
@@ -35,6 +35,10 @@ int main(int argc, char **argv) try {
       sx = std::stoi(argv[i + 1]);
     else if (o == "--bg1-scroll-y")
       sy = std::stoi(argv[i + 1]);
+    else if (o == "--bg2-scroll-x")
+      bg2x = std::stoi(argv[i + 1]);
+    else if (o == "--bg2-scroll-y")
+      bg2y = std::stoi(argv[i + 1]);
     else
       throw std::invalid_argument("unknown presentation runner option: " + o);
   }
@@ -54,7 +58,8 @@ int main(int argc, char **argv) try {
       content.entry("presentation.result.classic.font-layout.v1")};
   const auto frame = unirally::render_dragster_headless(
       {state, camera, static_cast<std::int16_t>(sx),
-       static_cast<std::int16_t>(sy), 0, 0},
+       static_cast<std::int16_t>(sy), static_cast<std::int16_t>(bg2x),
+       static_cast<std::int16_t>(bg2y)},
       assets);
   std::ofstream out(out_path, std::ios::binary | std::ios::trunc);
   if (!out)

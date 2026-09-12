@@ -28,6 +28,19 @@ int main() {
     rejected = true;
   }
   require(rejected);
+  // A synthetic selector at the observed first plane expands through the same
+  // 32-byte, four-by-four metatile definition used by $81:B270.
+  track[0x5831] = 1;
+  for (std::size_t plane = 1; plane < 5; ++plane)
+    track[0x5831 + plane * 0x800] = 1;
+  for (std::size_t i = 0; i < 16; ++i) {
+    const auto at = 0x800f + 32 + i * 2;
+    track[at] = static_cast<std::uint8_t>(i + 1);
+  }
+  const auto rolling = unirally::build_dragster_bg1_map(track, 0, 160);
+  require(rolling[10 * 32 + 16] == 1);
+  require(rolling[10 * 32 + 19] == 4);
+  require(rolling[13 * 32 + 16] == 13);
   rejected = false;
   try {
     (void)unirally::expand_dragster_bg1(

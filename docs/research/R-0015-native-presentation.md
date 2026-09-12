@@ -156,3 +156,22 @@ This closes the metatile selector and gather relationship on the four declared
 updating frames.  Ring-column placement and the exact screen-edge phase remain
 to be checked against the staged DMA destination before replacing the failed
 static expansion.
+
+The native port uses the DMA destination phase to reconstruct the 32-by-32
+ring statelessly from scroll position.  A separate capture watching VMAIN,
+VMADD, VMDATA and CGRAM over frames 1599--3454 passed the unchanged identities
+and has access SHA-256 `c69d43694055d6cd...`.  It associates all 108 packed
+rider tiles with their exact VRAM words in the five frozen DMA inventories
+(27, 20, 21, 21 and 19 tiles).  The 64-by-64 objects use the already observed
+tile bases 0/136, palettes 3/4 and horizontal reflection.  Original screen X
+is `position_x - camera_x - 832`; all five frozen player coordinates and the
+frame-2000 opponent wrap agree exactly.  Screen Y is `position_y - 752`.
+
+The same capture closes the race palette rewrite: CGRAM colours 96--111 are a
+semantic race/late-finish cycle, and colour zero changes from `$7FFF` to
+`$7DAD` at the late-finish pose.  With those observed writes, packed rider
+tiles and rolling map, the frame-3213 regional comparison is 445/50,176
+pixels (0.89%), down from the rejected static renderer's 33,561/50,176
+(66.89%) and within the preregistered 3% limit.  The residual is confined to
+the declared HUD and colour-math omissions.  Other frozen cases and the result
+screen still require automated reference checks before candidate submission.

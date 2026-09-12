@@ -1,15 +1,16 @@
 # R-0017 — M3 playable-slice acceptance
 
 - Task: [M3-04](../../tasks/M3-04.md)
-- Status: checkpoint; acceptance is blocked by the opponent-first live path
-- Candidate base: `55fb1d5882f00a0a791a752ec605cc4b5dc6c0e9`
+- Status: evidence candidate; independent review/hosted gates remain pending
+- Candidate base: `55fb1d5882f00a0a791a752ec605cc4b5dc6c0e9`;
+  correction candidate `0803735`
 - Tested host: macOS arm64, 13 September 2026
 - ROM identity: supported PAL SHA-256 `a1105819...fd4e`
 - Classic pack: 25 entries, 154,030 bytes, SHA-256
   `5c1fc5b0...1529`; extraction rules SHA-256 `70712c47...d768`
 
-This record distinguishes accepted component regressions from the incomplete
-real-play integration gate. It does not accept M3-04 or M3.
+This record maps the component regressions and completed local real-play
+integration evidence. It does not accept M3-04 or M3.
 
 ## Clean installation and archive-only launch
 
@@ -100,7 +101,7 @@ the process failed before a normal diagnostic summary could establish how many
 short presses overlapped a PAL update. Therefore this is **not yet** claimed as
 live-input acceptance evidence.
 
-## Blocking opponent-first continuation
+## Corrected opponent-first continuation
 
 Both the original bundle-less visible run and the corrected bundled run failed
 with `sampling content address is unavailable`. Their frontend reports are
@@ -112,18 +113,81 @@ onward and binary-searched the first failing prefix:
 - player x remains 1088;
 - the opponent is already marked finished with stored centiseconds 3358, while
   phase/outcome remain Racing/Pending because the player has not crossed;
-- the opponent continues after its finish and has wrapped its 16-bit x to 14;
-  the next decoded-track sample is unavailable.
+- the earlier parsing used byte 152. The canonical opponent begins at byte 144,
+  so its actual native frame-3434 state was x=28355, y=990, vx=448. No x wrap
+  occurred; the unavailable sample was downstream of missing finish handling.
 
 The exact input, output and stderr artifact hashes are respectively
 `32070115...cd9`, `6aa5aa8d...2117` and `37b47acd...d01`. This pins the failure
 to canonical simulation rather than SDL scheduling or rendering.
 
-It is a verified integration defect in the real-play space but the original
-opponent-first behavior is not established. Freezing or skipping the finished
-opponent is only a provisional hypothesis and has not been implemented. A
-bounded independent consultation/research decision is required before changing
-gameplay. Until a correction passes the frozen three-path matrix and fresh live
-evidence, the controls, sustained-run, repository-hygiene, independent-review
-and hosted exact-candidate gates remain incomplete and M3 acceptance is
-blocked.
+The bounded independent audit is recorded in
+[R-0017-opponent-first-audit](R-0017-opponent-first-audit.md), audit commit
+`b183486` (integrated task head `29ccf8a`). It established the original
+continuation: `$83:EA72-$83:EAC3` neutralizes the finished opponent from frame
+3215 and applies signed ten-unit pre-slowdown on the two nonzero phases, while
+ordinary horizontal limiting, integration, collision/contact and the player's
+timer continue. Freezing, clamping or skipping the rider would be incorrect.
+
+The finish pose is separately source-backed. `$82:8953-$82:89C2` advances
+per-rider selector `$11E7` on those same two phases through `$17:C7D6`: entries
+0..47 are poses `$0A45-$0A5C`, each duplicated; negative sentinel entry 48
+resets the selector and republishes `$0A45`. Persistent `$0DF1` is copied via
+`$0F59` before collision. Native serializes this selector in additive
+371-byte `URMV0003`; older 333-byte V1 and 369-byte V2 remain readable and V2
+offsets are unchanged.
+
+The tracked replay and projection bind the PAL ROM, unchanged bsnes/core
+identity, cold-start inputs, original sample/final/WRAM-series identities and a
+74,010-byte full projection for frames 1533-3999. Projection SHA-256 is
+`77ed349e...febe`. `native opponent-first-check` passes it in two fresh
+pack-only native processes and restores at 3214, 3215, 3231, 3234 and 3435
+(report
+`ee81b5ac46710c61076a926998e523b8fa9195747d95283a099c2d480efca00d`).
+Exact boundaries include frame 3215
+x/y/vx=`25278/857/415`, x=`25359` from 3231, velocity zero at 3234, pose
+`$0A45` at 3435 and `$0A55` at 3999. Player x stays1088, unfinished, and its
+timer advances through frame3999.
+
+After correction, all three accepted full-race paths and restores remain exact:
+continuous `5dfdf196a44ec47355b621cccce23a4006d3d6d1a8f96005a4f0890b86796179`,
+release `9fdd1a4a196b5c4f497a04bdded7bd6fc9d75f0693d3ff525fc35ab8c0d18326`,
+reviewer release `070cb4940ebb5f99954cbc18927b059eb3224887964fe5f4b49fa7214a4c783b`.
+All seven visual mismatches remain exactly unchanged
+(`484df63557974c0190e6507b3b0e61f59d26446d4340982e709f87856c28aca0`).
+Serial final app-debug and app-sanitize suites each pass 314/314 (291 Python,
+20 CTest, three fresh processes;
+`956fb0ab00b3c2c23f47952334b077f3b1785c639fefb87933075e04736e34ee`,
+`16b777ada9842590582306ee381df84414c7158e052dfd080715a855acdf7bc9`).
+A deliberately concurrent first debug/sanitize invocation caused two debug
+tooling failures because both suites mutated the shared `lab-failure-probe`
+build; the serial debug rerun is the applicable evidence.
+
+The ROM locator used for the targeted audit was removed again after capture.
+
+## Corrected sustained real-window run
+
+The rebuilt pack-only bundle (`org.unirally.classic`) ran visibly for 4,000 PAL
+updates/80.298 seconds and ended normally at semantic frame5533, far beyond the
+former 3435 failure. Coordinator computer use captured the current finish-line
+scene twice and delivered 120 mapped key-down plus 120 key-up events: 50 Right,
+then 30 Right, 20 Z and 20 Up taps. The diagnostic proved one nonzero controller
+update, 1,675 subsequent neutral updates, final mask zero and player x1094
+(report
+`6cf5621cb7ef1c8a276112dc4d06e163949dfd423d2b424b6030bd24317cca5d`).
+Thus real keyboard press, mapped sampling, visible response and
+release-to-neutral are observed; `--fixed-controller-mask` was not used.
+
+The automation API explicitly rejected a multi-nonmodifier `Right+Z` chord, so
+simultaneous input was not practical and is unavailable rather than passed.
+Simple Finder/game app switching did not surface an SDL event, so the
+coordinator clicked the real window minimize control, observed Finder in the
+foreground, then raised the game and captured a current screenshot. That
+second finite pack-only run reports one focus loss and zero active clears—as
+expected because it carried no active input—and completed 2,000 updates at
+frame3533
+(`f0fa6ed60bc509e9cb869359ba4ea536eda7d86f8a680660ba251585cd917bc3`).
+Active-mask clearing remains covered by the authored input-state regression,
+not a live claim. Final hygiene found no tracked ROM, pack, binary image or
+locator and `git diff --check` passed. Fresh review and hosted exact-candidate
+CI remain pending. This record does not accept M3-04 or M3.

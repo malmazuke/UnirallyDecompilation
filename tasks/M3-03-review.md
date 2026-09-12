@@ -815,3 +815,123 @@ processes, totaling 310 required checks with no failure or skip. Real Classic
 first-launch and pack-only SDL dummy smokes also passed. Exact commands and
 report hashes are recorded in `M3-03.md`. One fresh narrow re-review remains
 required.
+
+## Final narrow path-semantics re-review — approved
+
+- Handoff head reviewed:
+  `3d018871c81451d9cf6d6fd0b22ca4deead9803d`
+- Behavioral correction reviewed:
+  `258e9c001a8b9b7091179c99731bcf9d3b8b19d1`
+- Correction diff: `cfc2b04..258e9c001a8b9b7091179c99731bcf9d3b8b19d1`
+- Reviewer: fresh sequential OpenAI Codex Sol/medium session
+- Worktree/branch: `.worktrees/m3-03-path-review`,
+  `review/M3-03-path-semantics`
+- Date: 13 September 2026 AEST
+- Verdict: **approved; no material finding remains**
+
+### Unified open-path semantics confirmed
+
+`_frontend_paths` canonicalizes pack, optional ROM, rules, explicit/default
+executable and optional report once with non-strict `Path.resolve`. It does not
+expand a leading tilde. The resulting frozen `FrontendPaths` values are used
+unchanged by collision checking and then by rules/ROM/pack reads, atomic pack
+creation, executable launch and final report writing. The report writer's
+`Path(path)` conversion preserves that already-resolved path rather than
+reinterpreting the original argument. Direct resolved-path equality covers
+ordinary and nonexistent aliases; `samefile` adds existing hardlink identity.
+No separate lexical `abspath` comparison remains to collapse `..` before a
+symlinked parent is resolved.
+
+This matches actual shell/open behavior in the reviewed macOS/Linux domain. A
+quoted `~/name` is resolved below the current working directory as a literal
+directory component, while an unquoted tilde has already been expanded by the
+shell. A report spelling with a symlinked parent followed by `..` is resolved
+component by component to the same target the later report open uses.
+
+### Independent disposable matrix and focused tests
+
+The tracked focused suite passed all nine tests:
+
+```text
+PYTHONPATH=tools python3 -m unittest -v tests.tooling.test_frontend
+Ran 9 tests in 2.450s — OK
+```
+
+I additionally ran an independent authored-content probe from
+`artifacts/m3-03-path-final-review/path_probe.py` (ignored, SHA-256
+`6ecd9296c05259f72fcbbf367cd7f4a0be877042ed616105aee50471f48edae2`):
+
+```text
+PYTHONPATH=tools python3 artifacts/m3-03-path-final-review/path_probe.py
+ordinary_preflight_cases=11
+literal_tilde_preflight_cases=4
+literal_tilde_cli_cases=4
+downstream_spies_untouched=true
+protected_bytes_preserved=true
+child_skipped_on_all_collisions=true
+```
+
+The eleven ordinary preflight cases covered exact ROM, relative/absolute ROM,
+final symlink, hardlink, parent traversal, existing pack, normalized
+nonexistent pack, nonexistent pack below a symlinked parent, rules, explicit
+executable and default executable aliases. Every case exited 3 before `Report`
+construction, rules loading, pack validation/build/write or child launch.
+Existing protected bytes were unchanged and nonexistent collision targets
+remained absent.
+
+Four direct and four real-subprocess cases separately placed ROM, validated
+one-entry pack, extraction rules and executable in a literal `~` directory.
+Each quoted-tilde report alias exited 3, retained the protected file's SHA-256
+and left both child sentinels absent. The probe used only a temporary authored
+ROM and packs generated from authored bytes; no private ROM or Classic pack was
+opened.
+
+The prior false-refusal shape was reproduced independently with
+`a/link -> b/sub`, pack `a/report.json` and report spelling
+`a/link/../report.json`. The command exited 0, preserved the pack, started the
+intended disposable child and wrote a passed report at the actual distinct
+target `b/report.json`. The child received the already-resolved pack path in
+its `--content-pack` argument.
+
+### Exact hosted runs
+
+Hosted run `34703189007` started at exact behavioral SHA `258e9c0`. Its
+headless jobs and macOS app-debug build passed, but the workflow was canceled
+while later app steps were running when the documentation handoff push started
+the replacement run. The tracked workflow uses one branch concurrency group
+with `cancel-in-progress: true`; the canceled run is therefore not claimed as
+complete acceptance evidence. Its downloaded partial reports are clean,
+source-bound to `258e9c0` and contain no required failure.
+
+Replacement run `34703283883` completed successfully at exact handoff SHA
+`3d01887`, whose only changes after `258e9c0` are documentation. macOS 15 passed
+headless debug, app-debug build/test and the executable help/link smoke. Ubuntu
+24.04 passed headless debug, bounded X11 preparation, app-debug build/test/help
+and the complete lab/app sanitizer step. Each app suite ran 287 Python tests,
+all 20 CTests and three fresh processes. Downloaded app reports all record clean
+source `3d01887`, no source change during execution and zero required
+non-passes.
+
+| Hosted report | SHA-256 |
+| --- | --- |
+| macOS app-debug build | `ad0fac6a0a775a88f15674dc4d1818b08f98e1588740c5b42027c1bb3bca6643` |
+| macOS app-debug suite | `48d5ac97f164ca2a3c32fafc0ad39f567fe4b421cd2534c7ea23f4354bf56815` |
+| Ubuntu app-debug build | `1ca08afbdbdeebb8b39266cd7a996a255ec2b02dc94d2f0ce644b69ada436700` |
+| Ubuntu app-debug suite | `18bfc9568934c1b36748425f453020f8fd856020959d5f2677e90ac86aabbc2d` |
+| Ubuntu app-sanitize build | `726a89e242fe3da685107c3a47c5bd2faa2583747d07b899d0c8c30dfe4b0662` |
+| Ubuntu app-sanitize suite | `a398bdae48098e7457e1c2de1dd861244f0c676dd1f205c7c3dfd801535c07e2` |
+
+### Final conclusion and hygiene
+
+The destructive literal-tilde miss and the symlink-parent/`..` false refusal
+are corrected without reopening any earlier approved frontend behavior. The
+ordinary lexical, relative, nonexistent, symlink and hardlink refusal matrix
+remains intact, and the guard runs before report/input/child activity. No
+material path-semantics finding remains.
+
+`git diff --check 759ed9e..3d01887` passed before this report. The worktree had
+no tracked modification before this append. The review used only temporary or
+ignored authored inputs and downloaded reports under `artifacts/`; no ROM,
+generated Classic pack, state, capture, image or report payload is added to the
+tracked tree. Behavioral correction `258e9c0` and M3-03 are approved for
+coordinator acceptance.

@@ -70,7 +70,12 @@ jobs:
         run: python3 tools/project.py test --suite synthetic --preset app-debug --artifacts artifacts/ci/test-app-debug --report artifacts/ci/test-app-debug.json --timeout 600
 
       - name: Check frontend runtime link and help
-        run: build/app-debug/src/app/unirally --help
+        run: |
+          if [[ "$RUNNER_OS" == "macOS" ]]; then
+            build/app-debug/src/app/unirally.app/Contents/MacOS/unirally --help
+          else
+            build/app-debug/src/app/unirally --help
+          fi
 
       - name: Build and test with sanitizers (Linux)
         if: runner.os == 'Linux'

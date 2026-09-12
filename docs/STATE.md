@@ -1,6 +1,6 @@
 # Project state
 
-Updated: 12 September 2026 (M2-01 component checkpoint; full movement blocked on M2-01A).
+Updated: 12 September 2026 (usage interruption checkpoint and D-0004 model routing).
 
 ## Current facts
 
@@ -46,21 +46,32 @@ First implementation milestone: M0 repeatable laboratory. First gameplay feasibi
 | Original behavior plus separately versioned extensions | Proposed architecture |
 | Human-readable native source from the first routine | Explicit project goal and review requirement ([D-0003](decisions/D-0003-human-readable-native-code.md)); stable mod APIs deferred until concrete needs |
 | Two-player first online prototype | Planning default, later product decision |
-| Two concurrent workers | Allowed under the M0-05 conditions above (disjoint paths, own worktree, claim in record and registry together, orphan check); a shared queue needs a lease store first. Not used for M1-02/M1-03: both needed the same additive worker options, so they were sequenced |
+| Model routing and usage | Adopted [D-0004](decisions/D-0004-model-and-usage-budget.md): Sol/medium default, one child, bounded frontier audits and sampled quota reserves; no hard limiter or scheduler |
+| Two concurrent workers | Exception requiring D-0004 quota justification; allowed under the M0-05 conditions above (disjoint paths, own worktree, claim in record and registry together, orphan check); a shared queue needs a lease store first. Not used for M1-02/M1-03: both needed the same additive worker options, so they were sequenced |
 | Data-access observation without a core change | Decided in M1-02 ([D-0002](decisions/D-0002-data-access-observation.md)): derive accesses from the unchanged trace ring plus ROM bytes; a bus hook in the core patch is the recorded fallback if the residual blocks an acceptance criterion |
 
 ## Next work
 
-The next ready task is **[M2-01A: contact and opponent-motion dependency](../tasks/M2-01A.md)**. Start from the integrated M2-01 component checkpoint, reproduce its documented evidence, and inventory the post-sampling contact response before implementing more movement. The focused primary capture covers frames 1576–1618, distinguishing the opponent jump trigger at 1578, later counter updates and the contact-state clear at 1617. The new task requires a separate preregistered research variation and leaves M2-01's withheld outputs sealed.
+**M2 continuation resumed on Astra with sequential Sol review.** The recovered
+motion approval is closed with224/224 final checks; native speed has fresh Sol
+approval and debug/sanitizer evidence. Contact and input/timer remain approved.
+Combined research/components at7ce2ba5 pass259/259 local checks. Native comparison
+command at20d3816 passes256/256 and is in independent review. Main integration/CI
+and semantic native movement implementation remain pending. See [M2-01A](../tasks/M2-01A.md)
+and [the recovery checkpoint](../tasks/M2-01-usage-checkpoint.md) for exact branches
+and evidence. Current quota baseline is3% weekly used, latest observation6%,
+with discretionary checkpoint at13%; no provider switch or reset redemption.
 
-M2-01 is **blocked, not accepted**. Its initial small-riding-update scope proved incomplete because player speed depends on opponent motion, including an unvalidated jump. The reviewed sampling/progress code is a useful component checkpoint, not a replacement for exact autonomous primary/withheld agreement. M2-01 resumes after this prerequisite; M2-02 still covers full native restore/continuation and portability. Original M1 limits and the open tool/content notes above remain in force.
+The dependency includes a real feedback path: opponent quarter-turn tracking enqueues a landing reward, its delayed consumer changes speed boosts and a cartridge-RAM feature total, and that total changes later AI jump requests. Motion research now inventories these states along with the exact GO brake/throttle transition. Native code will evolve them from one validated end-of-frame1533 seed. Frozen withheld outputs remain unopened until the full native routine is fixed.
+
+M2-01 is **in progress, not accepted**. Reviewed component probes still receive captured arguments and do not substitute for autonomous primary/withheld agreement. M2-02 retains full restore/continuation and portability acceptance. Original M1 limits and the open tool/content notes above remain in force.
 
 Implementation choices should be made through bounded experiments. Remote hosting beyond the private repository, release license/distribution arrangements, online service topology, public accounts/ranking and paid execution budgets remain undecided and do not block the next research task. A Linux build of the pinned core (ROM-free) is a natural CI addition when convenient.
 
 ## Milestone status
 
-M0: accepted on 11 September 2026 (M0-00 through M0-06; evidence report [R-0005](research/R-0005-m0-acceptance.md); tag `m0`). M1: M1-01 accepted on 11 September 2026 ([R-0006](research/R-0006-observed-code-map.md)); M1-02 accepted on 11 September 2026 ([R-0007](research/R-0007-player-state.md), [D-0002](decisions/D-0002-data-access-observation.md)); M1-03 accepted on 12 September 2026 ([R-0008](research/R-0008-track-decode.md)); M1-04 accepted and **milestone M1 accepted on 12 September 2026, tagged `m1`** ([R-0009](research/R-0009-m1-acceptance.md)). M2: started; M2-01 has reviewed native components but is blocked on M2-01A. M3–M6: not started. No autonomous native gameplay equivalence or calendar/cost promise has been established.
+M0: accepted on 11 September 2026 (M0-00 through M0-06; evidence report [R-0005](research/R-0005-m0-acceptance.md); tag `m0`). M1: M1-01 accepted on 11 September 2026 ([R-0006](research/R-0006-observed-code-map.md)); M1-02 accepted on 11 September 2026 ([R-0007](research/R-0007-player-state.md), [D-0002](decisions/D-0002-data-access-observation.md)); M1-03 accepted on 12 September 2026 ([R-0008](research/R-0008-track-decode.md)); M1-04 accepted and **milestone M1 accepted on 12 September 2026, tagged `m1`** ([R-0009](research/R-0009-m1-acceptance.md)). M2: started; M2-01 has reviewed native components and is progressing through M2-01A review into assembly. M3–M6: not started. No autonomous native gameplay equivalence or calendar/cost promise has been established.
 
 ## Handoff
 
-The next agent should read this file, `AGENTS.md`, M2-01's blocked handoff and M2-01A. Reproduce the baseline with `python3 tools/project.py doctor`, `bootstrap`, `build --preset lab-debug` and `test --suite synthetic` (211 checks), then the unchanged primary fields replay and the relevant sampling/progress command from R-0010. Original content and captures stay ignored; regenerate them from the tracked manifests and exact watch lists. Preserve the PAL identity and all frozen expectations. Update this summary with observed results and decisions; keep execution details in the task and research records.
+The next agent should first read [the usage checkpoint](../tasks/M2-01-usage-checkpoint.md), this file, `AGENTS.md`, M2-01's continuation records and M2-01A. Reproduce the baseline with `python3 tools/project.py doctor`, `bootstrap`, `build --preset lab-debug` and `test --suite synthetic` (211 checks), then the unchanged primary fields replay and the relevant sampling/progress command from R-0010. Original content and captures stay ignored; regenerate them from the tracked manifests and exact watch lists. Preserve the PAL identity and all frozen expectations. Update this summary with observed results and decisions; keep execution details in the task and research records.

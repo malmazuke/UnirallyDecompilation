@@ -11,9 +11,27 @@ This protocol is intended for humans and agents using different models or runtim
 | Implementation worker | Implement a defined contract and its checks | Assigned code/test paths on its own branch |
 | Reviewer | Reproduce the claim, inspect evidence, exercise independent cases and identify regressions | Review report; no silent edits to the implementation being reviewed |
 
-Roles do not require four simultaneous agents. Start with a coordinator and one worker; add a second worker only when tasks are independent. Review can use a fresh sequential session. A model switch does not change the task's acceptance criteria.
+Roles do not require four simultaneous agents. For OpenAI tasks, default to a Sol coordinator and one Sol worker, with explicit model/effort settings. Review uses a fresh sequential session. A second child requires the independent-scope and quota justification in D-0004. A model switch does not change the task's acceptance criteria.
 
 For example, after M0, one worker could investigate track encoding while another identifies rider-state writes. Two workers should not independently rewrite the state schema. The coordinator establishes a small shared interface first and serializes changes to it.
+
+## Model and usage policy
+
+Follow [D-0004](decisions/D-0004-model-and-usage-budget.md) for model routing,
+frontier escalation, compact dispatch context and sampled quota guardrails.
+Keep the task and all children within its starting provider; only the user
+may move work between platforms. Usage exhaustion causes a checkpoint, never
+an automatic cross-provider fallback. A user-initiated platform change sets the
+provider for that continuation, regardless of the repository's earlier authors.
+Sol/medium is the OpenAI default for coordination, implementation and ordinary review;
+Anthropic tasks retain Anthropic models as specified in D-0004.
+Use frontier models for bounded difficult questions and milestone audits.
+Project `.codex/config.toml` supplies defaults for new Codex sessions/children;
+explicit runtime settings may override them, so record the actual model.
+The initial budget reserves 20% of weekly allowance and checkpoints discretionary
+implementation after a 10 percentage-point increase from its recorded session
+baseline. These are agent-enforced limits, not an implemented metering service.
+No automatic reset redemption or purchases are authorized.
 
 ## Task lifecycle
 
@@ -25,7 +43,7 @@ The coordinator is the single writer of the canonical task registry. Each task r
 - Owned paths, interface dependencies, allowed scope and non-goals.
 - Acceptance criteria, check commands or the task to implement those commands, and required evidence.
 - Required inputs/tools and the fixture-access arrangement.
-- A bounded session/time budget and any actually authorized monetary limit.
+- A bounded session/time budget, explicit model/effort and routing rationale, starting quota and reserve under D-0004, and any actually authorized monetary limit.
 - Worker identity, branch/worktree, claim time, heartbeat and checkpoint location.
 
 On a single workstation, one coordinator can serialize assignments through task files. A later scheduler needs atomic claims and a lease store under ignored runtime state; committing a Markdown file is not a distributed lock. Do not let two coordinators dispatch from independent copies of the same queue.
@@ -45,9 +63,9 @@ Do not spend the entire session producing source code before running an experime
 
 ## Unattended operation and stopping conditions
 
-Proposed initial operating defaults, adjustable from measured runs:
+Operating defaults, adjustable from measured runs under D-0004 (enforced by agents; no scheduler exists):
 
-- One worker initially; at most two independent workers until integration is stable.
+- One active child by default; a second independent child needs the recorded D-0004 justification.
 - A 45-minute task session, checkpoint at least every 10 minutes and before an expensive experiment. Larger tasks become several sessions with durable progress.
 - After three attempts at the same hypothesis without new evidence, stop that approach. Narrow the experiment, ask for review, or reassign; do not blindly regenerate implementations.
 - Apply explicit process timeouts to builds and tests. Separate timeout, crash, unavailable prerequisite and behavioral mismatch in reports.
@@ -59,6 +77,10 @@ The scheduler configuration must state total run duration and concurrency. If mo
 Notify the user when a milestone is accepted, a scope/budget decision is needed, a material failure prevents progress, or a requested run ends. Do not require user approval for every hypothesis, reversible fix or merge that is already within the active assignment. Runtime-required approvals cannot be replaced by this protocol.
 
 Routine integration can proceed automatically only when the task is in scope, a reviewer has accepted the evidence, and the exact merge candidate passes its required checks. Public release, deployment and new service spending remain distinct actions requiring the user's authorization; do not infer those from the aspiration to have online play.
+
+### Internal prerequisites and continuity
+
+When a worker reaches an internal dependency, it checkpoints the evidence and informs the coordinator. The coordinator amends scope or creates and dispatches the smallest prerequisite, then resumes the dependent task after review. A ready prerequisite is work to do, not a reason to end the user request. The 45-minute sessions above are checkpoint/reassessment intervals; they do not create a user-imposed total budget. Do not invent additional stopping budgets. The usage-conservation defaults adopted in D-0004 respond to the user's explicit budget-management request and take precedence over earlier unlimited-session allocations. Preserve actual spending restrictions and runtime limits, and escalate only dependencies that require the user's access, input or authority.
 
 ## Source control and integration
 
@@ -77,7 +99,7 @@ A remote repository is optional for early work. If one is established, use the s
 
 ## Handoff and model switching
 
-Persist the same fields for a switch to another model, another machine, or a fresh session of the same model:
+Provider changes are user-controlled. Within-provider model changes remain autonomous. Persist the same fields for a permitted model/platform change, another machine, or a fresh session:
 
 1. Task, milestone, base/head commits, worktree path and uncommitted changes.
 2. Verified facts and links to the supporting experiment/artifacts.
@@ -91,7 +113,7 @@ Keep model name/version/runtime in execution metadata for reproducibility, but d
 
 ### Portable dispatch prompt
 
-> Work on task `<ID>` in `<task file>`, starting from `<commit>` in `<worktree>`. Read AGENTS.md and docs/STATE.md. Verify prerequisites, work within the assigned scope, and use the acceptance criteria in the task. Record reproducible evidence and update the handoff before yielding. Do not mark the task accepted; submit it for review. If blocked, preserve the current state and state the smallest next dependency.
+> Stay within task provider `<OpenAI/Anthropic>` unless the user explicitly moves this continuation. Use `<runtime/model>` with `<reasoning effort>` under D-0004; quota baseline `<timestamp/window/value or unknown>`, reserve/budget `<limits>`, checkpoint `<path>`. Work on task `<ID>` in `<task file>`, starting from `<commit>` in `<worktree>`. Read AGENTS.md and docs/STATE.md. Verify prerequisites, work within the assigned scope, and use the acceptance criteria in the task. Record reproducible evidence and update the handoff before yielding. Do not mark the task accepted; submit it for review. If blocked, preserve the current state and state the smallest next dependency.
 
 ### Reviewer checklist
 

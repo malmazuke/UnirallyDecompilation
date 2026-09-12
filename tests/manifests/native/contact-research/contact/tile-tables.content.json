@@ -1,0 +1,151 @@
+{
+  "description": "Existing R-0008 static collision column and flag content, restricted to contact research.",
+  "id": "contact-research-tile-tables",
+  "identifiers": {
+    "rider": "MIKE",
+    "segment": "the tile map region visible at frames 1600 and 2400",
+    "tile_sets": [
+      1,
+      2,
+      20,
+      36,
+      22,
+      24
+    ],
+    "tour": "CRAWLER",
+    "track": "DRAGSTER",
+    "track_asset": "$82:B332/0xC2"
+  },
+  "items": [
+    {
+      "expected": {
+        "length": 640,
+        "sha256": "bb95427aa2a307c9874b6140b145dce5a4e279112d57a5efcae77eb444951a72"
+      },
+      "id": "tile-tables",
+      "kind": "raw",
+      "name": "per-tile column tables of the six tile sets ($17:A000 index, 2 bytes per 16x16 column)",
+      "pieces": [
+        {
+          "file_offset": 762020,
+          "length": 32
+        },
+        {
+          "file_offset": 762052,
+          "length": 32
+        },
+        {
+          "file_offset": 767684,
+          "length": 128
+        },
+        {
+          "file_offset": 770948,
+          "length": 288
+        },
+        {
+          "file_offset": 767940,
+          "length": 128
+        },
+        {
+          "file_offset": 768196,
+          "length": 32
+        }
+      ],
+      "runtime": {
+        "loaded_by": "$82:E2CD-$82:E30C at frame 1242",
+        "read_by": "$81:8CDD, $81:8CBB during riding",
+        "work_ram": "$7E:A000",
+        "work_ram_offset": 40960
+      }
+    },
+    {
+      "expected": {
+        "length": 20,
+        "sha256": "590e52f2640bb1b70f602622aa07285ed51d7c4b84707b4d77c5cc33fc230846"
+      },
+      "id": "tile-flags",
+      "kind": "raw",
+      "name": "per-tile flag bytes of the six tile sets ($17:C4E4 + (table - $A0A4)/32)",
+      "pieces": [
+        {
+          "file_offset": 771300,
+          "length": 1
+        },
+        {
+          "file_offset": 771301,
+          "length": 1
+        },
+        {
+          "file_offset": 771477,
+          "length": 4
+        },
+        {
+          "file_offset": 771579,
+          "length": 9
+        },
+        {
+          "file_offset": 771485,
+          "length": 4
+        },
+        {
+          "file_offset": 771493,
+          "length": 1
+        }
+      ],
+      "runtime": {
+        "loaded_by": "$82:E30E-$82:E346 at frame 1242",
+        "read_by": "$81:8C0C, $81:82D9 during riding",
+        "work_ram": "$7E:C000",
+        "work_ram_offset": 49152
+      }
+    }
+  ],
+  "kind": "content_manifest",
+  "rom": {
+    "sha256": "a1105819d48c04d680c8292bbfa9abbce05224f1bc231afd66af43b7e0a1fd4e",
+    "size": 2097152
+  },
+  "scenario_id": "race-crawler-dragster-3000",
+  "scene": {
+    "backdrop": 0,
+    "bg1": {
+      "bpp": 4,
+      "hdma_scroll_table": 8262,
+      "map_byte": 6144,
+      "sc_register": 12,
+      "tall": false,
+      "tile_byte": 16384,
+      "tiles16": true,
+      "wide": false
+    },
+    "bg2": {
+      "bpp": 4,
+      "hdma_scroll_table": 8280,
+      "map_byte": 57344,
+      "sc_register": 115,
+      "tall": true,
+      "tile_byte": 8192,
+      "tiles16": false,
+      "wide": true
+    },
+    "bg3": {
+      "bpp": 2,
+      "map_byte": 12288,
+      "rendered": false,
+      "sc_register": 24,
+      "tile_byte": 0
+    },
+    "bg_mode": 1,
+    "bgmode_register": 25,
+    "first_race_frame": 1329,
+    "oam_shadow": 5003,
+    "obsel": 131,
+    "regeneration": "python3 tools/project.py content decode --manifest tests/manifests/content/dragster-segment.json --out artifacts/content/dragster-segment",
+    "tilemap_staging": {
+      "column": 1113,
+      "row": 1079
+    }
+  },
+  "schema_version": 1,
+  "regeneration_command": "python3 tools/project.py content decode --manifest tests/manifests/native/contact-research/contact/tile-tables.content.json --out artifacts/m2-01a-contact/content"
+}

@@ -33,7 +33,9 @@
     "presentation.classic.palette.v1",
     "presentation.classic.font.v1",
     "presentation.rider.mike.race-tiles.v1",
-    "presentation.result.classic.font-layout.v1"
+    "presentation.result.classic.font-layout.v1",
+    "presentation.effect.go-window.v1",
+    "presentation.effect.winner-window.v1"
   ],
   "reference_cases": [
     {

@@ -185,3 +185,27 @@ or expected image was changed.  A result-mode PPU capture has access SHA-256
 `7096ed7850cfdac0...` and records mode 3, BG map/tile base registers, the
 result palette transfer and the two tile transfers needed for the stable
 screen reconstruction.
+
+## Additive window-effect prerequisite freeze
+
+The two failed cases exposed a bounded prerequisite after the initial seven
+presentation payloads were frozen: the declared GO and winner effects are
+channel-6 window compositions backed by static ROM tables. A fresh capture of
+frames 3452–3454 watched channel 6 and `$2123..$2132`, passed the unchanged
+sample/final-state identities, and produced `access.json` SHA-256
+`3a6a0b56141b36da...`. Original setup at `$82:D572` writes channel-6
+`DMAP=$04` and `BBAD=$26`; `$80:8691` selects the table address and bank.
+
+At frame 1600 the selected table is `$15:8A89`; at frame 3453 it is
+`$15:BF36`. Each is exactly 898 bytes: two repeat-mode HDMA runs containing
+224 four-byte scanline rows for WH0, WH1, WH2 and WH3. The displayed mask is
+the XOR of the two inclusive horizontal windows. Their source SHA-256 values
+are respectively `33f19daed02ec2f968d1a1ba27675a4da794c96772af28edfc1e321e113c4b29`
+and `b6fddc697a55984d607220aff50ab465881297de3f94fd9e434c0c9be3d4df20`.
+
+Before committing the consumer, the extraction and presentation manifests
+additively freeze these as `presentation.effect.go-window.v1` and
+`presentation.effect.winner-window.v1`. The already frozen reference cases,
+rectangles and limits do not change. A first reduction from those entries gives
+36/26,656 mismatches (0.135%) for frame 1600's exact declared rectangle and
+653/50,176 (1.301%) for frame 3453, below the original 2% and 3% limits.

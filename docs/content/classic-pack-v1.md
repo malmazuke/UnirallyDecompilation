@@ -13,9 +13,10 @@ poses and templates), `FlatContactContent` (tile columns and flags), progress,
 pose/displacement/idle-pose, rotation reward/class, and speed mask/decrement
 tables. Controller input and canonical continuation state are process inputs,
 not content entries. No other static-content read occurs in the accepted
-M3-01 runner. M3-02 extends the same schema/profile with seven immutable
+M3-01 runner. M3-02 extends the same schema/profile with nine immutable
 presentation spans: Dragster BG1/BG2 tiles and BG2 map, race palette, HUD font,
-the preregistered rider tile-DMA atlas, and result palette/tiles/layout seed.
+the preregistered rider tile-DMA atlas, result palette/tiles/layout seed, and
+the two exact channel-6 GO/winner window tables.
 Presentation consumers do not alter or serialize gameplay state.
 
 Schema 1 is a single deterministic binary file. It has an eight-byte
@@ -28,7 +29,7 @@ identity, duplicate/missing/unknown IDs, non-canonical layout, trailing bytes,
 or any entry size/hash mismatch before exposing an entry.
 
 The presentation namespace is reserved under `presentation.*`; the M3-02
-extension changes the exact rules identity and native inventory to twenty
+extension changes the exact rules identity and native inventory to twenty-two
 entries. Schema 1 does not promise arbitrary extension or another ROM.
 
 ## Semantic playable start

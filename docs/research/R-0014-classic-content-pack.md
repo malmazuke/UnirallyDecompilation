@@ -91,7 +91,7 @@ restore and correction recheck are recorded in
 
 ## M3-02 presentation extension
 
-M3-02 evolves the exact rules identity to `b8b9bf3c...868b` and twenty
+M3-02 first evolved the exact rules identity to `b8b9bf3c...868b` and twenty
 entries while retaining the accepted source/profile/start identities and all
 thirteen gameplay payload identities. Seven presentation entries are exact-ROM
 gated: BG1 tiles (2,560 bytes), BG2 tiles (992), BG2 map (8,192), race palette
@@ -99,3 +99,10 @@ gated: BG1 tiles (2,560 bytes), BG2 tiles (992), BG2 map (8,192), race palette
 and result palette/tiles/layout seed (5,224). Pack SHA-256
 `a90549bd...0ccb` was extracted atomically in ignored artifacts; the ROM-absent
 headless reader accepted all twenty entries.
+
+The failed frozen window-effect cases then exposed an internal presentation
+prerequisite before their consumer was committed. The additive extraction
+rules SHA-256 is `714c2a08...19b`; the inventory is twenty-two entries. It adds
+the 898-byte GO and winner mode-4 HDMA window tables with payload SHA-256
+`33f19dae...b29` and `b6fddc69...df20`. All thirteen accepted gameplay payload
+identities and the source/profile/start identities remain unchanged.

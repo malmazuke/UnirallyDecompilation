@@ -1,12 +1,12 @@
-# Sol coordinator handover — begin M3-02A Classic content pack
+# Sol coordinator handover — begin M3-02 native presentation
 
-M3-01 is accepted through merge `c393c54` after two returned arithmetic
-findings, an approving fresh review and green private CI run34682900511 on
-macOS15 and Ubuntu24.04. Read [M3-02A](M3-02A.md),
-[D-0005](../docs/decisions/D-0005-classic-content-distribution.md),
-[R-0013](../docs/research/R-0013-native-finish-reference-freeze.md) and the
-[native source guide](../src/core/README.md). Do not repeat finish research or
-begin renderer/frontend work.
+M3-02A is accepted through integration candidate `cd37469` after one returned
+native-reader identity finding and green CI run34685007265 on macOS15 and
+Ubuntu24.04. Read [M3-02](M3-02.md),
+[R-0014](../docs/research/R-0014-classic-content-pack.md),
+[R-0008](../docs/research/R-0008-track-decode.md) and the
+[native source guide](../src/core/README.md). Do not repeat pack-boundary or
+finish research.
 
 ## Operating instructions
 
@@ -23,16 +23,11 @@ large traces stay ignored. M3-01's accepted full-race cases and explicit
 
 ## Next ready work
 
-Claim M3-02A from current `main`. Reproduce the accepted M3-01 reviewer-owned
-finish case and one restore boundary, then inventory every static-content read
-made by the native runner. Freeze a minimal logical-ID pack schema and a public,
-semantic playable-start state before implementing commands.
+Claim M3-02 from current `main`. Reproduce the R-0008 frame comparisons and the
+M3-02A pack-backed full-race case, then freeze the presentation state/asset
+contract. First close the decoded BG1 column gather and rider pose-to-frame
+mapping; add minimum background/HUD/result logical entries only after their
+provenance is evidenced. Keep renderer output headless and reference-checkable.
 
-Implement deterministic atomic extraction from the exact supported PAL ROM,
-pack inspection and mutation rejection using authored ROM-free fixtures. Prove
-two separately generated packs are byte-identical, then move the ROM aside and
-show that the validated pack alone reproduces canonical native state. Never
-track or expose original bytes in CI artifacts.
-
-Presentation extraction is M3-02, SDL/live controls are M3-03, and playable
-acceptance is M3-04. Do not collapse them into M3-02A or claim M3 accepted.
+SDL/live controls and scheduling are M3-03, and playable acceptance is M3-04.
+Do not collapse them into M3-02 or claim M3 accepted.

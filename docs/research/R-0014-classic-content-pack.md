@@ -1,7 +1,7 @@
 # R-0014 — Classic content pack and semantic playable start
 
 - Task: [M3-02A](../../tasks/M3-02A.md)
-- Status: implementation candidate; independent review pending
+- Status: accepted M3-02A evidence
 - ROM: accepted PAL SHA-256 `a1105819...fd4e`
 - Pack rules: `tests/manifests/content/classic-crawler-dragster-pack.json`
 
@@ -82,3 +82,9 @@ On exact correction `c86874d`, debug and sanitizer suites each pass 296/296
 3226/3227/3228 pass (`80a0fcba...992a`), and the ROM-absent continuous case at
 3213/3453 passes (`dc7a2d69...a7eb`). No expected payload or extraction rule
 changed.
+
+The exact integrated candidate `cd37469` passed the same 296/296 debug and
+sanitizer suites locally and hosted run 34685007265 on macOS 15 and Ubuntu
+24.04, including Linux sanitizers. The independent finding, withheld frame-3212
+restore and correction recheck are recorded in
+[M3-02A-review](../../tasks/M3-02A-review.md).

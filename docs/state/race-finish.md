@@ -35,8 +35,12 @@ The shared race-timer digits at `$7E0E19`–`$7E0E29` continue advancing during
 the 240-frame finish display. They are not the stored player time printed on
 the results screen: continuous results show `0:33.57`, while the shared digits
 reach 0:38.3 plus 4/5; the variation results show `0:35.66`, while the shared
-digits continue to 0:40.4 plus 4/5. The per-rider stored-time layout is not yet
-identified.
+digits continue to 0:40.4 plus 4/5. The per-rider stored-time layout was not yet
+identified by M3-00. M3-01's additive [R-0013](../research/R-0013-native-finish-reference-freeze.md)
+locates the interleaved digit words at `$7E0E3F`–`$7E0E51` and persisted u16
+centisecond values at `$77:0755/$77:07BF` (with identical copies at
+`$77:0769/$77:07D3`). The tested player values are 3357 and 3566; the opponent
+value is 3358 in both.
 
 ## State-format consequence
 

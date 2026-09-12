@@ -29,7 +29,7 @@ digest `72f618f2...b1f`.
 
 At `$81:B3D3`, the original loads a little-endian word from
 `$7F:000F + X`, stores it at the current staging destination and advances X by
-the current `$0236`. Every one of the 347 watched loads in frames 1329–139
+the current `$0236`. Every one of the 347 watched loads in frames 1329–1339
 equals the same word in the independently decoded 33,815-byte track entry. In
 frame 1334 all 33/33 words agree; source X spans `$8004`–`$801C` and the
 destination spans `$0437`–`$0477`. `$81:B31C` constructs its source from a

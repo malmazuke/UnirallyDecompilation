@@ -52,6 +52,9 @@ First implementation milestone: M0 repeatable laboratory. First gameplay feasibi
 
 ## Next work
 
+For the next Sol coordinator, start with [the compact handover](../tasks/NEXT_SESSION.md).
+The prior Astra run is complete; no conversation replay is required.
+
 **M2 continuation resumed on Astra with sequential Sol review.** The recovered
 motion approval is closed with224/224 final checks; native speed has fresh Sol
 approval and debug/sanitizer evidence. Contact and input/timer remain approved.

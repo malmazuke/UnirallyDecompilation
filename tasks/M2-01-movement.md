@@ -1,11 +1,13 @@
 # M2-01 movement implementation — semantic autonomous update
 
 Status: review checkpoint; movement_impl (Sol/medium) stopped at the usage guardrail.
-Provider: OpenAI. Coordinator Astra (current-session exception); worker Sol,
-medium reasoning, compact fresh context. No additional child workers.
+Provider: OpenAI. Previous coordinator Astra; next user-initiated continuation
+uses Sol/medium per [the compact handover](NEXT_SESSION.md). Workers use Sol/medium
+with compact fresh context. No additional child workers.
 Base: `f6ca7f1c6e90aad896f5694a4493b13ff101e509`, branch
 `codex/M2-01-movement`, isolated `.worktrees/m2-01-movement`.
-Same work-session quota baseline3%, discretionary boundary13%, reserve20%;
+Previous run: quota baseline3%, checkpoint13%. On the next user-initiated run,
+measure a fresh baseline under D-0004; keep its10-point allowance and20% reserve;
 checkpoint at least every10min and before expensive experiments. No purchases.
 
 ## Outcome and ownership
@@ -26,7 +28,7 @@ Read AGENTS/STATE/workflow, M2-01, R-0010, all R-0011 research, and the componen
 headers/handoffs. Motion research9b840a8 plus completed handoffc025318 is approved;
 speed68fcdd9 is independently approved. Input/contact/sampling/progress approved
 as recorded in M2-01A. Exact combined local component suite7ce2ba5 passed259/259;
-final integration candidatef6ca7f1 is in final checks/CI. No gameplay acceptance.
+final candidatef6ca7f1 passed macOS/Linux CI and merged through PR2. No gameplay acceptance.
 
 ## Interfaces and evidence
 
@@ -54,8 +56,9 @@ execution, and no silently assumed SRAM/seed values.
 New primary.case.json uses schema_version1, kind native_movement_case and
 replay/expected/runtime each {path,sha256}, binding existing frozen primary
 replay/expected files and generated runtime metadata. Coordinator CLI command
-candidate20d3816 implements this interface and is independently reviewed
-separately; merge that branch only after coordinator supplies approval.
+corrected candidate758363c implements this interface and was independently
+approved; combined candidate4ef64d5 merged through PR3 as628efd7. The worker
+base already contains the command fixes.
 
 Existing ignored source artifacts can be read in .worktrees/m2-01a-motion,
 m2-01a-contact, m2-01a-speed, m2-01 and m2-01-sampling-review. Each has its own

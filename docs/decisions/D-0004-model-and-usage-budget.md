@@ -64,7 +64,9 @@ Opus as the provisional routine coordinator/worker choice. Keep the coordinator
 stable and use compact, same-provider frontier consultations when justified.
 Do not start every task on a frontier model merely to plan it before switching.
 
-User adjustment: the current OpenAI continuation stays on Astra as coordinator.
+User adjustment: the completed OpenAI run kept Astra as coordinator. At its
+clean checkpoint, the user requested preparation for a cheaper coordinator; the
+next continuation starts on Sol using tasks/NEXT_SESSION.md.
 The new-session default does not require a mid-task coordinator switch. Bounded
 Sol workers remain available under the existing scope and quota rules. This is
 a continuity preference, not a measured claim that switching models would cost

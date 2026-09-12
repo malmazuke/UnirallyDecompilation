@@ -444,3 +444,62 @@ values are `a669496e...28b` and `df8cf245...f8c`.
 
 This section is the worker's CI-correction handoff, not an approval. A fresh
 hosted run and independent review remain required.
+
+## Hosted-CI portability correction review — candidate `a1730b5`
+
+- Correction candidate: `a1730b58f011883da068b94f44ccc780d9760fe1`
+- Behavioral diff reviewed: `ff38673..a1730b5` (implementation commit
+  `6300e70`)
+- Reviewer: fresh OpenAI Codex Sol/medium session
+- Worktree/branch: `.worktrees/m3-02-portability-review`,
+  `review/M3-02-portability`
+- Date: 12 September 2026 AEST
+- Verdict: **approved; no material finding in the portability correction**
+
+### Source and semantic review
+
+All five warned plane-byte expressions now convert the fetched `uint8_t` to
+`unsigned` before the shift. For the complete input domain the old promoted
+left operand was a non-negative `int` in 0--255 and the shift count is 0--7;
+the new unsigned operand therefore produces the same shifted value. The
+subsequent one-bit mask, plane placement, OR accumulation and final eight-bit
+narrowing are unchanged. No tile address, index, ordering, state or
+serialization code changed.
+
+The added ROM-free result-render check reaches both shift endpoints in the
+8bpp decoder: `$80` changes pixel 0, `$01` changes pixel 7, and the latter does
+not change pixel 0. The 4bpp decoder does not receive an equally direct new
+non-zero endpoint assertion, but the correction there is the identical
+value-preserving conversion and the warning-as-error GCC build compiles all
+four sites. Existing presentation rendering checks continue to exercise the
+complete renderer.
+
+One non-material wording correction remains for the task/research handoff:
+the unsigned shift count does not itself convert the promoted left operand.
+The old shift result had type `int`; GCC diagnosed its later usual-arithmetic
+conversion when combined with the unsigned `1U` mask. The implementation fix
+and its behavioral justification remain correct.
+
+### Independent checks
+
+On the exact clean candidate, local AppleClang warning-as-error builds passed
+for `lab-debug` and `lab-sanitize`. In each preset the focused
+`classic_content_pack_identity_rejection` and
+`presentation_gather_mapping_and_determinism` CTests passed 2/2. The build
+report SHA-256 values are debug `ea54e18f...3a20` and sanitizer
+`d1df962f...ac30`; both reports bind clean source
+`a1730b58f011883da068b94f44ccc780d9760fe1`.
+
+Fresh hosted Actions run `34696268126` then passed at the same candidate SHA.
+The Ubuntu 24.04 job passed the warning-as-error debug build and all synthetic
+checks, followed by the Linux sanitizer build and suite that had failed at
+`ff38673`: 278/278 Python records, all 19 CTests (including the presentation
+test) and three-process repeatability. The macOS 15 job also passed its debug
+build and full synthetic suite. This directly establishes that the original
+GCC `-Wsign-conversion` failure is corrected; no warning suppression or build
+flag change appears in the diff.
+
+`git diff --check ff38673..a1730b5` passed. The five-file diff is text-only;
+the only implementation/test changes are the planar-byte conversions and the
+endpoint assertions. No ROM, pack, fixture, expected image, threshold or
+generated artifact is tracked by the correction.

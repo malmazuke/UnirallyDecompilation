@@ -327,3 +327,20 @@ The correction changes no movement structures or serialization source.
 Finish/restore equality and the renderer's authored before/after serialization
 check passed. `git diff --check 65b49fa..3eb0879` passed; the 14-file diff is
 text-only and adds no tracked ROM, pack, state, capture, or rendered image.
+
+## Second correction response — contract identity seam
+
+The checker now validates every top-level field against the one supported
+presentation contract, including exact source/profile, sampling schema/phase,
+state fields, logical entries and omissions. New explicit Classic pack
+profile/start/rules declarations are cross-checked against the independently
+validated pack and its entry inventory before build or render.
+The exact seven-case array is digest-pinned as well, preventing a shortened or
+self-consistently replaced suite.
+
+ROM-free subtests mutate every formerly ignored declaration independently.
+Each returns invalid input with report status `failed` and no visual result;
+the reviewer's exact all-zero source mutation now fails at
+`source_rom_sha256`. The unmodified seven visual expectations and all gameplay/
+pack identities are preserved. Fresh independent re-review is still required;
+this response does not approve or accept M3-02.

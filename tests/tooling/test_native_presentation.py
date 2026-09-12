@@ -1,9 +1,13 @@
+import argparse
 import copy
+import contextlib
+import io
 import json
 from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tools"))
 from unirally_lab.content import ppu
@@ -22,24 +26,62 @@ class NativePresentationCommandTests(unittest.TestCase):
         self.assertFalse(failed["passed"])
 
     def test_manifest_fixture_and_numeric_boundaries_are_validated(self):
-        case = {"id": "boundary", "frame": 3678,
-                "state_file": "states/state.bin", "state_sha256": "a" * 64,
-                "reference_file": "frames/frame.png", "reference_png_sha256": "b" * 64,
-                "camera_x": -(1 << 31), "bg1_scroll": [-32768, 32767],
-                "bg2_scroll": [0, 0], "comparison_rect": [0, 0, 256, 224],
-                "maximum_mismatch_fraction": 0.15}
-        contract = {"schema_version": 1, "kind": "native_presentation_contract",
-                    "frame_size": [256, 224], "pixel_format": "rgb888",
-                    "reference_cases": [case]}
-        with tempfile.TemporaryDirectory() as temp:
-            path = Path(temp) / "manifest.json"
-            path.write_text(json.dumps(contract))
-            self.assertEqual(presentation.load_contract(path)["reference_cases"][0]["frame"], 3678)
-            bad = copy.deepcopy(contract)
-            bad["reference_cases"][0]["state_file"] = "../state.bin"
-            path.write_text(json.dumps(bad))
-            with self.assertRaises(presentation.PresentationContractError):
-                presentation.load_contract(path)
+        root = Path(__file__).resolve().parents[2]
+        tracked = root / "tests/manifests/presentation/classic-crawler-dragster-v1.json"
+        contract = presentation.load_contract(tracked)
+        mutated_fields = (
+            "profile_id", "source_rom_sha256", "classic_pack_profile_id",
+            "classic_pack_start_state_id", "classic_pack_rules_sha256",
+            "sampling_schema", "sampling_phase", "state_fields",
+            "logical_entries", "declared_omissions", "reference_cases",
+        )
+        with tempfile.TemporaryDirectory(dir=root / "artifacts") as temp:
+            temp_path = Path(temp)
+            for index, field in enumerate(mutated_fields):
+                with self.subTest(field=field):
+                    bad = copy.deepcopy(contract)
+                    if field == "source_rom_sha256":
+                        bad[field] = "0" * 64
+                    elif isinstance(bad[field], list):
+                        bad[field] = list(reversed(bad[field]))
+                    else:
+                        bad[field] += ".unsupported"
+                    manifest = temp_path / f"{field}.json"
+                    manifest.write_text(json.dumps(bad))
+                    artifacts = temp_path / f"run-{index}"
+                    args = argparse.Namespace(
+                        manifest=str(manifest), fixtures=str(temp_path),
+                        content_pack=str(temp_path / "unused.pack"),
+                        preset="lab-debug", artifacts=str(artifacts),
+                        report=str(artifacts / "report.json"), timeout=10,
+                        task="authored-presentation-identity")
+                    with contextlib.redirect_stderr(io.StringIO()), \
+                         patch.object(presentation.reports, "print_summary"):
+                        code = presentation.cmd_presentation_check(args)
+                    self.assertEqual(code, 3)
+                    report = json.loads((artifacts / "report.json").read_text())
+                    self.assertEqual(report["status"], "failed")
+                    self.assertNotIn("visual_results", report)
+
+        inspected = {
+            "source_rom_sha256": contract["source_rom_sha256"],
+            "profile_id": contract["classic_pack_profile_id"],
+            "start_state_id": contract["classic_pack_start_state_id"],
+            "rules_sha256": contract["classic_pack_rules_sha256"],
+            "entries": [{"id": value}
+                        for value in contract["logical_entries"]],
+        }
+        presentation.validate_pack_binding(
+            contract, inspected, contract["classic_pack_rules_sha256"])
+        for field in ("source_rom_sha256", "profile_id", "start_state_id",
+                      "rules_sha256"):
+            with self.subTest(pack_field=field):
+                bad_pack = copy.deepcopy(inspected)
+                bad_pack[field] = "unsupported"
+                with self.assertRaises(presentation.PresentationContractError):
+                    presentation.validate_pack_binding(
+                        contract, bad_pack,
+                        contract["classic_pack_rules_sha256"])
 
     def test_ppm_parser_and_png_decoder_form_a_rom_free_image_seam(self):
         rgb = bytes((index % 251 for index in range(256 * 224 * 3)))

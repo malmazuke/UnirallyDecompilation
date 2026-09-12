@@ -6,6 +6,7 @@ or game content. Authorized fixtures remain below ignored ``local/`` or
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import math
 from pathlib import Path
@@ -21,6 +22,53 @@ from . import finish, protocol
 
 ROOT = reports.repo_root()
 SHA256 = re.compile(r"[0-9a-f]{64}\Z")
+SUPPORTED_TOP_LEVEL = {
+    "schema_version": 1,
+    "kind": "native_presentation_contract",
+    "profile_id": "classic.pal.crawler.dragster.presentation.v1",
+    "source_rom_sha256":
+        "a1105819d48c04d680c8292bbfa9abbce05224f1bc231afd66af43b7e0a1fd4e",
+    "classic_pack_profile_id": "classic.pal.crawler.dragster.v1",
+    "classic_pack_start_state_id": "classic.crawler.dragster.race-start.v1",
+    "classic_pack_rules_sha256":
+        "70712c470db436ad95b02d3a6d51f737be7bb5b27689ca0d99a8297bac31d768",
+    "sampling_schema": "native-presentation-sample-v1",
+    "sampling_phase": "end_of_pal_game_update",
+    "frame_size": [256, 224],
+    "pixel_format": "rgb888",
+    "state_fields": [
+        "frame", "race_phase", "race_outcome", "timer_digits",
+        "player.position_x", "player.position_y", "player.pose_index",
+        "player.reflected", "opponent.position_x", "opponent.position_y",
+        "opponent.pose_index", "opponent.reflected", "camera_x",
+        "bg1_scroll_x", "bg1_scroll_y", "bg2_scroll_x", "bg2_scroll_y",
+    ],
+    "logical_entries": [
+        "physics.track.dragster.data",
+        "presentation.track.dragster.bg1-tiles.v1",
+        "presentation.track.dragster.bg2-tiles.v1",
+        "presentation.track.dragster.bg2-map.v1",
+        "presentation.classic.palette.v1",
+        "presentation.classic.font.v1",
+        "presentation.rider.mike.race-tiles.v1",
+        "presentation.result.classic.font-layout.v1",
+        "presentation.effect.go-window.v1",
+        "presentation.effect.winner-window.v1",
+        "presentation.result.classic.base-vram.v1",
+        "presentation.result.classic.palette.v1",
+        "presentation.result.classic.palette-tail.v1",
+    ],
+    "declared_omissions": [
+        "windowed GO letters",
+        "four-line fixed-colour and colour-math band",
+        "per-scanline register changes beyond the frozen constant scroll sample",
+        "mosaic and interlace",
+        "sprite-per-line hardware limits",
+    ],
+}
+SUPPORTED_TOP_LEVEL_KEYS = {*SUPPORTED_TOP_LEVEL, "reference_cases"}
+SUPPORTED_CASES_SHA256 = (
+    "384e641180490fa367a6702c07ccc178b7733334730506e41af0d88293d1cae5")
 
 
 class PresentationContractError(ValueError):
@@ -41,11 +89,12 @@ def _fixture_name(value: object, label: str) -> str:
 
 def load_contract(path: Path) -> dict:
     data = json.loads(path.read_text(encoding="utf-8"))
-    if ((data.get("schema_version"), data.get("kind")) !=
-            (1, "native_presentation_contract")):
-        raise PresentationContractError("unsupported presentation contract")
-    if data.get("frame_size") != [256, 224] or data.get("pixel_format") != "rgb888":
-        raise PresentationContractError("unsupported presentation pixel contract")
+    if not isinstance(data, dict) or set(data) != SUPPORTED_TOP_LEVEL_KEYS:
+        raise PresentationContractError("unsupported presentation contract fields")
+    for field, expected in SUPPORTED_TOP_LEVEL.items():
+        if type(data.get(field)) is not type(expected) or data.get(field) != expected:
+            raise PresentationContractError(
+                f"unsupported presentation contract identity: {field}")
     cases = data.get("reference_cases")
     if not isinstance(cases, list) or not cases:
         raise PresentationContractError("presentation contract has no cases")
@@ -79,7 +128,32 @@ def load_contract(path: Path) -> dict:
         limit = case.get("maximum_mismatch_fraction")
         if type(limit) is not float or not math.isfinite(limit) or not 0 <= limit <= 1:
             raise PresentationContractError(f"{case_id} has an invalid mismatch limit")
+    encoded_cases = json.dumps(
+        cases, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    if hashlib.sha256(encoded_cases).hexdigest() != SUPPORTED_CASES_SHA256:
+        raise PresentationContractError(
+            "unsupported presentation reference-case identity")
     return data
+
+
+def validate_pack_binding(contract: dict, inspected: dict, rules_hash: str) -> None:
+    expected = {
+        "source_rom_sha256": contract["source_rom_sha256"],
+        "profile_id": contract["classic_pack_profile_id"],
+        "start_state_id": contract["classic_pack_start_state_id"],
+        "rules_sha256": contract["classic_pack_rules_sha256"],
+    }
+    for field, value in expected.items():
+        if inspected.get(field) != value:
+            raise PresentationContractError(
+                f"Classic pack differs from presentation contract: {field}")
+    if rules_hash != contract["classic_pack_rules_sha256"]:
+        raise PresentationContractError(
+            "active extraction rules differ from presentation contract")
+    pack_entries = [entry.get("id") for entry in inspected.get("entries", [])]
+    if any(logical_id not in pack_entries for logical_id in contract["logical_entries"]):
+        raise PresentationContractError(
+            "Classic pack lacks a presentation contract logical entry")
 
 
 def parse_ppm(data: bytes) -> bytes:
@@ -131,7 +205,8 @@ def cmd_presentation_check(args) -> int:
         bound_inputs.append(("presentation_manifest", manifest_path, manifest_hash))
         pack_path = Path(args.content_pack).resolve()
         rules, rules_hash = packmod.load_rules(root / packmod.RULES_PATH)
-        packmod.validate_pack(pack_path.read_bytes(), rules, rules_hash)
+        inspected = packmod.validate_pack(pack_path.read_bytes(), rules, rules_hash)
+        validate_pack_binding(contract, inspected, rules_hash)
         pack_hash = reports.file_sha256(pack_path)
         rep.add_input("classic_pack", pack_path, pack_hash)
         bound_inputs.append(("classic_pack", pack_path, pack_hash))

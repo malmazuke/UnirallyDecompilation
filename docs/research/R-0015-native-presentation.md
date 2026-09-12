@@ -4,6 +4,10 @@
 - Status: contract frozen; implementation and private evidence submitted for review
 - ROM/core: accepted PAL identity and pinned bsnes identity from R-0008/R-0013
 - Machine contract: `tests/manifests/presentation/classic-crawler-dragster-v1.json`
+- Session-only usage override: during the second correction run the user raised
+  its ceiling from 24% to 50% at 21% used, retaining the final 20% review/
+  recovery reserve and the bans on resets and purchases. This does not alter
+  D-0004 or any future session limit.
 
 ## Pre-implementation reproduction
 
@@ -395,3 +399,22 @@ results. Three ROM-free tooling tests cover exact threshold pass/fail behavior,
 fixture/numeric validation, and PPM/PNG parsing. A deliberate 0.1% mutation of
 frame 1600 reports 36/26,656 and exits 1. The tracked debug and sanitizer runs
 both pass all seven cases without changing any prior limit.
+
+The returned re-review exposed that hashing the contract file did not itself
+authenticate its declarations. The command now treats the contract as a
+closed compatibility boundary. It exactly validates the presentation profile,
+PAL source hash, sampling schema/phase, ordered semantic state fields, ordered
+logical entries, omissions and pixel contract. The manifest also names the
+accepted Classic pack profile, start-state ID and extraction-rules SHA-256;
+those fields and the required logical-entry subset are compared with the
+validated pack before the build starts. Unknown top-level fields fail too.
+The canonicalized seven-case array is pinned by SHA-256, so a shortened,
+reordered or self-consistently relabelled visual suite is not accepted.
+
+A single ROM-free authored test mutates each previously ignored top-level
+identity independently, including the reviewer's all-zero source hash, and
+requires exit 3, report status `failed`, and no `visual_results`. It also
+mutates each pack-side source/profile/start/rules identity. The exact reviewer
+reproduction now fails before pack access or rendering with `unsupported
+presentation contract identity: source_rom_sha256`; the seven unmodified
+visual expectations remain byte-for-byte and numerically unchanged.

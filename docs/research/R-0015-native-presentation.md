@@ -4,10 +4,11 @@
 - Status: contract frozen; implementation and private evidence submitted for review
 - ROM/core: accepted PAL identity and pinned bsnes identity from R-0008/R-0013
 - Machine contract: `tests/manifests/presentation/classic-crawler-dragster-v1.json`
-- Session-only usage override: during the second correction run the user raised
-  its ceiling from 24% to 50% at 21% used, retaining the final 20% review/
-  recovery reserve and the bans on resets and purchases. This does not alter
-  D-0004 or any future session limit.
+- Session-only usage override: during the second correction run the user first
+  raised its ceiling from 24% to 50% at 21% used, then removed the percentage
+  stop/reserve for the active objective through remaining M3. Reset redemption,
+  purchases, publication and deployment remain prohibited; future tasks retain
+  evidence-first commits and independent review under D-0004.
 
 ## Pre-implementation reproduction
 

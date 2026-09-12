@@ -247,9 +247,11 @@ def cmd_restore_check(args: argparse.Namespace) -> int:
     report_path = Path(args.report).resolve() if args.report else artifacts / "report.json"
     reserved = {"build.json", "baseline-inputs.txt", "baseline.txt",
                 "baseline.stderr.txt"}
+    report_first = report_path.relative_to(artifacts).parts[0] if report_path.is_relative_to(artifacts) else ""
     if (not artifacts.is_relative_to(root / "artifacts") or artifacts == root / "artifacts"
             or not report_path.is_relative_to(artifacts) or report_path == artifacts
-            or report_path.relative_to(artifacts).parts[0] in reserved
+            or report_first in reserved
+            or report_first.startswith(("prefix-", "suffix-", "state-"))
             or artifacts.exists() or not math.isfinite(args.timeout) or args.timeout <= 0):
         print("native restore-check requires a fresh directory under artifacts/, its report inside that directory, and a positive timeout", file=sys.stderr)
         return 3
@@ -304,6 +306,10 @@ def cmd_restore_check(args: argparse.Namespace) -> int:
                 suffix_stream = artifacts / f"suffix-{frame}-inputs.txt"
                 prefix_stream.write_text(protocol.input_text(replay, reference["initial_frame"], frame))
                 suffix_stream.write_text(protocol.input_text(replay, frame, reference["last_frame"]))
+                rep.add_input(f"prefix_inputs_{frame}", prefix_stream,
+                              reports.file_sha256(prefix_stream))
+                rep.add_input(f"suffix_inputs_{frame}", suffix_stream,
+                              reports.file_sha256(suffix_stream))
                 status, prefix_rows, prefix_states = native_process(
                     runner, seed, content, prefix_stream, args.timeout, artifacts,
                     f"prefix-{frame}", reference["initial_frame"], frame, rep)

@@ -264,6 +264,8 @@ class NativeCommandTests(unittest.TestCase):
         self.assertEqual(rep['fresh_processes'], 3)
         self.assertEqual(rep['save_frames'], [11])
         self.assertEqual(rep['boundaries']['11']['saved_state_bytes'], 333)
+        self.assertIn('prefix_inputs_11', rep['inputs'])
+        self.assertIn('suffix_inputs_11', rep['inputs'])
         self.assertEqual((art / 'state-11.bin').read_bytes(), state_bytes(11))
         calls = runner.call_args_list
         self.assertEqual(calls[0].args[0][1:3], ['--seed', str(self.seed)])
@@ -326,6 +328,10 @@ class NativeCommandTests(unittest.TestCase):
     def test_restore_check_rejects_report_outside_artifacts(self):
         code, _, builder, runner, _ = self.invoke_restore(
             report=str(self.root / 'outside.json'))
+        self.assertEqual(code, 3); builder.assert_not_called(); runner.assert_not_called()
+        reserved = self.root / 'artifacts' / 'reserved-restore'
+        code, _, builder, runner, _ = self.invoke_restore(
+            artifacts=str(reserved), report=str(reserved / 'prefix-11.txt'))
         self.assertEqual(code, 3); builder.assert_not_called(); runner.assert_not_called()
 
     def test_restore_check_propagates_crash_timeout_and_build_failure(self):

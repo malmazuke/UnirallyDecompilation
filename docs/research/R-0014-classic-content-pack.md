@@ -112,3 +112,8 @@ base-VRAM entry, SHA-256 `c1f19c30...e04f4`, from four copier runs that precede
 the already packed result DMAs. This makes the additive inventory twenty-three
 entries under extraction-rules SHA-256 `43d14175...82a53`; earlier logical
 payload identities remain unchanged.
+
+The final copier association also adds the later 216-byte stable-result CGRAM
+payload (`155799e6...0e18`) as a distinct entry; the earlier 216-byte transition
+palette is retained. The resulting inventory is twenty-four entries under
+rules SHA-256 `11aeefa1...265c3`.

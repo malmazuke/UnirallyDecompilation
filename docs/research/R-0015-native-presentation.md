@@ -237,3 +237,11 @@ pieces. Before its consumer, the manifests additively freeze it as
 `presentation.result.classic.base-vram.v1`. The twenty-three-entry extraction
 rules SHA-256 is `43d14175...82a53`; all prior payload identities and the 15%
 gate remain unchanged.
+
+The same copier capture corrects the first palette hypothesis. The 216-byte
+DMA at frame 3529 is a transition palette; frames 3557–3558 later copy 216
+bytes from `$04:8700` to CGRAM indices 0–107. The later payload begins with
+stable gray `$39CE`, has SHA-256 `155799e6...0e18`, and is additively frozen as
+`presentation.result.classic.palette.v1`. The inventory is twenty-four entries
+under rules SHA-256 `11aeefa1...265c3`; the earlier transition payload remains
+identified rather than silently replaced.

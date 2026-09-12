@@ -289,7 +289,7 @@ void update_idle_pose(RiderMovementState& rider,bool race_active,bool opponent,
         use_table=true;
     }
     const auto delta=use_table
-        ? static_cast<std::int8_t>(table[static_cast<unsigned>(reference)])
+        ? static_cast<std::int8_t>(table[static_cast<std::size_t>(reference)])
         : static_cast<std::int16_t>(idle.velocity);
     idle.wobble_offset=add_word(idle.wobble_offset,static_cast<std::uint16_t>(delta));
 }

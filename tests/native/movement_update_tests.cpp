@@ -16,7 +16,11 @@ int main() {
             unirally::finish_speed_toward_zero(10)==0 &&
             unirally::finish_speed_toward_zero(9)==9 &&
             static_cast<std::int16_t>(unirally::finish_speed_toward_zero(
-                static_cast<std::uint16_t>(-11)))==-1,
+                static_cast<std::uint16_t>(-11)))==-1 &&
+            static_cast<std::int16_t>(unirally::finish_speed_toward_zero(
+                static_cast<std::uint16_t>(-10)))==-10 &&
+            static_cast<std::int16_t>(unirally::finish_speed_toward_zero(
+                static_cast<std::uint16_t>(-9)))==-9,
             "finish speed changes only without crossing zero");
     unirally::MovementState state{};
     state.frame = 1533;

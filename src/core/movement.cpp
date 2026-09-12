@@ -69,7 +69,9 @@ bool negative(std::uint16_t value) { return (value & 0x8000U) != 0; }
 std::uint16_t speed_toward_zero(std::uint16_t velocity, std::int16_t amount) {
     const auto speed=static_cast<std::int16_t>(velocity);
     if(speed>=amount)return static_cast<std::uint16_t>(speed-amount);
-    if(speed<=-amount)return static_cast<std::uint16_t>(speed+amount);
+    // PAL CMP #$FFF6 / BPL keeps negative equality unchanged; its positive
+    // CMP #10 / BMI boundary is intentionally asymmetric.
+    if(speed < -amount)return static_cast<std::uint16_t>(speed+amount);
     return velocity;
 }
 

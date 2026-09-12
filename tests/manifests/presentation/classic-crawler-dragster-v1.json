@@ -37,7 +37,8 @@
     "presentation.effect.go-window.v1",
     "presentation.effect.winner-window.v1",
     "presentation.result.classic.base-vram.v1",
-    "presentation.result.classic.palette.v1"
+    "presentation.result.classic.palette.v1",
+    "presentation.result.classic.palette-tail.v1"
   ],
   "reference_cases": [
     {

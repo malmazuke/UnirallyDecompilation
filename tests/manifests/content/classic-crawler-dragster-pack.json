@@ -32,6 +32,7 @@
 {"id":"presentation.effect.go-window.v1","source":{"kind":"raw","pieces":[{"file_offset":690825,"length":898}]},"size":898,"sha256":"33f19daed02ec2f968d1a1ba27675a4da794c96772af28edfc1e321e113c4b29"},
 {"id":"presentation.effect.winner-window.v1","source":{"kind":"raw","pieces":[{"file_offset":704310,"length":898}]},"size":898,"sha256":"b6fddc697a55984d607220aff50ab465881297de3f94fd9e434c0c9be3d4df20"},
 {"id":"presentation.result.classic.base-vram.v1","source":{"kind":"raw","pieces":[{"file_offset":240088,"length":8192},{"file_offset":216248,"length":2816},{"file_offset":155640,"length":8960},{"file_offset":134072,"length":21568}]},"size":41536,"sha256":"c1f19c30beb818f2d65e524cb6894ce55c52f2cb6ada6a5aa92b47672b7e04f4"},
-{"id":"presentation.result.classic.palette.v1","source":{"kind":"raw","pieces":[{"file_offset":132864,"length":216}]},"size":216,"sha256":"155799e64a81640cf5ad05a9c43b83062d0c32aa5249add78d522a5f55a00e18"}
+{"id":"presentation.result.classic.palette.v1","source":{"kind":"raw","pieces":[{"file_offset":132864,"length":216}]},"size":216,"sha256":"155799e64a81640cf5ad05a9c43b83062d0c32aa5249add78d522a5f55a00e18"},
+{"id":"presentation.result.classic.palette-tail.v1","source":{"kind":"raw","pieces":[{"file_offset":131296,"length":32},{"file_offset":132832,"length":32},{"file_offset":132800,"length":32},{"file_offset":132768,"length":32}]},"size":128,"sha256":"cd7b9fac3c3ec53d74450dcb28da0f53a09c927826ca3753ff047851c2b20641"}
   ]
 }

@@ -71,7 +71,7 @@ struct RequiredEntry {
   std::size_t size;
   std::string_view sha256;
 };
-const std::array<RequiredEntry, 24> required{
+const std::array<RequiredEntry, 25> required{
     {{"physics.track.dragster.data", 33815,
       "8f5cef67dc57977af8ff614b8178514a26e9fe0059e02ed27aad5978185580d4"},
      {"physics.rider.collision-poses", 32768,
@@ -119,7 +119,9 @@ const std::array<RequiredEntry, 24> required{
      {"presentation.result.classic.base-vram.v1", 41536,
       "c1f19c30beb818f2d65e524cb6894ce55c52f2cb6ada6a5aa92b47672b7e04f4"},
      {"presentation.result.classic.palette.v1", 216,
-      "155799e64a81640cf5ad05a9c43b83062d0c32aa5249add78d522a5f55a00e18"}}};
+      "155799e64a81640cf5ad05a9c43b83062d0c32aa5249add78d522a5f55a00e18"},
+     {"presentation.result.classic.palette-tail.v1", 128,
+      "cd7b9fac3c3ec53d74450dcb28da0f53a09c927826ca3753ff047851c2b20641"}}};
 
 std::array<std::uint8_t, 32> hex_digest(std::string_view text) {
   if (text.size() != 64)
@@ -242,7 +244,7 @@ ClassicContentPack::ClassicContentPack(const std::filesystem::path &path) {
         "Classic pack source ROM identity is unsupported");
   if (rules_identity !=
       hex_digest(
-          "11aeefa1daef1ce95afc5145995af65d556989897f43072de19953d5fd8265c3"))
+          "70712c470db436ad95b02d3a6d51f737be7bb5b27689ca0d99a8297bac31d768"))
     throw std::invalid_argument(
         "Classic pack extraction-rules identity is unsupported");
   if (in.text() != "classic.pal.crawler.dragster.v1")

@@ -286,3 +286,24 @@ primary-source direct-colour formula worsens the result to 57,344/57,344
 (100%). The exact formula and add/halve arithmetic now have authored native
 checks, while the next experiment recovers stable CGRAM indices 108--255 and
 then applies the listed OBJ descriptors with the observed TM/TS priorities.
+
+The existing aggregate port log could not preserve repeated writer ordering,
+so a bounded follow-up captured every execution of `$82:B18A`, `$82:B19D`
+and `$82:B1A3` over frames 3454--3561. Its ignored `access.json` has SHA-256
+`e5d0c453be1d0aa78d03e30591f7c45e0db376aa6ca8aa5e442908acd9879c77`;
+all 108 frames completed with unchanged ROM/core/script identities and no
+truncation. CGADD and paired low/high CGDATA stores show frame 3560 writing
+palettes 128--191, followed by frame 3561 writing palettes 208--255.
+
+The 128--143 source is the existing 32-byte Classic palette piece at file
+offset 131456. Palettes 144--191 repeat the existing piece at 131968. The
+retained 112--127 source is file offset 131296. The three 32-byte sources for
+208--255 are file offsets 132832, 132800 and 132768 in destination order.
+Their ordered 128-byte concatenation has SHA-256
+`cd7b9fac3c3ec53d74450dcb28da0f53a09c927826ca3753ff047851c2b20641`.
+This set was not present in the initial result inventory because
+it is written by CPU stores rather than the 216-byte DMA. Before a consumer,
+the extraction and presentation manifests therefore additively freeze it as
+`presentation.result.classic.palette-tail.v1`; no reference case or 15% limit
+changes. The resulting twenty-five-entry extraction rules have SHA-256
+`70712c470db436ad95b02d3a6d51f737be7bb5b27689ca0d99a8297bac31d768`.

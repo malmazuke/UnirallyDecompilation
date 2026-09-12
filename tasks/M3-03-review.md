@@ -448,3 +448,11 @@ Pre-commit app-debug and app-sanitize suites passed 283 Python tests, 20 CTests
 and three fresh processes. Exact correction commits and evidence are recorded
 in `tasks/M3-03.md` after the coherent commit. Fresh re-review and exact-head
 hosted CI remain required; this response does not approve M3-03.
+
+The exact round-2 behavioral correction is
+`457ba885f82856b5b328243ecffcacce03312bf5`. Both complete app suites,
+debug/sanitizer SDL dummy smokes, the sustained continuous-right diagnostic,
+all four real CLI timeout spellings and the private finish/presentation gates
+passed at that SHA. `tasks/M3-03.md` records exact commands and hashes. This
+documentation-only follow-up still requires independent re-review and hosted
+Linux/macOS evidence.

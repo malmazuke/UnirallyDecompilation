@@ -149,9 +149,10 @@ unchanged scheduler. It used rider-pose fallback on 1,419 redraws and had
 **zero identical consecutive fallback redraws while Racing** (longest such run
 zero). Across all phases it had 383 identical redraws and a longest run of 228,
 which the metric reports rather than misclassifying as the former race fallback
-freeze. The exact-candidate launch report is
-`artifacts/m3-03-correction-exact-continuous-right.json`; ignored artifacts are
-not tracked.
+freeze. The round-2 exact-candidate launch report is
+`artifacts/m3-03-r2-exact-continuous-right.json`; ignored artifacts are not
+tracked. Its scheduler happened to render all 2,146 update iterations, used
+fallback on 1,420 and retained zero identical fallback redraws while Racing.
 
 The review also reproduced `--timeout nan` escaping the bounded-process helper,
 losing the requested report and orphaning a child. Frontend argument validation

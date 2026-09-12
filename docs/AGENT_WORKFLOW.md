@@ -95,8 +95,15 @@ At implementation start, initialize a local Git repository if none exists. Recor
 - Retain old reference artifacts by hash. A baseline change needs an explained correction and independent confirmation; never overwrite the previous result in place.
 - Use revert commits for accepted changes that later prove wrong. Preserve failed task attempts for diagnosis; avoid force-pushing shared history.
 - Add milestone tags only when the gate is met, and link the evidence report from project state.
+- For this project's existing private `origin`, an accepted integration is not
+  complete until the coordinator pushes `main` and verifies `HEAD` equals
+  `origin/main`. Push an accepted milestone tag as part of the same completion
+  flow. Push task branches when the task's declared remote review or CI requires
+  them. A push failure is a reported synchronization failure, not permission to
+  describe an ahead-only local branch as fully complete. Never force-push or
+  change remote configuration/visibility under this standing authority.
 
-A remote repository is optional for early work. If one is established, use the same task record in the PR description, require checks/review on `main`, and use CI as specified in [build and validation](BUILD_AND_VALIDATION.md). A local integration report provides the equivalent review trail before hosting is configured.
+A remote repository is optional for early work. If one is established, use the same task record in the PR description, require checks/review on `main`, and use CI as specified in [build and validation](BUILD_AND_VALIDATION.md). A local integration report provides the equivalent review trail before hosting is configured. Pushing ordinary commits and tags to this project's already-configured private remote is source-control synchronization; creating a public release, changing visibility or deploying remains separately authorized work.
 
 ## Handoff and model switching
 

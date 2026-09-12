@@ -54,6 +54,17 @@ boundary and pass through2999 with five fresh processes; report
 Both baselines also remain identical to all13 frozen reference projections.
 Runtime metadata remains `a38d58f2...37da`; seed remains `7cd034fc...b4ab`.
 
+## Clean candidate validation
+
+Implementation commit `c4c88a4efb2afe3f3bc88662dcb27d7f732f79d9`
+passes the complete ROM-free suite **281/281** on clean source; report
+`artifacts/m2-02-clean-synthetic.json`, SHA-256
+`c13f6af3340214462dc285bcd491147d53feebf8f34b6ce39af0f8051c5851f6`.
+The three movement CTests pass under sanitizers with no diagnostics; sanitizer
+build report SHA-256 is
+`baf065e4bd8758ac0b6f53d5f443d261ef512563bedf3b6e01ba85677569b312`.
+Focused command tests pass19/19. No gameplay source or frozen expectation changed.
+
 ## Remaining gates
 
 Run the complete synthetic and sanitizer suites on a clean candidate, obtain an

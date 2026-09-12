@@ -96,6 +96,35 @@ int main() {
                                                          content);
   require(first.pixels == second.pixels);
   require(before == unirally::serialize_movement_state(state));
+
+  // The retained result copier resets VMADD at byte $7B00. With stable scroll
+  // 82, screen pixel (0,0) selects map row 10 and character 293; this byte is
+  // reachable only through the second half of that split run.
+  auto result_state = state;
+  result_state.finish.phase = unirally::RacePhase::ResultScreen;
+  result_state.finish.outcome = unirally::RaceOutcome::PlayerWon;
+  result[5208] = 'd';
+  result[5209] = 'r';
+  result[5210] = 'a';
+  result[5211] = 'g';
+  result[5212] = 's';
+  result[5213] = 't';
+  result[5214] = 'e';
+  result[5215] = 'r';
+  result[5216] = 0xff;
+  constexpr std::size_t visible_map_word = 8192 + 10 * 64;
+  result_base_vram[visible_map_word] = 0x25;
+  result_base_vram[visible_map_word + 1] = 0x01;
+  result_palette[2] = 0xff;
+  result_palette[3] = 0x7f;
+  const auto empty_result = unirally::render_dragster_headless(
+      {result_state, 0, 0, 0, 0, 0}, content);
+  result_base_vram[39814] = 0x80;
+  const auto split_result = unirally::render_dragster_headless(
+      {result_state, 0, 0, 0, 0, 0}, content);
+  require(empty_result.pixels[0] != split_result.pixels[0]);
+  require(before == unirally::serialize_movement_state(state));
+
   auto winner_state = state;
   winner_state.riders[0].pose.pose_index = 0x04fe;
   winner_state.riders[1].pose.pose_index = 0x037c;

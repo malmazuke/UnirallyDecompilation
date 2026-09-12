@@ -1,7 +1,7 @@
 # R-0015 — Native presentation contract and DRAGSTER gather
 
 - Task: [M3-02](../../tasks/M3-02.md)
-- Status: presentation contract frozen before native renderer implementation
+- Status: contract frozen; implementation and private evidence submitted for review
 - ROM/core: accepted PAL identity and pinned bsnes identity from R-0008/R-0013
 - Machine contract: `tests/manifests/presentation/classic-crawler-dragster-v1.json`
 
@@ -260,7 +260,7 @@ The wide result-register capture has access SHA-256
 `8ce9717076a75c10...`; the stable-only capture has SHA-256
 `7425d8a9d976438d...`. Bank-mirrored PPU writes establish the stable state:
 mode 3, BG1SC `$02`, BG2SC `$13`, BG12NBA `$23`, TM `$13`, TS `$10`,
-CGWSEL `$02`, CGADSUB `$7F`, OBSEL `$63`, BG1 vertical scroll 78 and all
+CGWSEL `$02`, CGADSUB `$7F`, OBSEL `$63`, BG1 vertical scroll 82 and all
 other scroll values zero. The final result map upload targets VRAM word
 `$1000`. The semantic reconstruction fills 1,024 words with `$004C`, then
 writes the title, `COMPLETE`, header, player/time and three `NO TIME` rows in
@@ -314,23 +314,50 @@ order: the stable 0--107 DMA, the stable-frame 108--111 cycle, retained
 and frame-3561 writes to 208--255. This improves frame 3679 from
 54,532/57,344 (95.10%) to 51,593/57,344 (89.97%).
 
-A final scroll-order capture then watched both mirrored scroll ports and the
-four writer PCs over frames 3556--3559. It passed every required identity and
-completeness check; `access.json` has SHA-256 beginning `906a4f8f56156408`.
-At frame 3559 `$80:F553` writes BG1 vertical low byte 82 and zero high byte,
-then `$80:F63E` writes low byte 78 and zero high byte. Thus the stable final
-vertical scroll is 78, not 82 or 76. The frame-3558 BG1 horizontal pair is
-zero. BG1SC `$02` selects a 32-by-64 map at word zero, BG12NBA `$23` selects
-BG1 8bpp tiles at word `$3000`, and TMW/TSW remain zero; none of these checks
-supports changing the current addressing or window enable.
+A first scroll-order reading used per-PC arrays and incorrectly treated their
+array order as a global execution order, producing the unsupported value 78.
+The closing capture instead watched both `$00:210E` and its `$80:210E` mirror
+in one run at frame 3559 and merged their records by frame and sequence. It
+passed every required identity/completeness check and has `access.json`
+SHA-256 `ad0dbcf1746874ddb73e9644c909add831ea9b5e51aeada94b57a2e44a8e04e8`.
+The unbanked writes are sequences 23/24 (78, 0), while the later banked writes
+are sequences 798/799 (82, 0). The stable BG1 vertical scroll is therefore 82;
+horizontal scroll is zero. BG1SC `$02` selects a 32-by-64 map at word zero,
+BG12NBA `$23` selects BG1 8bpp tiles at word `$3000`, and TMW/TSW remain zero.
 
 The stable-only log also closes display brightness: INIDISP advances through
 2, 4, 6, 8, 10, 12 and finally 14 at frame 3568, with no later write. Applying
 bsnes' per-channel `round(brightness * channel / 15)` rule reduces the exact
-frame-3679 mismatch to 37,872/57,344 (66.04%). Title and text placement and
-colours visibly align, but the broad BG1 field still differs and the frozen
-15% gate remains failed. The next bounded evidence step is to compare the
-visible BG1 map tile IDs 284--319 and their priority bits against the ordered
-`$82:B296` retained-VRAM source/destination runs, particularly the character
-origin `(map tile + $180) & $3FF`; only after that association should the
-eleven already captured result OBJ descriptors be composed on main/subscreen.
+frame-3679 mismatch to 37,872/57,344 (66.04%).
+
+## Stable-result closure and candidate evidence
+
+A bounded read-only Astra consultation rechecked the existing captures and
+identified two ordering errors plus one semantic string error; it changed no
+files. Frame 3546 `$82:B1E0` resets VMADD to word `$3D80` partway through the
+source run previously described as one 21,568-byte destination. The logical
+`base-vram` payload remains unchanged, but its first 8,000 bytes are copied to
+byte `$6340` and its remaining 13,568 bytes to byte `$7B00`. The later 1,920-
+byte result payload overwrites from that same `$7B00` destination. The tile
+origin remains `(map tile + $180) & $3FF`; alternatives that changed it were
+rejected. The semantic header is exactly `PLAYER     TIME` (five spaces and no
+trailing spaces), placing `TIME` at tile X 18. The merged scroll capture above
+then independently confirmed the consultation's final-scroll prediction.
+
+Those three corrections reduce frame 3679 to 961/57,344 mismatched pixels
+(1.675851%), below the unchanged 15% limit and exactly matching the
+consultation's diagnostic prediction. The native PPM SHA-256 is
+`b5cf1100f278a74c7690662bfd4600e458e2693547b9a92b84133715ff75fbbb`.
+OBSEL `$63` selects 16-by-16 small and 32-by-32 large objects. Eleven result
+objects remain intentionally uncomposed: their frozen descriptors are listed
+above, but speculative object reconstruction is unnecessary for the declared
+gate and the residual is quantitatively bounded by that gate.
+
+The automated six-case private report is
+`artifacts/m3-02-all-presentation-check/report.json`, SHA-256
+`41a5b36945fc67ec6bd890ffb547fff6aeaeb01dd5a0d23c79f71109cfe13857`.
+It preserves every frozen rectangle and limit: frame 1600 is 36/26,656
+(0.135054%, limit 2%); 2000 is 697/50,176 (1.389110%, limit 2%, withheld);
+2400 is 279/50,176 (0.556043%, limit 2%); 3213 is 445/50,176 (0.886878%,
+limit 3%); 3453 is 653/50,176 (1.301419%, limit 3%); and 3679 is 961/57,344
+(1.675851%, limit 15%). No expected image, crop, or limit was regenerated.

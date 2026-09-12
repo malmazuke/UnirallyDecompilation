@@ -385,7 +385,8 @@ void build_result_map(std::array<std::uint8_t, 65536> &vram,
   const std::string_view title(
       reinterpret_cast<const char *>(title_seed.data()),
       static_cast<std::size_t>(terminator - title_seed.begin()));
-  if (title != "dragster" || sample.movement.finish.outcome != RaceOutcome::PlayerWon)
+  if (title != "dragster" ||
+      sample.movement.finish.outcome != RaceOutcome::PlayerWon)
     throw std::invalid_argument("unsupported Classic result composition");
 
   // $80:C431 first fills the map, then writes these semantic fields in this
@@ -393,7 +394,7 @@ void build_result_map(std::array<std::uint8_t, 65536> &vram,
   // two-by-two. The result state carries the observed five timer digits.
   write_result_title(vram, 8, 2, title);
   write_result_title(vram, 8, 5, "complete");
-  write_result_text(vram, 7, 8, "PLAYER    TIME  ");
+  write_result_text(vram, 7, 8, "PLAYER     TIME");
   const auto &digits = sample.movement.finish.finish_time_digits[0];
   std::array<char, 8> time{{' ', static_cast<char>('0' + digits[0]), ':',
                             static_cast<char>('0' + digits[1]),
@@ -417,7 +418,7 @@ struct ResultBackgroundPixel {
 
 ResultBackgroundPixel result_bg1_pixel(
     const std::array<std::uint8_t, 65536> &vram, int x, int y) {
-  constexpr int vertical_scroll = 78;
+  constexpr int vertical_scroll = 82;
   const int py = (y + vertical_scroll + 1) & 511;
   const int map_screen = py >= 256 ? 1 : 0;
   const int map_y = (py / 8) & 31;
@@ -475,7 +476,10 @@ void render_result_background(RgbFrame &frame,
   copy_wrapping(vram, 0xc000, content.result_base_vram.subspan(0, 8192));
   copy_wrapping(vram, 0x0000, content.result_base_vram.subspan(8192, 2816));
   copy_wrapping(vram, 0x4000, content.result_base_vram.subspan(11008, 8960));
-  copy_wrapping(vram, 0x6340, content.result_base_vram.subspan(19968, 21568));
+  copy_wrapping(vram, 0x6340, content.result_base_vram.subspan(19968, 8000));
+  // Frame 3546 resets VMADD to word $3D80 before the remaining copier run.
+  copy_wrapping(vram, 0x7b00,
+                content.result_base_vram.subspan(27968, 13568));
 
   // The two result-specific 4bpp payloads retain the current VMADD ordering:
   // $3D80 (byte $7B00), then $7A00 (byte $F400, wrapping through $0000).

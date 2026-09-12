@@ -45,6 +45,12 @@ std::array<std::uint16_t, 30 * 16>
 std::array<std::uint16_t, 32 * 32>
 build_dragster_bg1_map(std::span<const std::uint8_t>, std::int16_t scroll_x,
                        std::int16_t scroll_y);
+// Semantic 32-by-32 result map recovered at $80:C431. The returned words are
+// in row-major order and retain the original tile attributes. R-0019 freezes
+// the player-loss time glyphs independently of the whole-frame visual gate.
+std::array<std::uint16_t, 32 * 32>
+build_dragster_result_map(const MovementState &,
+                          std::span<const std::uint8_t> result_assets);
 struct RgbFrame {
   static constexpr std::size_t width = 256, height = 224;
   std::array<std::uint8_t, width * height * 3> pixels{};
@@ -66,7 +72,8 @@ RgbFrame render_dragster_headless(const PresentationSample &,
                                   const PresentationContent &);
 // Presentation-only rider atlas override. Gameplay state still controls the
 // scene palette, window effects, positions, camera and HUD.
-RgbFrame render_dragster_headless_with_rider_art(
-    const PresentationSample &, const PresentationContent &,
-    const std::array<RiderArtPose, 2> &);
+RgbFrame
+render_dragster_headless_with_rider_art(const PresentationSample &,
+                                        const PresentationContent &,
+                                        const std::array<RiderArtPose, 2> &);
 } // namespace unirally

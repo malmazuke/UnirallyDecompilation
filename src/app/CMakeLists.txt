@@ -1,6 +1,8 @@
 add_library(unirally_frontend STATIC frontend.cpp)
 target_include_directories(unirally_frontend PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(unirally_frontend PUBLIC unirally_presentation lab_options)
+add_executable(live_presentation_runner live_presentation_runner.cpp)
+target_link_libraries(live_presentation_runner PRIVATE unirally_frontend)
 
 if(LAB_BUILD_APP)
   include(FetchContent)

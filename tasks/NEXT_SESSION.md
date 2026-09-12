@@ -23,7 +23,9 @@ result first. [M4-02](M4-02.md) performs second-track reference discovery next;
 ZOOM ZOO is currently a menu label only, so it must observe opponent/event
 coupling before claiming track-only isolation.
 
-Claim ready [M4-01](M4-01.md) and start with its pre-implementation release-path
+Before claiming ready [M4-01](M4-01.md), run its bounded Astra/high planning
+consultation under D-0004. Record the returned risks, experiment ordering and
+Sol coordinator decisions, then start the pre-implementation release-path
 reproduction and loser-result evidence freeze. Preserve every frozen M3 identity
 and regression. Publishing, deploying, spending money or redeeming usage credits
 still requires separate authority.

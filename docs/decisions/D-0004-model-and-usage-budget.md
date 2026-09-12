@@ -37,11 +37,29 @@ Astra from that task. Record actual supported model settings in either runtime.
 
 | Work | Default | Escalation |
 | --- | --- | --- |
-| Coordination, task selection, routine planning | Sol, medium reasoning | One bounded frontier consultation for a consequential unresolved design question |
+| Coordination, task selection, routine planning | Sol, medium reasoning | One bounded frontier consultation before complicated, consequential work, or for a consequential unresolved design question |
 | Implementation and ordinary research | Sol, medium reasoning | Narrow the experiment after two unsuccessful bounded attempts; use high reasoning or a frontier consultation when the record explains why |
 | Independent component review | Fresh Sol reviewer; medium normally, high for difficult arithmetic | Frontier review for unresolved reviewer disagreement or critical uncertainty |
 | Milestone architecture/accuracy audit | Bounded Astra review | Produce findings and a decision, then return execution to the default model |
 | Mechanical, low-risk chores | Sol initially; Terra/Luna optional | Adopt only when measured results justify the change |
+
+The frontier consultation is also a **proactive planning role**, not only a
+recovery mechanism. Before implementation, use one bounded Astra consultation
+when the upcoming work is both complicated and consequential. A task normally
+qualifies when it will freeze or replace reference evidence, establish or change
+an architecture/schema/content identity, alter accepted behavioral boundaries,
+or make a scope decision whose error would invalidate substantial downstream
+work. Routine additive implementation, mechanical follow-ups and execution of
+an already reviewed plan do not qualify merely because they are lengthy.
+
+The planning consultation receives the task record, relevant evidence and one
+concrete request: identify hidden assumptions and failure modes, order the
+cheapest discriminating experiments, and recommend pre-implementation gates and
+scope boundaries. Record its findings and the coordinator's decisions in the
+task. Keep the consultation bounded to ten minutes and return evidence recovery,
+implementation and ordinary review to Sol unless a separate escalation criterion
+is later met. This is a planning checkpoint, not permission for continuous
+frontier coordination.
 
 Use explicit provider model IDs and reasoning settings in each dispatch. Codex
 IDs currently used here are `gpt-5.6-sol` and `gpt-6-astra`; do not infer IDs from
@@ -52,7 +70,8 @@ Use the user's observed Fable throughput as a reason to compare it, not a
 promise of future hours. Never create a paid provider account to switch models.
 
 A frontier consultation receives one question, exact evidence paths and a
-required output. Reassess within ten minutes and checkpoint if unresolved;
+required output. This includes the proactive planning consultation above.
+Reassess within ten minutes and checkpoint if unresolved;
 do not turn it into continuous frontier coordination, routine coding or polling.
 A second consultation needs a recorded new question or new evidence. Routine
 model selection and reversible adjustments need no user confirmation.

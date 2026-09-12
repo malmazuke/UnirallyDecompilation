@@ -85,8 +85,9 @@ First implementation milestone: M0 repeatable laboratory. First gameplay feasibi
 For the next Sol coordinator, start with [the compact handover](../tasks/NEXT_SESSION.md).
 The M4-00 candidate and bounded Astra audit need no conversation replay.
 
-**M3 and M4-00 are accepted.** Claim [M4-01](../tasks/M4-01.md) to recover the
-existing DRAGSTER player-loss result composition. [M4-02](../tasks/M4-02.md) then moves
+**M3 and M4-00 are accepted.** Run the bounded Astra/high planning checkpoint
+recorded in [M4-01](../tasks/M4-01.md), then claim it to recover the existing
+DRAGSTER player-loss result composition. [M4-02](../tasks/M4-02.md) then moves
 one alternate track from a menu label to reference evidence, but must measure
 opponent/event coupling before calling it a one-variable track comparison.
 Preserve the exact M3 identities, regressions and Classic pack boundary.

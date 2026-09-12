@@ -103,6 +103,7 @@ this checkpoint is 19% of the seven-day window (baseline 17%, ceiling 27%).
 
 ## Autonomous movement checkpoint at the 25% usage guard
 
+Code checkpoint: `fdbf397` (`Compose autonomous native movement update`).
 The update now composes the reviewed sampler, progress, flat contact, speed,
 input/timer, jump, pose/rolling, quarter-turn, reward and opponent-AI contracts.
 Primary comparison passes all 13 fields for all 1,466 computed frames and both

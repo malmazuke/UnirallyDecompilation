@@ -1,6 +1,7 @@
 # M3-01 independent review — native finish and full-race state
 
-- Review status: **corrected re-review returned for a signed boundary mismatch**
+- Current review status: **final signed-boundary correction approved at
+  `be632150bd5cd2e6a57085c03e459f8c08cdee9c`; prior review history follows**
 - Submitted head inspected: `f985bebb9ca0d8f9e420c4e9cef8374cefc23b16`
 - Behavioral candidate returned: `ee87a71273dc6b7a717d1d5348c742284a4ab204`
 - Reference freezes: `dcbc896b14a4ae8d715d437894f55474b6a7e186` and
@@ -259,3 +260,106 @@ missing authored assertion for signed `-10` (neighboring `-9` and `-11` are
 useful guards). Rerun the focused CTest and debug/sanitizer suites; the frozen
 positive full-race cases need no expectation change. Submit the new behavioral
 commit for another fresh sequential review.
+
+## Final signed-boundary review
+
+- Decision: **approve exact submitted head
+  `be632150bd5cd2e6a57085c03e459f8c08cdee9c` for coordinator integration**
+- Behavioral correction: `66657d3c6ce2209ecffd17fae87c402f31cf3706`
+  after returned review commit `b959bba`
+- Review checkout: `review/M3-01-native-finish-final` in
+  `.worktrees/m3-01-final-review`
+- Actual reviewer runtime: fresh independent OpenAI Codex session, no child
+  agent; launched binary
+  `/Applications/ChatGPT.app/Contents/Resources/codex`, version `0.153.4`,
+  model `gpt-5.6-sol`, medium reasoning
+- Authority: no merge, task acceptance, push, purchase or credit redemption
+  performed
+
+### Decision and source audit
+
+The returned signed boundary is corrected exactly. The generic helper now
+subtracts ten for positive values greater than or equal to ten, adds ten only
+for negative values strictly below negative ten, and otherwise preserves the
+input. The authored movement test explicitly asserts the six requested guards:
+`11 -> 1`, `10 -> 0`, `9 -> 9`, `-11 -> -1`, `-10 -> -10`, and
+`-9 -> -9`. The focused test executes those assertions and passes.
+
+The identity-bound PAL ROM passes all 10 expected identity fields. Bytes read
+at LoROM file offset `0x01e90d` include the negative `CMP #$FFF6; BPL` and
+positive `CMP #10; BMI` paths at `$83:E91A-$83:E932`, independently confirming
+the asymmetric equality behavior.
+
+`git diff --check b959bba..be63215` passes. The complete changed-path set is
+only `src/core/movement.cpp`, `tests/native/movement_update_tests.cpp`, and
+`tasks/M3-01.md`: the generic helper, its authored assertions, and the worker
+handoff. The range has no changes under `tests/manifests/`, `tools/locks/`,
+`tools/unirally_lab/`, `docs/`, `src/core/movement.hpp`, or the movement runner.
+Thus no replay input, frozen projection, expected result, ROM/core identity,
+comparison logic, serialization interface or full-race scheduling behavior was
+changed. The second review's ROM-backed reviewer/original/M2 matrix at
+`073bb9d` remains applicable to that unchanged scope; this final review did not
+misreport it as rerun at `be63215`.
+
+### Exact commands and results
+
+All successful suite reports below record source
+`be632150bd5cd2e6a57085c03e459f8c08cdee9c`, `dirty: false`, no untracked
+files, and 288 passed checks with zero failed, missing, skipped or timed-out
+checks.
+
+```sh
+/Applications/ChatGPT.app/Contents/Resources/codex --version
+
+rom_path=$(sed -n '1p' local/rom-location.txt)
+python3 tools/project.py rom inspect --path "$rom_path" \
+  --expect tests/manifests/rom/unirally-pal.json \
+  --report artifacts/m3-01-final-review-rom.json
+xxd -g1 -s 0x1e90d -l 38 "$rom_path"
+
+python3 tools/project.py build --preset lab-debug --task M3-01 \
+  --report artifacts/m3-01-final-review-debug-build.json --timeout 180
+python3 tools/project.py bootstrap --task M3-01 \
+  --report artifacts/m3-01-final-review-bootstrap.json --timeout 180
+python3 tools/project.py build --preset lab-debug --task M3-01 \
+  --report artifacts/m3-01-final-review-debug-build.json --timeout 180
+local/toolchain/cmake-3.31.10-darwin-arm64/bin/ctest \
+  --test-dir build/lab-debug -R '^movement_first_update$' --output-on-failure
+python3 tools/project.py test --suite synthetic --preset lab-debug \
+  --task M3-01 --artifacts artifacts/m3-01-final-review-debug \
+  --report artifacts/m3-01-final-review-debug.json \
+  --timeout 180 --test-timeout 60
+
+python3 tools/project.py build --preset lab-sanitize --task M3-01 \
+  --report artifacts/m3-01-final-review-sanitize-build.json --timeout 180
+python3 tools/project.py test --suite synthetic --preset lab-sanitize \
+  --task M3-01 --artifacts artifacts/m3-01-final-review-sanitize \
+  --report artifacts/m3-01-final-review-sanitize.json \
+  --timeout 180 --test-timeout 60
+```
+
+The runtime command reports `codex-cli 0.153.4`. ROM inspection passes all
+four report checks, including 10/10 identity fields. The first debug build
+correctly exits with a missing isolated-toolchain prerequisite; it is not
+counted as a pass. Bootstrap then passes 2/2, and the repeated debug build
+passes. Focused CTest passes 1/1. The full debug suite passes 288/288: 268
+Python tests, 17 CTests and three fresh-process runs with hash
+`0be347c529fadda9`. The sanitizer build passes, and its full suite also passes
+288/288 with the same component counts and repeatability hash; no sanitizer
+finding occurs.
+
+Report SHA-256 values are: ROM inspection
+`3b840caf61c70a633c025efe3d94d6857335c8cb30d9d08d7097e3178f4d30c1`;
+bootstrap `41aecb878dc189e5718ebe3b8577ce070eb608b4b4a346b15e85c5c4d431ae39`;
+successful debug build
+`46834692fa0b802dd054d38badc3f12c6eb39793a1a067897e13bf1baf378f99`;
+debug suite
+`b9552d0c96b7c51c4118348ff0eb38d959435f60413c2a28d47d9a0d1e3b8e9f`;
+sanitizer build
+`8173cb0936c6b3eb980d0b9b3097ec7ac05819d1257d50f06df9c78ee8b9221d`;
+and sanitizer suite
+`99e5d7fb5311e74144daf11af9bc6e8553c4e0fc9af77dc7603b1670f2040f0f`.
+
+No material failure or broader behavior/scope regression was found in the
+submitted correction. Coordinator integration and hosted ROM-free CI remain
+outside this review's authority.

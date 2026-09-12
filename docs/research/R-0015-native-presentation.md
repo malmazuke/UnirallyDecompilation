@@ -108,3 +108,25 @@ E8 / 88 / 10 F8`. Frame 3560 overlays 444 bytes from `$0290` through `$0771`;
 one confirmed overlay writer is `$80:C431`. The final map is unchanged from
 frame 3560 through stable result and has SHA-256 `2d6e563a...0129`. This closes
 the base expansion and exact result, but not the semantic overlay algorithm.
+
+## OAM association and asset-backed reduction
+
+An initial `$0A00` series sampled the OAM DMA staging area, not the semantic
+shadow, and was rejected as a descriptor source. The corrected `$138B` shadow
+capture (`access.json` SHA-256 `9acb899c...4c58`) passed all identity checks.
+Across frames 1600/2000/2400/3213/3453, shadow entries 98 and 99 are the
+player/opponent 64-by-64 objects: tile bases 0 and 136, attributes `$66/$68`.
+Their descriptor bases remain fixed while semantic pose changes select new
+32-byte tile DMAs. At frame 2000 the opponent's high X bit represents wrapped
+screen X -26. This associates pose keys with tile payload selection rather than
+inventing per-pose OAM geometry.
+
+The first real SNES tile/palette decode reconstructs VRAM/CGRAM entirely from
+the twenty-entry pack, including observed BG1 tile destinations, 4bpp planes,
+16-by-16 subtile addressing, flips, palette selection and the calibrated
+one-line vertical phase. The first preregistered frame-3213 reduction, using
+fresh scroll values BG1 `(24367,208)` and BG2 `(12183,104)`, differs in
+33,561/50,176 pixels (66.89%). This fails the frozen 3% limit. It proves that
+the 30-by-16 region is a metatile-definition source for the rolling gather,
+not a complete static BG1 screen map; the `$81:B270` selector construction must
+drive map expansion before another visual claim.

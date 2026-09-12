@@ -1,5 +1,6 @@
 #include "presentation.hpp"
 #include <algorithm>
+#include <cmath>
 #include <limits>
 #include <stdexcept>
 namespace unirally {
@@ -24,6 +25,129 @@ void rect(RgbFrame &f, int x, int y, int w, int h,
   for (int py = y; py < y + h; ++py)
     for (int px = x; px < x + w; ++px)
       pixel(f, px, py, c);
+}
+
+std::uint8_t channel8(std::uint16_t value) {
+  const auto expanded = static_cast<unsigned>((value << 3U) | (value >> 2U));
+  const auto wide = expanded * 257U;
+  if (wide > 32767U)
+    return static_cast<std::uint8_t>(wide >> 8U);
+  const auto corrected = 32767.0 * std::pow(wide / 32767.0, 1.5);
+  return static_cast<std::uint8_t>(static_cast<unsigned>(corrected) >> 8U);
+}
+
+std::array<std::uint8_t, 3> colour(const std::array<std::uint8_t, 512> &cgram,
+                                   std::uint8_t index) {
+  const auto at = static_cast<std::size_t>(index) * 2;
+  const auto value = static_cast<std::uint16_t>(
+      cgram[at] | (static_cast<unsigned>(cgram[at + 1]) << 8U));
+  return {channel8(value & 31U), channel8((value >> 5U) & 31U),
+          channel8((value >> 10U) & 31U)};
+}
+
+std::uint8_t tile_pixel(const std::array<std::uint8_t, 65536> &vram,
+                        std::size_t tile_byte, std::uint16_t tile, int x,
+                        int y) {
+  const auto at = (tile_byte + (tile & 0x3ffU) * 32U) & 0xffffU;
+  const auto bit = static_cast<unsigned>(7 - x);
+  const auto plane01 = at + static_cast<std::size_t>(y) * 2;
+  const auto plane23 = plane01 + 16;
+  return static_cast<std::uint8_t>(((vram[plane01] >> bit) & 1U) |
+                                   (((vram[plane01 + 1] >> bit) & 1U) << 1U) |
+                                   (((vram[plane23] >> bit) & 1U) << 2U) |
+                                   (((vram[plane23 + 1] >> bit) & 1U) << 3U));
+}
+
+std::uint8_t background_pixel(const std::array<std::uint8_t, 65536> &vram,
+                              std::size_t map_base, bool wide, bool tall,
+                              std::size_t tile_base, bool tiles16, int hofs,
+                              int vofs, int screen_x, int screen_y) {
+  const int tile_size = tiles16 ? 16 : 8;
+  const int map_width = wide ? 64 : 32;
+  const int map_height = tall ? 64 : 32;
+  const int px = (screen_x + hofs) & (map_width * tile_size - 1);
+  const int py = (screen_y + vofs + 1) & (map_height * tile_size - 1);
+  int map_x = px / tile_size, map_y = py / tile_size, screen = 0;
+  if (map_x >= 32) {
+    ++screen;
+    map_x -= 32;
+  }
+  if (map_y >= 32) {
+    screen += wide ? 2 : 1;
+    map_y -= 32;
+  }
+  const auto entry_at = (map_base + static_cast<std::size_t>(screen) * 0x800U +
+                         static_cast<std::size_t>(map_y * 32 + map_x) * 2U) &
+                        0xffffU;
+  const auto entry = static_cast<std::uint16_t>(
+      vram[entry_at] | (static_cast<unsigned>(vram[entry_at + 1]) << 8U));
+  int tile_x = px % tile_size, tile_y = py % tile_size;
+  if (entry & 0x4000U)
+    tile_x = tile_size - 1 - tile_x;
+  if (entry & 0x8000U)
+    tile_y = tile_size - 1 - tile_y;
+  auto tile = static_cast<std::uint16_t>(entry & 0x3ffU);
+  if (tiles16) {
+    const auto subtile =
+        static_cast<unsigned>((tile_x >> 3) + ((tile_y >> 3) << 4));
+    tile = static_cast<std::uint16_t>((tile + subtile) & 0x3ffU);
+    tile_x &= 7;
+    tile_y &= 7;
+  }
+  const auto value = tile_pixel(vram, tile_base, tile, tile_x, tile_y);
+  return value == 0
+             ? 0
+             : static_cast<std::uint8_t>(((entry >> 10U) & 7U) * 16U + value);
+}
+
+void render_race_background(RgbFrame &frame, const PresentationSample &sample,
+                            const PresentationContent &content,
+                            const std::array<std::uint16_t, 480> &map) {
+  std::array<std::uint8_t, 65536> vram{};
+  std::copy(content.bg2_tiles.begin(), content.bg2_tiles.end(),
+            vram.begin() + 0x2000);
+  std::copy(content.bg2_map.begin(), content.bg2_map.end(),
+            vram.begin() + 0xe000);
+  constexpr std::array<std::uint16_t, 40> bg1_words{
+      {8192, 8448, 8224, 8480, 8256, 8512, 8288, 8544, 8320, 8576,
+       8352, 8608, 8384, 8640, 8416, 8672, 8704, 8960, 8736, 8992,
+       8768, 9024, 8800, 9056, 8832, 9088, 8864, 9120, 8896, 9152,
+       8928, 9184, 9216, 9472, 9248, 9504, 9280, 9536, 9312, 9568}};
+  for (std::size_t piece = 0; piece < bg1_words.size(); ++piece)
+    std::copy_n(content.bg1_tiles.begin() +
+                    static_cast<std::ptrdiff_t>(piece * 64),
+                64, vram.begin() + bg1_words[piece] * 2);
+  for (std::size_t y = 0; y < 16; ++y)
+    for (std::size_t x = 0; x < 30; ++x) {
+      const auto at = 0x1800U + (y * 32U + x) * 2U;
+      const auto entry = map[y * 30 + x];
+      vram[at] = static_cast<std::uint8_t>(entry);
+      vram[at + 1] = static_cast<std::uint8_t>(entry >> 8U);
+    }
+  std::array<std::uint8_t, 512> cgram{};
+  constexpr std::array<std::size_t, 6> targets{{0, 224, 256, 352, 480, 384}};
+  constexpr std::array<std::size_t, 6> lengths{{192, 32, 32, 32, 32, 32}};
+  std::size_t source{};
+  for (std::size_t piece = 0; piece < targets.size(); ++piece) {
+    std::copy_n(content.palette.begin() + static_cast<std::ptrdiff_t>(source),
+                lengths[piece],
+                cgram.begin() + static_cast<std::ptrdiff_t>(targets[piece]));
+    source += lengths[piece];
+  }
+  rect(frame, 0, 0, 256, 224, colour(cgram, 0));
+  for (int y = 0; y < 224; ++y)
+    for (int x = 0; x < 256; ++x) {
+      const auto bg2 =
+          background_pixel(vram, 0xe000, true, true, 0x2000, false,
+                           sample.bg2_scroll_x, sample.bg2_scroll_y, x, y);
+      if (bg2)
+        pixel(frame, x, y, colour(cgram, bg2));
+      const auto bg1 =
+          background_pixel(vram, 0x1800, false, false, 0x4000, true,
+                           sample.bg1_scroll_x, sample.bg1_scroll_y, x, y);
+      if (bg1)
+        pixel(frame, x, y, colour(cgram, bg1));
+    }
 }
 } // namespace
 RiderFrameSelection rider_frame_for_pose(std::uint16_t pose, bool reflected) {
@@ -100,17 +224,7 @@ RgbFrame render_dragster_headless(const PresentationSample &s,
         "Classic presentation entry size is unsupported");
   const auto map = expand_dragster_bg1(content.track);
   RgbFrame f{};
-  rect(f, 0, 0, 256, 224, {18, 24, 52});
-  for (int y = 28; y < 224; ++y)
-    for (int x = 0; x < 256; ++x) {
-      const int tx = (((x + s.bg1_scroll_x) / 8) % 30 + 30) % 30,
-                ty = (((y + s.bg1_scroll_y) / 8) % 16 + 16) % 16;
-      const auto e = map[static_cast<std::size_t>(ty * 30 + tx)];
-      const auto shade = static_cast<std::uint8_t>(40 + (e & 7U) * 20U);
-      pixel(f, x, y,
-            {static_cast<std::uint8_t>(shade / 2), shade,
-             static_cast<std::uint8_t>(shade / 3)});
-    }
+  render_race_background(f, s, content, map);
   const auto &t = s.movement.timer;
   const std::array<unsigned, 4> d{
       {t.minutes, t.tens_seconds, t.seconds, t.tenths}};

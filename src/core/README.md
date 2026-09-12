@@ -48,3 +48,18 @@ without padding or host byte-order assumptions. The isolated recurrence matches
 both riders through frame 2999 from one frame-1533 seed, but its sampled words
 still originate from captured positions/poses. See R-0010 for commands and the
 post-gather collision-response dependency that remains before autonomous riding.
+
+## Semantic movement continuation state
+
+`movement.*` defines the first shared autonomous-state boundary. Each rider has
+one `ContactMotion`, `RiderContactState`, `SpeedModifiers` and `TrackProgress`
+record, plus the named jump, pose, quarter-turn, residue and throttle fields
+identified in R-0011-motion. Global state owns the alternating phases, counters,
+timer, opponent continuation and reward queue. The canonical 295-byte encoding
+is fixed-order little-endian, begins `URMV0001` plus a u32 frame, validates its
+binary flags and cursors, and contains no CPU registers or captured calls.
+
+`tools/unirally_lab/native/prepare.py` accepts only the identity-verified
+end-of-frame 1533 WRAM/SRAM observation and a complete named 12-file static
+inventory. It emits an ignored semantic seed, static content and runtime
+metadata. No autonomous movement update exists at this checkpoint.

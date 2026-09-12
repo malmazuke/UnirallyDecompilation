@@ -31,3 +31,7 @@ target_link_libraries(speed_limits_probe PRIVATE unirally_speed_limits)
 add_executable(speed_limits_tests speed_limits_tests.cpp)
 target_link_libraries(speed_limits_tests PRIVATE unirally_speed_limits)
 add_test(NAME speed_limits_boundaries COMMAND speed_limits_tests)
+
+add_executable(movement_state_tests movement_state_tests.cpp)
+target_link_libraries(movement_state_tests PRIVATE unirally_movement)
+add_test(NAME movement_state_roundtrip COMMAND movement_state_tests)

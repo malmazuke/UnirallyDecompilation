@@ -1,0 +1,73 @@
+#pragma once
+
+#include "flat_contact.hpp"
+#include "input_timer.hpp"
+#include "speed_limits.hpp"
+#include "track_progress.hpp"
+
+#include <array>
+#include <cstdint>
+#include <span>
+#include <vector>
+
+namespace unirally {
+
+// Semantic continuation state for the recovered Dragster domain. Every word is
+// an original 16-bit bit pattern; signed interpretation belongs to the update
+// that consumes it. R-0011-motion records the source addresses and ordering.
+struct JumpState {
+    std::uint16_t pending{}, impulse_phase{}, baseline{}, previous_input{};
+};
+struct PoseState {
+    std::uint16_t orientation{}, reflected_orientation{}, animation_phase{};
+    std::uint16_t animation_increment{}, previous_x{}, previous_y{};
+    std::uint16_t displacement_remainder{}, target_orientation{}, pose_index{};
+    std::array<std::uint16_t, 3> displacement_history{};
+    std::uint16_t rolling_level{}, alternate_animation_phase{};
+    bool rolling{};
+};
+struct QuarterTurnState {
+    std::uint16_t previous_quadrant{}, forward_turns{}, reverse_turns{};
+    std::uint16_t forward_quarters{}, reverse_quarters{};
+    bool initialized{}, reflected_at_start{};
+};
+struct RiderMovementState {
+    ContactMotion motion{};
+    RiderContactState contact{};
+    SpeedModifiers speed{};
+    TrackProgress progress{};
+    JumpState jump{};
+    PoseState pose{};
+    QuarterTurnState quarter_turn{};
+    std::uint16_t residue_x{}, residue_y{}, throttle{}, previous_brake{};
+    std::uint16_t launch_override{}, small_motion_counter{};
+};
+struct OpponentContinuationState {
+    std::uint16_t impulse_countdown{}, trick_selector{}, suppression_counter{};
+};
+struct RewardQueueState {
+    std::array<std::uint8_t, 32> entries{};
+    std::uint8_t read_cursor{}, write_cursor{};
+    std::uint16_t cooldown{}, feature_total{};
+    std::uint8_t event_one_weight{};
+};
+struct MovementState {
+    std::uint32_t frame{};
+    ControllerSample player_input{};
+    std::array<RiderMovementState, 2> riders{}; // player, opponent
+    RaceTimerDigits timer{};
+    OpponentContinuationState opponent_ai{};
+    RewardQueueState rewards{};
+    std::uint16_t countdown{};
+    std::uint8_t contact_phase{}, progress_phase{}, animation_counter{}, update_counter{};
+};
+
+inline constexpr std::array<std::uint8_t, 8> movement_state_magic{
+    'U', 'R', 'M', 'V', '0', '0', '0', '1'};
+
+// Fixed-order little-endian encoding. It contains semantic continuation fields
+// only: no WRAM image, CPU registers, frame-indexed events or captured calls.
+std::vector<std::uint8_t> serialize_movement_state(const MovementState& state);
+MovementState deserialize_movement_state(std::span<const std::uint8_t> bytes);
+
+} // namespace unirally

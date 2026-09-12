@@ -97,3 +97,13 @@ must be represented as a deterministic template expansion, not extracted as a
 captured WRAM image. The exact 16-byte template source and its expansion
 semantics, plus OAM-to-pose frame descriptors, remain to be closed before the
 pack rule can honestly claim the frozen `font-layout` logical entry.
+
+A fresh bounded capture (`artifacts/m3-02-result-map/access.json`, SHA-256
+`34247f71...e90c`) sampled the full `$0200..$09FF` map buffer and frames
+3559–3561. It passed all identity/completeness checks and retained the accepted
+full-run digests. `$83:8B7D` first fills all 1,024 map words with `$004C`; the
+loop at `$83:8B85` is byte-visible as `A9 4C 00 / A0 FF 03 / 9D 00 00 / E8
+E8 / 88 / 10 F8`. Frame 3560 overlays 444 bytes from `$0290` through `$0771`;
+one confirmed overlay writer is `$80:C431`. The final map is unchanged from
+frame 3560 through stable result and has SHA-256 `2d6e563a...0129`. This closes
+the base expansion and exact result, but not the semantic overlay algorithm.

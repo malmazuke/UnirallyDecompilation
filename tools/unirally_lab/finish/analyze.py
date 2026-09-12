@@ -142,6 +142,8 @@ def analyze(contract: dict[str, Any], continuous_samples: dict[str, Any], variat
         raise AnalysisError("provenance record lacks summary")
     content_delta = {k: summary.get(k) for k in ("channel_transfers", "block_moves", "block_move_bytes",
                                                   "destinations_pairable", "destinations_paired")}
+    for key, observed in content_delta.items():
+        check(f"content_{key}", observed, contract["content_delta"][key])
     status = "passed" if all(c["outcome"] == "passed" for c in checks) else "failed"
     return {"schema_version": 1, "kind": "finish_analysis", "status": status, "checks": checks,
             "first_divergence": divergence, "finish_events": result_events,

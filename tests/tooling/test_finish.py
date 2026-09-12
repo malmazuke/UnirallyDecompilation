@@ -35,6 +35,8 @@ class FinishAnalysisTests(unittest.TestCase):
                                      "counter_first": 20, "counter_last": 21}},
             "coverage_delta": {"baseline_scenario": "short", "bytes_only_here": 4,
                                "bytes_only_in_baseline": 0, "new_ranges": 1, "new_entry_points": 2},
+            "content_delta": {"channel_transfers": 1, "block_moves": 0, "block_move_bytes": 0,
+                              "destinations_pairable": 1, "destinations_paired": 1},
             "decoded_track_length": 32,
         }
         self.coverage = {"compared_to": {"baseline_scenario": "short", "bytes_only_here": 4,
@@ -81,6 +83,14 @@ class FinishAnalysisTests(unittest.TestCase):
         failures = {check["name"] for check in result["checks"] if check["outcome"] == "failed"}
         self.assertEqual(result["status"], "failed")
         self.assertEqual(failures, {"continuous_sample_digest", "coverage_bytes_only_here"})
+
+    def test_changed_provenance_totals_fail(self):
+        self.provenance["summary"]["channel_transfers"] = 0
+        self.provenance["summary"]["destinations_paired"] = 0
+        result = self.run_analysis()
+        failures = {check["name"] for check in result["checks"] if check["outcome"] == "failed"}
+        self.assertEqual(result["status"], "failed")
+        self.assertEqual(failures, {"content_channel_transfers", "content_destinations_paired"})
 
 
 if __name__ == "__main__":

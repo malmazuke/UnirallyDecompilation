@@ -1,7 +1,7 @@
 # R-0012 — Complete-race reference evidence and playable-slice inventory
 
 - Task: [M3-00](../../tasks/M3-00.md)
-- Status: candidate for fresh independent review
+- Status: corrected candidate for sequential re-review
 - Input freeze: commit `135ae38`; continuous manifest SHA-256
   `d03102fc33c22738466bfc9ae81fb55107ced9d693904ebd3132fa1f76afced2`;
   release-3000–3299 manifest SHA-256
@@ -184,12 +184,27 @@ Run the compact verifier against those regenerated ignored files:
 python3 -m tools.unirally_lab.finish.analyze --contract tests/manifests/finish/dragster-complete-race.json --continuous-samples <continuous-samples.json> --variation-samples <variation-samples.json> --continuous-access <continuous-access.json> --variation-access <variation-access.json> --coverage-map docs/map/race-crawler-dragster-12000-continuous-right-fields.map.json --content-manifest tests/manifests/content/dragster-segment.json --provenance <provenance.json> --out artifacts/m3-00-finish-analysis.json
 ```
 
-The analyzer is ROM-free once artifacts exist. It passed 20/20 contract checks;
-the compact result SHA-256 is
-`2c1467d062ba5c6f6dc6b07199b60bad5edd97b377b95bb23623e196dfbb31bc`. It
+The analyzer is ROM-free once artifacts exist. The corrected candidate passed
+25/25 contract checks; the compact result SHA-256 is
+`cfe83e3e6d033b83b27a2c917922d93108b0b601b0e2eed7db7aac6b5d023416`.
+The five added checks bind the content/provenance totals listed above: 9,817
+channel transfers, five block moves, 80 block-move bytes, 9,817 pairable
+destinations and 9,814 paired destinations. It
 rejects a changed finish boundary, missing writer, out-of-block track read and
-wrong digest/coverage value. Large samples, access records, frame images,
-decoded bytes and ROM content remain ignored.
+wrong digest, coverage or provenance total. Large samples, access records,
+frame images, decoded bytes and ROM content remain ignored.
+
+## Returned review and correction
+
+Fresh review at `review/M3-00-finish-evidence` reproduced the reference replays,
+finish boundary/order, coverage delta and track sufficiency, but returned the
+first candidate for one moderate verifier defect: mutating
+`channel_transfers` and `destinations_paired` still produced a passing 20-check
+result. The exact review is commit `2e3e4fd`. The correction freezes all five
+provenance totals in the finish contract, compares each in the analyzer and
+adds a focused two-field mutation test. The expensive reference runs were not
+repeated because the reviewer already reproduced them and no replay manifest,
+reference input or captured artifact changed.
 
 ## Limits
 

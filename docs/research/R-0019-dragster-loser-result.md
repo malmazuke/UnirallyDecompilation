@@ -1,9 +1,8 @@
 # R-0019 — DRAGSTER loser-result composition
 
 - Task: [M4-01](../../tasks/M4-01.md)
-- Status: reference evidence and visual contract frozen before implementation;
-  implementation `f438741` plus publication-boundary correction `a3106f4`
-  pending focused re-review
+- Status: accepted evidence and implementation; integrated as `3058eb9` after
+  approved focused re-review
 - Freeze base: task claim `55eadf7`; no presentation source changed before this
   record and the additive loser contract
 - ROM: PAL Unirally SHA-256

@@ -26,8 +26,8 @@ The coordinator maintains the status registry below. Work orders further below d
 | M3-03 | accepted 13 September 2026 after five returned review rounds, final approval and green macOS/Linux SDL CI | [Minimal frontend and controls](M3-03.md) |
 | M3-04 | accepted 13 September 2026 after independent approval and green macOS/Linux CI; M3 accepted, tag `m3` | [Playable-slice acceptance](M3-04.md) |
 | M4-00 | accepted 13 September 2026 after Astra audit, returned independent review and focused approval | [M4 coverage inventory](M4-00.md) |
-| M4-01 | claimed 13 September 2026 by OpenAI Sol/medium | [DRAGSTER loser-result presentation](M4-01.md) |
-| M4-02 | pending M4-00 inventory | [Second-track reference discovery](M4-02.md) |
+| M4-01 | accepted 13 September 2026 after one returned review finding, approved re-review and green macOS/Linux CI | [DRAGSTER loser-result presentation](M4-01.md) |
+| M4-02 | ready; scheduled after accepted M4-01 | [Second-track reference discovery](M4-02.md) |
 | M4-03 – M6 | planned | See milestone definitions |
 
 ## M0 — repeatable laboratory

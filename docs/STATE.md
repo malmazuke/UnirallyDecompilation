@@ -1,10 +1,11 @@
 # Project state
 
-Updated: 13 September 2026 (M4-00 accepted; M4-01 ready; M3 remains the latest
+Updated: 13 September 2026 (M4-01 accepted; M4-02 ready; M3 remains the latest
 accepted milestone, tag `m3`).
 
 ## Current facts
 
+- DRAGSTER loser-result presentation (M4-01, [R-0019](research/R-0019-dragster-loser-result.md), [review](../tasks/M4-01-review.md), [re-review](../tasks/M4-01-rereview.md)): a fresh pinned-core capture shows that the stable loss result retains the winner layout and changes exactly six player-time map bytes to display `MIKE 0:35.66`; the existing 25-entry Classic pack is sufficient. The additive identity-bound visual case passes at 1,073/57,344 pixels while all seven winner counts remain exact. Pack-backed `LivePresentation` renders fresh/reused instances without changing canonical state and admits only the three observed publication tuples. Review returned an impossible loser counter-241 tuple, corrected and independently approved. Merge `3058eb9` passes local debug/sanitizer 315/315, both visual matrices and release/restores; hosted run 34719187215 passes macOS 15 and Ubuntu 24.04 including Linux SDL sanitizers. **M4-01 is accepted.**
 - M4-00 ([R-0018](research/R-0018-m4-feature-inventory.md),
   [review](../tasks/M4-00-review.md)) separates
   accepted native behavior, reference observations, menu labels and unobserved
@@ -85,10 +86,9 @@ First implementation milestone: M0 repeatable laboratory. First gameplay feasibi
 For the next Sol coordinator, start with [the compact handover](../tasks/NEXT_SESSION.md).
 The M4-00 candidate and bounded Astra audit need no conversation replay.
 
-**M3 and M4-00 are accepted.** Run the bounded Astra/high planning checkpoint
-recorded in [M4-01](../tasks/M4-01.md), then claim it to recover the existing
-DRAGSTER player-loss result composition. [M4-02](../tasks/M4-02.md) then moves
-one alternate track from a menu label to reference evidence, but must measure
+**M3, M4-00 and M4-01 are accepted.** Start ready
+[M4-02](../tasks/M4-02.md) with its bounded Astra/high planning checkpoint, then
+move one alternate track from a menu label to reference evidence, first measuring
 opponent/event coupling before calling it a one-variable track comparison.
 Preserve the exact M3 identities, regressions and Classic pack boundary.
 
@@ -96,14 +96,14 @@ Implementation choices should be made through bounded experiments. Original-cont
 
 ## Milestone status
 
-M0: accepted on 11 September 2026 (M0-00 through M0-06; evidence report [R-0005](research/R-0005-m0-acceptance.md); tag `m0`). M1: M1-01 accepted on 11 September 2026 ([R-0006](research/R-0006-observed-code-map.md)); M1-02 accepted on 11 September 2026 ([R-0007](research/R-0007-player-state.md), [D-0002](decisions/D-0002-data-access-observation.md)); M1-03 accepted on 12 September 2026 ([R-0008](research/R-0008-track-decode.md)); M1-04 accepted and **milestone M1 accepted on 12 September 2026, tagged `m1`** ([R-0009](research/R-0009-m1-acceptance.md)). M2: M2-01A and M2-01 accepted through PR2/PR4; M2-02 accepted through PR5; **milestone M2 accepted on 12 September 2026, tag `m2`** ([R-0011](research/R-0011-m2-acceptance.md)). M3: M3-00 through M3-04 are accepted; **milestone M3 accepted on 13 September 2026, tag `m3`** ([R-0017](research/R-0017-m3-acceptance.md)). M4: M4-00 is accepted; M4-01 is ready; no M4 implementation task is accepted yet. M5–M6: not started. No calendar/cost promise has been established.
+M0: accepted on 11 September 2026 (M0-00 through M0-06; evidence report [R-0005](research/R-0005-m0-acceptance.md); tag `m0`). M1: M1-01 accepted on 11 September 2026 ([R-0006](research/R-0006-observed-code-map.md)); M1-02 accepted on 11 September 2026 ([R-0007](research/R-0007-player-state.md), [D-0002](decisions/D-0002-data-access-observation.md)); M1-03 accepted on 12 September 2026 ([R-0008](research/R-0008-track-decode.md)); M1-04 accepted and **milestone M1 accepted on 12 September 2026, tagged `m1`** ([R-0009](research/R-0009-m1-acceptance.md)). M2: M2-01A and M2-01 accepted through PR2/PR4; M2-02 accepted through PR5; **milestone M2 accepted on 12 September 2026, tag `m2`** ([R-0011](research/R-0011-m2-acceptance.md)). M3: M3-00 through M3-04 are accepted; **milestone M3 accepted on 13 September 2026, tag `m3`** ([R-0017](research/R-0017-m3-acceptance.md)). M4: M4-00 and M4-01 are accepted; M4-02 is ready. M5–M6: not started. No calendar/cost promise has been established.
 
 ## Handoff
 
 The next agent should read [the compact handoff](../tasks/NEXT_SESSION.md), this
 file, `AGENTS.md`, [M4-00](../tasks/M4-00.md),
 [R-0018](research/R-0018-m4-feature-inventory.md),
-[M4-01](../tasks/M4-01.md) and [R-0017](research/R-0017-m3-acceptance.md).
-Claim M4-01; do not repeat accepted M3 mechanics, pack, winner presentation or
-frontend research. Preserve the PAL and frozen replay/pack identities and keep
-original content, generated packs and captures ignored.
+[M4-01](../tasks/M4-01.md), [R-0019](research/R-0019-dragster-loser-result.md)
+and [M4-02](../tasks/M4-02.md). Claim M4-02; do not repeat accepted M3 mechanics,
+pack work or M4-01 result research. Preserve the PAL and frozen replay/pack
+identities and keep original content, generated packs and captures ignored.

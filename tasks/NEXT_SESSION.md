@@ -1,12 +1,9 @@
-# Coordinator handover — M4-00 accepted, M4-01 ready
+# Coordinator handover — M4-01 accepted, M4-02 ready
 
-Milestone M3 is accepted on 13 September 2026 and tagged `m3`. M4-00 is accepted
-after returned and approved Astra review; read
-[the task](M4-00.md) and [R-0018](../docs/research/R-0018-m4-feature-inventory.md).
-It reconciles the root README, separates accepted native/reference-observed/menu-
-label/unobserved coverage and writes two bounded next work orders. Reviewed
-branch head `e1ed44b` merged as `3a3f977`; the exact merge passed link/diff checks
-and the ROM-free app-debug suite 314/314.
+Milestone M3 is accepted on 13 September 2026 and tagged `m3`. M4-00 and M4-01
+are accepted. Read [M4-01](M4-01.md),
+[R-0019](../docs/research/R-0019-dragster-loser-result.md) and its returned
+[review](M4-01-review.md) plus approved [re-review](M4-01-rereview.md).
 
 The accepted scope is the identified PAL one-player CRAWLER/DRAGSTER slice:
 supported-ROM extraction creates a validated local Classic pack, later launches
@@ -15,17 +12,17 @@ CPU execution, and live macOS controls/presentation plus exact macOS/Linux gates
 pass. Audio, unrecovered intermediate rider artwork, other tracks/riders/modes,
 menus/progression, local multiplayer and public packaging remain omissions.
 
-The bounded user-requested Astra/high audit found one material sequencing issue:
-the release-3000 loser gameplay is exact through stable result, but the visual
-contract has winner results only and `src/core/presentation.cpp` rejects
-`PlayerLost`. [M4-01](M4-01.md) therefore closes the existing DRAGSTER loser
-result first. [M4-02](M4-02.md) performs second-track reference discovery next;
-ZOOM ZOO is currently a menu label only, so it must observe opponent/event
-coupling before claiming track-only isolation.
+M4-01 closes the stable release-3000 loser result with an additive authenticated
+visual contract and no pack change. The observed screen retains the winner
+layout, displays `MIKE 0:35.66`, and differs at exactly six result-map bytes.
+Behavioral correction `a3106f4` rejects the reviewer's impossible counter-241
+publication state; focused re-review approved it. Merge `3058eb9` passes local
+debug/sanitizer 315/315, exact winner/loser visuals, release/restores, and hosted
+macOS/Linux run 34719187215.
 
-Before claiming ready [M4-01](M4-01.md), run its bounded Astra/high planning
-consultation under D-0004. Record the returned risks, experiment ordering and
-Sol coordinator decisions, then start the pre-implementation release-path
-reproduction and loser-result evidence freeze. Preserve every frozen M3 identity
-and regression. Publishing, deploying, spending money or redeeming usage credits
-still requires separate authority.
+Start ready [M4-02](M4-02.md) with its bounded Astra/high planning consultation,
+then return execution to Sol/medium. Its first evidence gate injects one short
+Down press at the CRAWLER track screen and observes selection, opponent and
+event/rule coupling before any tracked replay is frozen. Preserve every frozen
+M3/M4-01 identity and regression. Publishing, deploying, spending money or
+redeeming usage credits still requires separate authority.

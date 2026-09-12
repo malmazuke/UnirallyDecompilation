@@ -1,26 +1,29 @@
 # M3-00 independent review — complete-race evidence
 
-- Review status: **returned for one required evidence-verifier change**
+- Review status: **approved after sequential correction review**
 - Reviewed behavioral/evidence candidate: `922ea576dd99e1c4715d16c53fb503be43f47321`
+- Corrected verifier candidate: `d5e81e6d0d628b2845fedc587e1cbf8eace9a871`
 - Input freeze: `135ae38`
 - Handoff head inspected: `ad068e5a8731ac29d64a414f64a55e3f41b52ffa`
+- Corrected handoff head inspected: `d0c6d40383dc04c70d6487b2e75169eb6e4b4d8d`
 - Review checkout: `review/M3-00-finish-evidence` in `.worktrees/m3-00-review`
 - Reviewer/runtime: fresh OpenAI Codex `gpt-5.6-sol`, medium; no child agent
 - Quota: coordinator checkpoint was 41% used / 59% remaining at 2026-09-12
   16:08 AEST. Review sample was 43% used / 57% remaining in the same seven-day
-  window, below the 50% checkpoint and retaining the final 20%. No purchase or
-  reset was made.
+  window; final sequential re-review sample was 44% used / 56% remaining,
+  below the 50% checkpoint and retaining the final 20%. No purchase or reset
+  was made.
 
 ## Decision
 
 The reference observations, replay identities, counter boundary, within-frame
 order, coverage delta and decoded-track sufficiency reproduced. The candidate
-is not approved yet because the compact analyzer reports success after its
-provenance totals are changed to false values. This leaves the numeric content
-delta in R-0012 outside the claimed machine-checked contract. The candidate was
-not edited.
+is approved after correction commit `d5e81e6`: it binds all five provenance
+totals in the contract, checks them, and adds the exact regression returned by
+the first review. The original returned finding and reproduction remain below
+as review history. Neither review edited the candidate.
 
-Required change:
+Required change from the first round, now closed:
 
 1. Add the expected provenance/content totals to the finish contract and make
    `tools.unirally_lab.finish.analyze` fail when at least
@@ -180,7 +183,56 @@ Observed exit was 0 with `status=passed checks=20`, even though the emitted
 `content_delta` said `channel_transfers: 0` and `destinations_paired: 0`.
 Output SHA-256 was
 `4117f3b6316db998e8fd17d1b64c67accbe5e8ee639e1fb5418eaed180053c57`.
-This mutation is not covered by the five added tests. Review should resume on
-the corrected exact candidate; the expensive reference runs need not be
-repeated if the fix is confined to the contract/analyzer/tests and preserves
-the frozen manifests and artifact identities.
+At the original candidate this mutation was not covered by the five added
+tests. The requested correction and resumed review are recorded below.
+
+## Sequential correction review
+
+The re-review detached at exact corrected commit
+`d5e81e6d0d628b2845fedc587e1cbf8eace9a871`. Its scoped diff from `922ea57`
+changes only the finish contract, analyzer, focused test, R-0012 and M3-00
+handoff. It does not touch either frozen replay manifest, the reference core or
+adapter, coverage/access/provenance artifacts, tracked map, or native core.
+`git diff --check 922ea57..d5e81e6` passed.
+
+Focused verification:
+
+```sh
+PYTHONPATH=tools python3 -m unittest tests.tooling.test_finish
+
+python3 -m tools.unirally_lab.finish.analyze \
+  --contract tests/manifests/finish/dragster-complete-race.json \
+  --continuous-samples artifacts/m3-00-review/continuous/run1-samples.json \
+  --variation-samples artifacts/m3-00-review/cross/right-samples.json \
+  --continuous-access ../m3-00-finish-evidence/artifacts/m3-00-complete-access/capture/access.json \
+  --variation-access ../m3-00-finish-evidence/artifacts/m3-00-variation-access/capture/access.json \
+  --coverage-map docs/map/race-crawler-dragster-12000-continuous-right-fields.map.json \
+  --content-manifest tests/manifests/content/dragster-segment.json \
+  --provenance ../m3-00-finish-evidence/artifacts/m3-00-content/complete-provenance/provenance.json \
+  --out artifacts/m3-00-review/corrected-finish-analysis.json
+```
+
+The focused suite passed 6/6. The real content-addressed artifacts passed
+25/25 with exit 0 and output SHA-256
+`cfe83e3e6d033b83b27a2c917922d93108b0b601b0e2eed7db7aac6b5d023416`.
+The five emitted totals remained 9,817 channel transfers, 5 block moves, 80
+block-move bytes, 9,817 pairable destinations and 9,814 paired destinations.
+
+The exact first-review mutation was then repeated against the corrected
+candidate. It returned exit 1, `status=failed`, 25 checks, and exactly these two
+failures:
+
+- `content_channel_transfers`: observed 0, expected 9817
+- `content_destinations_paired`: observed 0, expected 9814
+
+The failed mutation output SHA-256 was
+`16b0e0f0ed49250e4ccd25748570a7f2cd96c7efdc794629018cf0991aaeda1e`.
+This closes the only required finding. The worker separately reports a clean
+287/287 full synthetic run on the corrected commit; this sequential review did
+not repeat that suite or the long reference/capture work because the inspected
+fix is restricted to the contract/analyzer/test and the underlying evidence
+was already independently reproduced in the first round.
+
+Final verdict: **approve exact corrected verifier/evidence commit `d5e81e6`**.
+The coordinator may integrate it with handoff `d0c6d40`; milestone acceptance
+and registry/state updates remain coordinator-owned.

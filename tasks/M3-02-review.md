@@ -228,3 +228,102 @@ without changing gameplay serialization or any frozen threshold:
 5. Pack records now consistently close on 25 total / 12 presentation entries.
 
 Fresh re-review is required; this response does not approve or accept M3-02.
+
+## Correction re-review — candidate `3eb0879`
+
+- Correction candidate: `3eb0879` (`Document corrected presentation gate
+  commands`)
+- Diff reviewed: `65b49fa..3eb0879`
+- Reviewer: fresh sequential OpenAI Codex Sol/medium session
+- Worktree/branch: `.worktrees/m3-02-rereview`,
+  `review/M3-02-native-presentation-correction`
+- Date: 12 September 2026 AEST
+- Verdict: **returned with one material identity-binding finding; not approved**
+
+### Material finding: top-level presentation contract identities are ignored
+
+`native presentation-check` hashes the supplied manifest and validates the
+Classic pack independently, but `load_contract` does not validate or consume
+the manifest's `profile_id`, `source_rom_sha256`, `sampling_phase`,
+`state_fields`, or `logical_entries`. Consequently it does not bind the
+manifest's declared source identity to the pack it actually renders.
+
+I copied the tracked manifest and changed only `source_rom_sha256` from the
+accepted PAL identity to sixty-four zeroes. With the unchanged valid pack and
+unchanged identity-bound fixtures, the checker exited **0**, wrote report
+status `passed`, and passed all seven visual cases. The mutated manifest
+SHA-256 is
+`c015c129796631d11797256fef9f0546af4a0e249a0d48ffdee3b99e6ccca78c`;
+the passing report SHA-256 is
+`3ca53ee61afc175e01fdf680c22b181a70d2e7b6875e6286bc3db9af451930da`.
+
+Reproduction:
+
+```text
+cp tests/manifests/presentation/classic-crawler-dragster-v1.json artifacts/m3-02-rereview-wrong-source-manifest.json
+# Change only source_rom_sha256 to 64 zeroes.
+python3 tools/project.py native presentation-check \
+  --manifest artifacts/m3-02-rereview-wrong-source-manifest.json \
+  --fixtures artifacts/m3-02-rereview-fixtures \
+  --content-pack artifacts/m3-02-rereview.pack \
+  --preset lab-debug \
+  --artifacts artifacts/m3-02-rereview-wrong-source-pass \
+  --report artifacts/m3-02-rereview-wrong-source-pass/report.json \
+  --timeout 120 --task M3-02-review
+```
+
+This contradicts the required manifest/identity-bound durable gate. Validate
+the frozen top-level contract fields and require the declared source/profile/
+logical-entry identities to agree with the accepted Classic pack and command
+domain. Add a ROM-free authored mutation showing that an altered source
+identity fails rather than merely changing the manifest hash recorded in the
+report.
+
+### Returned findings otherwise verified
+
+1. The tracked debug and sanitizer visual checks each ran seven cases. Frame
+   3678 rendered the result at `ResultLoading`/`PlayerWon` update 225 with
+   962/57,344 mismatches (1.677595%) under the unchanged 15% gate; frame 3679
+   remained 961/57,344 (1.675851%). The authored update-224 boundary remains a
+   race presentation and the focused native test passed under both presets.
+2. Changing only the frame-2000 player `pose.reflected` byte from one to zero
+   made the direct runner exit 1 with `unsupported Classic rider
+   pose/reflection combination` and no output. The unmodified supported state
+   rendered successfully.
+3. Sanitizer runs with camera X `INT32_MIN` and `INT32_MAX` completed without a
+   diagnostic. Camera overflow/underflow, fractional and trailing-text values,
+   plus scroll 32768/-32769, each exited 1 before creating output.
+4. The tracked checker passed all seven cases in both presets. Tightening only
+   frame 1600's threshold to 0.1% exited 1 at 36/26,656; substituting a different
+   image or state fixture exited 3 on its SHA-256 before rendering. Report
+   SHA-256 values are debug `94703e9d...f44b`, sanitizer
+   `8990742d...9e2`, threshold `549995a8...8368`, image mutation
+   `cdab7d31...6e2f`, and state mutation `d7566dd5...99e`.
+5. The pack rebuilt deterministically as 154,030 bytes, SHA-256
+   `5c1fc5b...1529`, with 25 logical entries. The pack records now consistently
+   say thirteen gameplay plus twelve presentation entries.
+
+### Continuation, failure paths, suites and hygiene
+
+Pack-backed `native finish-check` passed under debug and sanitizer: two fresh
+processes, gameplay/finish equality, and exact prefix/suffix continuation at
+1600, 2000, 2400, 3213, 3453 and 3678. Report SHA-256 values are
+`a2f1cb7f...e806` and `fd1f105c...a25a`. Moving the ROM locator aside and
+running frame 3678 from only the validated pack produced
+`b5cf1100...fbbb`, byte-identical to the normal checker output; the locator was
+restored. A separately truncated pack was rejected by `pack-inspect` with exit
+3 and by the C++ runner with exit 1, without output.
+
+Sequential full synthetic runs passed all 300 required records under both
+debug and sanitizer, with report SHA-256 values `800a00ca...432e` and
+`b76e231b...8aa`; focused `presentation|content_pack` CTests passed 2/2 in
+each preset. An earlier attempt to run the two full suites concurrently is not
+acceptance evidence: both failed two tooling checks because they raced on the
+shared `build/lab-failure-probe` directory. Those failed reports were retained,
+the generated probe build was moved aside, and the valid reruns were strictly
+sequential.
+
+The correction changes no movement structures or serialization source.
+Finish/restore equality and the renderer's authored before/after serialization
+check passed. `git diff --check 65b49fa..3eb0879` passed; the 14-file diff is
+text-only and adds no tracked ROM, pack, state, capture, or rendered image.

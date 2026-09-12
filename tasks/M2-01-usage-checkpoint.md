@@ -73,3 +73,10 @@ claimed. The policy/configuration change is checked by TOML parsing, local link
 resolution and Git whitespace checks; runtime default selection still needs to
 be observed in a fresh session. Existing live sessions are not switched by a
 repository configuration edit.
+
+## Subsequent user routing adjustment
+
+Keep the current continuation's coordinator on Astra. Sol/medium is the default
+for future OpenAI sessions and bounded workers, not a requirement to replace
+this live coordinator. Future Anthropic sessions start with Opus provisionally.
+Provider boundaries and quota guardrails above still apply.

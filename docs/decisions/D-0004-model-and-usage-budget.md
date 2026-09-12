@@ -57,6 +57,20 @@ do not turn it into continuous frontier coordination, routine coding or polling.
 A second consultation needs a recorded new question or new evidence. Routine
 model selection and reversible adjustments need no user confirmation.
 
+## Starting future sessions
+
+Start new OpenAI work sessions with Sol/medium; start Anthropic sessions with
+Opus as the provisional routine coordinator/worker choice. Keep the coordinator
+stable and use compact, same-provider frontier consultations when justified.
+Do not start every task on a frontier model merely to plan it before switching.
+
+User adjustment: the current OpenAI continuation stays on Astra as coordinator.
+The new-session default does not require a mid-task coordinator switch. Bounded
+Sol workers remain available under the existing scope and quota rules. This is
+a continuity preference, not a measured claim that switching models would cost
+more: the actual context sent, compaction and caching determine input overhead,
+and this session's cross-model cache behavior has not been established.
+
 ## Execution and usage guardrails
 
 - Default to the primary plus at most one active child. Sequence implementation

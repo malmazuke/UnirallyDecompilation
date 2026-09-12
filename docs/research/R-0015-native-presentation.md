@@ -209,3 +209,13 @@ additively freeze these as `presentation.effect.go-window.v1` and
 rectangles and limits do not change. A first reduction from those entries gives
 36/26,656 mismatches (0.135%) for frame 1600's exact declared rectangle and
 653/50,176 (1.301%) for frame 3453, below the original 2% and 3% limits.
+
+The first stable-result placement remains a recorded failure. A canonical
+frame-3678 restore (the last legal interior save boundary) is already in
+`ResultScreen` and reproduces the stable frame-3679 presentation inputs. The
+diagnostic/first placement differs in 57,280/57,344 pixels (99.89%), far above
+the frozen 15% limit. Mode 3, BG map/character registers, the final constructed
+2,048-byte map, palette transfer and two tile transfers are observed; the
+unresolved relationship is which BG owns each transition tile payload and the
+retained tile-76 background used by the filled map. No limit or expected image
+was changed.

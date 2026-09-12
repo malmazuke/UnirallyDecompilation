@@ -228,3 +228,191 @@ again recorded 1,419 fallback frames and zero identical consecutive fallback
 redraws while Racing. `tasks/M3-03.md` contains the exact commands and report
 hashes. This documentation-only follow-up does not replace the required fresh
 review or hosted macOS/Linux evidence.
+
+## Fresh sequential re-review — correction round 2
+
+- Handoff head reviewed: `126cd1685e1711f0e87e816058a0c4dcaba8c194`
+- Behavioral correction reviewed:
+  `3509ae99ed5102d8d7e2afdbea9d7e4ecbeda4da`
+- Correction diff: `8ccb0377ae0f9a244b7bb11638f875be6a625342..3509ae99ed5102d8d7e2afdbea9d7e4ecbeda4da`
+- Reviewer: fresh sequential OpenAI Codex Sol/medium session
+- Worktree/branch:
+  `.worktrees/m3-03-minimal-frontend/.worktrees/m3-03-rereview`,
+  `review/M3-03-minimal-frontend-r2`
+- Date: 13 September 2026 AEST
+- Verdict: **returned with material findings; not approved**
+
+### Findings
+
+#### 1. The fallback still changes scene-wide effects, not only rider art
+
+The former complete-frame freeze is corrected: camera, track, rider positions
+and timer now come from a fresh current-state render, and the external
+canonical state is not mutated. The replacement is nevertheless not yet the
+declared rider-only fallback. `LivePresentation::render` copies the complete
+state, substitutes the retained pose indices/reflection, and passes that copy
+through the complete renderer (`frontend.cpp:128-151`). Those pose fields also
+select the scene-wide racing/finish palette (`presentation.cpp:158-169`) and
+the GO/winner window effects (`presentation.cpp:760-763,787-788`), in addition
+to selecting rider atlas tiles.
+
+An independent pack-backed boundary made both riders wholly off-screen and
+rendered the **same current unsupported state**, camera, scroll and HUD twice.
+One `LivePresentation` instance had last accepted the late-finish pair
+`04fe/037c`; the other had last accepted the rolling pair `0855/0895`. The two
+fallback frames differed in **14,290 RGB channel bytes** even though no rider
+pixel could contribute. The probe deliberately exited 7 on a difference. A
+second authored-content probe with a visible synthetic window differed in
+114,448 channel bytes. This proves fallback history leaks into non-rider scene
+pixels. It also explains why the new regression misses the defect: its GO and
+winner window tables are empty, and its expected frame is produced by the same
+whole-state pose substitution.
+
+Holding recovered rider art is acceptable for M3-03; recovering sustained pose
+coverage and judging real play belong to M3-04. The acceptable boundary must,
+however, apply retained pose/reflection only to atlas/rider drawing while the
+current semantic state continues to control palette, effects, camera and HUD.
+Add a regression in which the same unsupported current state and off-screen
+riders render identically after two different recovered-art histories.
+
+The exact final probe command was:
+
+```text
+/usr/bin/clang++ -std=c++20 -Isrc/app -Isrc/core -x c++ - -x none build/app-debug/src/app/libunirally_frontend.a build/app-debug/src/core/libunirally_presentation.a build/app-debug/src/core/libunirally_movement.a build/app-debug/src/core/libunirally_contact.a build/app-debug/src/core/libunirally_input_timer.a build/app-debug/src/core/libunirally_speed_limits.a build/app-debug/src/core/libunirally_sampling.a -o artifacts/m3-03-rereview/fallback-history-pack-boundary
+artifacts/m3-03-rereview/fallback-history-pack-boundary '/Users/markfeaver/Projects/Unirally Decompilation/.worktrees/m3-03-minimal-frontend/artifacts/m3-03-first-launch.pack'
+```
+
+The inline probe loaded that identity-validated pack, used the public semantic
+start, captured its valid opening presentation position, set phase Racing,
+made both rider X coordinates zero and both poses reflected unsupported
+`04fa`, primed separate presentation instances with the pairs above, and
+counted unequal channel bytes with `std::inner_product`. The output was
+`same_current_state_offscreen_riders_history_pixel_differences=14290` and exit
+7. The private pack is unchanged and remains ignored.
+
+#### 2. Separated negative infinity still loses the requested report
+
+The command handler now rejects non-finite values before pack access or child
+creation. At the real CLI boundary, however, argparse interprets the natural
+two-token spelling `--timeout -inf` as a new option and exits before
+`cmd_run`. `tools/project.py` maps that usage exit to 3, but no requested JSON
+report is written. The authored test calls `cmd_run` directly, so it cannot
+detect this parser boundary.
+
+Exact results using the valid review pack were:
+
+```text
+--timeout nan       -> exit 3, failed report written, no matching child
+--timeout inf       -> exit 3, failed report written, no matching child
+--timeout -inf      -> exit 3, argparse error, no report, no matching child
+--timeout=-inf      -> exit 3, failed report written, no matching child
+```
+
+The post-run process scan
+`pgrep -fl '/m3-03-rereview/build/app-debug/src/app/unirally'` exited 1. Thus
+the crash/orphan defect is corrected, but the requirement that every
+non-finite timeout produce its requested failed report is not. Add a
+subprocess-level CLI regression for all four spellings above and handle the
+separated negative-infinity token before argparse loses command/report
+context.
+
+#### 3. Exact-head hosted Linux app and sanitizer evidence failed
+
+Hosted run `34699306504` ran at exact head `126cd16`. macOS 15 passed the
+headless suite, `app-debug` build and suite, and the executable help/link
+smoke. Ubuntu 24.04 passed the existing headless debug build and suite, then
+failed configuring `app-debug`: SDL reported that it could find neither X11
+nor Wayland development libraries (with a separate non-fatal ALSA warning).
+The Linux app-debug suite/help and the complete Linux `app-sanitize`
+build/suite/help step were consequently skipped. The run conclusion is
+failure.
+
+This confirms that the workflow selects the right app presets and preserves
+the headless path, but it does not yet provide Linux SDL compilation/linking or
+sanitizer evidence. The smallest correction is a bounded Ubuntu-only install
+of an explicit SDL-documented X11 or Wayland development package set before
+the app steps, followed by an exact-candidate rerun. Disabling SDL's Unix
+desktop-backend check would compile dummy/offscreen support only and would not
+satisfy the desktop-window acceptance criterion. Dependency preparation and
+the build remain bounded by the 30-minute job limit and should also retain
+explicit command-level timeouts.
+
+Reproduction/inspection:
+
+```text
+gh run view 34699306504 --json status,conclusion,jobs,url,headSha
+gh run view 34699306504 --job 103568159240 --log-failed
+```
+
+### Corrected items confirmed
+
+- The only tracked `SDL_RenderPresent` call is now checked; false throws
+  `cannot present rendered frame` with SDL's error. No discarded present call
+  remains.
+- NaN, positive infinity and the equals-form negative infinity all exit 3,
+  write a failed exact-head report before pack/child execution, and leave no
+  app process. The remaining report gap is the parser boundary above.
+- The fallback does not mutate accepted canonical gameplay state, and it no
+  longer holds complete RGB frames. The remaining defect is presentation-only
+  but material because startup and R-0016 claim that the whole scene stays
+  current while only rider art is held.
+- The hidden `--fixed-controller-mask` seam overrides port 0 only after the
+  ordinary per-update input snapshot. It is suitable for deterministic
+  scheduler/simulation/presentation smoke evidence and does not change the
+  canonical core. It does bypass SDL event-to-mask delivery, so the 2,146-
+  update run is not evidence that live keyboard/gamepad input works. Pure
+  mapping/state tests and source inspection cover the logical boundary;
+  M3-04's real sustained-play check must exercise actual live input. With that
+  evidence scope stated accurately, the seam itself is not a blocker.
+
+### Local validation
+
+These commands passed at exact handoff head `126cd16`:
+
+```text
+python3 tools/project.py build --preset app-debug --report artifacts/m3-03-rereview/app-debug-build.json --timeout 600 --task M3-03-review-r2
+python3 tools/project.py test --suite synthetic --preset app-debug --artifacts artifacts/m3-03-rereview/app-debug-synthetic --report artifacts/m3-03-rereview/app-debug-synthetic/report.json --timeout 600 --test-timeout 120 --task M3-03-review-r2
+python3 tools/project.py build --preset app-sanitize --report artifacts/m3-03-rereview/app-sanitize-build.json --timeout 600 --task M3-03-review-r2
+python3 tools/project.py test --suite synthetic --preset app-sanitize --artifacts artifacts/m3-03-rereview/app-sanitize-synthetic --report artifacts/m3-03-rereview/app-sanitize-synthetic/report.json --timeout 600 --test-timeout 120 --task M3-03-review-r2
+SDL_VIDEODRIVER=dummy python3 tools/project.py frontend run --pack '/Users/markfeaver/Projects/Unirally Decompilation/.worktrees/m3-03-minimal-frontend/artifacts/m3-03-first-launch.pack' --preset app-debug --hidden --updates 20 --timeout 30 --report artifacts/m3-03-rereview/dummy-debug.json --task M3-03-review-r2
+SDL_VIDEODRIVER=dummy python3 tools/project.py frontend run --pack '/Users/markfeaver/Projects/Unirally Decompilation/.worktrees/m3-03-minimal-frontend/artifacts/m3-03-first-launch.pack' --preset app-sanitize --hidden --updates 20 --fixed-controller-mask 128 --timeout 30 --report artifacts/m3-03-rereview/dummy-sanitize.json --task M3-03-review-r2
+```
+
+Both suites ran 282 Python tests, 20 CTests and three fresh processes: 305
+required checks, no failure or skip. Both pack-only dummy-video launches
+validated the pack without opening a ROM and exited successfully. Report
+SHA-256 values:
+
+| Evidence | SHA-256 |
+| --- | --- |
+| app-debug build | `7536caf7597e3b6e4b0fdfe489612b8a24430124d0ed675eb45bcf0db8cd7733` |
+| app-debug synthetic | `3f5cb55126f26d4b7a1db22d3624d37d2db3ff994e4f0536f2799dfcd86da9e9` |
+| app-sanitize build | `d67c698e6c6fef59c950ec79d6c900d79a154bd54928d2c4f938a69d94c72281` |
+| app-sanitize synthetic | `fa53bc89863be928a21269efaf6acdde583429d651c00c924e0e73e4c169551c` |
+| dummy debug | `67d4bc9447c2edacbc660ffb14833bc1fdbd5e8a3dab42a17547eb9f537f7e00` |
+| dummy sanitizer | `766b685ce9af5a40b77e97a02938f1ef33db2feeb929968ba8ef762f7a0b33d3` |
+| rejected NaN | `aa1cdd1db5650ed88c57fc8b2929e406b07e929e0f1e172770f3b6b5ec40d35a` |
+| rejected positive infinity | `12d8254f3d46713c8d209cf06c42a6f024813b8fc0d30fb0751202feda070740` |
+| rejected equals-form negative infinity | `f22eb4f631a259f66ffe3796bf46f39f53428ebedde5e3ef16e4a9dea8de7d55` |
+
+All nine reports name `126cd1685e1711f0e87e816058a0c4dcaba8c194`
+as their source commit. The three timeout reports correctly have overall
+status `failed`; that is the required mutation result. The separated
+negative-infinity case has no report and is therefore intentionally absent
+from the table.
+
+`git diff --check 8ccb037..3509ae9` passed. The review worktree had no tracked
+changes before this appended round. Generated builds, reports, probe binaries,
+the toolchain links and the Classic pack all remain ignored. No implementation,
+case, manifest, threshold or accepted core semantic was changed by this
+review.
+
+### Required correction and next review
+
+Decouple retained rider art from pose-derived palette/window scene behavior;
+make every CLI spelling of negative infinity emit the requested invalid-input
+report without starting a child; prepare a real Linux SDL window backend in
+the hosted workflow and obtain green Linux app-debug/app-sanitize evidence.
+Then rerun both local app suites, the same-state/off-screen-rider fallback
+boundary, all CLI non-finite mutations, dummy smokes and exact-head hosted CI.
+M3-03 remains unapproved.

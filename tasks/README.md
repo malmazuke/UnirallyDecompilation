@@ -19,7 +19,9 @@ The coordinator maintains the status registry below. Work orders further below d
 | M2-01A | accepted: PR2 merged after independent review and macOS/Linux CI; native gameplay remains M2-01 | [Close riding dependencies](M2-01A.md) |
 | M2-01 movement | accepted: exact primary/two withheld agreement; integrated through PR4 | [Movement implementation](M2-01-movement.md) |
 | M2-02 | accepted: PR5 merged after independent review and macOS/Linux CI; M2 accepted, tag `m2` | [Native save/restore and portability](M2-02.md) |
-| M3 – M6 | planned; M3 is next | See milestone definitions |
+| M3-00 | claimed: complete-race reference evidence and dependency inventory | [Complete-race reference evidence](M3-00.md) |
+| M3-01 | planned; depends on M3-00 | One complete playable native track (work order below) |
+| M4 – M6 | planned | See milestone definitions |
 
 ## M0 — repeatable laboratory
 

@@ -63,3 +63,20 @@ The meaning of the decoded header/geometry regions is still unknown. Rider DMA
 rows are observed, but the mapping from each semantic pose to an authored frame
 descriptor remains the next experiment. Stable-result graphics provenance has
 not yet been closed; only the font-backed minimum layout is frozen.
+
+## Native boundary checkpoint
+
+Commit `9c2bcb3` implements the byte-exact strided gather, deterministic 30 by
+16 column-major expansion, and an explicit lookup for the seven pose keys in
+the preregistered cases. Unsupported pose keys fail closed. The offscreen
+runner accepts only a validated Classic pack plus canonical movement state and
+writes a 256 by 224 RGB PPM; rendering leaves canonical gameplay bytes
+unchanged. A ROM-absent frame-3213 run produced SHA-256
+`8c975f8f...ca651`.
+
+This is an intermediate diagnostic composition, not a visual acceptance
+result. The current 13-entry pack does not yet contain the seven frozen
+presentation assets. The renderer therefore uses authored diagnostic map
+colours and rider shapes and has not satisfied the frozen mismatch limits.
+Sprite frame descriptors, BG tile/palette placement and stable-result
+provenance remain required; the frozen limits must not be enlarged.

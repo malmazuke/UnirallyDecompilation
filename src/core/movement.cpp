@@ -274,7 +274,11 @@ void update_idle_pose(RiderMovementState& rider,bool race_active,bool opponent,
     velocity=static_cast<std::int16_t>(idle.velocity);
     bool use_table=false;
     if(velocity==0) {
-        use_table=reference<9 || reference>=58;
+        if(reference<9 || reference>=58) {
+            use_table=true;
+        } else {
+            idle.velocity=static_cast<std::uint16_t>(reference<32?-1:1);
+        }
     } else if(velocity<0) {
         if(reference<32) {
             if(reference>=9) idle.velocity=static_cast<std::uint16_t>(-1);

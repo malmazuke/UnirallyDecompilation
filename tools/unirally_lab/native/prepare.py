@@ -74,8 +74,8 @@ def rider_seed(w: Writer, ram: bytes, rider: int) -> None:
           word(ram,0x411+p),word(ram,0x211e+p),word(ram,0x2122+p),
           word(ram,0x2126+p),word(ram,0xb9f+p),word(ram,0xfe5+p))
     w.u8(flag(word(ram,0xea3+p)),flag(word(ram,0xba7+p)))
-    # Persistent idle-pose oscillator loaded at $82:8A34-$82:8B1C and written
-    # back at $82:8D3A-$82:8E1C (opponent paths use the adjacent stride).
+    # Persistent idle-pose oscillator loaded at $82:8A34-$82:8B28 and written
+    # back at $82:8D3A-$82:8E28 (opponent paths use the adjacent stride).
     w.u16(word(ram,0xe8b+p),word(ram,0xe77+p),word(ram,0xe83+p),
           word(ram,0xe7f+p),word(ram,0xe87+p),word(ram,0xbd7+p),
           word(ram,0xd5b+p),word(ram,0xd6b+p),word(ram,0xbdf+p))
@@ -115,7 +115,7 @@ def validate_static_content(bindings:list[str],out_dir:Path):
         name,sep,value=binding.partition("=")
         if not sep or name not in STATIC_CONTENT or name in sources:raise ValueError("--content requires each exact name=path once")
         sources[name]=Path(value)
-    if set(sources)!=set(STATIC_CONTENT):raise ValueError("complete 12-file static content inventory is required")
+    if set(sources)!=set(STATIC_CONTENT):raise ValueError("complete 13-file static content inventory is required")
     if out_dir.exists() and any(out_dir.iterdir()):raise ValueError("refusing to overwrite a nonempty runtime directory")
     # Validate every input and the repository-relative output contract before
     # creating anything. A failed preparation must not leave a plausible

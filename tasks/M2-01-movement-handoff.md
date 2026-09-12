@@ -158,3 +158,18 @@ passes273/273; debug and sanitizer movement CTests pass2/2. Reports are under
 `artifacts/m2-01-movement/{idle-primary-final,idle-cadence-final,idle-release-4}`
 and `idle-{synthetic,sanitize-build}.json`. Exact-candidate review in a separate
 checkout is next; do not treat this implementation submission alone as accepted.
+
+Independent review of `17e13cf` reproduced every stated check and identity but
+blocked approval on the two zero-crossing branches not reached by the frozen
+cases: references9–31 must force velocity−1 and references32–57 must force+1.
+The source fix and two authored one-update regressions are included in the next
+candidate; the reviewer also corrected the ninth word's documented load/writeback
+range to `$82:8B28/$82:8E28`.
+
+The corrected candidate passes both authored zero-crossing regressions, all
+three frozen cases through frame2999, and fresh-process determinism. Reports:
+`reviewer-fix-{primary,cadence,release}/report.json`. The complete synthetic
+suite passes273/273 in `reviewer-fix-synthetic.json`; debug and sanitizer
+movement CTests pass2/2, with sanitizer build evidence in
+`reviewer-fix-sanitize-build.json`. A final independent verdict on this exact
+commit is still required before acceptance.

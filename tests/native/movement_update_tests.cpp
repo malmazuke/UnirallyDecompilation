@@ -81,4 +81,29 @@ int main() {
     require(idle.riders[0].idle_pose.velocity==1 &&
             idle.riders[0].idle_pose.wobble_offset==1,
             "idle pose positive recurrence");
+
+    auto zero_crossing=[&](std::uint16_t reflected_orientation,
+                           std::uint16_t initial_velocity) {
+        unirally::MovementState boundary{};
+        boundary.frame=2000; boundary.animation_counter=5; boundary.countdown=0;
+        boundary.contact_phase=1; boundary.progress_phase=1;
+        boundary.rewards.write_cursor=1; boundary.rewards.event_one_weight=4;
+        for(auto& rider:boundary.riders) {
+            rider.motion.y=64; rider.pose.previous_y=64;
+            rider.pose.reflected=true;
+        }
+        boundary.riders[0].pose.reflected_orientation=reflected_orientation;
+        boundary.riders[0].idle_pose.velocity=initial_velocity;
+        unirally::update_movement(boundary,neutral,
+            {{track,poses,templates},{columns,flags},transitions,slopes,displacement,idle_pose,reward,reward_class,
+             {masks,decrements}});
+        return boundary.riders[0].idle_pose;
+    };
+    const auto negative_crossing=zero_crossing(44,1); // reference 64-44 = 20
+    require(static_cast<std::int16_t>(negative_crossing.velocity)==-1 &&
+            static_cast<std::int16_t>(negative_crossing.wobble_offset)==-1,
+            "idle pose negative zero crossing");
+    const auto positive_crossing=zero_crossing(24,0xffff); // reference 40
+    require(positive_crossing.velocity==1 && positive_crossing.wobble_offset==1,
+            "idle pose positive zero crossing");
 }

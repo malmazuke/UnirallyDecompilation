@@ -1,0 +1,48 @@
+{
+  "description": "Static speed clamp tables recovered for M2-01A.",
+  "id": "movement-speed",
+  "identifiers": {
+    "domain": "CRAWLER tour / DRAGSTER primary movement frames 1534-2999",
+    "research": "docs/research/R-0011-speed.md"
+  },
+  "items": [
+    {
+      "expected": {
+        "length": 9,
+        "sha256": "0ca19a78da56137e0926c4ba602d8041648a422b9cf5d0a7c3de4a30998cf58b"
+      },
+      "id": "speed-masks",
+      "kind": "raw",
+      "name": "speed-masks",
+      "pieces": [
+        {
+          "file_offset": 1307,
+          "length": 9
+        }
+      ]
+    },
+    {
+      "expected": {
+        "length": 18,
+        "sha256": "c1fab1d9aa1e691d34c1a78e8658cfd52b8334cc5bdec8efb23bedc672988068"
+      },
+      "id": "speed-decrements",
+      "kind": "raw",
+      "name": "speed-decrements",
+      "pieces": [
+        {
+          "file_offset": 1316,
+          "length": 18
+        }
+      ]
+    }
+  ],
+  "kind": "content_manifest",
+  "rom": {
+    "sha256": "a1105819d48c04d680c8292bbfa9abbce05224f1bc231afd66af43b7e0a1fd4e",
+    "size": 2097152
+  },
+  "scenario_id": "race-crawler-dragster-3000",
+  "schema_version": 1,
+  "regeneration_command": "python3 tools/project.py content decode --manifest tests/manifests/native/movement-speed.content.json --out artifacts/m2-01-movement/speed-content"
+}

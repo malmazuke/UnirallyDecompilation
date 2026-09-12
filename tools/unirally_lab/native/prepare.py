@@ -19,11 +19,19 @@ ROM_SHA = "a1105819d48c04d680c8292bbfa9abbce05224f1bc231afd66af43b7e0a1fd4e"
 WRAM_SHA = "f87f42ddfcdae3010bef8da6823216664f655cb5fcdb54af8b7bbd7876605fdf"
 SRAM_SHA = "774410886d8e20e123924251c49230fb94a3bfb51438497ea070ba3421b889eb"
 REPORT_SHA = "2e187dc5cba609ffc8ad611eeeaffd857528f13677cf2167c13bd3b6f685d49c"
-STATIC_SIZES = {
-    "track-data.bin":33815,"collision-poses.bin":32768,"collision-templates.bin":17249,
-    "progress-transitions.bin":80,"tile-tables.bin":640,"tile-flags.bin":20,
-    "speed-masks.bin":9,"speed-decrements.bin":18,"pose-slopes.bin":128,
-    "displacement-table.bin":512,"rotation-reward.bin":2,"rotation-class.bin":1,
+STATIC_CONTENT = {
+    "track-data.bin":(33815,"8f5cef67dc57977af8ff614b8178514a26e9fe0059e02ed27aad5978185580d4"),
+    "collision-poses.bin":(32768,"9d1754d38c20cb2900239557550211ab6fc23d9b0237e17b78fb29f3bf272c32"),
+    "collision-templates.bin":(17249,"2f03a8cb985899436603ef36b233b28f7b4213e4ba106fca328a6b02cdb081c7"),
+    "progress-transitions.bin":(80,"8a90513f349bc7836513d3495a9bbb90563b9eb7a716fd4aff5b9a4c74fc83df"),
+    "tile-tables.bin":(640,"bb95427aa2a307c9874b6140b145dce5a4e279112d57a5efcae77eb444951a72"),
+    "tile-flags.bin":(20,"590e52f2640bb1b70f602622aa07285ed51d7c4b84707b4d77c5cc33fc230846"),
+    "speed-masks.bin":(9,"0ca19a78da56137e0926c4ba602d8041648a422b9cf5d0a7c3de4a30998cf58b"),
+    "speed-decrements.bin":(18,"c1fab1d9aa1e691d34c1a78e8658cfd52b8334cc5bdec8efb23bedc672988068"),
+    "pose-slopes.bin":(128,"f6b1ea6a34c78336ca25449c8ddbd23e2417ef829ec09765e695f957cd714584"),
+    "displacement-table.bin":(512,"27894923de2aaeb58ca24dedbddadcf0d4d154fbc61ea484e7c248d066e24e1b"),
+    "rotation-reward.bin":(2,"8509b81230019d2ad970d970f791dfbdc8caf54f5c594fcd327cef9feed206c1"),
+    "rotation-class.bin":(1,"6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"),
 }
 
 def sha(path: Path) -> str: return hashlib.sha256(path.read_bytes()).hexdigest()
@@ -52,12 +60,18 @@ def rider_seed(w: Writer, ram: bytes, rider: int) -> None:
     w.u16(word(ram,0x11d9+p),word(ram,0x11df+p),word(ram,0x343+p),
           word(ram,0xfc5+p),word(ram,0xfc9+p),word(ram,0xfcd+p))
     w.u8(0) # rejection is transient and false at the established stationary seed
-    # Jump and pose/animation state. The three displacement-history words are
-    # zero at this stationary seed; later states serialize their evolved values.
+    # Jump and pose/animation state. $82:8AE0-$82:8AF8 loads the player's
+    # displacement history from $7E:211E/$2122/$2126 into the pose scratch
+    # words, and $82:8FE8-$82:9000 does the same from $2120/$2124/$2128 for the
+    # opponent. The paired writeback paths are $82:8DE0-$82:8FF2 and
+    # $82:92CE-$82:92E0. Read the persistent words even though this seed happens
+    # to contain zero, so another value cannot be silently replaced by an
+    # assumption.
     w.u16(word(ram,0xd39+p),word(ram,0x4c3+p),word(ram,0xbdb+p),word(ram,0xbe3+p),
           word(ram,0x4cb+p),word(ram,0xde9+p),word(ram,0xb62+p),word(ram,0xb6a+p),
           word(ram,0xb5a+p),word(ram,0xb5e+p),word(ram,0xb66+p),word(ram,0xb76+p),
-          word(ram,0x411+p),0,0,0,word(ram,0xb9f+p),word(ram,0xfe5+p))
+          word(ram,0x411+p),word(ram,0x211e+p),word(ram,0x2122+p),
+          word(ram,0x2126+p),word(ram,0xb9f+p),word(ram,0xfe5+p))
     w.u8(flag(word(ram,0xea3+p)))
     w.u16(word(ram,0xd25+p),word(ram,0x1203+p),word(ram,0x1207+p),
           word(ram,0x120b+p),word(ram,0x120f+p))
@@ -84,26 +98,40 @@ def validate_observation(wram_path:Path,sram_path:Path,report_path:Path)->tuple[
     required={"schema_version":1,"kind":"original_single_seed","after_frame":1533,
               "rom_sha256":ROM_SHA,"wram_sha256":WRAM_SHA,"cartridge_sha256":SRAM_SHA,
               "cartridge_bytes":8192,"feature_total_770825":0,"event_one_weight_7e2102":4}
-    if any(report.get(k)!=v for k,v in required.items()):raise ValueError("seed report metadata differs from R-0011-motion")
+    if any(type(report.get(k)) is not type(v) or report.get(k)!=v for k,v in required.items()):
+        raise ValueError("seed report metadata differs from R-0011-motion")
     if word(sram,0x825)!=0 or wram[0x2102]!=4:raise ValueError("direct SRAM/WRAM seed guards differ")
     return wram,sram
 
-def prepare(wram_path:Path,sram_path:Path,report_path:Path,bindings:list[str],out_dir:Path)->dict:
-    wram,sram=validate_observation(wram_path,sram_path,report_path)
+def validate_static_content(bindings:list[str],out_dir:Path):
     sources={}
     for binding in bindings:
         name,sep,value=binding.partition("=")
-        if not sep or name not in STATIC_SIZES or name in sources:raise ValueError("--content requires each exact name=path once")
+        if not sep or name not in STATIC_CONTENT or name in sources:raise ValueError("--content requires each exact name=path once")
         sources[name]=Path(value)
-    if set(sources)!=set(STATIC_SIZES):raise ValueError("complete 12-file static content inventory is required")
+    if set(sources)!=set(STATIC_CONTENT):raise ValueError("complete 12-file static content inventory is required")
     if out_dir.exists() and any(out_dir.iterdir()):raise ValueError("refusing to overwrite a nonempty runtime directory")
+    # Validate every input and the repository-relative output contract before
+    # creating anything. A failed preparation must not leave a plausible
+    # partial runtime behind.
+    out_dir.resolve().relative_to(ROOT.resolve())
+    validated=[]
+    for name,(size,digest) in STATIC_CONTENT.items():
+        source=sources[name]
+        if source.stat().st_size!=size:raise ValueError(f"wrong static content size: {name}")
+        if sha(source)!=digest:raise ValueError(f"wrong static content identity: {name}")
+        validated.append((name,source,size,digest))
+    return validated
+
+def prepare(wram_path:Path,sram_path:Path,report_path:Path,bindings:list[str],out_dir:Path)->dict:
+    wram,sram=validate_observation(wram_path,sram_path,report_path)
+    validated=validate_static_content(bindings,out_dir)
     content=out_dir/"content"; content.mkdir(parents=True,exist_ok=True)
     files=[]
-    for name in STATIC_SIZES:
-        source=sources[name]
-        if source.stat().st_size!=STATIC_SIZES[name]:raise ValueError(f"wrong static content size: {name}")
+    for name,source,size,digest in validated:
         target=content/name; shutil.copyfile(source,target)
-        files.append({"name":name,"size":STATIC_SIZES[name],"sha256":sha(target)})
+        if sha(target)!=digest:raise OSError(f"copied static content identity changed: {name}")
+        files.append({"name":name,"size":size,"sha256":digest})
     seed=out_dir/"seed.bin"; seed.write_bytes(canonical_seed(wram,sram))
     def relative(path):return str(path.resolve().relative_to(ROOT.resolve()))
     runtime={"schema_version":1,"rom_sha256":ROM_SHA,

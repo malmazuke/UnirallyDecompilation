@@ -1,9 +1,11 @@
 #include "movement.hpp"
+#include <fstream>
+#include <iterator>
 #include <stdexcept>
 
 static void require(bool value) { if(!value) throw std::runtime_error("movement state expectation failed"); }
 
-int main() {
+int main(int argc, char** argv) {
     unirally::MovementState state{};
     state.frame=1533; state.player_input={0,1,1,2}; state.contact_phase=1; state.progress_phase=1;
     state.animation_counter=31; state.update_counter=205; state.countdown=69;
@@ -20,4 +22,19 @@ int main() {
     malformed=encoded; malformed.push_back(0); rejected=false;
     try { (void)unirally::deserialize_movement_state(malformed); } catch(const std::invalid_argument&) { rejected=true; }
     require(rejected);
+    if(argc==2) {
+        std::ifstream input(argv[1],std::ios::binary);
+        require(input.good());
+        const std::vector<std::uint8_t> seed{
+            std::istreambuf_iterator<char>(input),std::istreambuf_iterator<char>()};
+        const auto imported=unirally::deserialize_movement_state(seed);
+        require(imported.frame==1533);
+        require(imported.riders[0].motion.x==1088);
+        require(imported.riders[0].throttle==432);
+        require(imported.riders[0].pose.displacement_history==
+                std::array<std::uint16_t,3>{0,0,0});
+        require(imported.riders[1].pose.displacement_history==
+                std::array<std::uint16_t,3>{0,0,0});
+        require(unirally::serialize_movement_state(imported)==seed);
+    }
 }

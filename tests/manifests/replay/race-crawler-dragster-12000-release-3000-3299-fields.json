@@ -53,5 +53,9 @@
     {"name": "jump_height", "kind": "wram_range", "start": 829, "length": 2},
     {"name": "camera_x", "kind": "wram_range", "start": 8230, "length": 2}
   ],
-  "regeneration_command": "python3 tools/project.py replay compare --manifest tests/manifests/replay/race-crawler-dragster-12000-release-3000-3299-fields.json --against tests/manifests/replay/race-crawler-dragster-12000-continuous-right-fields.json"
+  "regeneration_command": "python3 tools/project.py replay compare --manifest tests/manifests/replay/race-crawler-dragster-12000-release-3000-3299-fields.json",
+  "expected": {
+    "sample_digest": "d24a12347bcda3352244ecdb1d5e1ffc88985827a7725ac00da5a9f8ec866c74",
+    "final_state_sha256": "628878bd41e4edecf2ca3efd5b8cedb7b3144385f1edb726c0f198727c4e5dcd"
+  }
 }

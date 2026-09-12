@@ -22,7 +22,7 @@ The coordinator maintains the status registry below. Work orders further below d
 | M3-00 | accepted: integrated 12 September 2026 after one returned finding and approved re-review | [Complete-race reference evidence](M3-00.md) |
 | M3-01 | accepted: integrated 12 September 2026 after two returned findings, approved final review and macOS/Linux CI | [Native finish and full-race state](M3-01.md) |
 | M3-02A | accepted 12 September 2026 after one returned finding and green macOS/Linux CI | [Classic content pack and ROM extraction](M3-02A.md) |
-| M3-02 | ready: native presentation contract | [Native presentation contract](M3-02.md) |
+| M3-02 | claimed 12 September 2026: native presentation contract | [Native presentation contract](M3-02.md) |
 | M4 – M6 | planned | See milestone definitions |
 
 ## M0 — repeatable laboratory

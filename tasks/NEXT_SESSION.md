@@ -1,33 +1,37 @@
-# Sol coordinator handover — begin M3-02 native presentation
+# Sol coordinator handover — M3-03 minimal frontend
 
-M3-02A is accepted through integration candidate `cd37469` after one returned
-native-reader identity finding and green CI run34685007265 on macOS15 and
-Ubuntu24.04. Read [M3-02](M3-02.md),
-[R-0014](../docs/research/R-0014-classic-content-pack.md),
-[R-0008](../docs/research/R-0008-track-decode.md) and the
-[native source guide](../src/core/README.md). Do not repeat pack-boundary or
-finish research.
+M3-02 is accepted through integration `759ed9e` after three independent review
+rounds and green hosted run `34696469012` on macOS 15 and Ubuntu 24.04. Read
+[M3-03](M3-03.md), [M3-02](M3-02.md),
+[R-0015](../docs/research/R-0015-native-presentation.md),
+[D-0005](../docs/decisions/D-0005-classic-content-distribution.md) and the
+[native source guide](../src/core/README.md). Do not repeat presentation,
+pack-identity or full-race mechanics research.
 
 ## Operating instructions
 
-Use OpenAI Sol with medium reasoning under D-0004, one child in an isolated
-worktree, then a fresh sequential reviewer. Resample quota at claim and preserve
-the final20% reserve. The post-M3-01 sample unexpectedly reported1% used after
-the task had sampled51%; record that telemetry discontinuity rather than
-attributing it to this task. No purchase, reset redemption, publication,
-deployment or provider switch is authorized.
+Use OpenAI Sol/medium with one worker in the assigned isolated worktree and a
+fresh sequential reviewer. The user removed percentage stop/reserve limits for
+this unattended run through all remaining M3 tasks, but did not authorize use
+of the weekly reset reserve: do not redeem reset credits, purchase usage,
+publish or deploy. At M3-03 claim, the account-wide weekly bucket reported 24%
+used; this telemetry may include unrelated work. Keep 45-minute checkpoints
+and durable ten-minute handoffs as recovery practice, not as a reason to stop.
 
-ROMs, decoded content, generated Classic packs, save states, screenshots and
-large traces stay ignored. M3-01's accepted full-race cases and explicit
-333-byte V1/369-byte V2 state transition are frozen regressions.
+## Current work
 
-## Next ready work
+The M3-03 claim record is on current `main`. Implement the smallest SDL3 desktop
+boundary that shows the accepted 256x224 pack-backed renderer, samples
+keyboard/gamepad state into the accepted two-port masks exactly once per PAL
+simulation update, and advances at a bounded 50 Hz independently of display
+refresh. Freeze/test the scheduler and input mapping separately from the UI.
 
-Claim M3-02 from current `main`. Reproduce the R-0008 frame comparisons and the
-M3-02A pack-backed full-race case, then freeze the presentation state/asset
-contract. First close the decoded BG1 column gather and rider pose-to-frame
-mapping; add minimum background/HUD/result logical entries only after their
-provenance is evidenced. Keep renderer output headless and reference-checkable.
+First launch must exact-gate a user-selected supported ROM and atomically create
+the ignored Classic pack; later launch must succeed from the validated pack
+with the ROM absent. Failure/cancel/corruption paths must be explicit. Audio is
+deliberately omitted and must be visible in the CLI/UI/help rather than implied
+working. Keep CI ROM-free; use a dependency arrangement that is pinned,
+reproducible, warning-clean and does not install globally.
 
-SDL/live controls and scheduling are M3-03, and playable acceptance is M3-04.
-Do not collapse them into M3-02 or claim M3 accepted.
+M3-04 owns clean-checkout playable acceptance, sustained real play, full-track
+comparison and the milestone tag. Do not claim M3 accepted from M3-03 alone.

@@ -55,8 +55,8 @@ The synthetic executable in M0-02 is infrastructure validation, not game progres
 | M3-00 | Complete-race evidence and playable-slice inventory | M2 | Freeze full-race reference paths, finish/content evidence and measured M3 boundaries |
 | M3-01 | Native finish and full-race state | M2, M3-00 | Exact native agreement through winner/loser finish paths and explicit continuation state |
 | M3-02A | Classic content pack and user-ROM extraction | M3-01, D-0005 | Deterministic atomic ROM-to-pack extraction, logical content IDs, ROM-free pack validation and archive-only native relaunch |
-| M3-02 | Native presentation contract | M3-02A | Rider-frame mapping, BG1 gather and minimum HUD/result assets addressed through logical pack entries |
-| M3-03 | Minimal frontend and controls | M3-02 | SDL3 window, keyboard/gamepad masks, PAL scheduler, first-launch ROM selection/cache flow and declared audio omission |
+| M3-02 | Native presentation contract (accepted) | M3-02A | Rider-frame mapping, BG1 gather and minimum HUD/result assets addressed through logical pack entries |
+| M3-03 | Minimal frontend and controls (claimed) | M3-02 | SDL3 window, keyboard/gamepad masks, PAL scheduler, first-launch ROM selection/cache flow and declared audio omission |
 | M3-04 | Playable-slice acceptance | M3-03 | Clean checkout plus supported ROM, archive-only relaunch, sustained play, full-track comparison and independent review |
 
 For M2 withheld cases, include at least two variations not used to develop the routine: for example a different trick timing and a different landing/acceleration sequence, chosen after the game behavior is observed. Do not decide numeric tolerances by looking at candidate errors.

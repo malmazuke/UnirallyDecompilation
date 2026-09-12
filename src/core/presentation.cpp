@@ -4,6 +4,35 @@
 #include <limits>
 #include <stdexcept>
 namespace unirally {
+
+std::uint16_t snes_direct_colour(std::uint8_t palette_colour,
+                                 std::uint8_t palette_group) {
+  // bsnes sfc/ppu/screen.cpp:152-158. In mode 3 with CGWSEL bit 1 set,
+  // BG1's 8-bit pixel and the map entry's three-bit group directly form BGR555.
+  return static_cast<std::uint16_t>(
+      ((static_cast<unsigned>(palette_colour) << 7U) & 0x6000U) |
+      ((static_cast<unsigned>(palette_group) << 10U) & 0x1000U) |
+      ((static_cast<unsigned>(palette_colour) << 4U) & 0x0380U) |
+      ((static_cast<unsigned>(palette_group) << 5U) & 0x0040U) |
+      ((static_cast<unsigned>(palette_colour) << 2U) & 0x001cU) |
+      ((static_cast<unsigned>(palette_group) << 1U) & 0x0002U));
+}
+
+std::uint16_t snes_add_colour(std::uint16_t main_colour,
+                              std::uint16_t sub_colour, bool halve) {
+  // bsnes sfc/ppu/screen.cpp:130-137. The masks preserve independent carries
+  // for the three five-bit colour channels.
+  if (halve) {
+    return static_cast<std::uint16_t>(
+        (main_colour + sub_colour -
+         ((main_colour ^ sub_colour) & 0x0421U)) >>
+        1U);
+  }
+  const auto sum = static_cast<unsigned>(main_colour) + sub_colour;
+  const auto carry = (sum - ((main_colour ^ sub_colour) & 0x0421U)) & 0x8420U;
+  return static_cast<std::uint16_t>((sum - carry) | (carry - (carry >> 5U)));
+}
+
 namespace {
 std::uint16_t word(std::span<const std::uint8_t> b, std::size_t at) {
   if (at > b.size() || b.size() - at < 2)
@@ -82,6 +111,18 @@ std::array<std::uint8_t, 3> colour(const std::array<std::uint8_t, 512> &cgram,
           channel8((value >> 10U) & 31U)};
 }
 
+std::uint16_t colour_word(const std::array<std::uint8_t, 512> &cgram,
+                          std::uint8_t index) {
+  const auto at = static_cast<std::size_t>(index) * 2;
+  return static_cast<std::uint16_t>(
+      cgram[at] | (static_cast<unsigned>(cgram[at + 1]) << 8U));
+}
+
+std::array<std::uint8_t, 3> colour_word_rgb(std::uint16_t value) {
+  return {channel8(value & 31U), channel8((value >> 5U) & 31U),
+          channel8((value >> 10U) & 31U)};
+}
+
 std::array<std::uint8_t, 512>
 build_race_cgram(const PresentationSample &sample,
                  std::span<const std::uint8_t> packed_palette) {
@@ -129,6 +170,23 @@ std::uint8_t tile_pixel(const std::array<std::uint8_t, 65536> &vram,
                                    (((vram[plane01 + 1] >> bit) & 1U) << 1U) |
                                    (((vram[plane23] >> bit) & 1U) << 2U) |
                                    (((vram[plane23 + 1] >> bit) & 1U) << 3U));
+}
+
+std::uint8_t tile_pixel_8bpp(const std::array<std::uint8_t, 65536> &vram,
+                             std::size_t tile_byte, std::uint16_t tile, int x,
+                             int y) {
+  const auto at = (tile_byte + (tile & 0x3ffU) * 64U) & 0xffffU;
+  const auto bit = static_cast<unsigned>(7 - x);
+  std::uint8_t value{};
+  for (unsigned plane = 0; plane < 8; ++plane) {
+    const auto plane_byte =
+        at + static_cast<std::size_t>(y) * 2U + (plane / 2U) * 16U +
+        (plane & 1U);
+    value |= static_cast<std::uint8_t>(((vram[plane_byte & 0xffffU] >> bit) &
+                                        1U)
+                                       << plane);
+  }
+  return value;
 }
 
 std::uint8_t background_pixel(const std::array<std::uint8_t, 65536> &vram,
@@ -211,6 +269,233 @@ void render_race_background(RgbFrame &frame, const PresentationSample &sample,
                            sample.bg1_scroll_x, sample.bg1_scroll_y, x, y);
       if (bg1)
         pixel(frame, x, y, colour(cgram, bg1));
+    }
+}
+
+void copy_wrapping(std::array<std::uint8_t, 65536> &destination,
+                   std::size_t destination_byte,
+                   std::span<const std::uint8_t> source) {
+  for (std::size_t index = 0; index < source.size(); ++index)
+    destination[(destination_byte + index) & 0xffffU] = source[index];
+}
+
+void set_map_word(std::array<std::uint8_t, 65536> &vram, int x, int y,
+                  std::uint16_t value) {
+  const auto at = 0x2000U + static_cast<std::size_t>(y * 32 + x) * 2U;
+  vram[at] = static_cast<std::uint8_t>(value);
+  vram[at + 1] = static_cast<std::uint8_t>(value >> 8U);
+}
+
+std::uint16_t result_title_tile(char glyph) {
+  switch (glyph) {
+  case 'a': return 0x14;
+  case 'c': return 0x18;
+  case 'd': return 0x1a;
+  case 'e': return 0x1c;
+  case 'g': return 0x20;
+  case 'l': return 0x2a;
+  case 'm': return 0x2c;
+  case 'o': return 0x00;
+  case 'p': return 0x30;
+  case 'r': return 0x34;
+  case 's': return 0x36;
+  case 't': return 0x38;
+  default:
+    throw std::invalid_argument("unsupported Classic result title glyph");
+  }
+}
+
+void write_result_title(std::array<std::uint8_t, 65536> &vram, int x, int y,
+                        std::string_view text) {
+  for (const char glyph : text) {
+    const auto tile = result_title_tile(glyph);
+    set_map_word(vram, x, y, static_cast<std::uint16_t>(0x3c00U | tile));
+    set_map_word(vram, x + 1, y,
+                 static_cast<std::uint16_t>(0x3c00U | (tile + 1U)));
+    set_map_word(vram, x, y + 1,
+                 static_cast<std::uint16_t>(0x3c00U | (tile + 0x50U)));
+    set_map_word(vram, x + 1, y + 1,
+                 static_cast<std::uint16_t>(0x3c00U | (tile + 0x51U)));
+    x += 2;
+  }
+}
+
+std::uint16_t result_text_tile(char glyph) {
+  switch (glyph) {
+  case ' ': return 0xce;
+  case '.': return 0xa8;
+  case ':': return 0xcc;
+  case '0': return 0xa9;
+  case '3': return 0xac;
+  case '5': return 0xae;
+  case '7': return 0xb0;
+  case '8': return 0xb1;
+  case 'A': return 0xb3;
+  case 'E': return 0xb7;
+  case 'I': return 0xbb;
+  case 'K': return 0xbd;
+  case 'L': return 0xbe;
+  case 'M': return 0xbf;
+  case 'N': return 0xc0;
+  case 'O': return 0xa9;
+  case 'P': return 0xc1;
+  case 'R': return 0xc3;
+  case 'S': return 0xc4;
+  case 'T': return 0xc5;
+  case 'Y': return 0xca;
+  default:
+    throw std::invalid_argument("unsupported Classic result text glyph");
+  }
+}
+
+void write_result_text(std::array<std::uint8_t, 65536> &vram, int x, int y,
+                       std::string_view text) {
+  for (const char glyph : text) {
+    const auto tile = result_text_tile(glyph);
+    set_map_word(vram, x, y, static_cast<std::uint16_t>(0x3c00U | tile));
+    set_map_word(vram, x, y + 1,
+                 static_cast<std::uint16_t>(0x3c00U | (tile + 0x3cU)));
+    ++x;
+  }
+}
+
+void build_result_map(std::array<std::uint8_t, 65536> &vram,
+                      const PresentationSample &sample,
+                      std::span<const std::uint8_t> result_assets) {
+  for (std::size_t entry = 0; entry < 1024; ++entry)
+    set_map_word(vram, static_cast<int>(entry % 32),
+                 static_cast<int>(entry / 32), 0x004c);
+
+  const auto title_seed = result_assets.subspan(5208, 16);
+  const auto terminator =
+      std::find(title_seed.begin(), title_seed.end(), std::uint8_t{0xff});
+  if (terminator == title_seed.end())
+    throw std::invalid_argument("Classic result title seed lacks terminator");
+  const std::string_view title(
+      reinterpret_cast<const char *>(title_seed.data()),
+      static_cast<std::size_t>(terminator - title_seed.begin()));
+  if (title != "dragster" || sample.movement.finish.outcome != RaceOutcome::PlayerWon)
+    throw std::invalid_argument("unsupported Classic result composition");
+
+  // $80:C431 first fills the map, then writes these semantic fields in this
+  // order. Each small-font glyph is a vertical tile pair; title glyphs are
+  // two-by-two. The result state carries the observed five timer digits.
+  write_result_title(vram, 8, 2, title);
+  write_result_title(vram, 8, 5, "complete");
+  write_result_text(vram, 7, 8, "PLAYER    TIME  ");
+  const auto &digits = sample.movement.finish.finish_time_digits[0];
+  std::array<char, 8> time{{' ', static_cast<char>('0' + digits[0]), ':',
+                            static_cast<char>('0' + digits[1]),
+                            static_cast<char>('0' + digits[2]), '.',
+                            static_cast<char>('0' + digits[3]),
+                            static_cast<char>('0' + digits[4])}};
+  write_result_text(vram, 7, 11, "MIKE    ");
+  write_result_text(vram, 17, 11, std::string_view(time.data(), time.size()));
+  for (const int row : {14, 17, 20}) {
+    write_result_text(vram, 7, row, "SOMEONE ");
+    write_result_text(vram, 17, row, " NO TIME");
+  }
+}
+
+struct ResultBackgroundPixel {
+  std::uint8_t palette_index{};
+  std::uint8_t palette_group{};
+  std::uint8_t priority{};
+  bool direct_colour{};
+};
+
+ResultBackgroundPixel result_bg1_pixel(
+    const std::array<std::uint8_t, 65536> &vram, int x, int y) {
+  constexpr int vertical_scroll = 78;
+  const int py = (y + vertical_scroll + 1) & 511;
+  const int map_screen = py >= 256 ? 1 : 0;
+  const int map_y = (py / 8) & 31;
+  const int map_x = x / 8;
+  const auto map_at = static_cast<std::size_t>(map_screen * 0x800 +
+                                               (map_y * 32 + map_x) * 2);
+  const auto entry = static_cast<std::uint16_t>(
+      vram[map_at] | (static_cast<unsigned>(vram[map_at + 1]) << 8U));
+  int tile_x = x & 7, tile_y = py & 7;
+  if (entry & 0x4000U)
+    tile_x = 7 - tile_x;
+  if (entry & 0x8000U)
+    tile_y = 7 - tile_y;
+  const auto value = tile_pixel_8bpp(vram, 0x6000, entry & 0x3ffU, tile_x,
+                                      tile_y);
+  const auto priority = static_cast<std::uint8_t>(
+      value == 0 ? 0 : (entry & 0x2000U ? 7 : 3));
+  const auto palette_group = static_cast<std::uint8_t>((entry >> 10U) & 7U);
+  // CGWSEL=$02 selects subscreen blending (bit 1). Direct colour is bit 0 and
+  // is disabled in the captured result state, so BG1 still indexes CGRAM.
+  return {value, palette_group, priority, false};
+}
+
+ResultBackgroundPixel result_bg2_pixel(
+    const std::array<std::uint8_t, 65536> &vram, int x, int y) {
+  const int py = (y + 1) & 511;
+  const int map_screen = py >= 256 ? 2 : 0;
+  const int map_y = (py / 8) & 31;
+  const int map_x = x / 8;
+  const auto map_at = static_cast<std::size_t>(
+      0x2000 + map_screen * 0x800 + (map_y * 32 + map_x) * 2);
+  const auto entry = static_cast<std::uint16_t>(
+      vram[map_at] | (static_cast<unsigned>(vram[map_at + 1]) << 8U));
+  int tile_x = x & 7, tile_y = py & 7;
+  if (entry & 0x4000U)
+    tile_x = 7 - tile_x;
+  if (entry & 0x8000U)
+    tile_y = 7 - tile_y;
+  const auto value =
+      tile_pixel(vram, 0x4000, entry & 0x3ffU, tile_x, tile_y);
+  const auto palette = static_cast<std::uint8_t>(((entry >> 10U) & 7U) * 16U +
+                                                  value);
+  const auto priority = static_cast<std::uint8_t>(
+      value == 0 ? 0 : (entry & 0x2000U ? 5 : 1));
+  return {palette, 0, priority, false};
+}
+
+void render_result_background(RgbFrame &frame,
+                              const PresentationSample &sample,
+                              const PresentationContent &content) {
+  // These writes replay the observed $82:B296 copier sequence. Addresses are
+  // VRAM byte addresses; the SNES VMADD register observed by the capture uses
+  // word addresses. Later writes intentionally replace overlapping content.
+  std::array<std::uint8_t, 65536> vram{};
+  copy_wrapping(vram, 0xc000, content.result_base_vram.subspan(0, 8192));
+  copy_wrapping(vram, 0x0000, content.result_base_vram.subspan(8192, 2816));
+  copy_wrapping(vram, 0x4000, content.result_base_vram.subspan(11008, 8960));
+  copy_wrapping(vram, 0x6340, content.result_base_vram.subspan(19968, 21568));
+
+  // The two result-specific 4bpp payloads retain the current VMADD ordering:
+  // $3D80 (byte $7B00), then $7A00 (byte $F400, wrapping through $0000).
+  copy_wrapping(vram, 0x7b00, content.result_assets.subspan(216, 1920));
+  copy_wrapping(vram, 0xf400, content.result_assets.subspan(2136, 3072));
+
+  build_result_map(vram, sample, content.result_assets);
+
+  auto cgram = build_race_cgram(sample, content.palette);
+  std::copy(content.result_palette.begin(), content.result_palette.end(),
+            cgram.begin());
+  // The seven-frame palette cycle's stable-frame phase is captured at frame
+  // 3678: CGRAM 108..111 receive $4A52, $4631, $4210 and $56B5.
+  constexpr std::array<std::uint8_t, 8> cycle{
+      0x52, 0x4a, 0x31, 0x46, 0x10, 0x42, 0xb5, 0x56};
+  std::copy(cycle.begin(), cycle.end(), cgram.begin() + 216);
+  for (int y = 0; y < 224; ++y)
+    for (int x = 0; x < 256; ++x) {
+      const auto bg1 = result_bg1_pixel(vram, x, y);
+      const auto bg2 = result_bg2_pixel(vram, x, y);
+      const auto above = bg2.priority > bg1.priority ? bg2 : bg1;
+      const auto main_colour =
+          above.priority == 0
+              ? colour_word(cgram, 0)
+              : above.direct_colour
+                    ? snes_direct_colour(above.palette_index,
+                                         above.palette_group)
+                    : colour_word(cgram, above.palette_index);
+      // TS enables only OBJ. Where the bounded result renderer omits an OBJ,
+      // the subscreen is transparent and bsnes disables halve/subscreen blend.
+      pixel(frame, x, y, colour_word_rgb(main_colour));
     }
 }
 
@@ -406,9 +691,16 @@ RgbFrame render_dragster_headless(const PresentationSample &s,
       content.bg2_map.size() != 8192 || content.palette.size() != 352 ||
       content.font.size() != 2048 || content.rider_tiles.size() != 3456 ||
       content.result_assets.size() != 5224 || content.go_window.size() != 898 ||
-      content.winner_window.size() != 898)
+      content.winner_window.size() != 898 ||
+      content.result_base_vram.size() != 41536 ||
+      content.result_palette.size() != 216)
     throw std::invalid_argument(
         "Classic presentation entry size is unsupported");
+  if (s.movement.finish.phase == RacePhase::ResultScreen) {
+    RgbFrame result{};
+    render_result_background(result, s, content);
+    return result;
+  }
   const auto map = build_dragster_bg1_map(content.track, s.bg1_scroll_x,
                                           s.bg1_scroll_y);
   RgbFrame f{};
@@ -437,10 +729,6 @@ RgbFrame render_dragster_headless(const PresentationSample &s,
   }
   if (player_pose == 0x04fe && opponent_pose == 0x037c)
     render_window_xor(f, content.winner_window, {98, 98, 255});
-  if (s.movement.finish.phase == RacePhase::ResultScreen) {
-    rect(f, 36, 48, 184, 112, {12, 18, 38});
-    rect(f, 52, 64, 152, 8, {238, 238, 224});
-  }
   return f;
 }
 } // namespace unirally

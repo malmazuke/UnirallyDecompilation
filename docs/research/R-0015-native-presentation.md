@@ -245,3 +245,44 @@ stable gray `$39CE`, has SHA-256 `155799e6...0e18`, and is additively frozen as
 `presentation.result.classic.palette.v1`. The inventory is twenty-four entries
 under rules SHA-256 `11aeefa1...265c3`; the earlier transition payload remains
 identified rather than silently replaced.
+
+## Stable result register and OAM checkpoint
+
+The canonical restore originally labelled frame 3678 is still in
+`ResultLoading` phase 2. One native movement update reaches `ResultScreen`
+phase 3 without changing the gameplay contract; the derived ignored
+`state-3679.bin` has SHA-256
+`ca6bab5f31749e0058c7d5b7517b318024b1b2449fd461098b91948928e846fd`.
+It carries the observed player time 0:33.57, opponent time 0:33.58 and
+`PlayerWon` outcome.
+
+The wide result-register capture has access SHA-256
+`8ce9717076a75c10...`; the stable-only capture has SHA-256
+`7425d8a9d976438d...`. Bank-mirrored PPU writes establish the stable state:
+mode 3, BG1SC `$02`, BG2SC `$13`, BG12NBA `$23`, TM `$13`, TS `$10`,
+CGWSEL `$02`, CGADSUB `$7F`, OBSEL `$63`, BG1 vertical scroll 78 and all
+other scroll values zero. The final result map upload targets VRAM word
+`$1000`. The semantic reconstruction fills 1,024 words with `$004C`, then
+writes the title, `COMPLETE`, header, player/time and three `NO TIME` rows in
+the captured `$80:C431` ordering.
+
+The ignored result OAM capture has access SHA-256
+`3d3e885ca3dad290...` and WRAM-series SHA-256
+`7190c4ebbe8aea3b...`. At frame 3679 its visible small-object entries are
+96, 98, 100, 102, 104--107 and 112--114; their X/Y/tile/attribute tuples are
+respectively `(219,88,202,$1B)`, `(219,88,228,$1B)`,
+`(14,88,14,$11)`, `(30,88,46,$11)`, `(120,87,138,$11)`,
+`(120,111,136,$13)`, `(120,135,132,$15)`, `(120,159,102,$17)`,
+`(200,91,164,$1B)`, `(200,115,166,$1D)` and
+`(200,139,168,$1F)`. No captured OAM bytes enter the tracked pack.
+
+With the observed VRAM ordering, stable palette prefix, semantic map and
+mode-3 layer priority, the result comparison currently differs at
+54,532/57,344 pixels (95.10%), still failing the frozen 15% limit. A bounded
+direct-colour hypothesis was rejected: pinned bsnes
+`sfc/ppu/io.cpp:609-614` maps CGWSEL bit 0 to direct colour and bit 1 to
+subscreen blending, so captured `$02` has direct colour disabled. Forcing the
+primary-source direct-colour formula worsens the result to 57,344/57,344
+(100%). The exact formula and add/halve arithmetic now have authored native
+checks, while the next experiment recovers stable CGRAM indices 108--255 and
+then applies the listed OBJ descriptors with the observed TM/TS priorities.

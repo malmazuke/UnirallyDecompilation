@@ -45,10 +45,17 @@ struct RgbFrame {
   static constexpr std::size_t width = 256, height = 224;
   std::array<std::uint8_t, width * height * 3> pixels{};
 };
+// Exact 15-bit SNES colour operations used by the frozen mode-3 result case.
+// `palette_group` is the three-bit tilemap palette field.
+std::uint16_t snes_direct_colour(std::uint8_t palette_colour,
+                                 std::uint8_t palette_group);
+std::uint16_t snes_add_colour(std::uint16_t main_colour,
+                              std::uint16_t sub_colour, bool halve);
 struct PresentationContent {
   std::span<const std::uint8_t> track, bg1_tiles, bg2_tiles, bg2_map;
   std::span<const std::uint8_t> palette, font, rider_tiles, result_assets;
   std::span<const std::uint8_t> go_window, winner_window;
+  std::span<const std::uint8_t> result_base_vram, result_palette;
 };
 RgbFrame render_dragster_headless(const PresentationSample &,
                                   const PresentationContent &);

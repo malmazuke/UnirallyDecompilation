@@ -9,6 +9,15 @@ void require(bool v) {
 }
 } // namespace
 int main() {
+  // Primary-source examples from bsnes' mode-3 direct-colour and add/halve
+  // formulas. These guard the bit placement and per-channel carry semantics.
+  require(unirally::snes_direct_colour(0x00, 0x00) == 0x0000);
+  require(unirally::snes_direct_colour(0xff, 0x07) == 0x73de);
+  require(unirally::snes_direct_colour(0x92, 0x05) == 0x510a);
+  require(unirally::snes_add_colour(0x001f, 0x001f, false) == 0x001f);
+  require(unirally::snes_add_colour(0x001f, 0x0001, true) == 0x0010);
+  require(unirally::snes_add_colour(0x7c00, 0x03e0, false) == 0x7fe0);
+
   std::vector<std::uint8_t> track(33815);
   for (std::size_t x = 0; x < 30; ++x)
     for (std::size_t y = 0; y < 16; ++y) {
@@ -63,7 +72,8 @@ int main() {
   state.riders[1].pose.pose_index = 0x895;
   const auto before = unirally::serialize_movement_state(state);
   std::vector<std::uint8_t> bg1(2560), bg2(992), bg2_map(8192), palette(352),
-      font(2048), rider(3456), result(5224), go_window, winner_window;
+      font(2048), rider(3456), result(5224), go_window, winner_window,
+      result_base_vram(41536), result_palette(216);
   const auto empty_window_table = [] {
     std::vector<std::uint8_t> table;
     for (const unsigned lines : {127U, 97U}) {
@@ -77,7 +87,8 @@ int main() {
   winner_window = empty_window_table();
   const unirally::PresentationContent content{track,   bg1,  bg2,   bg2_map,
                                               palette, font, rider, result,
-                                              go_window, winner_window};
+                                              go_window, winner_window,
+                                              result_base_vram, result_palette};
   const auto first = unirally::render_dragster_headless({state, 0, 0, 0, 0, 0},
                                                         content),
              second = unirally::render_dragster_headless({state, 0, 0, 0, 0, 0},

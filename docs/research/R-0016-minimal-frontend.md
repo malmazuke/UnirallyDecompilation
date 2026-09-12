@@ -207,3 +207,7 @@ exist. The guarded inputs are ROM, pack, extraction rules and explicit or
 default executable. A collision prints a clear error and exits 3 without
 writing the requested report, since doing so would itself overwrite the input.
 For non-collision failures the existing failed-report behavior is unchanged.
+At exact candidate `8682b17`, broad debug/sanitizer suites and real Classic
+first-launch/pack-only smokes passed. Subsequent refused report-equals-ROM and
+report-equals-pack commands left the disposable input hashes unchanged and
+created no first-launch output pack.

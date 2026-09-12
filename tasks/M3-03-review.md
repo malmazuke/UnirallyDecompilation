@@ -666,3 +666,11 @@ ROM collision, no sentinel child, exit 3 and the specific diagnostic. Exact
 candidate SHA and full-suite/first-launch evidence are appended to M3-03 after
 the coherent commit. Fresh narrow review remains required; this response does
 not approve M3-03.
+
+The exact behavioral correction is
+`8682b176f99db4da82b18fb28a0dc74c1e7efdeb`. Both complete app suites
+and real Classic first-launch/pack-only SDL smokes passed at that SHA. Exact
+collision commands refused ROM and pack aliases with exit 3; the disposable
+ROM and generated pack retained their byte identities and the refused
+first-launch created no pack. Full hashes and commands are in `tasks/M3-03.md`.
+Fresh narrow independent review remains required.

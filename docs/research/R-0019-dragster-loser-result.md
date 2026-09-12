@@ -1,7 +1,8 @@
 # R-0019 — DRAGSTER loser-result composition
 
 - Task: [M4-01](../../tasks/M4-01.md)
-- Status: reference evidence and visual contract frozen before implementation
+- Status: reference evidence and visual contract frozen before implementation;
+  implemented by candidate `f438741`, pending independent review
 - Freeze base: task claim `55eadf7`; no presentation source changed before this
   record and the additive loser contract
 - ROM: PAL Unirally SHA-256
@@ -88,3 +89,17 @@ release-3000 loss result and its adjacent 3798–3800 publication boundary. It
 does not establish general rankings, awards, other names/tracks/modes, menus,
 progression, audio or result objects. Focused map assertions remain necessary:
 the 15% visual limit alone is not semantic evidence.
+
+## Candidate reproduction
+
+The bounded compositor at `f438741` reproduces all specified map placements and
+differs from the original loser frame at exactly 1,073 of 57,344 whole-frame
+pixels (`1.871164%`) in both debug and sanitizer builds. The same builds retain
+the seven accepted winner-case mismatch counts exactly. The pack-backed live
+runner obtains identical output from fresh and previously used presentation
+instances and proves the canonical 371-byte state unchanged across rendering.
+
+The exact clean candidate report hashes and negative identity checks are
+recorded in M4-01. These implementation results do not widen the evidence above:
+only the independently observed stable loss state and adjacent publication
+boundary are claimed.

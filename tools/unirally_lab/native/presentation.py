@@ -67,8 +67,12 @@ SUPPORTED_TOP_LEVEL = {
     ],
 }
 SUPPORTED_TOP_LEVEL_KEYS = {*SUPPORTED_TOP_LEVEL, "reference_cases"}
-SUPPORTED_CASES_SHA256 = (
-    "384e641180490fa367a6702c07ccc178b7733334730506e41af0d88293d1cae5")
+SUPPORTED_CASES_SHA256 = {
+    "classic.pal.crawler.dragster.presentation.v1":
+        "384e641180490fa367a6702c07ccc178b7733334730506e41af0d88293d1cae5",
+    "classic.pal.crawler.dragster.loser-presentation.v1":
+        "c6fb70dfb856dae9f602da343cef5841530839e18c895612b46f020c5382e043",
+}
 
 
 class PresentationContractError(ValueError):
@@ -91,7 +95,13 @@ def load_contract(path: Path) -> dict:
     data = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(data, dict) or set(data) != SUPPORTED_TOP_LEVEL_KEYS:
         raise PresentationContractError("unsupported presentation contract fields")
+    profile_id = data.get("profile_id")
+    if profile_id not in SUPPORTED_CASES_SHA256:
+        raise PresentationContractError(
+            "unsupported presentation contract identity: profile_id")
     for field, expected in SUPPORTED_TOP_LEVEL.items():
+        if field == "profile_id":
+            expected = profile_id
         if type(data.get(field)) is not type(expected) or data.get(field) != expected:
             raise PresentationContractError(
                 f"unsupported presentation contract identity: {field}")
@@ -130,7 +140,8 @@ def load_contract(path: Path) -> dict:
             raise PresentationContractError(f"{case_id} has an invalid mismatch limit")
     encoded_cases = json.dumps(
         cases, sort_keys=True, separators=(",", ":")).encode("utf-8")
-    if hashlib.sha256(encoded_cases).hexdigest() != SUPPORTED_CASES_SHA256:
+    if (hashlib.sha256(encoded_cases).hexdigest() !=
+            SUPPORTED_CASES_SHA256[profile_id]):
         raise PresentationContractError(
             "unsupported presentation reference-case identity")
     return data
@@ -210,7 +221,11 @@ def cmd_presentation_check(args) -> int:
         pack_hash = reports.file_sha256(pack_path)
         rep.add_input("classic_pack", pack_path, pack_hash)
         bound_inputs.append(("classic_pack", pack_path, pack_hash))
-        runner = root / "build" / args.preset / "src" / "core" / "presentation_runner"
+        runner_name = ("live_presentation_runner" if contract["profile_id"] ==
+                       "classic.pal.crawler.dragster.loser-presentation.v1"
+                       else "presentation_runner")
+        runner_dir = "app" if runner_name == "live_presentation_runner" else "core"
+        runner = root / "build" / args.preset / "src" / runner_dir / runner_name
         build = native_commands.build_runner(root, args.preset, args.timeout, artifacts)
         rep.add_check("native_build", build.outcome, detail=build.tail(1500))
         if build.returncode != 0 or build.missing or build.timed_out:

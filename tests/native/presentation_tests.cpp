@@ -92,10 +92,18 @@ int main() {
   };
   go_window = empty_window_table();
   winner_window = empty_window_table();
-  const unirally::PresentationContent content{track,   bg1,  bg2,   bg2_map,
-                                              palette, font, rider, result,
-                                              go_window, winner_window,
-                                              result_base_vram, result_palette,
+  const unirally::PresentationContent content{track,
+                                              bg1,
+                                              bg2,
+                                              bg2_map,
+                                              palette,
+                                              font,
+                                              rider,
+                                              result,
+                                              go_window,
+                                              winner_window,
+                                              result_base_vram,
+                                              result_palette,
                                               result_palette_tail};
   const auto first = unirally::render_dragster_headless({state, 0, 0, 0, 0, 0},
                                                         content),
@@ -110,6 +118,9 @@ int main() {
   auto result_state = state;
   result_state.finish.phase = unirally::RacePhase::ResultScreen;
   result_state.finish.outcome = unirally::RaceOutcome::PlayerWon;
+  result_state.finish.rider_finished = {true, true};
+  result_state.finish.finish_time_centiseconds = {3357, 3358};
+  result_state.finish.finish_time_digits = {{{0, 3, 3, 5, 7}, {0, 3, 3, 5, 8}}};
   result[5208] = 'd';
   result[5209] = 'r';
   result[5210] = 'a';
@@ -140,6 +151,55 @@ int main() {
   result_base_vram[39814] = 0x80;
   require(before == unirally::serialize_movement_state(state));
 
+  const auto winner_map =
+      unirally::build_dragster_result_map(result_state, result);
+  require(winner_map[11 * 32 + 21] == 0x3cac);
+  require(winner_map[11 * 32 + 23] == 0x3cae);
+  require(winner_map[11 * 32 + 24] == 0x3cb0);
+
+  auto loser_state = result_state;
+  loser_state.finish.outcome = unirally::RaceOutcome::PlayerLost;
+  loser_state.finish.finish_time_centiseconds = {3566, 3358};
+  loser_state.finish.finish_time_digits[0] = {0, 3, 5, 6, 6};
+  const auto loser_before = unirally::serialize_movement_state(loser_state);
+  const auto loser_map =
+      unirally::build_dragster_result_map(loser_state, result);
+  require(loser_map[11 * 32 + 21] == 0x3cae);
+  require(loser_map[11 * 32 + 23] == 0x3caf);
+  require(loser_map[11 * 32 + 24] == 0x3caf);
+  require(loser_map[12 * 32 + 21] == 0x3cea);
+  require(loser_map[12 * 32 + 23] == 0x3ceb);
+  require(loser_map[12 * 32 + 24] == 0x3ceb);
+  for (std::size_t entry = 0; entry < winner_map.size(); ++entry) {
+    const bool time_glyph = entry == 11 * 32 + 21 || entry == 11 * 32 + 23 ||
+                            entry == 11 * 32 + 24 || entry == 12 * 32 + 21 ||
+                            entry == 12 * 32 + 23 || entry == 12 * 32 + 24;
+    require(time_glyph || winner_map[entry] == loser_map[entry]);
+  }
+  const auto loser_result =
+      unirally::render_dragster_headless({loser_state, 0, 0, 0, 0, 0}, content);
+  require(loser_result.pixels.size() == split_result.pixels.size());
+  require(loser_before == unirally::serialize_movement_state(loser_state));
+
+  auto contradictory = loser_state;
+  contradictory.finish.outcome = unirally::RaceOutcome::PlayerWon;
+  rejected = false;
+  try {
+    (void)unirally::build_dragster_result_map(contradictory, result);
+  } catch (const std::invalid_argument &) {
+    rejected = true;
+  }
+  require(rejected);
+  contradictory = loser_state;
+  contradictory.finish.finish_time_digits[0][4] = 5;
+  rejected = false;
+  try {
+    (void)unirally::build_dragster_result_map(contradictory, result);
+  } catch (const std::invalid_argument &) {
+    rejected = true;
+  }
+  require(rejected);
+
   // Result presentation becomes visible at the observed end-of-frame 3678
   // boundary while gameplay deliberately remains in ResultLoading update 225.
   result_state.finish.phase = unirally::RacePhase::ResultLoading;
@@ -156,10 +216,10 @@ int main() {
   // wide coordinate subtraction is never narrowed or evaluated in `int`.
   state.riders[0].pose.reflected = true;
   state.riders[1].pose.reflected = true;
-  (void)unirally::render_dragster_headless(
-      {state, INT32_MIN, 0, 0, 0, 0}, content);
-  (void)unirally::render_dragster_headless(
-      {state, INT32_MAX, 0, 0, 0, 0}, content);
+  (void)unirally::render_dragster_headless({state, INT32_MIN, 0, 0, 0, 0},
+                                           content);
+  (void)unirally::render_dragster_headless({state, INT32_MAX, 0, 0, 0, 0},
+                                           content);
 
   auto winner_state = state;
   winner_state.riders[0].pose.pose_index = 0x04fe;

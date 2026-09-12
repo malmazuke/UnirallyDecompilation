@@ -24,8 +24,7 @@ std::uint16_t snes_add_colour(std::uint16_t main_colour,
   // for the three five-bit colour channels.
   if (halve) {
     return static_cast<std::uint16_t>(
-        (main_colour + sub_colour -
-         ((main_colour ^ sub_colour) & 0x0421U)) >>
+        (main_colour + sub_colour - ((main_colour ^ sub_colour) & 0x0421U)) >>
         1U);
   }
   const auto sum = static_cast<unsigned>(main_colour) + sub_colour;
@@ -128,10 +127,9 @@ std::uint16_t apply_snes_brightness(std::uint16_t colour_value,
   const auto scale = [brightness](unsigned channel) {
     return (brightness * channel + 7U) / 15U;
   };
-  return static_cast<std::uint16_t>(scale(colour_value & 31U) |
-                                    (scale((colour_value >> 5U) & 31U) << 5U) |
-                                    (scale((colour_value >> 10U) & 31U)
-                                     << 10U));
+  return static_cast<std::uint16_t>(
+      scale(colour_value & 31U) | (scale((colour_value >> 5U) & 31U) << 5U) |
+      (scale((colour_value >> 10U) & 31U) << 10U));
 }
 
 std::array<std::uint8_t, 512>
@@ -148,13 +146,12 @@ build_race_cgram(const PresentationSample &sample,
     source += lengths[piece];
   }
   static constexpr std::array<std::uint8_t, 32> racing_cycle{
-      16, 66, 181, 86, 107, 45, 0, 0, 255, 127, 0, 0, 148, 82, 255, 127,
-      106, 73, 164, 48, 65, 20, 164, 48, 106, 73, 81, 102, 122, 127,
-      81, 102};
+      16,  66,  181, 86,  107, 45,  0,   0,   255, 127, 0,
+      0,   148, 82,  255, 127, 106, 73,  164, 48,  65,  20,
+      164, 48,  106, 73,  81,  102, 122, 127, 81,  102};
   static constexpr std::array<std::uint8_t, 32> finish_cycle{
-      16, 66, 0, 0, 255, 127, 181, 86, 107, 45, 0, 0, 148, 82, 255, 127,
-      81, 102, 122, 127, 81, 102, 106, 73, 164, 48, 65, 20, 164, 48,
-      106, 73};
+      16, 66,  0,   0,   255, 127, 181, 86, 107, 45, 0,  0,  148, 82, 255, 127,
+      81, 102, 122, 127, 81,  102, 106, 73, 164, 48, 65, 20, 164, 48, 106, 73};
   const bool late_finish =
       sample.movement.riders[1].pose.pose_index == 0x08d5 ||
       sample.movement.riders[0].pose.pose_index == 0x04fe;
@@ -191,9 +188,8 @@ std::uint8_t tile_pixel_8bpp(const std::array<std::uint8_t, 65536> &vram,
   const auto bit = static_cast<unsigned>(7 - x);
   std::uint8_t value{};
   for (unsigned plane = 0; plane < 8; ++plane) {
-    const auto plane_byte =
-        at + static_cast<std::size_t>(y) * 2U + (plane / 2U) * 16U +
-        (plane & 1U);
+    const auto plane_byte = at + static_cast<std::size_t>(y) * 2U +
+                            (plane / 2U) * 16U + (plane & 1U);
     value |= static_cast<std::uint8_t>(
         ((static_cast<unsigned>(vram[plane_byte & 0xffffU]) >> bit) & 1U)
         << plane);
@@ -300,18 +296,30 @@ void set_map_word(std::array<std::uint8_t, 65536> &vram, int x, int y,
 
 std::uint16_t result_title_tile(char glyph) {
   switch (glyph) {
-  case 'a': return 0x14;
-  case 'c': return 0x18;
-  case 'd': return 0x1a;
-  case 'e': return 0x1c;
-  case 'g': return 0x20;
-  case 'l': return 0x2a;
-  case 'm': return 0x2c;
-  case 'o': return 0x00;
-  case 'p': return 0x30;
-  case 'r': return 0x34;
-  case 's': return 0x36;
-  case 't': return 0x38;
+  case 'a':
+    return 0x14;
+  case 'c':
+    return 0x18;
+  case 'd':
+    return 0x1a;
+  case 'e':
+    return 0x1c;
+  case 'g':
+    return 0x20;
+  case 'l':
+    return 0x2a;
+  case 'm':
+    return 0x2c;
+  case 'o':
+    return 0x00;
+  case 'p':
+    return 0x30;
+  case 'r':
+    return 0x34;
+  case 's':
+    return 0x36;
+  case 't':
+    return 0x38;
   default:
     throw std::invalid_argument("unsupported Classic result title glyph");
   }
@@ -334,27 +342,50 @@ void write_result_title(std::array<std::uint8_t, 65536> &vram, int x, int y,
 
 std::uint16_t result_text_tile(char glyph) {
   switch (glyph) {
-  case ' ': return 0xce;
-  case '.': return 0xa8;
-  case ':': return 0xcc;
-  case '0': return 0xa9;
-  case '3': return 0xac;
-  case '5': return 0xae;
-  case '7': return 0xb0;
-  case '8': return 0xb1;
-  case 'A': return 0xb3;
-  case 'E': return 0xb7;
-  case 'I': return 0xbb;
-  case 'K': return 0xbd;
-  case 'L': return 0xbe;
-  case 'M': return 0xbf;
-  case 'N': return 0xc0;
-  case 'O': return 0xa9;
-  case 'P': return 0xc1;
-  case 'R': return 0xc3;
-  case 'S': return 0xc4;
-  case 'T': return 0xc5;
-  case 'Y': return 0xca;
+  case ' ':
+    return 0xce;
+  case '.':
+    return 0xa8;
+  case ':':
+    return 0xcc;
+  case '0':
+    return 0xa9;
+  case '3':
+    return 0xac;
+  case '5':
+    return 0xae;
+  case '6':
+    return 0xaf;
+  case '7':
+    return 0xb0;
+  case '8':
+    return 0xb1;
+  case 'A':
+    return 0xb3;
+  case 'E':
+    return 0xb7;
+  case 'I':
+    return 0xbb;
+  case 'K':
+    return 0xbd;
+  case 'L':
+    return 0xbe;
+  case 'M':
+    return 0xbf;
+  case 'N':
+    return 0xc0;
+  case 'O':
+    return 0xa9;
+  case 'P':
+    return 0xc1;
+  case 'R':
+    return 0xc3;
+  case 'S':
+    return 0xc4;
+  case 'T':
+    return 0xc5;
+  case 'Y':
+    return 0xca;
   default:
     throw std::invalid_argument("unsupported Classic result text glyph");
   }
@@ -386,8 +417,36 @@ void build_result_map(std::array<std::uint8_t, 65536> &vram,
   const std::string_view title(
       reinterpret_cast<const char *>(title_seed.data()),
       static_cast<std::size_t>(terminator - title_seed.begin()));
-  if (title != "dragster" ||
-      sample.movement.finish.outcome != RaceOutcome::PlayerWon)
+  const auto &finish = sample.movement.finish;
+  const bool observed_phase = finish.phase == RacePhase::ResultScreen ||
+                              (finish.phase == RacePhase::ResultLoading &&
+                               finish.outcome == RaceOutcome::PlayerWon &&
+                               finish.result_loading_updates == 225);
+  const auto time_is_consistent = [](const std::array<std::uint16_t, 5> &digits,
+                                     std::uint16_t centiseconds) {
+    if (digits[0] > 9 || digits[1] > 5 || digits[2] > 9 || digits[3] > 9 ||
+        digits[4] > 9)
+      return false;
+    const auto displayed = static_cast<unsigned>(digits[0]) * 6000U +
+                           static_cast<unsigned>(digits[1]) * 1000U +
+                           static_cast<unsigned>(digits[2]) * 100U +
+                           static_cast<unsigned>(digits[3]) * 10U + digits[4];
+    return displayed == centiseconds;
+  };
+  const bool times_are_consistent =
+      finish.rider_finished[0] && finish.rider_finished[1] &&
+      time_is_consistent(finish.finish_time_digits[0],
+                         finish.finish_time_centiseconds[0]) &&
+      time_is_consistent(finish.finish_time_digits[1],
+                         finish.finish_time_centiseconds[1]);
+  const bool outcome_is_consistent =
+      (finish.outcome == RaceOutcome::PlayerWon &&
+       finish.finish_time_centiseconds[0] <
+           finish.finish_time_centiseconds[1]) ||
+      (finish.outcome == RaceOutcome::PlayerLost &&
+       finish.finish_time_centiseconds[0] > finish.finish_time_centiseconds[1]);
+  if (title != "dragster" || !observed_phase || !times_are_consistent ||
+      !outcome_is_consistent)
     throw std::invalid_argument("unsupported Classic result composition");
 
   // $80:C431 first fills the map, then writes these semantic fields in this
@@ -396,7 +455,7 @@ void build_result_map(std::array<std::uint8_t, 65536> &vram,
   write_result_title(vram, 8, 2, title);
   write_result_title(vram, 8, 5, "complete");
   write_result_text(vram, 7, 8, "PLAYER     TIME");
-  const auto &digits = sample.movement.finish.finish_time_digits[0];
+  const auto &digits = finish.finish_time_digits[0];
   std::array<char, 8> time{{' ', static_cast<char>('0' + digits[0]), ':',
                             static_cast<char>('0' + digits[1]),
                             static_cast<char>('0' + digits[2]), '.',
@@ -417,40 +476,15 @@ struct ResultBackgroundPixel {
   bool direct_colour{};
 };
 
-ResultBackgroundPixel result_bg1_pixel(
-    const std::array<std::uint8_t, 65536> &vram, int x, int y) {
+ResultBackgroundPixel
+result_bg1_pixel(const std::array<std::uint8_t, 65536> &vram, int x, int y) {
   constexpr int vertical_scroll = 82;
   const int py = (y + vertical_scroll + 1) & 511;
   const int map_screen = py >= 256 ? 1 : 0;
   const int map_y = (py / 8) & 31;
   const int map_x = x / 8;
-  const auto map_at = static_cast<std::size_t>(map_screen * 0x800 +
-                                               (map_y * 32 + map_x) * 2);
-  const auto entry = static_cast<std::uint16_t>(
-      vram[map_at] | (static_cast<unsigned>(vram[map_at + 1]) << 8U));
-  int tile_x = x & 7, tile_y = py & 7;
-  if (entry & 0x4000U)
-    tile_x = 7 - tile_x;
-  if (entry & 0x8000U)
-    tile_y = 7 - tile_y;
-  const auto value = tile_pixel_8bpp(vram, 0x6000, entry & 0x3ffU, tile_x,
-                                      tile_y);
-  const auto priority = static_cast<std::uint8_t>(
-      value == 0 ? 0 : (entry & 0x2000U ? 7 : 3));
-  const auto palette_group = static_cast<std::uint8_t>((entry >> 10U) & 7U);
-  // CGWSEL=$02 selects subscreen blending (bit 1). Direct colour is bit 0 and
-  // is disabled in the captured result state, so BG1 still indexes CGRAM.
-  return {value, palette_group, priority, false};
-}
-
-ResultBackgroundPixel result_bg2_pixel(
-    const std::array<std::uint8_t, 65536> &vram, int x, int y) {
-  const int py = (y + 1) & 511;
-  const int map_screen = py >= 256 ? 2 : 0;
-  const int map_y = (py / 8) & 31;
-  const int map_x = x / 8;
-  const auto map_at = static_cast<std::size_t>(
-      0x2000 + map_screen * 0x800 + (map_y * 32 + map_x) * 2);
+  const auto map_at =
+      static_cast<std::size_t>(map_screen * 0x800 + (map_y * 32 + map_x) * 2);
   const auto entry = static_cast<std::uint16_t>(
       vram[map_at] | (static_cast<unsigned>(vram[map_at + 1]) << 8U));
   int tile_x = x & 7, tile_y = py & 7;
@@ -459,16 +493,39 @@ ResultBackgroundPixel result_bg2_pixel(
   if (entry & 0x8000U)
     tile_y = 7 - tile_y;
   const auto value =
-      tile_pixel(vram, 0x4000, entry & 0x3ffU, tile_x, tile_y);
-  const auto palette = static_cast<std::uint8_t>(((entry >> 10U) & 7U) * 16U +
-                                                  value);
-  const auto priority = static_cast<std::uint8_t>(
-      value == 0 ? 0 : (entry & 0x2000U ? 5 : 1));
+      tile_pixel_8bpp(vram, 0x6000, entry & 0x3ffU, tile_x, tile_y);
+  const auto priority =
+      static_cast<std::uint8_t>(value == 0 ? 0 : (entry & 0x2000U ? 7 : 3));
+  const auto palette_group = static_cast<std::uint8_t>((entry >> 10U) & 7U);
+  // CGWSEL=$02 selects subscreen blending (bit 1). Direct colour is bit 0 and
+  // is disabled in the captured result state, so BG1 still indexes CGRAM.
+  return {value, palette_group, priority, false};
+}
+
+ResultBackgroundPixel
+result_bg2_pixel(const std::array<std::uint8_t, 65536> &vram, int x, int y) {
+  const int py = (y + 1) & 511;
+  const int map_screen = py >= 256 ? 2 : 0;
+  const int map_y = (py / 8) & 31;
+  const int map_x = x / 8;
+  const auto map_at = static_cast<std::size_t>(0x2000 + map_screen * 0x800 +
+                                               (map_y * 32 + map_x) * 2);
+  const auto entry = static_cast<std::uint16_t>(
+      vram[map_at] | (static_cast<unsigned>(vram[map_at + 1]) << 8U));
+  int tile_x = x & 7, tile_y = py & 7;
+  if (entry & 0x4000U)
+    tile_x = 7 - tile_x;
+  if (entry & 0x8000U)
+    tile_y = 7 - tile_y;
+  const auto value = tile_pixel(vram, 0x4000, entry & 0x3ffU, tile_x, tile_y);
+  const auto palette =
+      static_cast<std::uint8_t>(((entry >> 10U) & 7U) * 16U + value);
+  const auto priority =
+      static_cast<std::uint8_t>(value == 0 ? 0 : (entry & 0x2000U ? 5 : 1));
   return {palette, 0, priority, false};
 }
 
-void render_result_background(RgbFrame &frame,
-                              const PresentationSample &sample,
+void render_result_background(RgbFrame &frame, const PresentationSample &sample,
                               const PresentationContent &content) {
   // These writes replay the observed $82:B296 copier sequence. Addresses are
   // VRAM byte addresses; the SNES VMADD register observed by the capture uses
@@ -479,8 +536,7 @@ void render_result_background(RgbFrame &frame,
   copy_wrapping(vram, 0x4000, content.result_base_vram.subspan(11008, 8960));
   copy_wrapping(vram, 0x6340, content.result_base_vram.subspan(19968, 8000));
   // Frame 3546 resets VMADD to word $3D80 before the remaining copier run.
-  copy_wrapping(vram, 0x7b00,
-                content.result_base_vram.subspan(27968, 13568));
+  copy_wrapping(vram, 0x7b00, content.result_base_vram.subspan(27968, 13568));
 
   // The two result-specific 4bpp payloads retain the current VMADD ordering:
   // $3D80 (byte $7B00), then $7A00 (byte $F400, wrapping through $0000).
@@ -494,8 +550,16 @@ void render_result_background(RgbFrame &frame,
             cgram.begin());
   // The seven-frame palette cycle's stable-frame phase is captured at frame
   // 3678: CGRAM 108..111 receive $4A52, $4631, $4210 and $56B5.
-  constexpr std::array<std::uint8_t, 8> cycle{
-      0x52, 0x4a, 0x31, 0x46, 0x10, 0x42, 0xb5, 0x56};
+  constexpr std::array<std::uint8_t, 8> winner_cycle{0x52, 0x4a, 0x31, 0x46,
+                                                     0x10, 0x42, 0xb5, 0x56};
+  // The release-3000 loss reaches its first complete result on frame 3800.
+  // Its last palette-cycle write at frame 3797 is the observed two-word
+  // rotation below; this is presentation state and does not alter gameplay.
+  constexpr std::array<std::uint8_t, 8> loser_cycle{0x10, 0x42, 0xb5, 0x56,
+                                                    0x52, 0x4a, 0x31, 0x46};
+  const auto &cycle = sample.movement.finish.outcome == RaceOutcome::PlayerLost
+                          ? loser_cycle
+                          : winner_cycle;
   std::copy(cycle.begin(), cycle.end(), cgram.begin() + 216);
 
   // Replay the observed CPU palette writers after the 216-byte DMA. Byte
@@ -509,8 +573,8 @@ void render_result_background(RgbFrame &frame,
   for (std::size_t block = 0; block < 3; ++block) {
     std::copy_n(content.result_palette_tail.begin() +
                     static_cast<std::ptrdiff_t>(32 + block * 32),
-                32, cgram.begin() +
-                        static_cast<std::ptrdiff_t>(416 + block * 32));
+                32,
+                cgram.begin() + static_cast<std::ptrdiff_t>(416 + block * 32));
   }
   for (int y = 0; y < 224; ++y)
     for (int x = 0; x < 256; ++x) {
@@ -518,12 +582,10 @@ void render_result_background(RgbFrame &frame,
       const auto bg2 = result_bg2_pixel(vram, x, y);
       const auto above = bg2.priority > bg1.priority ? bg2 : bg1;
       const auto main_colour =
-          above.priority == 0
-              ? colour_word(cgram, 0)
-              : above.direct_colour
-                    ? snes_direct_colour(above.palette_index,
-                                         above.palette_group)
-                    : colour_word(cgram, above.palette_index);
+          above.priority == 0 ? colour_word(cgram, 0)
+          : above.direct_colour
+              ? snes_direct_colour(above.palette_index, above.palette_group)
+              : colour_word(cgram, above.palette_index);
       // TS enables only OBJ. Where the bounded result renderer omits an OBJ,
       // the subscreen is transparent and bsnes disables halve/subscreen blend.
       // The result fade reaches and retains INIDISP brightness 14 at frame
@@ -545,21 +607,19 @@ RiderAtlasGroup rider_atlas_group(const PresentationSample &sample) {
       27072, 27088, 25136, 25152, 25168, 27296, 27312, 27328, 27344,
       25392, 25408, 25424, 27552, 27568, 25664, 25680, 27808, 27824};
   static constexpr std::array<std::uint16_t, 20> frame2000{
-      24848, 24864, 24880, 27024, 27040, 27056, 25136, 25152, 25168,
-      25184, 27312, 27328, 27344, 27360, 25408, 25424, 25440, 27584,
-      27600, 27616};
+      24848, 24864, 24880, 27024, 27040, 27056, 25136, 25152, 25168, 25184,
+      27312, 27328, 27344, 27360, 25408, 25424, 25440, 27584, 27600, 27616};
   static constexpr std::array<std::uint16_t, 21> frame2400{
-      26784, 24848, 24864, 24880, 27024, 27040, 27056, 25136, 25152,
-      25168, 25184, 27312, 27328, 27344, 27360, 25408, 25424, 25440,
-      27584, 27600, 27616};
+      26784, 24848, 24864, 24880, 27024, 27040, 27056,
+      25136, 25152, 25168, 25184, 27312, 27328, 27344,
+      27360, 25408, 25424, 25440, 27584, 27600, 27616};
   static constexpr std::array<std::uint16_t, 21> frame3213{
-      24608, 24848, 24864, 24880, 27024, 27040, 27056, 25136, 25152,
-      25168, 25184, 27312, 27328, 27344, 27360, 25408, 25424, 25440,
-      27584, 27600, 27616};
+      24608, 24848, 24864, 24880, 27024, 27040, 27056,
+      25136, 25152, 25168, 25184, 27312, 27328, 27344,
+      27360, 25408, 25424, 25440, 27584, 27600, 27616};
   static constexpr std::array<std::uint16_t, 19> frame3453{
-      24624, 24640, 24880, 24896, 25136, 25152, 25376, 25392, 25408,
-      27552, 27568, 27584, 25648, 25664, 25680, 27792, 27808, 27824,
-      27840};
+      24624, 24640, 24880, 24896, 25136, 25152, 25376, 25392, 25408, 27552,
+      27568, 27584, 25648, 25664, 25680, 27792, 27808, 27824, 27840};
   const auto player = sample.movement.riders[0].pose.pose_index;
   const auto opponent = sample.movement.riders[1].pose.pose_index;
   if (player == 0x04f9 && opponent == 0x0263)
@@ -581,7 +641,8 @@ void load_rider_tiles(std::array<std::uint8_t, 65536> &vram,
   const auto group = rider_atlas_group(sample);
   for (std::size_t tile = 0; tile < group.vram_words.size(); ++tile) {
     const auto source = (group.first_tile + tile) * 32U;
-    const auto destination = static_cast<std::size_t>(group.vram_words[tile]) * 2U;
+    const auto destination =
+        static_cast<std::size_t>(group.vram_words[tile]) * 2U;
     std::copy_n(atlas.begin() + static_cast<std::ptrdiff_t>(source), 32,
                 vram.begin() + static_cast<std::ptrdiff_t>(destination));
   }
@@ -600,8 +661,8 @@ void render_rider(RgbFrame &frame, const std::array<std::uint8_t, 65536> &vram,
           ((static_cast<unsigned>(base_tile) + tile_offset) & 0xffU));
       for (int pixel_y = 0; pixel_y < 8; ++pixel_y)
         for (int pixel_x = 0; pixel_x < 8; ++pixel_x) {
-          const auto value = tile_pixel(vram, object_tile_base, tile,
-                                        7 - pixel_x, pixel_y);
+          const auto value =
+              tile_pixel(vram, object_tile_base, tile, 7 - pixel_x, pixel_y);
           if (value == 0)
             continue;
           const auto palette = static_cast<std::uint8_t>(
@@ -613,6 +674,19 @@ void render_rider(RgbFrame &frame, const std::array<std::uint8_t, 65536> &vram,
 }
 
 } // namespace
+std::array<std::uint16_t, 32 * 32>
+build_dragster_result_map(const MovementState &state,
+                          std::span<const std::uint8_t> result_assets) {
+  std::array<std::uint8_t, 65536> vram{};
+  build_result_map(vram, {state, 0, 0, 0, 0, 0}, result_assets);
+  std::array<std::uint16_t, 32 * 32> map{};
+  for (std::size_t entry = 0; entry < map.size(); ++entry) {
+    const auto at = 0x2000U + entry * 2U;
+    map[entry] = static_cast<std::uint16_t>(
+        vram[at] | (static_cast<unsigned>(vram[at + 1]) << 8U));
+  }
+  return map;
+}
 RiderFrameSelection rider_frame_for_pose(std::uint16_t pose, bool reflected) {
   // Every observed pose in the frozen Classic slice carries the reflected
   // semantic orientation. The packed atlas/OAM relationship is not recovered
@@ -698,8 +772,7 @@ build_dragster_bg1_map(std::span<const std::uint8_t> track,
   const int first_tile_y = static_cast<std::uint16_t>(scroll_y) / 16;
   std::array<std::uint16_t, 1024> map{};
   for (int ring_y = 0; ring_y < 32; ++ring_y) {
-    const int global_y =
-        first_tile_y + ((ring_y - first_tile_y) & 31);
+    const int global_y = first_tile_y + ((ring_y - first_tile_y) & 31);
     const int relative_y = global_y - vertical_origin_tiles;
     if (relative_y < 0)
       continue;
@@ -708,8 +781,7 @@ build_dragster_bg1_map(std::span<const std::uint8_t> track,
     if (selector_plane >= 5)
       continue;
     for (int ring_x = 0; ring_x < 32; ++ring_x) {
-      const int global_x =
-          first_tile_x + ((ring_x - first_tile_x) & 31);
+      const int global_x = first_tile_x + ((ring_x - first_tile_x) & 31);
       const int relative_x = global_x - horizontal_origin_tiles;
       if (relative_x < 0)
         continue;
@@ -727,9 +799,9 @@ build_dragster_bg1_map(std::span<const std::uint8_t> track,
   }
   return map;
 }
-static RgbFrame render_dragster(
-    const PresentationSample &s, const PresentationContent &content,
-    const std::array<RiderArtPose, 2> *rider_art) {
+static RgbFrame render_dragster(const PresentationSample &s,
+                                const PresentationContent &content,
+                                const std::array<RiderArtPose, 2> *rider_art) {
   if (content.bg1_tiles.size() != 2560 || content.bg2_tiles.size() != 992 ||
       content.bg2_map.size() != 8192 || content.palette.size() != 352 ||
       content.font.size() != 2048 || content.rider_tiles.size() != 3456 ||
@@ -746,16 +818,16 @@ static RgbFrame render_dragster(
   // gameplay transition or its serialization.
   const auto &finish = s.movement.finish;
   const bool result_visible = finish.phase == RacePhase::ResultScreen ||
-      (finish.phase == RacePhase::ResultLoading &&
-       finish.outcome == RaceOutcome::PlayerWon &&
-       finish.result_loading_updates >= 225);
+                              (finish.phase == RacePhase::ResultLoading &&
+                               finish.outcome == RaceOutcome::PlayerWon &&
+                               finish.result_loading_updates >= 225);
   if (result_visible) {
     RgbFrame result{};
     render_result_background(result, s, content);
     return result;
   }
-  const auto map = build_dragster_bg1_map(content.track, s.bg1_scroll_x,
-                                          s.bg1_scroll_y);
+  const auto map =
+      build_dragster_bg1_map(content.track, s.bg1_scroll_x, s.bg1_scroll_y);
   RgbFrame f{};
   render_race_background(f, s, content, map);
   const auto player_pose = s.movement.riders[0].pose.pose_index;
@@ -776,28 +848,26 @@ static RgbFrame render_dragster(
       art_state.riders[rider].pose.reflected = (*rider_art)[rider].reflected;
     }
   }
-  const PresentationSample art_sample{art_state, s.camera_x, s.bg1_scroll_x,
-                                      s.bg1_scroll_y, s.bg2_scroll_x,
-                                      s.bg2_scroll_y};
+  const PresentationSample art_sample{art_state,      s.camera_x,
+                                      s.bg1_scroll_x, s.bg1_scroll_y,
+                                      s.bg2_scroll_x, s.bg2_scroll_y};
   load_rider_tiles(rider_vram, art_sample, content.rider_tiles);
   const auto rider_cgram = build_race_cgram(s, content.palette);
   for (std::size_t rider_index = 0; rider_index < 2; ++rider_index) {
     const auto &rider = s.movement.riders[rider_index];
-    const auto art_pose = rider_art == nullptr
-                              ? RiderArtPose{rider.pose.pose_index,
-                                             rider.pose.reflected}
-                              : (*rider_art)[rider_index];
+    const auto art_pose =
+        rider_art == nullptr
+            ? RiderArtPose{rider.pose.pose_index, rider.pose.reflected}
+            : (*rider_art)[rider_index];
     (void)rider_frame_for_pose(art_pose.pose_index, art_pose.reflected);
-    const std::int64_t wide_x =
-        static_cast<std::int16_t>(rider.motion.x) -
-        static_cast<std::int64_t>(s.camera_x) - 832;
+    const std::int64_t wide_x = static_cast<std::int16_t>(rider.motion.x) -
+                                static_cast<std::int64_t>(s.camera_x) - 832;
     const int y = static_cast<std::int16_t>(rider.motion.y) - 752;
     // A 64-pixel object wholly outside the 256-pixel screen cannot contribute.
     // Narrow only coordinates in the renderer's small, representable domain.
     if (wide_x > -64 && wide_x < 256)
       render_rider(f, rider_vram, rider_cgram, static_cast<int>(wide_x), y,
-                   rider_index == 0 ? 0 : 136,
-                   rider_index == 0 ? 0x66 : 0x68);
+                   rider_index == 0 ? 0 : 136, rider_index == 0 ? 0x66 : 0x68);
   }
   if (player_pose == 0x04fe && opponent_pose == 0x037c)
     render_window_xor(f, content.winner_window, {98, 98, 255});

@@ -83,6 +83,36 @@ class NativePresentationCommandTests(unittest.TestCase):
                         contract, bad_pack,
                         contract["classic_pack_rules_sha256"])
 
+    def test_loser_contract_is_separately_authenticated(self):
+        root = Path(__file__).resolve().parents[2]
+        tracked = root / "tests/manifests/presentation/classic-crawler-dragster-loser-v1.json"
+        contract = presentation.load_contract(tracked)
+        self.assertEqual(
+            contract["profile_id"],
+            "classic.pal.crawler.dragster.loser-presentation.v1")
+        case = contract["reference_cases"][0]
+        self.assertEqual(case["outcome"], "player_lost")
+        self.assertEqual(case["player_time_digits"], [0, 3, 5, 6, 6])
+        self.assertEqual(case["result_map_observations"]["time_tile_words"][1],
+                         {"x": 23, "y": 11, "word": "0x3caf"})
+        for mutation in (
+                lambda value: value["reference_cases"][0].update(
+                    {"outcome": "player_won"}),
+                lambda value: value["reference_cases"][0]["player_time_digits"].__setitem__(
+                    4, 5),
+                lambda value: value["reference_cases"][0]["result_map_observations"][
+                    "time_tile_words"][1].update({"word": "0x3cae"}),
+                lambda value: value["reference_cases"][0].update(
+                    {"maximum_mismatch_fraction": 0.151})):
+            with self.subTest(mutation=mutation):
+                bad = copy.deepcopy(contract)
+                mutation(bad)
+                with tempfile.TemporaryDirectory() as temp:
+                    path = Path(temp) / "contract.json"
+                    path.write_text(json.dumps(bad))
+                    with self.assertRaises(presentation.PresentationContractError):
+                        presentation.load_contract(path)
+
     def test_ppm_parser_and_png_decoder_form_a_rom_free_image_seam(self):
         rgb = bytes((index % 251 for index in range(256 * 224 * 3)))
         ppm = b"P6\n256 224\n255\n" + rgb

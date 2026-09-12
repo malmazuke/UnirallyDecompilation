@@ -29,20 +29,36 @@ The user selected PAL Unirally (European/Australian version). Establish its exac
 
 Until the playable slice works, defer online services, matchmaking, a general-purpose editor, replacement-art commissioning, multiple ROM revisions and a full rewrite of the sound system. Reserve useful interfaces now; implement features when their milestone needs them.
 
+### Classic content ownership and installation
+
+The public source repository and downloadable native program do not contain the
+original ROM or extracted original graphics, audio, tracks or other asset
+payloads. For Classic, the user supplies a supported ROM; the project verifies
+its exact identity and reproducibly creates a versioned local content pack.
+Ordinary play uses logical entries in that pack and does not require the ROM to
+remain present after successful extraction. Generated packs and loose extracted
+content remain local and ignored. See
+[D-0005](decisions/D-0005-classic-content-distribution.md).
+
+Replacement and custom content uses the same logical identity boundary. A
+future Extended distribution can be ROM-free when complete distributable
+replacement content exists. This technical policy does not itself authorize
+publication, select a source/content license or replace legal review.
+
 ## Architecture to grow from
 
 Use a small deterministic simulation library with a headless runner. A desktop frontend consumes its state. Research tools run the original in a reference emulator through a separate adapter. Keep the emulator integration replaceable.
 
 ```text
 ROM + recorded inputs -> reference adapter -> normalized reference state
-                                 |                     |
-                           trace/snapshots              |
-                                                       v
-decoded track + same inputs -> native simulation -> state comparator
-                                   |
-                         render/audio frontend
-                                   |
-                     later: editor and network session
+ |                               |                     |
+ |                         trace/snapshots              |
+ v                                                     v
+verified local extractor -> Classic content pack -> native simulation -> comparator
+                                                   |
+                                         render/audio frontend
+                                                   |
+                                     later: editor/network session
 ```
 
 The proposed native stack is C++20, CMake, Python tooling and SDL3. The environment spike may revise it with a written decision. Avoid writing an engine framework before the first experiment.
@@ -52,7 +68,7 @@ Design commitments:
 - **Explicit updates:** `step(state, inputs, content, rules)` advances one documented simulation update. M1 must determine how this corresponds to frames and input reads in the selected ROM; do not assume 60 updates per second.
 - **Complete state:** inventory RNG, timers, previous input, animation state where gameplay depends on it, and all other future-affecting data. Canonical serialization and state hashing must avoid pointers, padding and host byte-order assumptions.
 - **Defined arithmetic:** use explicit widths, signedness, overflow and fixed-point behavior where indicated by the original. Avoid C++ undefined overflow and compiler-dependent conversions. Display interpolation can use floats independently.
-- **Content separate from code:** extract original content through reproducible tools. Give tracks, sprites and animations stable logical identifiers, independent of source ROM offsets. Preserve offset provenance in the extraction metadata.
+- **Content separate from code:** extract original content through reproducible tools into the ignored, versioned local pack defined by D-0005. Give tracks, sprites and animations stable logical identifiers, independent of source ROM offsets. Preserve offset provenance in extraction metadata; reject incomplete, corrupt or incompatible packs.
 - **Visual replacement separate from collision:** record original anchors, logical dimensions and animation timing. A larger texture must not enlarge a rider's collider or alter a trick window.
 - **Versioned formats:** record rules, state, replay, track and asset schema versions. Reject incompatible inputs clearly. Add migration support only when a format actually changes.
 
@@ -65,7 +81,7 @@ A temporary emulator-assisted build can accelerate discovery and comparison. Lab
 | M0 — Repeatable laboratory | Reproducible toolchain, identified ROM, automated reference run, durable tasks | Clean build on local macOS and Linux; synthetic checks; identical repeated reference playback; intentionally altered input detected; one task resumed by a fresh agent session |
 | M1 — Map the relevant systems | Annotated code/data map, player-state schema, track investigation | Validated addresses and meanings for the selected sequence; state sampling point defined; each critical finding has an experiment; unknowns remain explicit |
 | M2 — Native mechanics experiment | Native implementation of the short movement/trick sequence | Exact agreement on defined gameplay fields for the primary trace and at least two withheld input variations; native save/restore continuation agrees; first-divergence reports work |
-| M3 — Playable native slice | One complete track, controls, rider animation, collision, tricks, race finish and minimal frontend | Full-track recordings match scoped gameplay fields; real play confirms controls and readability; no original CPU execution for delivered gameplay; declared visual/audio omissions; repeatable build from a clean checkout |
+| M3 — Playable native slice | One complete track, controls, rider animation, collision, tricks, race finish, local Classic content extraction and minimal frontend | Full-track recordings match scoped gameplay fields; real play confirms controls and readability; no original CPU execution for delivered gameplay; declared visual/audio omissions; clean checkout plus supported ROM reproducibly creates the pack and runs; a later launch succeeds from the validated pack with the ROM absent |
 | M4 — Original game coverage | Remaining tracks, opponents, modes, local multiplayer, menus/progression and audio | Feature-by-feature coverage matrix, regression recordings, persistence checks and release testing on selected desktop platforms; remaining mismatches published |
 | M5 — Custom-content release | External track packs, high-resolution texture packs and a usable track editor | Create/save/load/race a new track; replace a sprite/animation without altering gameplay; version compatibility and malformed-content checks; Classic regressions still pass |
 | M6 — Online release | Network sessions for agreed player count and rules, including custom-content compatibility | Same state across clients, latency/loss/jitter tests, reconnect/disconnect behavior, content/rules checks, desync diagnostics, tested session flow and deployment plan |
@@ -113,7 +129,7 @@ Use the original track decoder to learn which geometry and gameplay properties a
 
 ### High-resolution assets
 
-Use an asset manifest mapping logical identities to replacement images, pivots, frame order and timing. Specify fallback to original extracted art and texture-size/memory limits. Check that a visual-only pack leaves simulation hashes unchanged. A public pack gallery or hosting service is later scope.
+Use an asset manifest mapping logical identities to replacement images, pivots, frame order and timing. Specify fallback to original art extracted locally under D-0005 and texture-size/memory limits. Check that a visual-only pack leaves simulation hashes unchanged. A public pack gallery or hosting service is later scope.
 
 ## Risks and decision rules
 

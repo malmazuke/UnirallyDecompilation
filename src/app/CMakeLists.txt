@@ -21,6 +21,13 @@ if(LAB_BUILD_APP)
     URL_HASH "SHA256=${SDL_SOURCE_SHA256}"
     DOWNLOAD_EXTRACT_TIMESTAMP TRUE)
   FetchContent_MakeAvailable(SDL3)
-  add_executable(unirally WIN32 sdl_main.cpp)
+  if(APPLE)
+    add_executable(unirally MACOSX_BUNDLE sdl_main.cpp)
+    set_target_properties(unirally PROPERTIES
+      MACOSX_BUNDLE_BUNDLE_NAME "Unirally"
+      MACOSX_BUNDLE_GUI_IDENTIFIER "org.unirally.classic")
+  else()
+    add_executable(unirally WIN32 sdl_main.cpp)
+  endif()
   target_link_libraries(unirally PRIVATE unirally_frontend SDL3::SDL3)
 endif()

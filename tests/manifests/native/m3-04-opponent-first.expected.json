@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "kind": "frozen_opponent_first_projection",
+  "scenario_id": "m3-04-opponent-first-neutral",
+  "rom_sha256": "a1105819d48c04d680c8292bbfa9abbce05224f1bc231afd66af43b7e0a1fd4e",
+  "replay_manifest_sha256": "c0c603ccfc54d6d92ec9b7ff3a5f7b66aa776b5b030fdf2fab6c9c9073f85408",
+  "reference_sample_digest": "6ef702112e824ad684b44b4b13390843fdb5c67a9e761e5566911eb0a41b9223",
+  "reference_final_state_sha256": "2d3d727a1ff8069ef6986c234bc5ecc9f457d4285f8c2ee9139c77b7c88e57af",
+  "reference_series_sha256": "0edec35d1e7137fa7ee5e6f212a32a829ef709300f47ba37fb7b04c5357a8c4b",
+  "initial_frame": 1533,
+  "last_frame": 3999,
+  "projection": ["opponent_x","opponent_y","opponent_velocity_x","opponent_pose","player_x","player_finished","opponent_finished","player_finish_delay","timer_minutes","timer_tens_seconds","timer_seconds","timer_tenths","timer_frames"],
+  "encoding": "per row: little-endian uint32 frame followed by 13 little-endian uint16 fields in projection order",
+  "projection_sha256": "77ed349effc9f832cfd5ae61e5d1854ce19b61b778b0cfddf1ad5bcb8400febe",
+  "checkpoints": {
+    "3214": [25265,864,450,2133,1088,0,1,0,0,3,3,6,0],
+    "3215": [25278,857,415,2629,1088,0,1,0,0,3,3,6,1],
+    "3231": [25359,857,5,2634,1088,0,1,0,0,3,3,9,2],
+    "3234": [25359,857,0,2635,1088,0,1,0,0,3,4,0,0],
+    "3435": [25359,857,0,2629,1088,0,1,0,0,3,8,0,1],
+    "3999": [25359,857,0,2645,1088,0,1,0,0,4,9,3,0]
+  }
+}

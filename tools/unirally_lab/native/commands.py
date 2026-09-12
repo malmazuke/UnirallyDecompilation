@@ -533,7 +533,7 @@ def cmd_finish_check(args: argparse.Namespace) -> int:
 
 
 def register(subparsers) -> None:
-    from . import presentation
+    from . import opponent_first, presentation
     parser = subparsers.add_parser("native", help="native movement comparison")
     commands = parser.add_subparsers(dest="native_command", required=True)
     command = commands.add_parser("compare", help="build and run native movement twice against a frozen reference")
@@ -566,4 +566,5 @@ def register(subparsers) -> None:
     finish_check.add_argument("--timeout", type=float, default=120)
     finish_check.add_argument("--task", default="M3-01")
     finish_check.set_defaults(func=cmd_finish_check)
+    opponent_first.register(commands)
     presentation.register(commands)

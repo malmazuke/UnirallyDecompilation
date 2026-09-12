@@ -81,6 +81,28 @@ bool has_finish_state(const RaceFinishState& finish) {
            finish.phase != RacePhase::Racing || finish.outcome != RaceOutcome::Pending;
 }
 
+void update_opponent_finish_pose(RaceFinishState& finish, RiderMovementState& rider,
+                                 std::uint32_t output_frame) {
+    // $82:8953-$82:89C2 with selector table $17:C7D6. Calls occur on the two
+    // nonzero phases of the original three-phase counter. Entries 0..47 are
+    // $0A45..$0A5C, each duplicated. Entry 48 is a negative sentinel whose
+    // reset call republishes the first pose without consuming selector zero.
+    auto& selector=finish.opponent_finish_pose_selector;
+    if(output_frame%3U!=0U) {
+        if(selector>=48U) {
+            selector=0;
+        } else {
+            rider.pose.pose_index=static_cast<std::uint16_t>(0x0a45U+selector/2U);
+            ++selector;
+            return;
+        }
+    }
+    // `$0DF1` persists between animation-table calls and is copied through
+    // `$0F59` on every update before collision sampling.
+    rider.pose.pose_index=static_cast<std::uint16_t>(
+        0x0a45U+(selector==0U?0U:(selector-1U)/2U));
+}
+
 std::uint16_t finish_centiseconds(const RaceTimerDigits& timer, std::uint32_t frame) {
     const auto value = timer.minutes*6000U + timer.tens_seconds*1000U +
         timer.seconds*100U + timer.tenths*10U + timer.subframe*2U + (frame&1U);
@@ -595,9 +617,11 @@ std::uint16_t finish_speed_toward_zero(std::uint16_t velocity) {
 
 std::vector<std::uint8_t> serialize_movement_state(const MovementState& s) {
     if(s.contact_phase>1 || s.progress_phase>1) throw std::invalid_argument("movement phase is not binary");
-    const bool version_two=has_finish_state(s.finish);
-    std::vector<std::uint8_t> out(version_two?movement_state_magic_v2.begin():movement_state_magic.begin(),
-                                  version_two?movement_state_magic_v2.end():movement_state_magic.end());
+    const bool version_three=s.finish.opponent_finish_pose_selector!=0;
+    const bool version_two=version_three || has_finish_state(s.finish);
+    const auto& magic=version_three?movement_state_magic_v3:
+        (version_two?movement_state_magic_v2:movement_state_magic);
+    std::vector<std::uint8_t> out(magic.begin(),magic.end());
     put32(out,s.frame);
     for(auto v:{s.player_input.low_image,s.player_input.high_image,s.player_input.vertical,s.player_input.horizontal}) put8(out,v);
     for(const auto& rider:s.riders) write_rider(out,rider);
@@ -614,6 +638,7 @@ std::vector<std::uint8_t> serialize_movement_state(const MovementState& s) {
         put16(out,s.finish.player_finish_delay); put16(out,s.finish.result_loading_updates);
         put8(out,static_cast<std::uint8_t>(s.finish.phase));
         put8(out,static_cast<std::uint8_t>(s.finish.outcome));
+        if(version_three)put16(out,s.finish.opponent_finish_pose_selector);
     }
     return out;
 }
@@ -622,7 +647,8 @@ MovementState deserialize_movement_state(std::span<const std::uint8_t> bytes) {
     if(bytes.size()<movement_state_magic.size()) throw std::invalid_argument("movement state is truncated");
     const bool version_one=std::equal(movement_state_magic.begin(),movement_state_magic.end(),bytes.begin());
     const bool version_two=std::equal(movement_state_magic_v2.begin(),movement_state_magic_v2.end(),bytes.begin());
-    if(!version_one && !version_two)throw std::invalid_argument("movement state magic is unsupported");
+    const bool version_three=std::equal(movement_state_magic_v3.begin(),movement_state_magic_v3.end(),bytes.begin());
+    if(!version_one && !version_two && !version_three)throw std::invalid_argument("movement state magic is unsupported");
     Reader in(bytes.subspan(movement_state_magic.size())); MovementState s{}; s.frame=in.u32();
     s.player_input.low_image=in.u8(); s.player_input.high_image=in.u8(); s.player_input.vertical=in.u8(); s.player_input.horizontal=in.u8();
     for(auto& rider:s.riders) read_rider(in,rider);
@@ -631,7 +657,7 @@ MovementState deserialize_movement_state(std::span<const std::uint8_t> bytes) {
     for(auto& v:s.rewards.entries) v=in.u8();
     s.rewards.read_cursor=in.u8(); s.rewards.write_cursor=in.u8(); s.rewards.cooldown=in.u16(); s.rewards.feature_total=in.u16(); s.rewards.event_one_weight=in.u8();
     s.countdown=in.u16(); s.contact_phase=in.u8(); s.progress_phase=in.u8(); s.animation_counter=in.u8(); s.update_counter=in.u8();
-    if(version_two) {
+    if(version_two || version_three) {
         for(auto& value:s.finish.rider_finished)value=in.flag();
         for(auto& value:s.finish.finish_time_centiseconds)value=in.u16();
         for(auto& digits:s.finish.finish_time_digits)for(auto& value:digits)value=in.u16();
@@ -639,12 +665,14 @@ MovementState deserialize_movement_state(std::span<const std::uint8_t> bytes) {
         s.finish.player_finish_delay=in.u16(); s.finish.result_loading_updates=in.u16();
         s.finish.phase=static_cast<RacePhase>(in.u8());
         s.finish.outcome=static_cast<RaceOutcome>(in.u8());
+        if(version_three)s.finish.opponent_finish_pose_selector=in.u16();
     }
     if(s.contact_phase>1 || s.progress_phase>1 || s.animation_counter>31 ||
        s.player_input.vertical>2 || s.player_input.horizontal>2 ||
        s.rewards.read_cursor>31 || s.rewards.write_cursor>31) throw std::invalid_argument("movement state contains an out-of-domain counter");
     if(static_cast<std::uint8_t>(s.finish.phase)>3 || static_cast<std::uint8_t>(s.finish.outcome)>2 ||
-       s.finish.player_finish_delay>240)throw std::invalid_argument("movement state contains invalid finish state");
+       s.finish.player_finish_delay>240 || s.finish.opponent_finish_pose_selector>48)
+        throw std::invalid_argument("movement state contains invalid finish state");
     for(const auto& rider:s.riders) {
         if(rider.idle_pose.active>1 || rider.idle_pose.direction_adjustment>1 ||
            rider.idle_pose.cycle_latched>1 || rider.idle_pose.cycle_counter>=120 ||
@@ -704,6 +732,12 @@ void update_movement(MovementState& state, const ControllerButtons& player_butto
     }
     const auto timer_at_start=state.timer;
     const bool finish_delay=state.finish.phase==RacePhase::FinishDelay;
+    // $83:EA72-$83:EAC3: when the opponent finishes first, its next update
+    // receives the same neutral horizontal/action response and phased signed
+    // slowdown while the player's timer and ordinary race remain live. This is
+    // distinct from the later player-owned global finish delay (R-0017).
+    const bool opponent_finished_first=
+        state.finish.rider_finished[1] && !state.finish.rider_finished[0];
     if(finish_delay) {
         state.player_input.horizontal=1;
         ++state.finish.player_finish_delay;
@@ -719,7 +753,8 @@ void update_movement(MovementState& state, const ControllerButtons& player_butto
     const bool timer_enabled = state.countdown < 69;
     if (state.countdown != 0) --state.countdown;
     const bool player_brake = forced_brake || player_buttons.b;
-    bool opponent_jump=(state.riders[1].progress.marker_word&0x2000U)!=0;
+    bool opponent_jump=!opponent_finished_first &&
+        (state.riders[1].progress.marker_word&0x2000U)!=0;
     if(opponent_jump && state.riders[1].contact.unsupported_count<4 &&
        state.rewards.feature_total!=0) {
         const auto catch_up=static_cast<std::int16_t>(
@@ -744,6 +779,7 @@ void update_movement(MovementState& state, const ControllerButtons& player_butto
     } else if(!opponent_jump) {
         state.opponent_ai.impulse_countdown=0;
         state.opponent_ai.trick_selector=0;
+        if(opponent_finished_first)state.opponent_ai.suppression_counter=0;
     }
     const unsigned active=state.contact_phase?0U:1U;
     bool opponent_event_one=false;
@@ -753,7 +789,9 @@ void update_movement(MovementState& state, const ControllerButtons& player_butto
         auto& rider=state.riders[index];
         const auto speed_before=rider.motion.velocity_x;
         decay_idle_wobble(rider);
-        const auto horizontal=finish_delay?1U:(index==0?state.player_input.horizontal:2U);
+        const auto horizontal=index==0?
+            (finish_delay?1U:state.player_input.horizontal):
+            (finish_delay||opponent_finished_first?1U:2U);
         int animation_override=index==active?
             stationary_animation_override(rider,static_cast<std::uint8_t>(horizontal)):0;
         bool use_throttle_target=false;
@@ -774,10 +812,11 @@ void update_movement(MovementState& state, const ControllerButtons& player_butto
         }
         // The source dispatcher skips this pre-adjustment on each third
         // update; the ordinary limiter/damping still runs on every update.
-        if(finish_delay && (state.frame+1U)%3U!=0U)apply_finish_slowdown(rider);
+        if((finish_delay || (index==1 && opponent_finished_first)) &&
+           (state.frame+1U)%3U!=0U)apply_finish_slowdown(rider);
         update_horizontal(rider,index==0?player_brake:forced_brake,horizontal==2,index==1,state,content,
                           animation_override,use_throttle_target);
-        if(finish_delay) {
+        if(finish_delay || (index==1 && opponent_finished_first)) {
             // Neutral finish response removes the 24-unit drive contribution
             // after ordinary limiting only when subtraction cannot cross zero.
             // Unlike the ten-unit pre-adjustment, a smaller remainder persists.
@@ -792,6 +831,9 @@ void update_movement(MovementState& state, const ControllerButtons& player_butto
                          content.idle_pose_table);
         update_pose(rider,state.animation_counter,state.contact_phase,content,animation_override,
                     use_throttle_target);
+        if(index==1 && opponent_finished_first) {
+            update_opponent_finish_pose(state.finish,rider,state.frame+1U);
+        }
         if(finish_delay && index==0 && state.finish.player_finish_delay==2 && speed_before==460) {
             // The later-player path crosses a contact/pose boundary on its
             // second finish update; the source retains the prior value 15 for

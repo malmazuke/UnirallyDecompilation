@@ -135,20 +135,18 @@ LiveFrame LivePresentation::render(const MovementState &state,
       recovered_pair_.reflected[rider] = state.riders[rider].pose.reflected;
     }
   }
-  auto presentation_state = state;
-  if (fallback) {
-    for (std::size_t rider = 0; rider < 2; ++rider) {
-      presentation_state.riders[rider].pose.pose_index =
-          recovered_pair_.pose_indices[rider];
-      presentation_state.riders[rider].pose.reflected =
-          recovered_pair_.reflected[rider];
-    }
-  }
-  return {render_dragster_headless(
-              {presentation_state, position.camera_x, position.bg1_x,
-               position.bg1_y, position.bg2_x, position.bg2_y},
-              content),
-          fallback};
+  const PresentationSample sample{state, position.camera_x, position.bg1_x,
+                                  position.bg1_y, position.bg2_x,
+                                  position.bg2_y};
+  if (!fallback)
+    return {render_dragster_headless(sample, content), false};
+  const std::array<RiderArtPose, 2> rider_art{
+      RiderArtPose{recovered_pair_.pose_indices[0],
+                   recovered_pair_.reflected[0]},
+      RiderArtPose{recovered_pair_.pose_indices[1],
+                   recovered_pair_.reflected[1]}};
+  return {render_dragster_headless_with_rider_art(sample, content, rider_art),
+          true};
 }
 
 } // namespace unirally::app

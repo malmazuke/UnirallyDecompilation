@@ -727,8 +727,9 @@ build_dragster_bg1_map(std::span<const std::uint8_t> track,
   }
   return map;
 }
-RgbFrame render_dragster_headless(const PresentationSample &s,
-                                  const PresentationContent &content) {
+static RgbFrame render_dragster(
+    const PresentationSample &s, const PresentationContent &content,
+    const std::array<RiderArtPose, 2> *rider_art) {
   if (content.bg1_tiles.size() != 2560 || content.bg2_tiles.size() != 992 ||
       content.bg2_map.size() != 8192 || content.palette.size() != 352 ||
       content.font.size() != 2048 || content.rider_tiles.size() != 3456 ||
@@ -768,11 +769,25 @@ RgbFrame render_dragster_headless(const PresentationSample &s,
     rect(f, 8 + static_cast<int>(i) * 9, 8, 3 + static_cast<int>(d[i] % 5), 10,
          {238, 238, 224});
   std::array<std::uint8_t, 65536> rider_vram{};
-  load_rider_tiles(rider_vram, s, content.rider_tiles);
+  auto art_state = s.movement;
+  if (rider_art != nullptr) {
+    for (std::size_t rider = 0; rider < rider_art->size(); ++rider) {
+      art_state.riders[rider].pose.pose_index = (*rider_art)[rider].pose_index;
+      art_state.riders[rider].pose.reflected = (*rider_art)[rider].reflected;
+    }
+  }
+  const PresentationSample art_sample{art_state, s.camera_x, s.bg1_scroll_x,
+                                      s.bg1_scroll_y, s.bg2_scroll_x,
+                                      s.bg2_scroll_y};
+  load_rider_tiles(rider_vram, art_sample, content.rider_tiles);
   const auto rider_cgram = build_race_cgram(s, content.palette);
   for (std::size_t rider_index = 0; rider_index < 2; ++rider_index) {
     const auto &rider = s.movement.riders[rider_index];
-    (void)rider_frame_for_pose(rider.pose.pose_index, rider.pose.reflected);
+    const auto art_pose = rider_art == nullptr
+                              ? RiderArtPose{rider.pose.pose_index,
+                                             rider.pose.reflected}
+                              : (*rider_art)[rider_index];
+    (void)rider_frame_for_pose(art_pose.pose_index, art_pose.reflected);
     const std::int64_t wide_x =
         static_cast<std::int16_t>(rider.motion.x) -
         static_cast<std::int64_t>(s.camera_x) - 832;
@@ -787,5 +802,16 @@ RgbFrame render_dragster_headless(const PresentationSample &s,
   if (player_pose == 0x04fe && opponent_pose == 0x037c)
     render_window_xor(f, content.winner_window, {98, 98, 255});
   return f;
+}
+
+RgbFrame render_dragster_headless(const PresentationSample &sample,
+                                  const PresentationContent &content) {
+  return render_dragster(sample, content, nullptr);
+}
+
+RgbFrame render_dragster_headless_with_rider_art(
+    const PresentationSample &sample, const PresentationContent &content,
+    const std::array<RiderArtPose, 2> &rider_art) {
+  return render_dragster(sample, content, &rider_art);
 }
 } // namespace unirally

@@ -31,6 +31,7 @@ The current recovered slice consumes controller port 0 only.
 Audio is intentionally not implemented in M3. Intermediate rider animation
 poses outside the five M3-02 recovered atlas pairs use the last supported rider
 art while the current track, camera, positions and HUD continue to render. The
-temporary presentation copy never changes canonical simulation state. See
+presentation-only rider-art override never changes canonical simulation state
+or the current state's palette/window effects. See
 `docs/research/R-0016-minimal-frontend.md` for the exact scheduler, input,
 display, dependency and first-launch contracts.

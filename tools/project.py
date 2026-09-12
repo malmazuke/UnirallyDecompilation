@@ -164,10 +164,26 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _normalize_frontend_timeout(argv: list[str]) -> list[str]:
+    """Keep argparse from treating a separated negative infinity as an option."""
+    if argv[:2] != ["frontend", "run"]:
+        return argv
+    normalized = argv.copy()
+    for index in range(2, len(normalized) - 1):
+        if (normalized[index] == "--timeout" and
+                normalized[index + 1].casefold() in {"-inf", "-infinity"}):
+            normalized[index:index + 2] = [
+                f"--timeout={normalized[index + 1]}"
+            ]
+            break
+    return normalized
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     try:
-        args = parser.parse_args(argv)
+        raw_argv = list(sys.argv[1:] if argv is None else argv)
+        args = parser.parse_args(_normalize_frontend_timeout(raw_argv))
     except SystemExit as exc:
         # argparse exits 2 on usage errors; map that to the invalid-input code.
         return EXIT_INVALID_INPUT if exc.code not in (0, None) else EXIT_OK

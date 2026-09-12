@@ -55,6 +55,14 @@ jobs:
       - name: Test synthetic (lab-debug)
         run: python3 tools/project.py test --suite synthetic --preset lab-debug --artifacts artifacts/ci/test-debug --report artifacts/ci/test-debug.json
 
+      - name: Prepare Ubuntu X11 development headers for pinned SDL
+        if: runner.os == 'Linux'
+        run: |
+          timeout 300 sudo apt-get update
+          timeout 300 sudo apt-get install -y --no-install-recommends \
+            pkg-config libx11-dev libxext-dev libxrandr-dev libxcursor-dev \
+            libxfixes-dev libxi-dev libxss-dev libxtst-dev libxkbcommon-dev
+
       - name: Build pinned SDL frontend (app-debug)
         run: python3 tools/project.py build --preset app-debug --timeout 600 --report artifacts/ci/build-app-debug.json
 

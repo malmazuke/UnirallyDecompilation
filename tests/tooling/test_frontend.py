@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import subprocess
+import sys
 import tempfile
 import unittest
 from argparse import Namespace
@@ -11,6 +13,9 @@ from unittest import mock
 from unirally_lab import EXIT_FAILURE, EXIT_INVALID_INPUT, EXIT_MISSING_PREREQUISITE, EXIT_OK
 from unirally_lab.content import pack
 from unirally_lab.frontend import commands
+
+ROOT = Path(__file__).resolve().parents[2]
+PROJECT = ROOT / "tools" / "project.py"
 
 
 class FrontendLaunchTests(unittest.TestCase):
@@ -77,6 +82,38 @@ class FrontendLaunchTests(unittest.TestCase):
                 check = next(c for c in document["checks"] if c["name"] == "arguments")
                 self.assertEqual(check["outcome"], "failed")
                 self.assertIn("finite and positive", check["detail"])
+
+    def test_cli_nonfinite_timeout_spellings_report_without_starting_child(self):
+        marker = self.root / "child-started"
+        child = self.root / "child"
+        child.write_text(
+            "#!/usr/bin/env python3\n"
+            "from pathlib import Path\n"
+            f"Path({str(marker)!r}).write_text('started')\n"
+        )
+        child.chmod(0o755)
+        spellings = (("nan",), ("inf",), ("-inf",), ("--equals", "-inf"))
+        for index, spelling in enumerate(spellings):
+            with self.subTest(spelling=spelling):
+                report = self.root / f"cli-nonfinite-{index}.json"
+                timeout_arguments = (
+                    [f"--timeout={spelling[1]}"]
+                    if spelling[0] == "--equals"
+                    else ["--timeout", spelling[0]]
+                )
+                result = subprocess.run(
+                    [sys.executable, str(PROJECT), "frontend", "run",
+                     "--pack", str(self.root / "absent.pack"),
+                     "--executable", str(child), "--report", str(report),
+                     *timeout_arguments],
+                    capture_output=True, text=True, timeout=30,
+                )
+                self.assertEqual(result.returncode, EXIT_INVALID_INPUT,
+                                 result.stderr)
+                self.assertTrue(report.is_file())
+                self.assertEqual(json.loads(report.read_text())["status"],
+                                 "failed")
+                self.assertFalse(marker.exists())
 
 
 if __name__ == "__main__":

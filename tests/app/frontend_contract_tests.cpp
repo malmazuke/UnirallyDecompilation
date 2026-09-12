@@ -169,6 +169,11 @@ int main() {
   };
   go = empty_window_table();
   winner = empty_window_table();
+  for (std::size_t index = 0; index < palette.size(); ++index)
+    palette[index] = static_cast<std::uint8_t>((index * 37U) & 0xffU);
+  for (std::size_t index = 0; index < rider_tiles.size(); ++index)
+    rider_tiles[index] =
+        static_cast<std::uint8_t>(((index / 32U) * 37U + index) & 0xffU);
   const auto before = unirally::serialize_movement_state(presentation_state);
   const auto rendered = unirally::render_dragster_headless(
       {presentation_state, 0, -14, 208, -7, 104},
@@ -190,16 +195,17 @@ int main() {
                                        rider_tiles, result_assets, go, winner,
                                        result_vram, result_palette, result_tail});
   require(first_live.used_pose_fallback, "unsupported pair uses rider fallback");
-  auto expected_one = unsupported_one;
-  expected_one.riders[0].pose.pose_index = 0x04f9;
-  expected_one.riders[1].pose.pose_index = 0x0263;
-  const auto direct_one = unirally::render_dragster_headless(
-      {expected_one, first_position.camera_x, first_position.bg1_x,
+  const std::array<unirally::RiderArtPose, 2> opening_art{
+      unirally::RiderArtPose{0x04f9, true},
+      unirally::RiderArtPose{0x0263, true}};
+  const auto direct_one = unirally::render_dragster_headless_with_rider_art(
+      {unsupported_one, first_position.camera_x, first_position.bg1_x,
        first_position.bg1_y, first_position.bg2_x, first_position.bg2_y},
       {track, bg1, bg2, bg2_map, palette, font, rider_tiles, result_assets,
-       go, winner, result_vram, result_palette, result_tail});
+       go, winner, result_vram, result_palette, result_tail},
+      opening_art);
   require(first_live.frame.pixels == direct_one.pixels,
-          "fallback changes only rider pose fields");
+          "fallback changes only rider art selection");
 
   auto unsupported_two = unsupported_one;
   unsupported_two.frame += 1;
@@ -220,4 +226,84 @@ int main() {
   require(live.last_recovered_pose_pair().pose_indices ==
               std::array<std::uint16_t, 2>{0x04f9, 0x0263},
           "rider art remains the recovered fallback pair");
+
+  const auto active_window_table = [] {
+    std::vector<std::uint8_t> table;
+    for (const unsigned lines : {127U, 97U}) {
+      table.push_back(static_cast<std::uint8_t>(0x80U | lines));
+      for (unsigned line = 0; line < lines; ++line)
+        table.insert(table.end(), {0, 255, 255, 0});
+    }
+    return table;
+  };
+  go = active_window_table();
+  winner = active_window_table();
+  const unirally::PresentationContent effect_content{
+      track, bg1, bg2, bg2_map, palette, font, rider_tiles, result_assets,
+      go, winner, result_vram, result_palette, result_tail};
+
+  LivePresentation rolling_history;
+  auto rolling = presentation_state;
+  rolling.riders[0].pose.pose_index = 0x0855;
+  rolling.riders[1].pose.pose_index = 0x0895;
+  (void)rolling_history.render(rolling, first_position, effect_content);
+  LivePresentation finish_history;
+  auto finish = presentation_state;
+  finish.riders[0].pose.pose_index = 0x04fe;
+  finish.riders[1].pose.pose_index = 0x037c;
+  (void)finish_history.render(finish, first_position, effect_content);
+
+  auto same_unsupported = unsupported_one;
+  same_unsupported.riders[0].motion.x = 0;
+  same_unsupported.riders[1].motion.x = 0;
+  const auto same_before = unirally::serialize_movement_state(same_unsupported);
+  const PresentationPosition offscreen_position{0, -14, 208, -7, 104};
+  const auto rolling_offscreen =
+      rolling_history.render(same_unsupported, offscreen_position,
+                             effect_content);
+  const auto finish_offscreen =
+      finish_history.render(same_unsupported, offscreen_position,
+                            effect_content);
+  require(rolling_offscreen.frame.pixels == finish_offscreen.frame.pixels,
+          "off-screen fallback history cannot change scene effects");
+  require(unirally::serialize_movement_state(same_unsupported) == same_before,
+          "fallback histories leave canonical state unchanged");
+
+  auto visible_unsupported = same_unsupported;
+  visible_unsupported.riders[0].motion.x = 900;
+  visible_unsupported.riders[1].motion.x = 1050;
+  visible_unsupported.riders[0].motion.y = 752;
+  visible_unsupported.riders[1].motion.y = 752;
+  const auto visible_before =
+      unirally::serialize_movement_state(visible_unsupported);
+  const auto rolling_visible =
+      rolling_history.render(visible_unsupported, offscreen_position,
+                             effect_content);
+  const auto finish_visible =
+      finish_history.render(visible_unsupported, offscreen_position,
+                            effect_content);
+  require(rolling_visible.frame.pixels != finish_visible.frame.pixels,
+          "visible rider art retains its recovered history");
+  for (std::size_t pixel_index = 0;
+       pixel_index < rolling_visible.frame.pixels.size(); pixel_index += 3) {
+    const bool differs =
+        rolling_visible.frame.pixels[pixel_index] !=
+            finish_visible.frame.pixels[pixel_index] ||
+        rolling_visible.frame.pixels[pixel_index + 1] !=
+            finish_visible.frame.pixels[pixel_index + 1] ||
+        rolling_visible.frame.pixels[pixel_index + 2] !=
+            finish_visible.frame.pixels[pixel_index + 2];
+    if (!differs)
+      continue;
+    const auto pixel = pixel_index / 3;
+    const int x = static_cast<int>(pixel % unirally::RgbFrame::width);
+    const int y = static_cast<int>(pixel / unirally::RgbFrame::width);
+    const bool inside_player = x >= 68 && x < 132 && y >= 0 && y < 64;
+    const bool inside_opponent = x >= 218 && x < 256 && y >= 0 && y < 64;
+    require(inside_player || inside_opponent,
+            "fallback history differences are confined to visible riders");
+  }
+  require(unirally::serialize_movement_state(visible_unsupported) ==
+              visible_before,
+          "visible fallback leaves canonical state unchanged");
 }

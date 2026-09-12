@@ -28,8 +28,12 @@ The tracked `app-debug` and `app-sanitize` presets enable the desktop target.
 ROM-free hosted CI retains the headless jobs and additionally builds/tests
 `app-debug` on macOS and Linux and `app-sanitize` on Linux, with a pack-free
 `--help` runtime-link smoke. SDL examples, tests and install targets are
-disabled. macOS uses the platform SDK; Linux uses the host window-system
-development interfaces SDL detects.
+disabled. macOS uses the platform SDK. On ephemeral Ubuntu runners only, CI
+installs the X11 development package set listed by SDL 3.4.10's
+`docs/README-linux.md` before app builds, with each APT operation bounded to
+300 seconds. These OS headers compile SDL's real desktop backend; they are
+distinct from the SHA-256-pinned SDL source build and do not require or
+authorize a global SDL installation on a developer machine.
 
 ### Scheduler
 
@@ -95,9 +99,9 @@ so explicitly.
 The accepted atlas boundary intentionally recognizes only the five recovered
 rider-pose pairs frozen by M3-02. The frontend calls it unchanged. Between
 supported pairs it renders a fresh frame from the current gameplay state,
-camera, scroll, rider positions and timer, but substitutes the last recovered
-pair's pose indices/reflection in a temporary presentation copy. Before the
-first supported pair that copy uses the opening recovered pair. Canonical
+camera, scroll, rider positions, timer, palette and window effects. A narrow
+renderer input selects only rider atlas art from the last recovered pose pair;
+before the first supported pair it uses the opening recovered pair. Canonical
 gameplay is never changed. Startup reports this rider-art omission once. This
 makes the whole accepted simulation readable without pretending that
 unrecovered animation frames exist; extending pose coverage belongs to a later
@@ -122,13 +126,22 @@ race freezes as long as 153 updates / 3.06 seconds. That behavior contradicted
 the rider-only omission above and is rejected; see `tasks/M3-03-review.md` for
 the input/output hashes and interval inventory.
 
-The corrected pure adapter stores only two pose indices and reflection flags.
-Every redraw copies the current semantic state, substitutes those four
-presentation-only fields when needed, and renders current camera, scroll,
-positions and HUD. An authored regression uses two distinct unsupported
-states, camera values and timer digits: their RGB frames differ, each exactly
-equals a direct render of that current state with only the recovered pair
-substituted, and both canonical states remain unchanged.
+The first correction's pure adapter stored only two pose indices and reflection
+flags, but substituted them into a complete temporary semantic state. A second
+review proved those fields also selected race palette and GO/winner windows,
+so fallback history changed 14,290 RGB channel bytes with both riders
+off-screen. That presentation leakage is rejected.
+
+The final additive renderer seam accepts a separate two-rider art selection.
+Only atlas loading and rider-frame validation consume it; current semantic
+state continues to select palette/windows as well as camera, scroll, positions
+and HUD. The original M3-02 renderer API delegates to the same implementation
+without an override and remains source-compatible. The authored regression
+renders one unsupported state after rolling and late-finish histories: with
+both riders off-screen the frames are identical despite active effect tables
+and a nonuniform palette; with riders visible, history-dependent differences
+exist and are confined to the two rider rectangles. Canonical state remains
+byte-identical.
 
 An actual dummy-video, fixed continuous-right launch from frame 1533 through
 3679 produced 2,145 redraws; two display iterations batched updates under the
@@ -152,3 +165,25 @@ discarded return is rejected; the app now throws a renderer-specific launch
 failure when it is false. No backend-independent way to force that SDL call to
 fail was introduced merely for the test, so source inspection plus hosted/local
 runtime smokes cover this narrow error check.
+
+### Correction-round-2 observations and decisions
+
+Fresh re-review found two further integration boundaries. First, the initial
+pose-field substitution changed 14,290 RGB channel bytes with both riders
+off-screen because pose fields also select palette and window effects. Second,
+argparse rejected the separated spelling `--timeout -inf` before the frontend
+handler could emit its requested report. Hosted run `34699306504` also showed
+that Ubuntu lacked the X11/Wayland development headers SDL requires to compile
+a real desktop backend; macOS app-debug passed, while Linux app-debug failed at
+configuration and the later Linux app checks did not run. These are observed
+failures, not acceptance evidence.
+
+The reversible decisions are the additive rider-art renderer input described
+above; frontend-only normalization of a separated negative-infinity timeout
+before generic argparse processing; and the bounded ephemeral Ubuntu X11
+header preparation described in the dependency section. Subprocess tests cover
+`nan`, `inf`, separated `-inf` and equals-form `-inf`, each requiring exit 3, a
+failed report and a sentinel child that never starts. Other subcommands retain
+the generic CLI parser unchanged. Hosted Linux success remains evidence to be
+obtained on the exact correction candidate, not inferred from local macOS
+builds.

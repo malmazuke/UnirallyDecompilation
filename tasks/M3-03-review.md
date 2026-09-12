@@ -416,3 +416,35 @@ the hosted workflow and obtain green Linux app-debug/app-sanitize evidence.
 Then rerun both local app suites, the same-state/off-screen-rider fallback
 boundary, all CLI non-finite mutations, dummy smokes and exact-head hosted CI.
 M3-03 remains unapproved.
+
+## Worker correction response — round 2
+
+All three findings are corrected without changing the accepted gameplay,
+pack/state formats, cases, scheduler or visual thresholds:
+
+1. The existing M3-02 headless API remains and delegates without an override.
+   A new additive renderer call accepts only two `RiderArtPose` values. Atlas
+   loading and rider-frame validation consume that override; the current
+   semantic state alone drives palette, GO/winner windows, camera, positions
+   and HUD. The authored regression uses active effect tables and a nonuniform
+   palette, primes rolling and late-finish histories, and proves the same
+   unsupported state is pixel-identical when riders are off-screen. With riders
+   visible the histories differ only inside their two 64-pixel rider rectangles.
+   Both canonical states remain byte-identical.
+2. `tools/project.py` narrowly normalizes only a separated negative-infinity
+   token following `frontend run --timeout`; generic argparse behavior for all
+   other commands is unchanged. A subprocess regression exercises `nan`,
+   `inf`, separated `-inf` and `--timeout=-inf`, requiring exit 3, a written
+   failed report and an executable sentinel that never starts. Real pre-commit
+   probes reproduced all four successful rejection outcomes and found no app
+   process.
+3. Ubuntu CI now installs SDL 3.4.10's documented X11 development package set
+   before app builds. Both APT operations have 300-second bounds inside the
+   existing 30-minute job. This ephemeral hosted preparation is distinct from
+   the pinned, build-local SDL source dependency and does not install SDL
+   globally or disable its desktop backend.
+
+Pre-commit app-debug and app-sanitize suites passed 283 Python tests, 20 CTests
+and three fresh processes. Exact correction commits and evidence are recorded
+in `tasks/M3-03.md` after the coherent commit. Fresh re-review and exact-head
+hosted CI remain required; this response does not approve M3-03.

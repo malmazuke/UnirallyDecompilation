@@ -80,3 +80,20 @@ presentation assets. The renderer therefore uses authored diagnostic map
 colours and rider shapes and has not satisfied the frozen mismatch limits.
 Sprite frame descriptors, BG tile/palette placement and stable-result
 provenance remain required; the frozen limits must not be enlarged.
+
+## Result-loading provenance narrowing
+
+The existing continuous finish capture closes the large result-screen loads,
+which occur well before the stable frame rather than at frame 3679. Frame 3529
+DMA-copies 216 palette bytes from ROM file offset `0x0028D4`. Frame 3556 copies
+1,920 bytes from `0x022378`, and frame 3559 copies 3,072 bytes from
+`0x03D5D8`, both to VRAM. Frame 3561 then copies the constructed 2,048-byte
+WRAM map at `$000200` to VRAM word `$1000`. Frame 3560 contains the 16-byte
+template/block-move activity that precedes this map upload. At stable frame
+3679 the only DMA is the normal 544-byte WRAM-to-OAM transfer.
+
+This establishes the result palette/tile payload sources and that the layout
+must be represented as a deterministic template expansion, not extracted as a
+captured WRAM image. The exact 16-byte template source and its expansion
+semantics, plus OAM-to-pose frame descriptors, remain to be closed before the
+pack rule can honestly claim the frozen `font-layout` logical entry.

@@ -25,7 +25,9 @@ The coordinator maintains the status registry below. Work orders further below d
 | M3-02 | accepted 12 September 2026 after three review rounds and green macOS/Linux CI | [Native presentation contract](M3-02.md) |
 | M3-03 | accepted 13 September 2026 after five returned review rounds, final approval and green macOS/Linux SDL CI | [Minimal frontend and controls](M3-03.md) |
 | M3-04 | accepted 13 September 2026 after independent approval and green macOS/Linux CI; M3 accepted, tag `m3` | [Playable-slice acceptance](M3-04.md) |
-| M4 – M6 | planned; M4 is next | See milestone definitions |
+| M4-00 | in progress: evidence-backed original-game feature inventory | [M4 coverage inventory](M4-00.md) |
+| M4-01 | pending M4-00 inventory | Second-track reference baseline and coverage delta (record created by M4-00) |
+| M4-02 – M6 | planned | See milestone definitions |
 
 ## M0 — repeatable laboratory
 

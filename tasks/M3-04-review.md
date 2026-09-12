@@ -141,3 +141,59 @@ this review session and remains a coordinator gate. This review does not accept
 M3-04 or M3, update the registry/state, create the `m3` tag, push, publish or
 deploy. Those actions remain with the coordinator after exact-candidate hosted
 evidence is green.
+
+## Focused CI path re-review — `2be0aa6`
+
+- Main commit reviewed:
+  `2be0aa6e2f3bd4a8ed3d4f1fe0127caa2c6f1a64`
+- Parent: `4cd9d66`; exact diff is one workflow hunk in
+  `.github/workflows/synthetic.yml`
+- Verdict: **approved with no findings**
+
+The M3-04 merge exposed a CI-only macOS failure: `MACOSX_BUNDLE` places the
+clean-build executable at
+`build/app-debug/src/app/unirally.app/Contents/MacOS/unirally`, while the
+workflow still invoked the former unbundled path. The correction selects that
+bundle path when GitHub's `RUNNER_OS` is `macOS` and retains
+`build/app-debug/src/app/unirally` otherwise.
+
+This matches all three relevant boundaries. `src/app/CMakeLists.txt` uses
+`MACOSX_BUNDLE` only under `APPLE`; `_default_executable` in the frontend
+resolver selects the same bundle inner executable only when `sys.platform` is
+`darwin`; and the existing focused test requires precisely that Darwin path
+and the unchanged Linux path. A path-limited diff proved those production and
+test files are byte-identical between the already-reviewed `c2c8909` and
+`2be0aa6`.
+
+Exact focused commands and outcomes:
+
+```text
+git show --format=fuller --find-renames 2be0aa6 -- .github/workflows/synthetic.yml src/app/CMakeLists.txt tools/unirally_lab/frontend/commands.py tests/tooling/test_frontend.py
+# one workflow file changed, 6 insertions and 1 deletion
+
+git diff --exit-code c2c8909 2be0aa6 -- src/app/CMakeLists.txt src/app/sdl_main.cpp tools/unirally_lab/frontend/commands.py tests/tooling/test_frontend.py
+# exit 0; no production/test difference
+
+git diff --check 2be0aa6^..2be0aa6
+# exit 0
+
+git show 2be0aa6:.github/workflows/synthetic.yml | ruby -e 'require "yaml"; YAML.safe_load(STDIN.read, aliases: true); puts "yaml-parse=passed"'
+# yaml-parse=passed
+
+test -x build/app-debug/src/app/unirally.app/Contents/MacOS/unirally
+# exit 0
+
+RUNNER_OS=macOS bash -c 'if [[ "$RUNNER_OS" == "macOS" ]]; then build/app-debug/src/app/unirally.app/Contents/MacOS/unirally --help; else build/app-debug/src/app/unirally --help; fi'
+# exit 0; printed the expected Unirally usage, controls and audio omission
+
+PYTHONPATH=tools python3 -m unittest discover -s tests/tooling -p 'test_frontend.py' -v
+# 10 tests run in 2.561s; OK
+```
+
+The local host is macOS arm64, so the bundle existence and runtime-link/help
+boundary were executed directly. Linux was verified structurally through the
+unchanged non-Apple CMake branch, workflow `else` branch and the focused
+platform-mocked resolver test; no Linux host was available in this review
+session. A hosted rerun remains the coordinator's evidence gate. This focused
+approval does not alter coordinator acceptance records or authorize another
+acceptance, tag, push, publication or deployment.

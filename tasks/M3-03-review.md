@@ -674,3 +674,113 @@ collision commands refused ROM and pack aliases with exit 3; the disposable
 ROM and generated pack retained their byte identities and the refused
 first-launch created no pack. Full hashes and commands are in `tasks/M3-03.md`.
 Fresh narrow independent review remains required.
+
+## Final narrow independent re-review — path-collision guard
+
+- Handoff head reviewed:
+  `1e4b1dd8d1f02876d65ded153baee06a91304ba9`
+- Behavioral correction reviewed:
+  `8682b176f99db4da82b18fb28a0dc74c1e7efdeb`
+- Correction diff:
+  `9db1011..8682b176f99db4da82b18fb28a0dc74c1e7efdeb`
+- Reviewer: fresh sequential OpenAI Codex Sol/medium session
+- Worktree/branch: `.worktrees/m3-03-collision-review`,
+  `review/M3-03-collision-guard`
+- Date: 13 September 2026 AEST
+- Verdict: **returned with one material path-semantics finding; not approved**
+
+### Finding: the guard compares different paths from those the command uses
+
+`_paths_alias` expands `~` on both operands
+(`frontend/commands.py:21-24`), but final report writing passes the original
+unexpanded `Path(args.report)` (`frontend/commands.py:59-61` and
+`report.py:133-140`). Input handling is also inconsistent: pack and ROM paths
+are expanded later, while rules and explicit executable paths are not. The
+preflight can therefore compare a different report target from the one that is
+eventually opened for writing.
+
+I reproduced a destructive missed alias using only a temporary authored pack.
+From a temporary working directory I created a valid one-entry pack at the
+literal path `<tmp>/~/victim.pack`, supplied that absolute path as `--pack`,
+and supplied the quoted relative spelling `--report '~/victim.pack'`. The
+preflight expanded the report operand to the home directory and did not match
+it to the absolute literal-tilde pack. The later report writer did not expand
+the operand, so it opened the pack itself. A disposable executable sentinel
+also proved that the child ran:
+
+```text
+python3 <repo>/tools/project.py frontend run \
+  --pack '<tmp>/~/victim.pack' --rules '<tmp>/rules.json' \
+  --executable '<tmp>/child' --updates 1 --timeout 30 \
+  --report '~/victim.pack' --task M3-03-collision-final-review
+```
+
+The command exited 0, created the child sentinel and replaced the valid
+216-byte pack (SHA-256
+`52efcd186dc4c07704dd7e1a6b05e08a23011633b164af7250cde24b7f65003f`)
+with a 2,444-byte passed JSON report (SHA-256
+`3bf407e6f6f00379d0f9d2ab8c62689b04c67c14414dfc2106ea9a328800e038`).
+This violates the required exit-3, pre-read/pre-launch and byte-preservation
+contract for a report alias of the pack. The same path-normalization mismatch
+can affect ROM, rules and explicit executable operands.
+
+The initial normalized-absolute comparison also introduces a demonstrated
+false positive around a symlinked parent followed by `..`. With
+`<tmp>/a/link -> <tmp>/b/sub`, a pack at `<tmp>/a/report.json` and report path
+`<tmp>/a/link/../report.json`, the OS resolves the report to
+`<tmp>/b/report.json`; `samefile` is false and the two resolved paths differ.
+Nevertheless `os.path.abspath` lexically collapses the report spelling to the
+pack spelling first, so the command incorrectly exits 3 and creates no valid
+report. The pack remained unchanged. This is a real false positive rather than
+a conservative refusal of two paths that can access the same file.
+
+Canonicalize each operand exactly once according to the semantics later used
+for opening it, and use that same report path for the final write. Do not let a
+lexical `abspath` shortcut override a different symlink-aware resolution. Add
+CLI regressions for the quoted leading-tilde missed alias and the
+symlink-parent/parent-traversal distinct-path case. M3-03 remains unapproved.
+
+### Correct collision behavior independently confirmed
+
+An independent disposable matrix confirmed the intended behavior for eleven
+ordinary cases: ROM lexical, relative/absolute, final symlink, hardlink and
+parent-traversal aliases; existing pack; normalized nonexistent pack;
+nonexistent pack below a symlinked parent; rules; explicit executable; and a
+disposable default executable. Every case exited 3. Spies on `Report`, rules
+loading, pack validation/build/write and child launch remained untouched, all
+existing input hashes were unchanged, and the two nonexistent collision
+targets remained absent. Thus collision checking itself does not create or
+overwrite the report in the covered refusal paths.
+
+A distinct ordinary report path was also accepted: the command exited 0,
+wrote the report and preserved the authored pack byte for byte. The material
+finding above is confined to the guard's inconsistent path semantics; it does
+not reopen previously approved frontend/gameplay areas.
+
+### Exact-head hosted and local evidence
+
+Hosted run `34702119885` is green at exact handoff head `1e4b1dd`. Its macOS
+15 job passed app-debug build, the 285-test Python tooling suite, all 20 CTests,
+three fresh-process runs and the executable help/link smoke. Its Ubuntu 24.04
+job passed the bounded X11 dependency preparation, app-debug build/test/help,
+and app-sanitize build/test/help. The Ubuntu sanitizer suites likewise report
+285 Python tests, all 20 CTests and fresh-process repeatability with no required
+failure or skip. Both hosted jobs concluded success.
+
+Local focused frontend tooling ran all seven tests successfully. The
+proportionate exact-head app-debug build and complete synthetic suite also
+passed: 285 Python tests, 20 CTests and three fresh processes, 308 required
+checks with no failure or skip. The executable help smoke passed and retained
+the explicit audio omission. Report SHA-256 values were:
+
+| Evidence | SHA-256 |
+| --- | --- |
+| app-debug build | `369ee7b1cbc5cc4e5c9dd5d6784b933044efc3bc1e6fbadcb63e6648da56c407` |
+| app-debug synthetic | `345b01ce006f57ce91de96ea2b7370168e0000efda79172bf7986ee7519cb0af` |
+
+`git diff --check 8682b17^..1e4b1dd` passed. Before this appended round the
+worktree had no tracked modification. Generated reports/builds and the
+toolchain link remain ignored under `artifacts/`, `build/` and `local/`.
+Tracked-file inspection found no ROM, generated pack, state, capture,
+screenshot or report payload. No implementation, accepted case, manifest,
+threshold or gameplay/presentation behavior was changed by this review.

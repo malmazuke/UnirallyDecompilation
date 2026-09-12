@@ -59,3 +59,26 @@ needed by pack-backed execution and no seed bytes are tracked.
 These observations cover one ROM, one tour/track/rider pair and the accepted
 M3-01 input domain. Presentation content remains M3-02 and general starts,
 other tracks/modes and distribution clearance are not established here.
+
+## Independent review return and correction
+
+The first independent review returned candidate `e5b0ddf`: the Python
+`pack-inspect`/native command path rejected mutated source and extraction-rules
+identities, but direct `movement_runner` construction skipped those 64 header
+bytes and trusted each table-provided payload digest. A source-identity mutation
+at byte 12 therefore ran successfully when the command layer was bypassed.
+
+Correction `c86874d` binds the native reader to the frozen PAL source SHA-256,
+exact `f500d016...a620` extraction-rules SHA-256 and all thirteen expected
+logical ID/size/SHA-256 tuples before any payload span is exposed. A new
+ROM-free C++ test constructs an authored invalid pack with the correct metadata
+table and proves that source, rules, row-digest and payload gates reject at the
+responsible boundary. Direct `movement_runner` probes also reject the four
+private mutations with distinct source/rules/required-entry/payload messages.
+
+On exact correction `c86874d`, debug and sanitizer suites each pass 296/296
+(275 Python, 18 CTest, three fresh processes), report SHA-256 values
+`43857110...7e5` and `dd79de0e...7545`. Pack-backed reviewer restores
+3226/3227/3228 pass (`80a0fcba...992a`), and the ROM-absent continuous case at
+3213/3453 passes (`dc7a2d69...a7eb`). No expected payload or extraction rule
+changed.

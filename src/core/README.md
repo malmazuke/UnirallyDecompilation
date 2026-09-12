@@ -120,10 +120,11 @@ fresh-process save/restore checks at requested finish boundaries.
 
 M3-02A's schema-1 `URCP0001` pack replaces the thirteen loose runtime filenames
 with logical IDs. `ClassicContentPack` validates the binary layout, exact
-profile/start identity, required inventory and every payload SHA-256 before
-returning a byte span. The stable command additionally validates source-ROM and
-extraction-rules identities. ROM offsets exist only in the tracked extractor
-rules; the simulation sees no ROM address.
+source-ROM/extraction-rules/profile/start identities, required per-entry
+identities and every payload SHA-256 before returning a byte span. The stable
+command independently applies the same validation before starting a producer.
+ROM offsets exist only in the tracked extractor rules; the simulation sees no
+ROM address.
 
 `classic_crawler_dragster_start()` constructs the frozen end-of-frame 1533
 `MovementState` using named semantic fields. It has no WRAM/SRAM/ROM input and

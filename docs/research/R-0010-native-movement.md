@@ -1,6 +1,8 @@
 # R-0010 — Native movement prerequisite investigation
 
-- Status: blocked on research prerequisite M2-01A by coordinator reassessment; verified components submitted for independent review, no native gameplay agreement claimed.
+- Status: prerequisite investigation accepted through M2-01A and M2-01; final
+  native movement agreement is recorded in the task handoffs and
+  [R-0011](R-0011-m2-acceptance.md).
 - Task: [M2-01](../../tasks/M2-01.md), dispatched base `a9f86e590e4be0d76369a975ece2d556883aa51f`.
 - ROM: PAL Unirally, SHA-256 `a1105819d48c04d680c8292bbfa9abbce05224f1bc231afd66af43b7e0a1fd4e`; unchanged bsnes commit `7d5aa1e656b9171524d01b1b22917197d8121cb4`, patch `a719f5ffe2222dad4c1ab04336633319ad85004f74e32fc14893a058be333885`, Strict serialization.
 - Domain: primary Crawler/DRAGSTER race; end-of-frame samples, first full native update intended at 1534 from initial observation 1533. Reference baseline is unchanged. Native sampling and progress components exist; autonomous movement is not implemented.

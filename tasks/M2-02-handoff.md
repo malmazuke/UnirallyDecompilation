@@ -66,7 +66,7 @@ build report SHA-256 is
 `c668cea682dd18906666a94989d81440078808906347a146edb55b3767f1bd3d`.
 Focused command tests pass19/19. No gameplay source or frozen expectation changed.
 
-## Remaining gates
+## Review and acceptance
 
 Independent review approved behavioral commit `f7a3386`: **281/281** synthetic
 checks, all three sanitizer movement tests, both required exact cases, and the
@@ -89,5 +89,8 @@ All reports record clean source and no source change during execution. One
 initial coordinator release invocation misspelled the manifest filename and
 correctly exited2 as a missing prerequisite; the corrected command above passed.
 
-Only the private `task/**` PR and macOS15/Ubuntu24.04 CI remain. M2 and M2-02
-remain unaccepted until that gate closes.
+PR5 ran twice because both its push and pull-request events matched the workflow.
+Runs34675475186 and34675476818 each passed on macOS15 and Ubuntu24.04; the
+portable continuation test and Linux sanitizer run were included. PR5 merged as
+`144fd4839d540654b255f81d199f30acb866a55d`. M2-02 and milestone M2 are
+accepted; the milestone audit is [R-0011](../docs/research/R-0011-m2-acceptance.md).

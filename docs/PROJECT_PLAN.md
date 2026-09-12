@@ -88,6 +88,17 @@ M2-01 (native movement experiment) is the first task that writes game code and r
 
 These are effort figures for planning task order and concurrency. They are not a calendar date, a delivery promise or a cost: sessions are not metered here, no spend is authorized by this plan, and eight tasks on one host by two models is too small a sample to extrapolate beyond M2. Re-estimate M3 from M2's observed figures rather than from this one.
 
+M2 acceptance update (12 September 2026): M2-01 expanded once into the explicit
+M2-01A opponent/contact prerequisite; its reviews found one semantic translation
+error and one GCC portability error. M2-02 completed in one implementation and
+one independent review round with no remaining finding. PR5 then passed the full
+macOS/Linux matrix and M2 was accepted; see
+[R-0011](research/R-0011-m2-acceptance.md). M3 crosses more interfaces than M2
+(complete-race reference coverage, remaining mechanics, controls, rendering and
+frontend integration), so its initial planning range is **6 to 20 worker hours
+and 3 to 8 review rounds**, split into bounded evidence tasks rather than one
+long implementation. This is a prioritization range, not a date or cost promise.
+
 ## Future features without premature implementation
 
 ### Online play

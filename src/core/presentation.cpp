@@ -613,6 +613,13 @@ void render_rider(RgbFrame &frame, const std::array<std::uint8_t, 65536> &vram,
 
 } // namespace
 RiderFrameSelection rider_frame_for_pose(std::uint16_t pose, bool reflected) {
+  // Every observed pose in the frozen Classic slice carries the reflected
+  // semantic orientation. The packed atlas/OAM relationship is not recovered
+  // for the contradictory orientation, so fail closed instead of silently
+  // drawing the reflected object geometry.
+  if (!reflected)
+    throw std::invalid_argument(
+        "unsupported Classic rider pose/reflection combination");
   RiderFrameId id{};
   switch (pose) {
   case 0x04f9:
@@ -731,7 +738,16 @@ RgbFrame render_dragster_headless(const PresentationSample &s,
       content.result_palette_tail.size() != 128)
     throw std::invalid_argument(
         "Classic presentation entry size is unsupported");
-  if (s.movement.finish.phase == RacePhase::ResultScreen) {
+  // The original publishes the completed result at end-of-frame 3678. The
+  // accepted gameplay state reaches ResultScreen on the following update, so
+  // presentation consumes the observed loading counter without altering the
+  // gameplay transition or its serialization.
+  const auto &finish = s.movement.finish;
+  const bool result_visible = finish.phase == RacePhase::ResultScreen ||
+      (finish.phase == RacePhase::ResultLoading &&
+       finish.outcome == RaceOutcome::PlayerWon &&
+       finish.result_loading_updates >= 225);
+  if (result_visible) {
     RgbFrame result{};
     render_result_background(result, s, content);
     return result;
@@ -756,11 +772,16 @@ RgbFrame render_dragster_headless(const PresentationSample &s,
   for (std::size_t rider_index = 0; rider_index < 2; ++rider_index) {
     const auto &rider = s.movement.riders[rider_index];
     (void)rider_frame_for_pose(rider.pose.pose_index, rider.pose.reflected);
-    const int x = static_cast<std::int16_t>(rider.motion.x) - s.camera_x - 832;
+    const std::int64_t wide_x =
+        static_cast<std::int16_t>(rider.motion.x) -
+        static_cast<std::int64_t>(s.camera_x) - 832;
     const int y = static_cast<std::int16_t>(rider.motion.y) - 752;
-    render_rider(f, rider_vram, rider_cgram, x, y,
-                 rider_index == 0 ? 0 : 136,
-                 rider_index == 0 ? 0x66 : 0x68);
+    // A 64-pixel object wholly outside the 256-pixel screen cannot contribute.
+    // Narrow only coordinates in the renderer's small, representable domain.
+    if (wide_x > -64 && wide_x < 256)
+      render_rider(f, rider_vram, rider_cgram, static_cast<int>(wide_x), y,
+                   rider_index == 0 ? 0 : 136,
+                   rider_index == 0 ? 0x66 : 0x68);
   }
   if (player_pose == 0x04fe && opponent_pose == 0x037c)
     render_window_xor(f, content.winner_window, {98, 98, 255});

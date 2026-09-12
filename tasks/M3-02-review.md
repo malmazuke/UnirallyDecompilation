@@ -211,3 +211,20 @@ command with failure reports. Correct the pack inventory documentation. Re-run
 the six frozen cases plus frame 3678 (or document and evidence a corrected
 adjacent boundary), the three mutations above, pack/ROM independence,
 finish/restore invariants and debug/sanitizer checks on the correction commit.
+
+## Candidate correction response
+
+The task worker reproduced every finding and returned a corrected candidate
+without changing gameplay serialization or any frozen threshold:
+
+1. Frame 3678 is explicitly bound as `ResultLoading`/`PlayerWon` update 225,
+   when the original result is already visible; update 224 remains a race frame.
+2. All observed rider combinations are reflected. Contradictory false values
+   now fail closed, including the reviewer's exact frame-2000 mutation.
+3. Camera subtraction is performed in 64 bits and clipped before narrowing;
+   both 32-bit extremes are sanitizer-clean and scroll overflow is rejected.
+4. `native presentation-check` now runs all seven identity-bound private cases,
+   reports thresholds structurally, and has ROM-free pass/fail/parser tests.
+5. Pack records now consistently close on 25 total / 12 presentation entries.
+
+Fresh re-review is required; this response does not approve or accept M3-02.

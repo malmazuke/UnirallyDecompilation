@@ -117,3 +117,8 @@ The final copier association also adds the later 216-byte stable-result CGRAM
 payload (`155799e6...0e18`) as a distinct entry; the earlier 216-byte transition
 palette is retained. The resulting inventory is twenty-four entries under
 rules SHA-256 `11aeefa1...265c3`.
+
+The final M3-02 palette-writer association adds the 128-byte retained/CPU-
+written palette tail as the twelfth presentation entry. The completed Classic
+inventory is exactly twenty-five entries: thirteen gameplay and twelve
+presentation, under extraction-rules SHA-256 `70712c470db436ad95b02d3a6d51f737be7bb5b27689ca0d99a8297bac31d768`.

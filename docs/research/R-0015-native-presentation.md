@@ -361,3 +361,37 @@ It preserves every frozen rectangle and limit: frame 1600 is 36/26,656
 2400 is 279/50,176 (0.556043%, limit 2%); 3213 is 445/50,176 (0.886878%,
 limit 3%); 3453 is 653/50,176 (1.301419%, limit 3%); and 3679 is 961/57,344
 (1.675851%, limit 15%). No expected image, crop, or limit was regenerated.
+
+## Returned-review boundary and durable visual gate
+
+Independent review added the adjacent withheld frame 3678. Its fresh pinned-
+core capture passed all identities with access SHA-256
+`91ce740192a0df1c1074d0c9bd555a873aabf8d9f32ff4562387306816c14d11`
+and reference PNG SHA-256
+`9dfb6cfef4b6540b1acf8af34146e47f175d8ed04ad7345a52faa85bdf765589`.
+The canonical state is still `ResultLoading`, `PlayerWon`, with
+`result_loading_updates=225`; the original has already published the result.
+Native gameplay intentionally advances to `ResultScreen` at update 226, so the
+renderer now defines a presentation-only boundary at player-win loading update
+225. Update 224 stays on the race presentation. Serialization and gameplay
+state are unchanged. Frame 3678 measures 962/57,344 (1.677595%) against the
+unchanged 15% result limit; 3679 remains 961/57,344 (1.675851%).
+
+Every frozen rider state has semantic `reflected=true`. No source observation
+defines the opposite atlas/OAM composition, so supported pose indices paired
+with `false` now fail closed. The reviewer's frame-2000 1-to-0 mutation exits 1
+instead of producing byte-identical output. Camera X subtraction uses 64-bit
+intermediate arithmetic and discards wholly off-screen objects before safe
+narrowing; both signed 32-bit extremes run without sanitizer diagnostics.
+Scroll arguments are parsed directly into signed 16-bit values, so 32768 is
+rejected rather than truncated.
+
+`native presentation-check` is the durable private gate. The tracked manifest
+now binds each ignored state/reference filename and SHA-256 plus its exact
+camera, scroll, rectangle and threshold. The command admits fixtures only
+below ignored `local/` or `artifacts/`, validates the Classic pack, builds and
+runs the headless producer, rehashes inputs, and emits structured per-case
+results. Three ROM-free tooling tests cover exact threshold pass/fail behavior,
+fixture/numeric validation, and PPM/PNG parsing. A deliberate 0.1% mutation of
+frame 1600 reports 36/26,656 and exits 1. The tracked debug and sanitizer runs
+both pass all seven cases without changing any prior limit.

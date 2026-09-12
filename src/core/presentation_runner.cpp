@@ -1,6 +1,8 @@
 #include "content_pack.hpp"
 #include "movement.hpp"
 #include "presentation.hpp"
+#include <charconv>
+#include <cstdint>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -15,10 +17,21 @@ std::vector<std::uint8_t> read(const std::filesystem::path &p) {
     throw std::runtime_error("cannot open presentation state");
   return {std::istreambuf_iterator<char>(in), {}};
 }
+template <typename Integer>
+Integer parse_integer(const char *text, const char *name) {
+  Integer value{};
+  const std::string_view input(text);
+  const auto parsed = std::from_chars(input.data(), input.data() + input.size(),
+                                      value);
+  if (parsed.ec != std::errc{} || parsed.ptr != input.data() + input.size())
+    throw std::invalid_argument(std::string("invalid ") + name);
+  return value;
+}
 } // namespace
 int main(int argc, char **argv) try {
   std::filesystem::path pack, state_path, out_path;
-  int camera{}, sx{}, sy{}, bg2x{}, bg2y{};
+  std::int32_t camera{};
+  std::int16_t sx{}, sy{}, bg2x{}, bg2y{};
   for (int i = 1; i < argc; i += 2) {
     if (i + 1 >= argc)
       throw std::invalid_argument("presentation runner requires option values");
@@ -30,15 +43,15 @@ int main(int argc, char **argv) try {
     else if (o == "--out")
       out_path = argv[i + 1];
     else if (o == "--camera-x")
-      camera = std::stoi(argv[i + 1]);
+      camera = parse_integer<std::int32_t>(argv[i + 1], "camera-x");
     else if (o == "--bg1-scroll-x")
-      sx = std::stoi(argv[i + 1]);
+      sx = parse_integer<std::int16_t>(argv[i + 1], "bg1-scroll-x");
     else if (o == "--bg1-scroll-y")
-      sy = std::stoi(argv[i + 1]);
+      sy = parse_integer<std::int16_t>(argv[i + 1], "bg1-scroll-y");
     else if (o == "--bg2-scroll-x")
-      bg2x = std::stoi(argv[i + 1]);
+      bg2x = parse_integer<std::int16_t>(argv[i + 1], "bg2-scroll-x");
     else if (o == "--bg2-scroll-y")
-      bg2y = std::stoi(argv[i + 1]);
+      bg2y = parse_integer<std::int16_t>(argv[i + 1], "bg2-scroll-y");
     else
       throw std::invalid_argument("unknown presentation runner option: " + o);
   }
@@ -62,9 +75,7 @@ int main(int argc, char **argv) try {
       content.entry("presentation.result.classic.palette.v1"),
       content.entry("presentation.result.classic.palette-tail.v1")};
   const auto frame = unirally::render_dragster_headless(
-      {state, camera, static_cast<std::int16_t>(sx),
-       static_cast<std::int16_t>(sy), static_cast<std::int16_t>(bg2x),
-       static_cast<std::int16_t>(bg2y)},
+      {state, camera, sx, sy, bg2x, bg2y},
       assets);
   std::ofstream out(out_path, std::ios::binary | std::ios::trunc);
   if (!out)

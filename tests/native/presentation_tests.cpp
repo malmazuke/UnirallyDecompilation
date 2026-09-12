@@ -58,11 +58,18 @@ int main() {
     rejected = true;
   }
   require(rejected);
-  require(unirally::rider_frame_for_pose(0x855, false).logical_id ==
+  require(unirally::rider_frame_for_pose(0x855, true).logical_id ==
           "presentation.rider.mike.race-tiles.v1");
   rejected = false;
   try {
     (void)unirally::rider_frame_for_pose(0xffff, false);
+  } catch (const std::invalid_argument &) {
+    rejected = true;
+  }
+  require(rejected);
+  rejected = false;
+  try {
+    (void)unirally::rider_frame_for_pose(0x0855, false);
   } catch (const std::invalid_argument &) {
     rejected = true;
   }
@@ -124,6 +131,27 @@ int main() {
       {result_state, 0, 0, 0, 0, 0}, content);
   require(empty_result.pixels[0] != split_result.pixels[0]);
   require(before == unirally::serialize_movement_state(state));
+
+  // Result presentation becomes visible at the observed end-of-frame 3678
+  // boundary while gameplay deliberately remains in ResultLoading update 225.
+  result_state.finish.phase = unirally::RacePhase::ResultLoading;
+  result_state.finish.result_loading_updates = 225;
+  const auto boundary_result = unirally::render_dragster_headless(
+      {result_state, 0, 0, 0, 0, 0}, content);
+  require(boundary_result.pixels == split_result.pixels);
+  result_state.finish.result_loading_updates = 224;
+  const auto prior_loading = unirally::render_dragster_headless(
+      {result_state, 0, 0, 0, 0, 0}, content);
+  require(prior_loading.pixels != split_result.pixels);
+
+  // Both extremes remain defined: the riders are wholly off-screen and the
+  // wide coordinate subtraction is never narrowed or evaluated in `int`.
+  state.riders[0].pose.reflected = true;
+  state.riders[1].pose.reflected = true;
+  (void)unirally::render_dragster_headless(
+      {state, INT32_MIN, 0, 0, 0, 0}, content);
+  (void)unirally::render_dragster_headless(
+      {state, INT32_MAX, 0, 0, 0, 0}, content);
 
   auto winner_state = state;
   winner_state.riders[0].pose.pose_index = 0x04fe;

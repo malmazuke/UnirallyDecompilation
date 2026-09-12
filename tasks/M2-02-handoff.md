@@ -68,7 +68,26 @@ Focused command tests pass19/19. No gameplay source or frozen expectation change
 
 ## Remaining gates
 
-Run the complete synthetic and sanitizer suites on a clean candidate, obtain an
-independent exact-candidate review with an additional boundary/mutation, then
-integrate through a `task/**` PR and require macOS15/Ubuntu24.04 CI. M2 and M2-02
-remain unaccepted until those gates close.
+Independent review approved behavioral commit `f7a3386`: **281/281** synthetic
+checks, all three sanitizer movement tests, both required exact cases, and the
+portable `7c799b4393d171f2` hash were reproduced in a clean detached checkout.
+Reviewer-owned boundaries1534 and2998 passed in five fresh processes (report
+SHA-256 `7881f4c5a5ccb90a20dada0b59cd82d71ff0e9043f3a48ffb748ea216a5bd3ab`),
+and a deliberate suffix-stream mutation was rejected after two producer calls
+with exit1. The reviewer found no hidden runtime state or remaining finding.
+
+Coordinator merge candidate `5c065db4ff261e69ef29516f41651e63c2892ade`
+passes **281/281** synthetic checks (report SHA-256
+`7cb940df41f6ccf572fa8814bbdc57805c079e193037e4f8dc80f1352bc1f838`),
+all three sanitizer movement tests (build-report SHA-256
+`ab2b7b43211a08fcb388e6571b28522928fae516092f6d0374251b63fffdb854`),
+primary1631/2200 (report SHA-256
+`91051b76ee5cbb72a1b3242e7be0be00d2995e3ddd926b25eebf314437cc1a97`)
+and release2761/2787 (report SHA-256
+`998d188bdec6dbe6a7c59b5ab805c95d594ac4cc1134c127aebee4faf074c4ca`).
+All reports record clean source and no source change during execution. One
+initial coordinator release invocation misspelled the manifest filename and
+correctly exited2 as a missing prerequisite; the corrected command above passed.
+
+Only the private `task/**` PR and macOS15/Ubuntu24.04 CI remain. M2 and M2-02
+remain unaccepted until that gate closes.

@@ -10,7 +10,7 @@
   },
   "runtime": {
     "path": "local/native/dragster/runtime.json",
-    "sha256": "c271d520b821fc60cd7a4e9053d50e0af302fd881f2ba21299b8f003224b7cd0"
+    "sha256": "e8d2898408d369b2ed1b9ca91a8891acb88d938fb49d96c05e1ef94d78a4fe89"
   },
   "schema_version": 1
 }

@@ -34,7 +34,8 @@ void write_rider(std::vector<std::uint8_t>& out, const RiderMovementState& r) {
     put_bool(out,r.progress.transition_rejected);
     for(auto v:{r.jump.pending,r.jump.impulse_phase,r.jump.baseline,r.jump.previous_input,r.pose.orientation,r.pose.reflected_orientation,r.pose.animation_phase,r.pose.animation_increment,r.pose.previous_x,r.pose.previous_y,r.pose.displacement_remainder,r.pose.target_orientation,r.pose.pose_index}) put16(out,v);
     for(auto v:r.pose.displacement_history) put16(out,v);
-    put16(out,r.pose.rolling_level); put16(out,r.pose.alternate_animation_phase); put_bool(out,r.pose.rolling);
+    put16(out,r.pose.rolling_level); put16(out,r.pose.alternate_animation_phase);
+    put_bool(out,r.pose.rolling); put_bool(out,r.pose.reflected);
     for(auto v:{r.quarter_turn.previous_quadrant,r.quarter_turn.forward_turns,r.quarter_turn.reverse_turns,r.quarter_turn.forward_quarters,r.quarter_turn.reverse_quarters}) put16(out,v);
     put_bool(out,r.quarter_turn.initialized); put_bool(out,r.quarter_turn.reflected_at_start);
     for(auto v:{r.residue_x,r.residue_y,r.throttle,r.previous_brake,r.launch_override,r.small_motion_counter}) put16(out,v);
@@ -47,10 +48,72 @@ void read_rider(Reader& in, RiderMovementState& r) {
     r.progress.transition_rejected=in.flag();
     for(auto* v:{&r.jump.pending,&r.jump.impulse_phase,&r.jump.baseline,&r.jump.previous_input,&r.pose.orientation,&r.pose.reflected_orientation,&r.pose.animation_phase,&r.pose.animation_increment,&r.pose.previous_x,&r.pose.previous_y,&r.pose.displacement_remainder,&r.pose.target_orientation,&r.pose.pose_index}) *v=in.u16();
     for(auto& v:r.pose.displacement_history) v=in.u16();
-    r.pose.rolling_level=in.u16(); r.pose.alternate_animation_phase=in.u16(); r.pose.rolling=in.flag();
+    r.pose.rolling_level=in.u16(); r.pose.alternate_animation_phase=in.u16();
+    r.pose.rolling=in.flag(); r.pose.reflected=in.flag();
     for(auto* v:{&r.quarter_turn.previous_quadrant,&r.quarter_turn.forward_turns,&r.quarter_turn.reverse_turns,&r.quarter_turn.forward_quarters,&r.quarter_turn.reverse_quarters}) *v=in.u16();
     r.quarter_turn.initialized=in.flag(); r.quarter_turn.reflected_at_start=in.flag();
     for(auto* v:{&r.residue_x,&r.residue_y,&r.throttle,&r.previous_brake,&r.launch_override,&r.small_motion_counter}) *v=in.u16();
+}
+
+bool negative(std::uint16_t value) { return (value & 0x8000U) != 0; }
+
+std::uint16_t add_word(std::uint16_t left, std::uint16_t right) {
+    return static_cast<std::uint16_t>(static_cast<std::uint32_t>(left) + right);
+}
+
+void update_horizontal(RiderMovementState& rider, bool brake, bool opponent,
+                       const MovementState& whole, const MovementContent& content) {
+    // $81:8592 common reset clears the one-update launch override before the
+    // throttle routine. The value written by a launch remains in the serialized
+    // end-of-frame state and is cleared at the next call.
+    rider.launch_override = 0;
+    if (rider.contact.unsupported_count >= 2) {
+        rider.throttle = 0;
+    } else {
+        if (brake && rider.motion.velocity_x != 0) {
+            throw std::invalid_argument("moving brake is outside the recovered movement domain");
+        }
+        // Player inputs and the recovered opponent AI both request Right in the
+        // primary domain. Leftward throttle remains explicitly unsupported.
+        rider.motion.velocity_x = add_word(rider.motion.velocity_x, 24);
+        const auto signed_boost = static_cast<std::int16_t>(rider.speed.boost);
+        const auto limit = static_cast<std::uint16_t>(448U +
+            (signed_boost > 0 ? static_cast<unsigned>(signed_boost) : 0U));
+        const auto candidate = add_word(rider.throttle, 16);
+        if (negative(static_cast<std::uint16_t>(candidate - limit))) rider.throttle = candidate;
+        if (brake) {
+            rider.motion.velocity_x = 0;
+        } else if (rider.previous_brake != 0 && rider.throttle != 0) {
+            rider.motion.velocity_x = add_word(rider.motion.velocity_x, rider.throttle);
+            rider.throttle = 0;
+            rider.launch_override = 256;
+        }
+    }
+    rider.previous_brake = brake ? 1 : 0;
+
+    SpeedLimitContext context{};
+    context.opponent = opponent;
+    context.pose_byte = 0; // Primary screen-coordinate values 43..104 keep this branch inactive.
+    context.start_override = rider.launch_override != 0;
+    context.ai_enabled = true;
+    context.player_progress = whole.riders[0].progress.transition_count;
+    context.opponent_progress = whole.riders[1].progress.transition_count;
+    context.adjustment_limit = 96;
+    context.player_base_cap = 448;
+    context.update_counter = whole.update_counter;
+    context.friction_mode = 2;
+    limit_rider_speed(rider.motion.velocity_x, rider.motion.velocity_y,
+                      rider.speed, context, content.speed_decay);
+
+    const auto total = static_cast<std::int32_t>(static_cast<std::int16_t>(rider.motion.velocity_x)) +
+                       static_cast<std::int16_t>(rider.residue_x);
+    const auto magnitude = total < 0 ? -total : total;
+    auto whole_units = magnitude / 32;
+    auto remainder = magnitude % 32;
+    if (total < 0) { whole_units = -whole_units; remainder = -remainder; }
+    rider.motion.x = static_cast<std::uint16_t>(rider.motion.x + whole_units);
+    rider.residue_x = static_cast<std::uint16_t>(remainder);
+    rider.motion.previous_x_displacement = static_cast<std::uint16_t>(whole_units);
 }
 }
 
@@ -79,7 +142,38 @@ MovementState deserialize_movement_state(std::span<const std::uint8_t> bytes) {
     for(auto& v:s.rewards.entries) v=in.u8();
     s.rewards.read_cursor=in.u8(); s.rewards.write_cursor=in.u8(); s.rewards.cooldown=in.u16(); s.rewards.feature_total=in.u16(); s.rewards.event_one_weight=in.u8();
     s.countdown=in.u16(); s.contact_phase=in.u8(); s.progress_phase=in.u8(); s.animation_counter=in.u8(); s.update_counter=in.u8();
-    if(s.contact_phase>1 || s.progress_phase>1 || s.rewards.read_cursor>31 || s.rewards.write_cursor>31) throw std::invalid_argument("movement state contains an out-of-domain counter");
+    if(s.contact_phase>1 || s.progress_phase>1 || s.animation_counter>31 ||
+       s.player_input.vertical>2 || s.player_input.horizontal>2 ||
+       s.rewards.read_cursor>31 || s.rewards.write_cursor>31) throw std::invalid_argument("movement state contains an out-of-domain counter");
+    (void)serialize_timer(s.timer); // Reuse the reviewed digit-domain validation.
     in.require_end(); return s;
+}
+
+
+void update_movement(MovementState& state, const ControllerButtons& player_buttons,
+                     const MovementContent& content) {
+    state.player_input = sample_controller(player_buttons);
+    if (state.player_input.horizontal == 0) {
+        throw std::invalid_argument("leftward movement is outside the recovered primary domain");
+    }
+    state.update_counter = static_cast<std::uint8_t>(state.update_counter + 1U);
+    state.animation_counter = static_cast<std::uint8_t>((state.animation_counter + 1U) & 31U);
+    state.contact_phase = static_cast<std::uint8_t>(1U - state.contact_phase);
+    state.progress_phase = static_cast<std::uint8_t>(1U - state.progress_phase);
+
+    // The countdown handler publishes a forced brake while entering with 70 or
+    // more, then decrements. End-1533 contains 69, so frame 1534 releases the
+    // stored brake and takes the ordinary launch transition.
+    const bool forced_brake = state.countdown >= 70;
+    const bool timer_enabled = state.countdown < 69;
+    if (state.countdown != 0) --state.countdown;
+    const bool player_brake = forced_brake || player_buttons.b;
+    if (state.player_input.horizontal != 2 && !player_brake) {
+        throw std::invalid_argument("neutral player throttle is not implemented yet");
+    }
+    update_horizontal(state.riders[0], player_brake, false, state, content);
+    update_horizontal(state.riders[1], forced_brake, true, state, content);
+    (void)advance_timer_digits(state.timer, timer_enabled);
+    ++state.frame;
 }
 } // namespace unirally

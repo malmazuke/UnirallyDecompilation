@@ -8,6 +8,7 @@
 #include <array>
 #include <cstdint>
 #include <span>
+#include <string_view>
 #include <vector>
 
 namespace unirally {
@@ -24,7 +25,7 @@ struct PoseState {
     std::uint16_t displacement_remainder{}, target_orientation{}, pose_index{};
     std::array<std::uint16_t, 3> displacement_history{};
     std::uint16_t rolling_level{}, alternate_animation_phase{};
-    bool rolling{};
+    bool rolling{}, reflected{};
 };
 struct QuarterTurnState {
     std::uint16_t previous_quadrant{}, forward_turns{}, reverse_turns{};
@@ -62,6 +63,10 @@ struct MovementState {
     std::uint8_t contact_phase{}, progress_phase{}, animation_counter{}, update_counter{};
 };
 
+struct MovementContent {
+    SpeedDecayContent speed_decay{};
+};
+
 inline constexpr std::array<std::uint8_t, 8> movement_state_magic{
     'U', 'R', 'M', 'V', '0', '0', '0', '1'};
 
@@ -69,5 +74,12 @@ inline constexpr std::array<std::uint8_t, 8> movement_state_magic{
 // only: no WRAM image, CPU registers, frame-indexed events or captured calls.
 std::vector<std::uint8_t> serialize_movement_state(const MovementState& state);
 MovementState deserialize_movement_state(std::span<const std::uint8_t> bytes);
+
+// Advance one PAL game update in the recovered CRAWLER/DRAGSTER domain. This
+// semantic path currently closes input, GO launch, horizontal acceleration,
+// speed limiting/integration and timer order. Later contact/pose/AI work extends
+// this same state transition; no reference row or frame-indexed event enters it.
+void update_movement(MovementState& state, const ControllerButtons& player_buttons,
+                     const MovementContent& content);
 
 } // namespace unirally

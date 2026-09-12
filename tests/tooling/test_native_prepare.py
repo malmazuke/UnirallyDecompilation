@@ -15,10 +15,10 @@ class NativeSeedPreparationTests(unittest.TestCase):
                               (0x2120,0x1357),(0x2124,0x2468),(0x2128,0xabcd)):
             wram[address:address+2]=value.to_bytes(2,"little")
         state=canonical_seed(bytes(wram),sram)
-        self.assertEqual(len(state),295)
+        self.assertEqual(len(state),297)
         self.assertEqual(state[:12],b"URMV0001\xfd\x05\x00\x00")
         self.assertEqual(state[90:96],bytes.fromhex("34127856bc9a"))
-        self.assertEqual(state[199:205],bytes.fromhex("57136824cdab"))
+        self.assertEqual(state[200:206],bytes.fromhex("57136824cdab"))
 
     def test_bad_seed_shape_and_identity_reject(self):
         with self.assertRaisesRegex(ValueError,"128 KiB"):canonical_seed(b"",b"")

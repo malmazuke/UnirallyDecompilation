@@ -11,10 +11,11 @@ int main(int argc, char** argv) {
     state.animation_counter=31; state.update_counter=205; state.countdown=69;
     state.riders[0].motion.x=1088; state.riders[0].throttle=432;
     state.riders[1].motion.velocity_y=0xff80; state.riders[1].contact.recontact=true;
-    state.riders[0].pose.displacement_history={1,2,3}; state.rewards.write_cursor=1;
+    state.riders[0].pose.displacement_history={1,2,3}; state.riders[0].pose.reflected=true;
+    state.rewards.write_cursor=1;
     state.rewards.cooldown=2; state.rewards.event_one_weight=4;
     const auto encoded=unirally::serialize_movement_state(state);
-    require(encoded.size()==295); require(encoded[0]=='U' && encoded[7]=='1');
+    require(encoded.size()==297); require(encoded[0]=='U' && encoded[7]=='1');
     require(unirally::serialize_movement_state(unirally::deserialize_movement_state(encoded))==encoded);
     auto malformed=encoded; malformed[100]=2; // first rider rolling flag
     bool rejected=false; try { (void)unirally::deserialize_movement_state(malformed); } catch(const std::invalid_argument&) { rejected=true; }
@@ -35,6 +36,7 @@ int main(int argc, char** argv) {
                 std::array<std::uint16_t,3>{0,0,0});
         require(imported.riders[1].pose.displacement_history==
                 std::array<std::uint16_t,3>{0,0,0});
+        require(imported.riders[0].pose.reflected && imported.riders[1].pose.reflected);
         require(unirally::serialize_movement_state(imported)==seed);
     }
 }

@@ -55,7 +55,7 @@ post-gather collision-response dependency that remains before autonomous riding.
 one `ContactMotion`, `RiderContactState`, `SpeedModifiers` and `TrackProgress`
 record, plus the named jump, pose, quarter-turn, residue and throttle fields
 identified in R-0011-motion. Global state owns the alternating phases, counters,
-timer, opponent continuation and reward queue. The canonical 295-byte encoding
+timer, opponent continuation and reward queue. The canonical 297-byte encoding
 is fixed-order little-endian, begins `URMV0001` plus a u32 frame, validates its
 binary flags and cursors, and contains no CPU registers or captured calls.
 

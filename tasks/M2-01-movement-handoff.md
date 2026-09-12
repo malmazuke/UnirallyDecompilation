@@ -15,7 +15,7 @@ withheld expectation, broad capture, native update or CPU interpreter was used.
 `src/core/movement.*` composes the reviewed contact, speed, progress, input and
 timer types into one semantic state for both riders. It adds named jump,
 pose/animation, quarter-turn, residue/throttle, opponent-continuation and reward
-queue state from R-0011-motion. Fixed-order little-endian serialization is 295
+queue state from R-0011-motion. The initial fixed-order little-endian serialization was 295
 bytes, begins `URMV0001` plus LE u32 frame, rejects invalid flags, phases,
 cursors, truncation and trailing data, and round-trips independently of host
 struct layout. Contact velocity and speed modifier state are not duplicated.
@@ -67,7 +67,7 @@ silently written as zero; ROM loads/writebacks at `$82:8AE0-$8AF8` /
 `$82:8DE0-$8FF2` and `$82:8FE8-$9000` / `$82:92CE-$92E0` establish persistent
 player addresses `$7E:211E/$2122/$2126` and opponent addresses
 `$7E:2120/$2124/$2128`. All six are zero in the approved frame-1533 dump, so
-the canonical seed digest remains `1264e64d...fdbb`; authored nonzero sentinels
+the initial canonical seed digest remained `1264e64d...fdbb`; authored nonzero sentinels
 now prove that the importer reads them rather than assuming them.
 
 Static preparation previously accepted arbitrary same-sized content. It now
@@ -79,4 +79,24 @@ runtime regenerated with hash `c271d520...cd0`, and tracked
 `primary.case.json` binds that runtime plus the unchanged primary replay and
 expectation hashes. Python preparation tests pass 3/3; debug build and CTest
 pass; the Python-produced approved seed was decoded and byte-for-byte
-round-tripped by the C++ test executable. Withheld cases remain unopened.
+round-tripped by the C++ test executable. A subsequent inventory pass found
+that nonzero current reflection at `$0BA7/$0BA9` was also absent. The canonical
+format is therefore superseded by a 297-byte version before update
+implementation. Withheld cases remain unopened.
+
+The corrected seed is 297 bytes, SHA-256
+`1c133b99c3395e440ce2d580b9a7eefa131015ec519a16bd50109e94fe09d5d9`;
+the regenerated runtime metadata is
+`e8d2898408d369b2ed1b9ca91a8891acb88d938fb49d96c05e1ef94d78a4fe89`.
+The new semantic update and `movement_runner` implement decoded input, phase
+and counter recurrence, the source-derived countdown/brake-release launch,
+horizontal throttle, reviewed speed clamp, signed `/32` integration and timer.
+The authored first-update test matches frame 1534 exactly. A full primary run
+uses only seed, static files and controller masks, is identical across two fresh
+processes, and matches all 13 projected fields through frame 1631. Its first
+divergence is the predicted coupled boundary at frame 1632: native player speed
+448 versus reference 449 after opponent progress leads. Report:
+`artifacts/m2-01-movement/horizontal-primary-297/report.json`. This is a
+diagnostic checkpoint, not gameplay acceptance; opponent jump/contact,
+reward/AI feedback, pose and marker progress remain to be composed. Usage at
+this checkpoint is 19% of the seven-day window (baseline 17%, ceiling 27%).

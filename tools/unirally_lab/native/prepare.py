@@ -72,7 +72,7 @@ def rider_seed(w: Writer, ram: bytes, rider: int) -> None:
           word(ram,0xb5a+p),word(ram,0xb5e+p),word(ram,0xb66+p),word(ram,0xb76+p),
           word(ram,0x411+p),word(ram,0x211e+p),word(ram,0x2122+p),
           word(ram,0x2126+p),word(ram,0xb9f+p),word(ram,0xfe5+p))
-    w.u8(flag(word(ram,0xea3+p)))
+    w.u8(flag(word(ram,0xea3+p)),flag(word(ram,0xba7+p)))
     w.u16(word(ram,0xd25+p),word(ram,0x1203+p),word(ram,0x1207+p),
           word(ram,0x120b+p),word(ram,0x120f+p))
     w.u8(flag(word(ram,0x136b+p)),flag(word(ram,0x33f+p)))
@@ -88,7 +88,7 @@ def canonical_seed(wram: bytes, sram: bytes) -> bytes:
     out.data.extend(wram[0xceb:0xd0b]); out.u8(wram[0xd11],wram[0xd13])
     out.u16(word(wram,0xca7),word(sram,0x825)); out.u8(wram[0x2102])
     out.u16(word(wram,0x11c5)); out.u8(wram[0x300],wram[0x302],wram[0x4c7],wram[0x127f])
-    if len(out.data)!=295: raise AssertionError("canonical movement width changed")
+    if len(out.data)!=297: raise AssertionError("canonical movement width changed")
     return bytes(out.data)
 
 def validate_observation(wram_path:Path,sram_path:Path,report_path:Path)->tuple[bytes,bytes]:

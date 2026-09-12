@@ -1,0 +1,6 @@
+{
+  "schema_version": 1,
+  "kind": "native_opponent_first_case",
+  "replay": {"path":"tests/manifests/replay/m3-04-opponent-first-neutral.json", "sha256":"c0c603ccfc54d6d92ec9b7ff3a5f7b66aa776b5b030fdf2fab6c9c9073f85408"},
+  "expected": {"path":"tests/manifests/native/m3-04-opponent-first.expected.json", "sha256":"1aebe8a2f3655b3970bb21adacbe2b94389c8160506718f0007cae34c3e8b155"}
+}

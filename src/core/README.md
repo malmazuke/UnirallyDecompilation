@@ -91,6 +91,10 @@ state is empty. After the first crossing, serialization switches one way to
 little-endian values. The reader accepts both revisions and validates enums,
 flags and the bounded delay without using native struct layout.
 
+Opponent-first continuation adds the two-byte `$11E7` finish-pose selector as
+371-byte `URMV0003`; older V1/V2 states remain readable and V2 offsets stay
+unchanged.
+
 ## Native continuation boundary
 
 `serialize_movement_state` is also the save/restore boundary; there is no second

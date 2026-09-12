@@ -10,8 +10,10 @@ from . import compare, protocol
 from .freeze_reference import DIAGNOSTIC, PROJECTION
 
 STATE_MAGIC_V2 = b"URMV0002"
+STATE_MAGIC_V3 = b"URMV0003"
 STATE_V1_BYTES = 333
 STATE_V2_BYTES = 369
+STATE_V3_BYTES = 371
 
 
 def load_reference(expected_path: Path, replay_path: Path,
@@ -62,6 +64,8 @@ def parse_output(output: str, initial: int, last: int) -> tuple[list, list[bytes
         if state[:8] == protocol.STATE_MAGIC and len(state) == STATE_V1_BYTES and not saw_v2:
             pass
         elif state[:8] == STATE_MAGIC_V2 and len(state) == STATE_V2_BYTES:
+            saw_v2 = True
+        elif state[:8] == STATE_MAGIC_V3 and len(state) == STATE_V3_BYTES:
             saw_v2 = True
         else:
             raise compare.NativeOutputError("invalid or regressing movement-state revision")

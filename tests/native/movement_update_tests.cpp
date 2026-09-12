@@ -144,6 +144,45 @@ int main() {
     require(low_tail.riders[0].motion.velocity_x==0,
             "reviewer finish tail reaches0 next update");
 
+    // $82:8953-$82:89C2: the opponent-first finish animation publishes its
+    // special pose before collision and preserves the duplicated-entry table
+    // selector across serialization, including the negative-sentinel reset.
+    unirally::MovementState opponent_finish{};
+    opponent_finish.frame=3285; opponent_finish.contact_phase=1;
+    opponent_finish.progress_phase=1; opponent_finish.countdown=0;
+    opponent_finish.rewards.write_cursor=1;
+    opponent_finish.rewards.event_one_weight=4;
+    opponent_finish.finish.rider_finished[1]=true;
+    opponent_finish.finish.finish_time_centiseconds[1]=3358;
+    opponent_finish.finish.opponent_finish_pose_selector=47;
+    for(auto& rider:opponent_finish.riders) {
+        rider.motion.y=64; rider.pose.previous_y=64; rider.pose.reflected=true;
+    }
+    unirally::update_movement(opponent_finish,neutral,
+        {{track,poses,templates},{columns,flags},transitions,slopes,displacement,idle_pose,reward,reward_class,
+         {masks,decrements}});
+    require(opponent_finish.frame==3286 &&
+            opponent_finish.riders[1].pose.pose_index==0x0a5c &&
+            opponent_finish.finish.opponent_finish_pose_selector==48,
+            "opponent finish pose final duplicated entry");
+    opponent_finish=unirally::deserialize_movement_state(
+        unirally::serialize_movement_state(opponent_finish));
+    unirally::update_movement(opponent_finish,neutral,
+        {{track,poses,templates},{columns,flags},transitions,slopes,displacement,idle_pose,reward,reward_class,
+         {masks,decrements}});
+    require(opponent_finish.frame==3287 &&
+            opponent_finish.riders[1].pose.pose_index==0x0a45 &&
+            opponent_finish.finish.opponent_finish_pose_selector==0,
+            "opponent finish pose sentinel reset after restore");
+    opponent_finish=unirally::deserialize_movement_state(
+        unirally::serialize_movement_state(opponent_finish));
+    unirally::update_movement(opponent_finish,neutral,
+        {{track,poses,templates},{columns,flags},transitions,slopes,displacement,idle_pose,reward,reward_class,
+         {masks,decrements}});
+    require(opponent_finish.frame==3288 &&
+            opponent_finish.riders[1].pose.pose_index==0x0a45,
+            "opponent finish pose persists between table calls");
+
     // Authored finish boundaries: crossing is recorded after movement, the
     // dispatcher reacts on the following update, and delay 240 transitions on
     // the update after it was displayed.

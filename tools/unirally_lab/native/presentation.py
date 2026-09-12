@@ -233,6 +233,8 @@ def cmd_presentation_check(args) -> int:
                 state_bytes = state.read_bytes()
                 valid_state = ((len(state_bytes) == finish.STATE_V2_BYTES and
                                 state_bytes[:8] == finish.STATE_MAGIC_V2) or
+                               (len(state_bytes) == finish.STATE_V3_BYTES and
+                                state_bytes[:8] == finish.STATE_MAGIC_V3) or
                                (len(state_bytes) == finish.STATE_V1_BYTES and
                                 state_bytes[:8] == protocol.STATE_MAGIC))
                 if (not valid_state or

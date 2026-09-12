@@ -56,6 +56,13 @@ int main(int argc, char** argv) {
     invalid=finish_encoded; invalid[367]=4; require(rejects(invalid));
     invalid=finish_encoded; invalid[368]=3; require(rejects(invalid));
     invalid=finish_encoded; invalid[363]=241; invalid[364]=0; require(rejects(invalid));
+    state.finish.opponent_finish_pose_selector=17;
+    const auto pose_encoded=unirally::serialize_movement_state(state);
+    require(pose_encoded.size()==371);
+    require(pose_encoded[0]=='U' && pose_encoded[7]=='3');
+    require(unirally::serialize_movement_state(
+            unirally::deserialize_movement_state(pose_encoded))==pose_encoded);
+    invalid=pose_encoded; invalid[369]=49; invalid[370]=0; require(rejects(invalid));
     const auto playable=unirally::classic_crawler_dragster_start();
     require(playable.frame==1533 && playable.player_input.high_image==1 &&
             playable.player_input.vertical==1 && playable.player_input.horizontal==2);

@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "kind": "native_presentation_contract",
+  "profile_id": "classic.pal.crawler.dragster.presentation.v1",
+  "source_rom_sha256": "a1105819d48c04d680c8292bbfa9abbce05224f1bc231afd66af43b7e0a1fd4e",
+  "sampling_phase": "end_of_pal_game_update",
+  "frame_size": [256, 224],
+  "pixel_format": "rgb888",
+  "state_fields": [
+    "frame",
+    "race_phase",
+    "race_outcome",
+    "timer_digits",
+    "player.position_x",
+    "player.position_y",
+    "player.pose_index",
+    "player.reflected",
+    "opponent.position_x",
+    "opponent.position_y",
+    "opponent.pose_index",
+    "opponent.reflected",
+    "camera_x",
+    "bg1_scroll_x",
+    "bg1_scroll_y",
+    "bg2_scroll_x",
+    "bg2_scroll_y"
+  ],
+  "logical_entries": [
+    "physics.track.dragster.data",
+    "presentation.track.dragster.bg1-tiles.v1",
+    "presentation.track.dragster.bg2-tiles.v1",
+    "presentation.track.dragster.bg2-map.v1",
+    "presentation.classic.palette.v1",
+    "presentation.classic.font.v1",
+    "presentation.rider.mike.race-tiles.v1",
+    "presentation.result.classic.font-layout.v1"
+  ],
+  "reference_cases": [
+    {
+      "id": "race-1600",
+      "frame": 1600,
+      "phase": "racing",
+      "player_pose_index": 1273,
+      "opponent_pose_index": 611,
+      "reference_png_sha256": "36e7d50410c86a976b95d7c6fd6dd3386edf261d6579e44fd124edf979df949e",
+      "comparison_rect": [120, 28, 136, 196],
+      "maximum_mismatch_fraction": 0.02
+    },
+    {
+      "id": "race-2000-withheld",
+      "frame": 2000,
+      "phase": "racing",
+      "player_pose_index": 2133,
+      "opponent_pose_index": 2197,
+      "reference_png_sha256": "024de09e5ecd0896c00281a0568997f6a484202e72f834b16b8aeeeb6e24189f",
+      "comparison_rect": [0, 28, 256, 196],
+      "maximum_mismatch_fraction": 0.02
+    },
+    {
+      "id": "race-2400",
+      "frame": 2400,
+      "phase": "racing",
+      "player_pose_index": 2197,
+      "opponent_pose_index": 2197,
+      "reference_png_sha256": "7faae644bd2b8a23c12213ab4f0a2cc707df436334291b93726a7d21de171091",
+      "comparison_rect": [0, 28, 256, 196],
+      "maximum_mismatch_fraction": 0.02
+    },
+    {
+      "id": "finish-delay-3213",
+      "frame": 3213,
+      "phase": "finish_delay",
+      "player_pose_index": 2133,
+      "opponent_pose_index": 2261,
+      "reference_png_sha256": "f84e6b4f7705aa35c190512e5868788df3d61026175679f0167ff336d884b8ee",
+      "comparison_rect": [0, 28, 256, 196],
+      "maximum_mismatch_fraction": 0.03
+    },
+    {
+      "id": "finish-delay-3453",
+      "frame": 3453,
+      "phase": "finish_delay",
+      "player_pose_index": 1278,
+      "opponent_pose_index": 892,
+      "reference_png_sha256": "910a54411039c54801f54d3552c2e2847741f028ca7b29a5f1a80f19cb63a3b2",
+      "comparison_rect": [0, 28, 256, 196],
+      "maximum_mismatch_fraction": 0.03
+    },
+    {
+      "id": "stable-result-3679",
+      "frame": 3679,
+      "phase": "result_screen",
+      "player_pose_index": 1278,
+      "opponent_pose_index": 892,
+      "reference_png_sha256": "91261adfc50634f1512aebd47950834020719c565849f8b596b47bbde72fdd8b",
+      "comparison_rect": [0, 0, 256, 224],
+      "maximum_mismatch_fraction": 0.15
+    }
+  ],
+  "declared_omissions": [
+    "windowed GO letters",
+    "four-line fixed-colour and colour-math band",
+    "per-scanline register changes beyond the frozen constant scroll sample",
+    "mosaic and interlace",
+    "sprite-per-line hardware limits"
+  ]
+}

@@ -31,6 +31,7 @@ from unirally_lab.content import commands as content_commands  # noqa: E402
 from unirally_lab.coverage import commands as coverage_commands  # noqa: E402
 from unirally_lab.reference import commands as reference_commands  # noqa: E402
 from unirally_lab.replay import commands as replay_commands  # noqa: E402
+from unirally_lab.native import commands as native_commands  # noqa: E402
 
 ROOT = reportmod.repo_root()
 DEFAULT_ROM_LOCATION = ROOT / "local" / "rom-location.txt"
@@ -157,6 +158,7 @@ def build_parser() -> argparse.ArgumentParser:
     coverage_commands.register(sub)
     access_commands.register(sub)
     content_commands.register(sub)
+    native_commands.register(sub)
     return parser
 
 

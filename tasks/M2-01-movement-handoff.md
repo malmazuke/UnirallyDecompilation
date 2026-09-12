@@ -36,8 +36,8 @@ python3 -m unittest tests.tooling.test_native_prepare
 python3 -m py_compile tools/unirally_lab/native/prepare.py
 ```
 
-Debug build and targeted CTest passed (1/1). The final unittest result is in the
-submission message. Direct import of the approved artifacts produced the digest
+Debug build and targeted CTest passed (1/1). Python preparation unittest
+passed2/2; py_compile passed. Code checkpoint:476834d9767dc55dbb3de26a4e44fa5e42903d87. Direct import of the approved artifacts produced the digest
 above. A hand-written direct check first used byte107 for throttle rather than
 its actual byte117; that assertion, not implementation output, failed. No
 gameplay expectation changed.

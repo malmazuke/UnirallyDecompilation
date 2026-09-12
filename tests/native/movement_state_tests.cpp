@@ -56,6 +56,16 @@ int main(int argc, char** argv) {
     invalid=finish_encoded; invalid[367]=4; require(rejects(invalid));
     invalid=finish_encoded; invalid[368]=3; require(rejects(invalid));
     invalid=finish_encoded; invalid[363]=241; invalid[364]=0; require(rejects(invalid));
+    const auto playable=unirally::classic_crawler_dragster_start();
+    require(playable.frame==1533 && playable.player_input.high_image==1 &&
+            playable.player_input.vertical==1 && playable.player_input.horizontal==2);
+    require(playable.riders[0].motion.x==1088 && playable.riders[0].motion.y==858 &&
+            playable.riders[0].throttle==432 && playable.riders[0].residue_x==0xffff);
+    require(playable.riders[1].idle_pose.orientation_reference==60 &&
+            playable.countdown==69 && playable.update_counter==205);
+    const auto playable_bytes=unirally::serialize_movement_state(playable);
+    require(playable_bytes.size()==333 &&
+            unirally::serialize_movement_state(unirally::deserialize_movement_state(playable_bytes))==playable_bytes);
     if(argc==2) {
         std::ifstream input(argv[1],std::ios::binary);
         require(input.good());
@@ -72,5 +82,6 @@ int main(int argc, char** argv) {
         require(imported.riders[0].idle_pose.wobble_offset==0);
         require(imported.riders[0].pose.reflected && imported.riders[1].pose.reflected);
         require(unirally::serialize_movement_state(imported)==seed);
+        require(playable_bytes==seed);
     }
 }

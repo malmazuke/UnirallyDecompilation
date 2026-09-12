@@ -16,6 +16,7 @@ import re
 import sys
 
 from .. import report as reports
+from ..content import pack as packmod
 from ..procs import run_bounded
 from . import compare, finish, protocol
 
@@ -96,7 +97,8 @@ def load_case(root: Path, case_path: Path, rep: reports.Report) -> tuple:
     return reference, replay, seed, seed_bytes, content
 
 
-def load_finish_case(root: Path, case_path: Path, rep: reports.Report) -> tuple:
+def load_finish_case(root: Path, case_path: Path, rep: reports.Report,
+                     content_pack: Path | None = None) -> tuple:
     case = json.loads(case_path.read_text())
     if (case.get("schema_version"), case.get("kind")) != (1, "native_full_race_case"):
         raise compare.ReferenceError("unsupported native full-race case")
@@ -106,6 +108,16 @@ def load_finish_case(root: Path, case_path: Path, rep: reports.Report) -> tuple:
     contract_path = checked_file(root, case.get("finish_contract"), rep, "finish_contract")
     reference, replay, contract, finish_case = finish.load_reference(
         expected_path, replay_path, contract_path)
+    if content_pack is not None:
+        rules, rules_digest = packmod.load_rules(root / packmod.RULES_PATH)
+        data = content_pack.read_bytes()
+        inspected = packmod.validate_pack(data, rules, rules_digest)
+        if inspected["source_rom_sha256"] != reference["rom_sha256"]:
+            raise compare.ReferenceError("Classic pack and full-race reference ROM identities differ")
+        rep.add_input("classic_pack", content_pack, reports.file_sha256(content_pack),
+                      profile_id=inspected["profile_id"], start_state_id=inspected["start_state_id"])
+        rep.data["classic_pack"] = inspected
+        return reference, replay, finish_case, None, None, content_pack
     runtime_path = checked_file(root, case.get("runtime"), rep, "runtime")
     runtime = json.loads(runtime_path.read_text())
     if runtime.get("schema_version") != 1 or runtime.get("rom_sha256") != reference["rom_sha256"]:
@@ -134,6 +146,15 @@ def load_finish_case(root: Path, case_path: Path, rep: reports.Report) -> tuple:
     return reference, replay, finish_case, seed, seed_bytes, content
 
 
+def runner_arguments(seed: Path | None, content: Path, stream: Path, *, pack_mode: bool,
+                     start_state: bool = False) -> list[str]:
+    state = (["--start-state", packmod.START_STATE_ID] if start_state else
+             ["--seed", str(seed)])
+    content_args = (["--content-pack", str(content)] if pack_mode else
+                    ["--content-dir", str(content)])
+    return state + content_args + ["--inputs", str(stream)]
+
+
 def build_runner(root: Path, preset: str, timeout: float, artifacts: Path):
     return run_bounded([sys.executable, str(root / "tools/project.py"), "build",
                         "--preset", preset, "--timeout", str(timeout),
@@ -150,7 +171,7 @@ def process_exit(result) -> int:
 
 
 def verify_unchanged_inputs(rep: reports.Report, content: Path) -> None:
-    if {path.name for path in content.iterdir()} != set(STATIC_SIZES):
+    if content.is_dir() and {path.name for path in content.iterdir()} != set(STATIC_SIZES):
         raise compare.NativeOutputError("static content directory changed during execution")
     for name, entry in rep.data["inputs"].items():
         if reports.file_sha256(Path(entry["path"])) != entry["sha256"]:
@@ -423,8 +444,10 @@ def cmd_finish_check(args: argparse.Namespace) -> int:
     artifacts.mkdir(parents=True)
     status = 0
     try:
+        pack_path = Path(args.content_pack).resolve() if args.content_pack else None
         reference, replay, finish_case, seed, seed_bytes, content = load_finish_case(
-            root, Path(args.manifest).resolve(), rep)
+            root, Path(args.manifest).resolve(), rep, pack_path)
+        pack_mode = pack_path is not None
         boundaries = sorted(args.save_frame or [])
         if (len(boundaries) != len(set(boundaries)) or any(frame <= reference["initial_frame"]
                 or frame >= reference["last_frame"] for frame in boundaries)):
@@ -443,8 +466,8 @@ def cmd_finish_check(args: argparse.Namespace) -> int:
             rep.add_input("controller_inputs", stream, reports.file_sha256(stream))
             series = []
             for number in (1, 2):
-                result = run_bounded([str(runner), "--seed", str(seed), "--content-dir", str(content),
-                                      "--inputs", str(stream)], timeout=args.timeout, cwd=artifacts)
+                result = run_bounded([str(runner), *runner_arguments(seed, content, stream,
+                                      pack_mode=pack_mode, start_state=pack_mode)], timeout=args.timeout, cwd=artifacts)
                 rep.add_check(f"native_process_{number}", result.outcome, detail=result.stderr[-1500:])
                 output = artifacts / f"run{number}.txt"; output.write_text(result.stdout)
                 (artifacts / f"run{number}.stderr.txt").write_text(result.stderr)
@@ -452,7 +475,9 @@ def cmd_finish_check(args: argparse.Namespace) -> int:
                 status = process_exit(result)
                 if status: break
                 rows, states = finish.parse_output(result.stdout, reference["initial_frame"], reference["last_frame"])
-                if states[0] != seed_bytes: raise compare.NativeOutputError("native process changed the initial seed")
+                if seed_bytes is not None and states[0] != seed_bytes: raise compare.NativeOutputError("native process changed the initial seed")
+                if pack_mode and hashlib.sha256(states[0]).hexdigest() != "7cd034fcdee04e8f306712707c01c05ae02a50f2e91668127a7c3ef64492b4ab":
+                    raise compare.NativeOutputError("semantic playable start differs from its frozen canonical identity")
                 comparison = finish.validate(rows, states, reference, finish_case, replay)
                 series.append((rows, states)); rep.data[f"run{number}"] = {
                     **finish.state_digests(states), "comparison": comparison}
@@ -469,7 +494,8 @@ def cmd_finish_check(args: argparse.Namespace) -> int:
                 prefix = artifacts / f"prefix-{frame}.txt"; suffix = artifacts / f"suffix-{frame}.txt"
                 prefix.write_text(protocol.input_text(replay, reference["initial_frame"], frame))
                 suffix.write_text(protocol.input_text(replay, frame, reference["last_frame"]))
-                prefix_result = run_bounded([str(runner), "--seed", str(seed), "--content-dir", str(content), "--inputs", str(prefix)], timeout=args.timeout, cwd=artifacts)
+                prefix_result = run_bounded([str(runner), *runner_arguments(seed, content, prefix,
+                                            pack_mode=pack_mode, start_state=pack_mode)], timeout=args.timeout, cwd=artifacts)
                 rep.add_check(f"prefix_{frame}", prefix_result.outcome,
                               detail=prefix_result.stderr[-1500:])
                 if process_exit(prefix_result): raise compare.NativeOutputError(f"prefix process failed at {frame}")
@@ -478,7 +504,8 @@ def cmd_finish_check(args: argparse.Namespace) -> int:
                     raise compare.NativeOutputError(f"prefix differs at {frame}")
                 saved = prefix_states[-1]; saved_path = artifacts / f"state-{frame}.bin"; saved_path.write_bytes(saved)
                 rep.add_artifact(f"saved_state_{frame}", saved_path)
-                suffix_result = run_bounded([str(runner), "--seed", str(saved_path), "--content-dir", str(content), "--inputs", str(suffix)], timeout=args.timeout, cwd=artifacts)
+                suffix_result = run_bounded([str(runner), *runner_arguments(saved_path, content, suffix,
+                                            pack_mode=pack_mode)], timeout=args.timeout, cwd=artifacts)
                 rep.add_check(f"suffix_{frame}", suffix_result.outcome,
                               detail=suffix_result.stderr[-1500:])
                 if process_exit(suffix_result): raise compare.NativeOutputError(f"suffix process failed at {frame}")
@@ -530,6 +557,7 @@ def register(subparsers) -> None:
     restore.set_defaults(func=cmd_restore_check)
     finish_check = commands.add_parser("finish-check", help="compare full-race gameplay/finish state and optional restored continuations")
     finish_check.add_argument("--manifest", required=True)
+    finish_check.add_argument("--content-pack", help="validated Classic pack; uses the public semantic start instead of local runtime files")
     finish_check.add_argument("--save-frame", type=int, action="append")
     finish_check.add_argument("--preset", choices=("lab-debug", "lab-release", "lab-sanitize"), default="lab-debug")
     finish_check.add_argument("--artifacts")

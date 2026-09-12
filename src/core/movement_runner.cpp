@@ -1,10 +1,12 @@
 #include "movement.hpp"
+#include "content_pack.hpp"
 
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <iterator>
+#include <memory>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -46,35 +48,50 @@ void emit(const unirally::MovementState& state) {
 }
 
 int main(int argc,char** argv) try {
-    std::filesystem::path seed,content,inputs;
+    std::filesystem::path seed,content,pack_path,inputs;
+    std::string start_state;
     for (int index=1;index<argc;index+=2) {
         if (index+1>=argc) throw std::invalid_argument("movement runner requires option values");
         const std::string option=argv[index];
         if (option=="--seed") seed=argv[index+1];
         else if (option=="--content-dir") content=argv[index+1];
+        else if (option=="--content-pack") pack_path=argv[index+1];
+        else if (option=="--start-state") start_state=argv[index+1];
         else if (option=="--inputs") inputs=argv[index+1];
         else throw std::invalid_argument("unknown movement runner option: " + option);
     }
-    if (seed.empty() || content.empty() || inputs.empty()) {
-        throw std::invalid_argument("movement runner requires --seed, --content-dir and --inputs");
+    if (inputs.empty() || (seed.empty()==start_state.empty()) || (content.empty()==pack_path.empty())) {
+        throw std::invalid_argument("movement runner requires exactly one seed/start state, one content directory/pack, and inputs");
     }
-    auto state=unirally::deserialize_movement_state(read_bytes(seed));
-    const auto masks=read_bytes(content/"speed-masks.bin");
-    const auto decrements=read_bytes(content/"speed-decrements.bin");
-    const auto track=read_bytes(content/"track-data.bin");
-    const auto poses=read_bytes(content/"collision-poses.bin");
-    const auto templates=read_bytes(content/"collision-templates.bin");
-    const auto transitions=read_bytes(content/"progress-transitions.bin");
-    const auto columns=read_bytes(content/"tile-tables.bin");
-    const auto flags=read_bytes(content/"tile-flags.bin");
-    const auto slopes=read_bytes(content/"pose-slopes.bin");
-    const auto displacement=read_bytes(content/"displacement-table.bin");
-    const auto idle_pose=read_bytes(content/"idle-pose-table.bin");
-    const auto reward=read_bytes(content/"rotation-reward.bin");
-    const auto reward_class=read_bytes(content/"rotation-class.bin");
-    const unirally::MovementContent movement_content{{track,poses,templates},{columns,flags},
-                                                       transitions,slopes,displacement,idle_pose,reward,reward_class,
-                                                       {masks,decrements}};
+    auto state=seed.empty()?unirally::classic_crawler_dragster_start():unirally::deserialize_movement_state(read_bytes(seed));
+    if(!start_state.empty() && start_state!="classic.crawler.dragster.race-start.v1")throw std::invalid_argument("unsupported semantic start-state ID");
+    std::unique_ptr<unirally::ClassicContentPack> pack;
+    std::vector<std::uint8_t> masks,decrements,track,poses,templates,transitions,columns,flags,slopes,displacement,idle_pose,reward,reward_class;
+    if(!pack_path.empty())pack=std::make_unique<unirally::ClassicContentPack>(pack_path);
+    const auto load=[&](const char* filename,const char* logical_id)->std::vector<std::uint8_t>{
+        (void)logical_id;
+        if(pack)return {};
+        return read_bytes(content/filename);
+    };
+    masks=load("speed-masks.bin","physics.speed.masks");
+    decrements=load("speed-decrements.bin","physics.speed.decrements");
+    track=load("track-data.bin","physics.track.dragster.data");
+    poses=load("collision-poses.bin","physics.rider.collision-poses");
+    templates=load("collision-templates.bin","physics.rider.collision-templates");
+    transitions=load("progress-transitions.bin","physics.track.progress-transitions");
+    columns=load("tile-tables.bin","physics.track.dragster.tile-columns");
+    flags=load("tile-flags.bin","physics.track.dragster.tile-flags");
+    slopes=load("pose-slopes.bin","physics.rider.pose-slopes");
+    displacement=load("displacement-table.bin","physics.rider.displacement-table");
+    idle_pose=load("idle-pose-table.bin","physics.rider.idle-pose-table");
+    reward=load("rotation-reward.bin","physics.reward.rotation-value");
+    reward_class=load("rotation-class.bin","physics.reward.rotation-class");
+    const auto bytes=[&](const std::vector<std::uint8_t>& loose,const char* logical_id)->std::span<const std::uint8_t>{return pack?pack->entry(logical_id):std::span<const std::uint8_t>(loose);};
+    const unirally::MovementContent movement_content{{bytes(track,"physics.track.dragster.data"),bytes(poses,"physics.rider.collision-poses"),bytes(templates,"physics.rider.collision-templates")},
+        {bytes(columns,"physics.track.dragster.tile-columns"),bytes(flags,"physics.track.dragster.tile-flags")},bytes(transitions,"physics.track.progress-transitions"),
+        bytes(slopes,"physics.rider.pose-slopes"),bytes(displacement,"physics.rider.displacement-table"),bytes(idle_pose,"physics.rider.idle-pose-table"),
+        bytes(reward,"physics.reward.rotation-value"),bytes(reward_class,"physics.reward.rotation-class"),
+        {bytes(masks,"physics.speed.masks"),bytes(decrements,"physics.speed.decrements")}};
     std::ifstream stream(inputs);
     if (!stream) throw std::runtime_error("cannot open controller input stream");
     std::cout << "unirally-movement-v1\n";

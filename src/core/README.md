@@ -115,3 +115,19 @@ they do not imply that later game modes need no additional state.
 to V2 transition, checks the frozen gameplay and finish/result state through
 the first stable result frame in two fresh processes, and can repeat
 fresh-process save/restore checks at requested finish boundaries.
+
+## Classic content pack and playable start
+
+M3-02A's schema-1 `URCP0001` pack replaces the thirteen loose runtime filenames
+with logical IDs. `ClassicContentPack` validates the binary layout, exact
+profile/start identity, required inventory and every payload SHA-256 before
+returning a byte span. The stable command additionally validates source-ROM and
+extraction-rules identities. ROM offsets exist only in the tracked extractor
+rules; the simulation sees no ROM address.
+
+`classic_crawler_dragster_start()` constructs the frozen end-of-frame 1533
+`MovementState` using named semantic fields. It has no WRAM/SRAM/ROM input and
+serializes to the same 333-byte `URMV0001` identity accepted in M2/M3-01. The
+runner accepts either this start ID plus `--content-pack`, or the prior
+`--seed`/`--content-dir` research boundary. Pack mode still accepts a canonical
+saved state for fresh-process continuation.

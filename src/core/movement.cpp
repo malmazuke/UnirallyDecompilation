@@ -656,6 +656,30 @@ MovementState deserialize_movement_state(std::span<const std::uint8_t> bytes) {
     in.require_end(); return s;
 }
 
+MovementState classic_crawler_dragster_start() {
+    MovementState state{};
+    state.frame=1533;
+    state.player_input.high_image=1; state.player_input.vertical=1; state.player_input.horizontal=2;
+    for(auto& rider:state.riders) {
+        rider.motion.x=0x0440; rider.motion.y=0x035a;
+        rider.contact.previous_uncorrected_x=0x0440; rider.contact.previous_uncorrected_y=0x035b;
+        rider.contact.selected_word=0x1804; rider.contact.selected_high=0x18;
+        rider.pose.orientation=6; rider.pose.reflected_orientation=0x3a;
+        rider.pose.animation_phase=0x13; rider.pose.previous_x=0x0440; rider.pose.previous_y=0x035b;
+        rider.pose.target_orientation=6; rider.pose.pose_index=0x04fa; rider.pose.reflected=true;
+        rider.quarter_turn.reflected_at_start=true;
+        rider.residue_y=0x17; rider.throttle=0x01b0; rider.previous_brake=1;
+        rider.small_motion_counter=4;
+    }
+    state.riders[0].idle_pose.orientation_reference=1;
+    state.riders[0].residue_x=0xffff;
+    state.riders[1].idle_pose.orientation_reference=60;
+    state.rewards.write_cursor=1; state.rewards.cooldown=2; state.rewards.event_one_weight=4;
+    state.countdown=0x45; state.contact_phase=1; state.progress_phase=1;
+    state.animation_counter=0x0d; state.update_counter=0xcd;
+    return state;
+}
+
 
 void update_movement(MovementState& state, const ControllerButtons& player_buttons,
                      const MovementContent& content) {

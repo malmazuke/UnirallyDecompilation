@@ -14,7 +14,7 @@ add_library(unirally_speed_limits STATIC speed_limits.cpp)
 target_include_directories(unirally_speed_limits PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(unirally_speed_limits PUBLIC lab_options)
 
-add_library(unirally_movement STATIC movement.cpp)
+add_library(unirally_movement STATIC movement.cpp content_pack.cpp)
 target_include_directories(unirally_movement PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(unirally_movement PUBLIC unirally_contact unirally_input_timer unirally_speed_limits unirally_sampling lab_options)
 add_executable(movement_runner movement_runner.cpp)

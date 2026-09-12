@@ -21,6 +21,7 @@ from .. import report as reportmod
 from ..access import commands as accesscmd
 from ..access import derive as accderive
 from ..reference import commands as refcmd
+from . import pack as packmod
 from . import ppu, provenance, rnc
 
 ROOT = reportmod.repo_root()
@@ -224,6 +225,71 @@ def cmd_decode(args: argparse.Namespace) -> int:
     rep.add_artifact("decode", res_path)
     rep.data["decode"] = {"items": len(results), "all_match": all(r["matches_expected"] for r in results)}
     return _finish(rep, args, _status(rep))
+
+
+# --------------------------------------------------------------- Classic pack
+
+
+def _pack_rules(args: argparse.Namespace) -> tuple[Path, dict[str, Any], str]:
+    path = Path(args.rules) if args.rules else ROOT / packmod.RULES_PATH
+    rules, digest = packmod.load_rules(path)
+    return path, rules, digest
+
+
+def cmd_pack(args: argparse.Namespace) -> int:
+    rep = reportmod.Report(sys.argv, task_id=args.task)
+    status = EXIT_OK
+    output = Path(args.out)
+    try:
+        rules_path, rules, rules_digest = _pack_rules(args)
+        rep.add_input("extraction_rules", rules_path, rules_digest)
+        rom_path = _rom_path(args)
+        if rom_path is None or not rom_path.is_file():
+            rep.add_check("rom_available", "missing", detail="supported ROM path is absent")
+            return _finish(rep, args, EXIT_MISSING_PREREQUISITE)
+        rom = rom_path.read_bytes()
+        rep.add_input("rom", rom_path, hashlib.sha256(rom).hexdigest(), size=len(rom))
+        payload, rows = packmod.build_pack(rom, rules, rules_digest)
+        rep.add_check("exact_rom_identity", "passed", detail=rules["source_rom"]["sha256"])
+        packmod.write_atomic(output, payload, interrupt_before_commit=args.simulate_interruption_before_commit)
+        inspected = packmod.validate_pack(output.read_bytes(), rules, rules_digest)
+        rep.add_check("atomic_pack_commit", "passed", detail=str(output))
+        rep.add_check("entry_inventory", "passed", detail=f"{len(rows)} logical entries")
+        rep.add_artifact("classic_pack", output)
+        rep.data["pack"] = inspected
+    except InterruptedError as exc:
+        rep.add_check("atomic_pack_commit", "failed", detail=str(exc)); status = EXIT_FAILURE
+        rep.data["output_exists"] = output.exists()
+    except FileNotFoundError as exc:
+        rep.add_check("prerequisite", "missing", detail=str(exc)); status = EXIT_MISSING_PREREQUISITE
+    except (ValueError, json.JSONDecodeError, OSError) as exc:
+        rep.add_check("pack_input", "failed", detail=str(exc)); status = EXIT_INVALID_INPUT
+    return _finish(rep, args, status)
+
+
+def cmd_pack_inspect(args: argparse.Namespace) -> int:
+    rep = reportmod.Report(sys.argv, task_id=args.task)
+    path = Path(args.pack)
+    try:
+        rules_path, rules, rules_digest = _pack_rules(args)
+        rep.add_input("extraction_rules", rules_path, rules_digest)
+        if not path.is_file():
+            rep.add_check("pack_available", "missing", detail=f"{path} not found")
+            return _finish(rep, args, EXIT_MISSING_PREREQUISITE)
+        data = path.read_bytes()
+        rep.add_input("classic_pack", path, hashlib.sha256(data).hexdigest(), size=len(data))
+        inspected = packmod.validate_pack(data, rules, rules_digest)
+        rep.add_check("pack_structure", "passed", detail="schema, identities and canonical layout")
+        rep.add_check("entry_inventory", "passed", detail=f"{len(inspected['entries'])} logical entries")
+        rep.add_check("entry_hashes", "passed", detail="all payload SHA-256 values match")
+        rep.data["pack"] = inspected
+        if args.print:
+            print(json.dumps(inspected, indent=2, sort_keys=True))
+        return _finish(rep, args, EXIT_OK)
+    except FileNotFoundError as exc:
+        rep.add_check("prerequisite", "missing", detail=str(exc)); return _finish(rep, args, EXIT_MISSING_PREREQUISITE)
+    except (ValueError, json.JSONDecodeError, OSError) as exc:
+        rep.add_check("pack_validation", "failed", detail=str(exc)); return _finish(rep, args, EXIT_INVALID_INPUT)
 
 
 # --------------------------------------------------------------- compare
@@ -476,6 +542,23 @@ def register(sub: argparse._SubParsersAction) -> None:
     dec.add_argument("--report", help="write the JSON run report here")
     dec.add_argument("--task", help="task ID to record in the report")
     dec.set_defaults(func=cmd_decode)
+
+    pack = csub.add_parser("pack", help="extract the exact PAL ROM into an atomic Classic content pack")
+    pack.add_argument("--rom", help="ROM file; defaults to local/rom-location.txt")
+    pack.add_argument("--out", required=True, help="new ignored Classic pack path")
+    pack.add_argument("--rules", help=argparse.SUPPRESS)
+    pack.add_argument("--simulate-interruption-before-commit", action="store_true", help=argparse.SUPPRESS)
+    pack.add_argument("--report")
+    pack.add_argument("--task", default="M3-02A")
+    pack.set_defaults(func=cmd_pack)
+
+    inspect = csub.add_parser("pack-inspect", help="validate a Classic pack without reading a ROM")
+    inspect.add_argument("--pack", required=True)
+    inspect.add_argument("--rules", help=argparse.SUPPRESS)
+    inspect.add_argument("--print", action="store_true")
+    inspect.add_argument("--report")
+    inspect.add_argument("--task", default="M3-02A")
+    inspect.set_defaults(func=cmd_pack_inspect)
 
     cmp_ = csub.add_parser("compare", help="render the decoded content as the original had it at a frame and compare with the frame image")
     cmp_.add_argument("--manifest", required=True)

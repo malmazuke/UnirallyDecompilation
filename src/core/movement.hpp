@@ -109,6 +109,10 @@ std::uint16_t finish_speed_toward_zero(std::uint16_t velocity);
 std::vector<std::uint8_t> serialize_movement_state(const MovementState& state);
 MovementState deserialize_movement_state(std::span<const std::uint8_t> bytes);
 
+// Public, capture-free semantic start for the accepted PAL CRAWLER/DRAGSTER
+// slice. See docs/content/classic-pack-v1.md for its frozen identity.
+MovementState classic_crawler_dragster_start();
+
 // Advance one PAL game update in the recovered CRAWLER/DRAGSTER domain. This
 // semantic path closes the frozen CRAWLER/DRAGSTER gameplay and finish/result
 // continuation. No reference row or frame-indexed event enters it.

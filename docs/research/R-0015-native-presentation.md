@@ -130,3 +130,29 @@ fresh scroll values BG1 `(24367,208)` and BG2 `(12183,104)`, differs in
 the 30-by-16 region is a metatile-definition source for the rolling gather,
 not a complete static BG1 screen map; the `$81:B270` selector construction must
 drive map expansion before another visual claim.
+
+## Rolling BG1 selector relationship
+
+A bounded frame-3212--3214 capture first established that `$81:B270` runs once
+for each newly exposed column and publishes sixteen words for a vertical VRAM
+column.  A second capture over frames 1599--3454 watched the five direct-page
+selector inputs at `$00..$08` and the complete builder.  Its `access.json` has
+SHA-256 `39fa19e2871b392d...` and passed the unchanged full-race sample and final
+state identities.  The smaller capture has SHA-256 `f8685461a3931ba0...`.
+
+For frozen updating frames 1600, 2000, 2400 and 3213, the five selector words
+come from decoded-track byte offset
+`$5831 + 2 * floor(BG1_scroll_x / 64)`, then from the four corresponding
+vertical planes at successive `$0800` offsets.  The selector tuples are
+`(7,7,7,28,0)`, `(6,6,6,28,0)`, `(9,9,9,28,0)` and
+`(0,0,0,26,0)`.  The horizontal subcolumn passed to `$81:B270` is exactly
+`(floor(BG1_scroll_x / 16) + 1) & 3` in all four cases.  The observed vertical
+subrow is 2 at scroll Y 203 and 3 at scroll Y 208.  `$81:B270` then gathers
+four-word groups from the selector's 32-byte metatile definition with an
+eight-byte stride, clipping the first and last groups by that vertical subrow.
+Frame 3453 no longer invokes the builder and retains the completed race map.
+
+This closes the metatile selector and gather relationship on the four declared
+updating frames.  Ring-column placement and the exact screen-edge phase remain
+to be checked against the staged DMA destination before replacing the failed
+static expansion.

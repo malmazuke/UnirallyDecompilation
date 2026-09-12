@@ -807,3 +807,11 @@ alias matrix remains green.
 Exact candidate SHA and full app-preset/SDL smoke evidence are appended to
 `M3-03.md` after the coherent commit. Fresh narrow review remains required;
 this response does not approve M3-03.
+
+The exact behavioral candidate is
+`258e9c001a8b9b7091179c99731bcf9d3b8b19d1`. At that clean SHA both complete
+app preset suites passed 287 Python tests, all 20 CTests and three fresh
+processes, totaling 310 required checks with no failure or skip. Real Classic
+first-launch and pack-only SDL dummy smokes also passed. Exact commands and
+report hashes are recorded in `M3-03.md`. One fresh narrow re-review remains
+required.

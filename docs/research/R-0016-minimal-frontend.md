@@ -234,4 +234,7 @@ shell. Authored direct and subprocess regressions require the literal-tilde
 alias to exit 3 without constructing a report or starting a child, and require
 the symlink-parent/`..` distinct target to launch and write the actual resolved
 report while preserving the pack. The earlier ordinary nonexistent, symlink
-and hardlink alias coverage remains frozen.
+and hardlink alias coverage remains frozen. At exact behavioral candidate
+`258e9c0`, both complete app preset suites passed 310 required checks and real
+Classic first-launch/pack-only SDL dummy smokes passed; this is validation
+evidence, not an acceptance decision.

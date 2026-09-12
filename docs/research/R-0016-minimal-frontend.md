@@ -185,6 +185,8 @@ before generic argparse processing; and the bounded ephemeral Ubuntu X11
 header preparation described in the dependency section. Subprocess tests cover
 `nan`, `inf`, separated `-inf` and equals-form `-inf`, each requiring exit 3, a
 failed report and a sentinel child that never starts. Other subcommands retain
-the generic CLI parser unchanged. Hosted Linux success remains evidence to be
-obtained on the exact correction candidate, not inferred from local macOS
-builds.
+the generic CLI parser unchanged. Hosted run `34700625467` subsequently passed
+at handoff SHA `6b4ac12`: macOS passed app-debug build/test/help, and Ubuntu
+passed bounded X11 preparation, app-debug build/test/help and the complete
+app-sanitize step. That is the required hosted evidence rather than an
+inference from local macOS builds.

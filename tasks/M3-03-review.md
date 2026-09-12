@@ -456,3 +456,8 @@ all four real CLI timeout spellings and the private finish/presentation gates
 passed at that SHA. `tasks/M3-03.md` records exact commands and hashes. This
 documentation-only follow-up still requires independent re-review and hosted
 Linux/macOS evidence.
+
+Post-push hosted run `34700625467` completed successfully at handoff SHA
+`6b4ac12cf7d9c1097a5cf7e41c3f159be34898ee`: macOS app-debug and Ubuntu
+X11 preparation, app-debug and app-sanitize all passed, including both
+runtime-link help smokes. Fresh independent review remains required.

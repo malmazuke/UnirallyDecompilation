@@ -206,6 +206,14 @@ adds a focused two-field mutation test. The expensive reference runs were not
 repeated because the reviewer already reproduced them and no replay manifest,
 reference input or captured artifact changed.
 
+The corrected implementation commit is
+`d5e81e6d0d628b2845fedc587e1cbf8eace9a871`. From that clean source, the
+focused suite passed 6/6, all three replay manifests passed their three ROM-free
+validation checks, the compact analyzer passed 25/25 with the hash above, and
+the full synthetic suite passed 287/287. The synthetic report SHA-256 is
+`1285a6e3c1fcd9dd239ee04727ae1afa73c75c7f89a6d45d7d7333ea9bafcf50`;
+it records the corrected commit and `dirty: false`.
+
 ## Limits
 
 - One PAL ROM, one track, one menu path and two input streams on one macOS host.

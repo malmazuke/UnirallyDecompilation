@@ -5,3 +5,7 @@ target_link_libraries(unirally_sampling PUBLIC lab_options)
 add_library(unirally_input_timer STATIC input_timer.cpp)
 target_include_directories(unirally_input_timer PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(unirally_input_timer PUBLIC lab_options)
+
+add_library(unirally_contact STATIC flat_contact.cpp)
+target_include_directories(unirally_contact PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(unirally_contact PUBLIC unirally_sampling lab_options)

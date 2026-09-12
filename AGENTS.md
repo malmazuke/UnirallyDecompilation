@@ -2,10 +2,11 @@
 
 Read `docs/STATE.md`, the relevant task record, and `docs/AGENT_WORKFLOW.md` before implementation. Consult `docs/PROJECT_PLAN.md` for scope and `docs/BUILD_AND_VALIDATION.md` for acceptance evidence.
 
-- This is currently a planning repository. Build commands, test runners and scheduling described in the documents are proposed interfaces until implemented and recorded as such.
+- Implementation is underway. Consult docs/BUILD_AND_VALIDATION.md for the implemented command inventory; unimplemented interfaces and scheduling remain proposals, not available capabilities.
 - Keep verified observations, hypotheses and implementation decisions distinct. Support gameplay claims with a ROM identity, addresses or traces, a reproducible experiment and the precise tested domain.
 - Write native code for human contributors: descriptive names for established concepts, small explicit update functions, documented units/integer semantics, and evidence links for recovered behavior. Keep uncertain meanings provisional; defer speculative mod frameworks. Refactor under frozen differential checks (D-0003).
 - Preserve original integer arithmetic, ordering and timing when reconstructing behavior. Do not replace unknown mechanics with plausible inventions while describing the result as accurate.
+- Follow [D-0004](docs/decisions/D-0004-model-and-usage-budget.md): keep each task and its children within its starting provider unless the user moves it; use Sol/medium for routine OpenAI coordination and implementation, explicit child models, one active child by default, bounded frontier consultations, and recorded quota guardrails. Preserve independent review; never automatically buy or redeem credits.
 - Work only within the assigned task and ownership boundaries. For concurrent work, each worker uses a separate checkout/worktree; the coordinator owns the shared task registry and integration branch.
 - Update the handoff with the actual commit, commands, results, unresolved issues and next experiment. A fresh agent must be able to resume without the previous conversation.
 - Treat missing prerequisites and skipped tests as such; never report them as passes. Do not weaken or regenerate expected results merely to make a change pass.

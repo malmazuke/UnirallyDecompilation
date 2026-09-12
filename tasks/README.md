@@ -15,8 +15,8 @@ The coordinator maintains the status registry below. Work orders further below d
 | M1-02 | accepted: integrated 11 September 2026 after one independent review | [Validated player-state schema and update timing](M1-02.md) |
 | M1-03 | accepted: integrated 12 September 2026 after one independent review | [Minimal track/asset decode](M1-03.md) |
 | M1-04 | accepted: integrated 12 September 2026 after one independent review; M1 accepted, tag `m1` | [M1 acceptance report](M1-04.md) |
-| M2-01 | movement depends on active M2-01A; coordinator prepares comparator in isolated worktree; full native movement not accepted | [Native movement experiment](M2-01.md) |
-| M2-01A | claimed: contact_contract and motion_contract in disjoint worktrees; coordinator continues to M2-01 after review | [Close riding dependencies](M2-01A.md) |
+| M2-01 | in progress: approved components, native CLI and movement assembly; full gameplay not accepted | [Native movement experiment](M2-01.md) |
+| M2-01A | resumed: Sol resume_review owns native speed review; Astra coordinator closes approved motion tests and assembly | [Close riding dependencies](M2-01A.md) |
 | M2-02, M3 – M6 | planned | See milestone definitions |
 
 ## M0 — repeatable laboratory

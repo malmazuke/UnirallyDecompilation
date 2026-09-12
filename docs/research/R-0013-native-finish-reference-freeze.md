@@ -54,3 +54,10 @@ and reports are retained under ignored `artifacts/m3-01-result-{continuous,varia
 
 This freeze defines one PAL, one track, one rider pair and two inputs. It does
 not establish general ranking, records, awards or another race mode.
+
+Before native finish logic was written, `freeze_full_race` compared two fresh
+reference processes per input and froze every existing M2 gameplay projection
+from frame1533 through the last finish-display frame. The continuous expectation
+has 1,921 rows and SHA-256 `748ae6ed...2042`; the variation has 2,026 rows and
+SHA-256 `feae3706...77db`. Their case manifests bind those files, the original
+12,000-frame replay bytes, the accepted runtime identity and the finish contract.

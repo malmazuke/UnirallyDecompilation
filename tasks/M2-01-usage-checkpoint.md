@@ -13,8 +13,9 @@ usage-limit errors (reported reset: 19 September, 08:22). A usage-tool snapshot
 reported zero weekly usage, conflicting with the errors. Actual numerical usage
 is unknown; no reset credit was redeemed and no new service was purchased.
 No worker was respawned. All prior claims need a stopped-process/ownership check
-before reassignment. Continue through a fresh explicit Sol session, or an
-already available authorized Claude Code runtime, when that runtime can work.
+before reassignment. This continuation is OpenAI-based: resume through a fresh explicit Sol session
+when that provider can work. Do not switch to Claude Code automatically; only
+the user may move the continuation to another platform.
 
 ## Preserved source
 

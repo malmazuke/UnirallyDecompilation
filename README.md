@@ -22,7 +22,8 @@ Progress belongs in source control and reproducible experiments, so work can mov
 Human-readable native source is an explicit goal from the first routine
 ([D-0003](docs/decisions/D-0003-human-readable-native-code.md)). Agents make
 routine project decisions autonomously. [D-0004](docs/decisions/D-0004-model-and-usage-budget.md)
-sets Sol as the routine model, bounded frontier review and usage guardrails.
+sets Sol as the routine OpenAI model, bounded frontier review and usage guardrails.
+Tasks stay within their starting provider; platform switches belong to the user.
 
 ## Immediate next step
 

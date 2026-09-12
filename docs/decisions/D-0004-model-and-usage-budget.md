@@ -15,12 +15,32 @@ support a numerical burn-rate estimate.
 
 ## Routing decision
 
+**Keep each task within the provider the user started it with.** An OpenAI
+task uses only OpenAI models for coordination, implementation, subagents and
+review; an Anthropic task uses only Anthropic models. Model/effort changes within
+that provider remain autonomous. This applies to prerequisite tasks and fresh
+worker sessions too: creating a child does not authorize crossing providers.
+Only the user may move work between platforms. A user-initiated continuation
+on another platform establishes the provider for that continuation; historical
+commits from another provider do not force a switch back.
+
+The user manages the two subscription allowances separately and reports no
+Anthropic weekly allowance remaining at this adjustment. Never assume the other
+provider has spare capacity. If the task's provider runs out, checkpoint and
+report the resource condition; do not fall back to another provider or ask the
+user to make a routine routing decision.
+
+The following defaults apply to OpenAI tasks. For Anthropic tasks, keep routine
+work in the selected Anthropic runtime (Opus is the proposed worker candidate),
+with bounded Fable consultation/review where justified; never dispatch Sol or
+Astra from that task. Record actual supported model settings in either runtime.
+
 | Work | Default | Escalation |
 | --- | --- | --- |
 | Coordination, task selection, routine planning | Sol, medium reasoning | One bounded frontier consultation for a consequential unresolved design question |
 | Implementation and ordinary research | Sol, medium reasoning | Narrow the experiment after two unsuccessful bounded attempts; use high reasoning or a frontier consultation when the record explains why |
 | Independent component review | Fresh Sol reviewer; medium normally, high for difficult arithmetic | Frontier review for unresolved reviewer disagreement or critical uncertainty |
-| Milestone architecture/accuracy audit | Bounded Fable or Astra review | Produce findings and a decision, then return execution to the default model |
+| Milestone architecture/accuracy audit | Bounded Astra review | Produce findings and a decision, then return execution to the default model |
 | Mechanical, low-risk chores | Sol initially; Terra/Luna optional | Adopt only when measured results justify the change |
 
 Use explicit provider model IDs and reasoning settings in each dispatch. Codex
@@ -55,8 +75,8 @@ model selection and reversible adjustments need no user confirmation.
   review/recovery; limit discretionary implementation to a 10 percentage-point
   increase from a recorded work-session start. Do not reset that baseline by
   spawning a child, rotating tasks or starting another automatic session. At
-  either threshold, checkpoint and use an already available provider with its
-  own budget headroom, or end the run with the resource condition recorded.
+  either threshold, checkpoint and end discretionary implementation with the
+  resource condition recorded. Do not switch providers to bypass the limit.
   These are project defaults chosen in response to the user's request, not
   provider guarantees or newly authorized purchases.
 - Unknown or contradictory telemetry is not free capacity: avoid new frontier

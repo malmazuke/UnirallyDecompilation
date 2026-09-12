@@ -56,7 +56,8 @@ First implementation milestone: M0 repeatable laboratory. First gameplay feasibi
 three child sessions hit provider usage limits before final review/assembly
 finished. Branches and a motion handoff draft are preserved; no M2 acceptance
 is claimed. D-0004 now defaults to Sol/medium, one child, bounded frontier review
-and recorded quota guardrails. No reset credit was redeemed. Earlier active
+and recorded quota guardrails. This continuation stays with OpenAI; only the user
+may move it to another provider. No reset credit was redeemed. Earlier active
 assignments below describe pending work, not currently running workers.
 
 The continuation runs through **[M2-01A](../tasks/M2-01A.md)** into **[M2-01](../tasks/M2-01.md)** without user intervention. Contact research and its native component have independent approval; input/timer and strict comparison components are approved; speed arithmetic and evidence checks are approved and its C++ port is submitted; motion/pose/AI/reward research is in final independent review. These branches are not yet accepted as an integrated game update. Coordinator integration and the native comparison command remain unfinished; the next agent follows the checkpoint without asking the user to choose the next step.

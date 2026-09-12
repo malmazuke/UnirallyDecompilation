@@ -5,6 +5,7 @@
 - Status: planned / ready / claimed / in_progress / review / accepted / blocked / abandoned
 - Milestone:
 - Coordinator:
+- Task provider (fixed for all children; record any user-initiated platform change):
 - Worker/session/runtime/model:
 - Actual model/reasoning effort, routing rationale and frontier escalation question (if any):
 - Provider quota window/baseline timestamp, used/remaining or unknown, reserve and session allowance (D-0004):

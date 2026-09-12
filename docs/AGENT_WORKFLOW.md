@@ -11,7 +11,7 @@ This protocol is intended for humans and agents using different models or runtim
 | Implementation worker | Implement a defined contract and its checks | Assigned code/test paths on its own branch |
 | Reviewer | Reproduce the claim, inspect evidence, exercise independent cases and identify regressions | Review report; no silent edits to the implementation being reviewed |
 
-Roles do not require four simultaneous agents. Default to a Sol coordinator and one Sol worker, with explicit model/effort settings. Review uses a fresh sequential session. A second child requires the independent-scope and quota justification in D-0004. A model switch does not change the task's acceptance criteria.
+Roles do not require four simultaneous agents. For OpenAI tasks, default to a Sol coordinator and one Sol worker, with explicit model/effort settings. Review uses a fresh sequential session. A second child requires the independent-scope and quota justification in D-0004. A model switch does not change the task's acceptance criteria.
 
 For example, after M0, one worker could investigate track encoding while another identifies rider-state writes. Two workers should not independently rewrite the state schema. The coordinator establishes a small shared interface first and serializes changes to it.
 
@@ -19,7 +19,12 @@ For example, after M0, one worker could investigate track encoding while another
 
 Follow [D-0004](decisions/D-0004-model-and-usage-budget.md) for model routing,
 frontier escalation, compact dispatch context and sampled quota guardrails.
-Sol/medium is the default for coordination, implementation and ordinary review.
+Keep the task and all children within its starting provider; only the user
+may move work between platforms. Usage exhaustion causes a checkpoint, never
+an automatic cross-provider fallback. A user-initiated platform change sets the
+provider for that continuation, regardless of the repository's earlier authors.
+Sol/medium is the OpenAI default for coordination, implementation and ordinary review;
+Anthropic tasks retain Anthropic models as specified in D-0004.
 Use frontier models for bounded difficult questions and milestone audits.
 Project `.codex/config.toml` supplies defaults for new Codex sessions/children;
 explicit runtime settings may override them, so record the actual model.
@@ -94,7 +99,7 @@ A remote repository is optional for early work. If one is established, use the s
 
 ## Handoff and model switching
 
-Persist the same fields for a switch to another model, another machine, or a fresh session of the same model:
+Provider changes are user-controlled. Within-provider model changes remain autonomous. Persist the same fields for a permitted model/platform change, another machine, or a fresh session:
 
 1. Task, milestone, base/head commits, worktree path and uncommitted changes.
 2. Verified facts and links to the supporting experiment/artifacts.
@@ -108,7 +113,7 @@ Keep model name/version/runtime in execution metadata for reproducibility, but d
 
 ### Portable dispatch prompt
 
-> Use `<runtime/model>` with `<reasoning effort>` under D-0004; quota baseline `<timestamp/window/value or unknown>`, reserve/budget `<limits>`, checkpoint `<path>`. Work on task `<ID>` in `<task file>`, starting from `<commit>` in `<worktree>`. Read AGENTS.md and docs/STATE.md. Verify prerequisites, work within the assigned scope, and use the acceptance criteria in the task. Record reproducible evidence and update the handoff before yielding. Do not mark the task accepted; submit it for review. If blocked, preserve the current state and state the smallest next dependency.
+> Stay within task provider `<OpenAI/Anthropic>` unless the user explicitly moves this continuation. Use `<runtime/model>` with `<reasoning effort>` under D-0004; quota baseline `<timestamp/window/value or unknown>`, reserve/budget `<limits>`, checkpoint `<path>`. Work on task `<ID>` in `<task file>`, starting from `<commit>` in `<worktree>`. Read AGENTS.md and docs/STATE.md. Verify prerequisites, work within the assigned scope, and use the acceptance criteria in the task. Record reproducible evidence and update the handoff before yielding. Do not mark the task accepted; submit it for review. If blocked, preserve the current state and state the smallest next dependency.
 
 ### Reviewer checklist
 

@@ -19,6 +19,19 @@ int main(int argc, char** argv) {
     const auto encoded=unirally::serialize_movement_state(state);
     require(encoded.size()==333); require(encoded[0]=='U' && encoded[7]=='1');
     require(unirally::serialize_movement_state(unirally::deserialize_movement_state(encoded))==encoded);
+    auto rejects=[](const std::vector<std::uint8_t>& bytes) {
+        try { (void)unirally::deserialize_movement_state(bytes); }
+        catch(const std::invalid_argument&) { return true; }
+        return false;
+    };
+    auto invalid=encoded; invalid[0]='X'; require(rejects(invalid));
+    invalid=encoded; invalid.pop_back(); require(rejects(invalid));
+    invalid=encoded; invalid[14]=3; require(rejects(invalid));
+    invalid=encoded; invalid[320]=32; require(rejects(invalid));
+    invalid=encoded; invalid[321]=32; require(rejects(invalid));
+    invalid=encoded; invalid[329]=2; require(rejects(invalid));
+    invalid=encoded; invalid[330]=2; require(rejects(invalid));
+    invalid=encoded; invalid[331]=32; require(rejects(invalid));
     auto malformed=encoded; malformed[100]=2; // first rider rolling flag
     bool rejected=false; try { (void)unirally::deserialize_movement_state(malformed); } catch(const std::invalid_argument&) { rejected=true; }
     require(rejected);

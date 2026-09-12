@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "core": "bsnes",
+  "description": "Cold start, 3300 PAL frames: 1P, MIKE, CRAWLER tour, Down 1000-1005 to ZOOM ZOO, Race; Right held 1650-3299, Up 2200-2259. Equivalent to tests/manifests/replay/race-crawler-zoom-zoo-3300.json.",
+  "frames": 3300,
+  "sample_every": 1,
+  "inputs": [
+    {
+      "from": 300,
+      "to": 305,
+      "buttons": [
+        "start"
+      ],
+      "port": 0
+    },
+    {
+      "from": 620,
+      "to": 625,
+      "buttons": [
+        "start"
+      ],
+      "port": 0
+    },
+    {
+      "from": 750,
+      "to": 755,
+      "buttons": [
+        "start"
+      ],
+      "port": 0
+    },
+    {
+      "from": 900,
+      "to": 905,
+      "buttons": [
+        "start"
+      ],
+      "port": 0
+    },
+    {
+      "from": 1000,
+      "to": 1005,
+      "buttons": [
+        "down"
+      ],
+      "port": 0
+    },
+    {
+      "from": 1050,
+      "to": 1055,
+      "buttons": [
+        "start"
+      ],
+      "port": 0
+    },
+    {
+      "from": 1200,
+      "to": 1205,
+      "buttons": [
+        "start"
+      ],
+      "port": 0
+    },
+    {
+      "from": 1650,
+      "to": 3299,
+      "buttons": [
+        "right"
+      ],
+      "port": 0
+    },
+    {
+      "from": 2200,
+      "to": 2259,
+      "buttons": [
+        "up"
+      ],
+      "port": 0
+    }
+  ],
+  "trace_entries": 64
+}

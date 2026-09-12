@@ -1,0 +1,53 @@
+{
+  "description": "Reference-only M4-02 inventory of the observed ZOOM ZOO track-data seam. It does not expand the Classic pack or authorize native support; decoded bytes stay ignored.",
+  "id": "zoom-zoo-reference-inventory",
+  "identifiers": {
+    "rider": "MIKE",
+    "tour": "CRAWLER",
+    "track": "ZOOM ZOO",
+    "track_asset": "$82:B332/0xC3"
+  },
+  "items": [
+    {
+      "expected": {
+        "length": 50665,
+        "sha256": "db6770152e399f9d16fc6937b5d56588a8f67e825ae70d6578b77d36053fdd28"
+      },
+      "id": "track-data",
+      "kind": "rnc",
+      "name": "Observed CRAWLER / ZOOM ZOO track-data candidate",
+      "runtime": {
+        "consumed_source_end": {"address": 39754, "bank": 24},
+        "frames": [1232, 1290],
+        "known_runtime_writes": [],
+        "loaded_by": "$82:E12B -> $82:B2DD -> $81:B8E2",
+        "work_ram": "$7F:0000",
+        "work_ram_offset": 65536
+      },
+      "source": {
+        "address": 33155,
+        "bank": 24,
+        "directory": "$82:B332 entry 0xC3 (asset $77:074A + $C3)",
+        "file_offset": 786819,
+        "header": {
+          "chunks": 5,
+          "leeway": 2,
+          "magic": "RNC",
+          "method": 1,
+          "packed_crc": 3995,
+          "packed_length": 6581,
+          "unpacked_crc": 26754,
+          "unpacked_length": 50665
+        },
+        "packed_length": 6599
+      }
+    }
+  ],
+  "kind": "content_manifest",
+  "rom": {
+    "manifest": "tests/manifests/rom/unirally-pal.json",
+    "sha256": "a1105819d48c04d680c8292bbfa9abbce05224f1bc231afd66af43b7e0a1fd4e"
+  },
+  "scenario_id": "race-crawler-zoom-zoo-3300",
+  "schema_version": 1
+}

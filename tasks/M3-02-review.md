@@ -422,3 +422,25 @@ prerequisite is not counted as a pass.
 text-only and contains no ROM, pack, state, capture, fixture, or rendered
 image. No acceptance baseline or expected digest was regenerated. I found no
 remaining material issue in the assigned identity-correction scope.
+
+## Hosted-CI return after approval — run 34695851618
+
+The approved `ff38673` candidate passed the macOS job in hosted Actions run
+`34695851618`, but its Linux sanitizer build failed under GCC
+`-Wsign-conversion` in `src/core/presentation.cpp` at the four-plane shifts
+(former lines 180–183) and eight-plane shift (former line 196). The promoted
+`uint8_t` operand was converted to unsigned by the unsigned shift count. This
+is a real portability failure, so the prior approval is returned for a narrow
+correction and the failed Linux job is not counted as passing evidence.
+
+Correction commit `6300e70` explicitly widens each plane byte to `unsigned`
+before shifting, without changing tile indices, bit masks, plane placement or
+decoded pixel values. ROM-free coverage now exercises both legal shift
+boundaries, bit 7 and bit 0. Local debug and sanitizer builds passed; the two
+focused native CTests passed in each preset. The tracked seven-frame checker
+also passed both presets with every mismatch count unchanged. Build report
+SHA-256 values are `0ef582ff...bf511` and `3d4fdbec...50657c`; visual report
+values are `a669496e...28b` and `df8cf245...f8c`.
+
+This section is the worker's CI-correction handoff, not an approval. A fresh
+hosted run and independent review remain required.

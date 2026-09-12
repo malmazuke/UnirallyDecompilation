@@ -419,3 +419,29 @@ mutates each pack-side source/profile/start/rules identity. The exact reviewer
 reproduction now fails before pack access or rendering with `unsupported
 presentation contract identity: source_rom_sha256`; the seven unmodified
 visual expectations remain byte-for-byte and numerically unchanged.
+
+## Hosted-CI compiler-portability finding
+
+Hosted Actions run `34695851618` tested approved identity candidate `ff38673`.
+The macOS job passed. The Linux sanitizer build failed under GCC
+`-Wsign-conversion` in both planar pixel decoders: shifting a `uint8_t` by the
+unsigned bit index first applied integral promotion, then converted the
+intermediate operand to unsigned. This was a compiler portability failure, not
+a visual mismatch, and the failed job is retained as failed evidence.
+
+Commit `6300e70` applies the smallest semantic correction: every fetched VRAM
+plane byte is explicitly converted to `unsigned` before the right shift. Tile
+origins, wrapped indices, bit masks, plane shifts and final `uint8_t` narrowing
+remain in their recovered order. A new ROM-free test sets the same first plane
+byte first to `$80` and then `$01`, proving the decoder reaches the leftmost
+bit-7 and rightmost bit-0 pixels without cross-affecting the left edge.
+
+Fresh local debug and sanitizer builds passed. In each preset,
+`classic_content_pack_identity_rejection` and
+`presentation_gather_mapping_and_determinism` passed 2/2. The tracked private
+visual command also passed both presets with the exact pre-correction counts:
+36/26,656; 697/50,176; 279/50,176; 445/50,176; 653/50,176; 962/57,344; and
+961/57,344. Debug/sanitizer visual report SHA-256 values are
+`a669496e...28b` and `df8cf245...f8c`; build report values are
+`0ef582ff...bf511` and `3d4fdbec...50657c`. No fixture, pack, contract,
+threshold, crop or gameplay serialization changed.

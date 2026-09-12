@@ -20,7 +20,7 @@ The coordinator maintains the status registry below. Work orders further below d
 | M2-01 movement | accepted: exact primary/two withheld agreement; integrated through PR4 | [Movement implementation](M2-01-movement.md) |
 | M2-02 | accepted: PR5 merged after independent review and macOS/Linux CI; M2 accepted, tag `m2` | [Native save/restore and portability](M2-02.md) |
 | M3-00 | accepted: integrated 12 September 2026 after one returned finding and approved re-review | [Complete-race reference evidence](M3-00.md) |
-| M3-01 | ready: native finish and full-race state, based on M3-00 evidence | [Native finish and full-race state](M3-01.md) |
+| M3-01 | claimed: native finish and full-race state; Sol/medium worker in isolated worktree | [Native finish and full-race state](M3-01.md) |
 | M4 – M6 | planned | See milestone definitions |
 
 ## M0 — repeatable laboratory

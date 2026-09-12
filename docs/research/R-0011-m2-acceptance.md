@@ -18,6 +18,11 @@
 | Portability and regressions | The ROM-free continuation series pins FNV-1a `7c799b4393d171f2`. PR5 CI runs34675475186 and34675476818 each passed macOS15 and Ubuntu24.04, including Linux sanitizers and **281/281** required checks. |
 | Independent review and integration | M2-01's review found and verified the idle-pose zero-crossing correction and later GCC conversion correction. A fresh M2-02 reviewer approved exact behavioral commit `f7a3386`, reproduced all required evidence, and added the boundary/mutation cases above. Coordinator candidate `5c065db` passed the full local matrix before PR5 merged. |
 
+Post-merge run34675548675 retained one infrastructure failure: macOS `ranlib`
+returned an output-file I/O error while Ubuntu and both PR matrices passed. No
+source diagnostic occurred. The next exact-main run34675648179 passed macOS and
+Ubuntu completely, including Linux sanitizers, on acceptance commit `6262961`.
+
 The canonical writer/reader audit covers every `MovementState` member. Static
 content and future controller masks remain identity-checked inputs rather than
 serialized state. No second snapshot path, emulator fallback, hidden gameplay

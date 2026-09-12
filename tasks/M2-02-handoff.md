@@ -94,3 +94,7 @@ Runs34675475186 and34675476818 each passed on macOS15 and Ubuntu24.04; the
 portable continuation test and Linux sanitizer run were included. PR5 merged as
 `144fd4839d540654b255f81d199f30acb866a55d`. M2-02 and milestone M2 are
 accepted; the milestone audit is [R-0011](../docs/research/R-0011-m2-acceptance.md).
+The first post-merge run34675548675 retained a macOS `ranlib` output-file I/O
+failure while Ubuntu passed. Exact-main run34675648179 then passed both platforms
+and Linux sanitizers on acceptance-record commit `6262961`; no code change was
+needed.

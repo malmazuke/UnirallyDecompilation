@@ -344,3 +344,81 @@ the reviewer's exact all-zero source mutation now fails at
 `source_rom_sha256`. The unmodified seven visual expectations and all gameplay/
 pack identities are preserved. Fresh independent re-review is still required;
 this response does not approve or accept M3-02.
+
+## Identity correction re-review — candidate `8acfac7`
+
+- Correction candidate: `8acfac7` (`Record presentation identity evidence`)
+- Diff reviewed: `0bca7bf..8acfac7`
+- Reviewer: fresh sequential OpenAI Codex session
+- Worktree/branch: `.worktrees/m3-02-identity-review`,
+  `review/M3-02-identity-correction`
+- Date: 12 September 2026 AEST
+- Verdict: **approved; the returned identity-binding finding is corrected**
+
+### Independent identity and failure-path reproductions
+
+The exact prior attack, changing only `source_rom_sha256` to sixty-four zeroes,
+now exits 3 with report status `failed`, no `visual_results`, and no build or
+render artifact. Its report SHA-256 is `8d4ce286...96321`. Independent changes
+to `profile_id`, `sampling_schema`, and the ordering of `state_fields` behaved
+the same. Unknown and missing top-level keys and a Boolean `schema_version`
+were also rejected as invalid input. Reordering, omitting, or substituting one
+of the seven reference cases was rejected by the independently recomputed case
+digest `384e6411...1cae5`; none reached build or render.
+
+The constants are program-owned literals, not copied from the supplied
+manifest at runtime. `load_contract` requires the exact closed set of
+top-level keys, exact Python types, ordered identity arrays and values. The
+canonical case array is separately pinned. `validate_pack_binding` then
+compares the independently validated pack's source ROM, profile, semantic
+start and rules identities to those fixed declarations and requires every
+contract logical entry to occur in the pack. The underlying pack validator
+also requires the complete exact 25-entry inventory, canonical offsets, sizes,
+hashes and payloads.
+
+I independently flipped each binary pack identity in turn (source, rules,
+profile and semantic start) and replaced one same-width logical entry ID. All
+five commands exited 3 before build/render, wrote failed reports without
+`visual_results`, and named the corresponding incompatibility. Report SHA-256
+values are source `b94b4c5c...b70d`, rules `9f9ecc5a...9e5d`, profile
+`31e60873...704a`, start `4f7f6664...207c`, and logical inventory
+`4f323130...bb1c`.
+
+Changing one byte in the first bound state and, independently, the first PNG
+made the checker exit 3 before rendering, with no native image artifact and no
+`visual_results`; report SHA-256 values are `739d32b9...bf77` and
+`3643b9f1...53a0`. Fixture hashes are checked after the native build step, so
+these two fixture attacks do perform an incremental build check; no renderer
+process is started.
+
+### Genuine contract, earlier corrections and regression checks
+
+The genuine 154,030-byte pack remains SHA-256 `5c1fc5b0...1529`. Debug and
+sanitizer `native presentation-check` runs both passed the same seven exact
+cases: 36/26,656, 697/50,176, 279/50,176, 445/50,176, 653/50,176,
+962/57,344 and 961/57,344 mismatches, under the unchanged 2%, 2%, 2%, 3%, 3%,
+15% and 15% limits. Their report SHA-256 values are `b52dda12...2289` and
+`be9e7cd5...d45f`.
+
+The earlier five corrections remain intact and covered: frame 3678 takes the
+result presentation path; the frame-2000 false-reflection state exits 1 with
+no output; sanitizer renders at both signed 32-bit camera extremes with no
+diagnostic; scroll 32768 exits 1 with no output; the tracked visual command is
+the gate exercised above; and the content record still states 25 total / 12
+presentation entries. The identity-only diff does not touch the C++ renderer,
+movement serialization, pack inventory documentation, frozen fixtures or
+thresholds.
+
+The focused ROM-free presentation unit module passed 3/3. Sequential full
+debug and sanitizer synthetic reruns each passed 278 Python records, 19 CTests
+and three-process repeatability; report SHA-256 values are
+`ac6797e6...2d1a` and `4fddc8ba...006`. The first sanitizer-suite invocation
+was correctly reported as failed because that fresh worktree did not yet have
+a sanitizer build; after the explicit sanitizer build passed (report
+`3df0808b...9ce3`), the fresh sequential rerun above passed. This missing
+prerequisite is not counted as a pass.
+
+`git diff --check 0bca7bf..8acfac7` passed. The six-file correction diff is
+text-only and contains no ROM, pack, state, capture, fixture, or rendered
+image. No acceptance baseline or expected digest was regenerated. I found no
+remaining material issue in the assigned identity-correction scope.

@@ -47,6 +47,22 @@
       "cacheVariables": {
         "LAB_PROBE_FAILURES": "ON"
       }
+    },
+    {
+      "name": "app-debug",
+      "displayName": "Desktop frontend debug with pinned SDL3",
+      "inherits": "lab-debug",
+      "cacheVariables": {
+        "LAB_BUILD_APP": "ON"
+      }
+    },
+    {
+      "name": "app-sanitize",
+      "displayName": "Desktop frontend with sanitizers and pinned SDL3",
+      "inherits": "lab-sanitize",
+      "cacheVariables": {
+        "LAB_BUILD_APP": "ON"
+      }
     }
   ],
   "buildPresets": [
@@ -65,6 +81,14 @@
     {
       "name": "lab-failure-probe",
       "configurePreset": "lab-failure-probe"
+    },
+    {
+      "name": "app-debug",
+      "configurePreset": "app-debug"
+    },
+    {
+      "name": "app-sanitize",
+      "configurePreset": "app-sanitize"
     }
   ],
   "testPresets": [
@@ -92,6 +116,20 @@
     {
       "name": "lab-failure-probe",
       "configurePreset": "lab-failure-probe",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "app-debug",
+      "configurePreset": "app-debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "app-sanitize",
+      "configurePreset": "app-sanitize",
       "output": {
         "outputOnFailure": true
       }

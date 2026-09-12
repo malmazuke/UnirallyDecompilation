@@ -70,4 +70,9 @@ M0: accepted on 11 September 2026 (M0-00 through M0-06; evidence report [R-0005]
 
 ## Handoff
 
-The next agent should first read [the usage checkpoint](../tasks/M2-01-usage-checkpoint.md), this file, `AGENTS.md`, M2-01's continuation records and M2-01A. Reproduce the baseline with `python3 tools/project.py doctor`, `bootstrap`, `build --preset lab-debug` and `test --suite synthetic` (268 checks on the reviewed PR3 candidate), then the unchanged primary fields replay and the relevant sampling/progress command from R-0010. Original content and captures stay ignored; regenerate them from the tracked manifests and exact watch lists. Preserve the PAL identity and all frozen expectations. Update this summary with observed results and decisions; keep execution details in the task and research records.
+The next agent should read [the compact M2-02 handoff](../tasks/NEXT_SESSION.md),
+this file, `AGENTS.md`, and the accepted M2-01 record. Start from current
+`main`; do not repeat the obsolete semantic-seed checkpoint or component probes.
+Create/finalize M2-02's work order before dispatch, preserve the PAL and frozen
+movement identities, and keep original content/captures ignored. Update this
+summary with accepted results; keep execution detail in the task/research record.

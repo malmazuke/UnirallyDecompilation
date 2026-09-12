@@ -50,6 +50,12 @@ explicitly and serialize both rider flags, the delay, any future-affecting
 stored finish times/result outcome, and the presentation phase. Appending a
 hidden global or reusing the emulator's work RAM would violate the M2 boundary.
 
+The M3-01 candidate keeps `URMV0001` byte-identical before a finish and appends
+the named fields in 369-byte `URMV0002` after the first rider crosses. The
+additive `native finish-check` rejects a revision regression, verifies stored
+times/outcome/delay/transition state each frame, and compares restored canonical
+suffixes around both crossings and both delay-completion boundaries.
+
 This record does not establish ranking rules. The variation visibly says
 `LOSER`, but its later `DRAGSTER COMPLETE` screen still decorates MIKE's row;
 that icon is not interpreted as proof of placement.

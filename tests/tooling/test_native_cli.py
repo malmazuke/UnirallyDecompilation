@@ -5,7 +5,7 @@ import sys
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'tools'))
-from unirally_lab.native import protocol
+from unirally_lab.native import finish, protocol
 from unirally_lab.native.compare import NativeOutputError
 
 
@@ -55,6 +55,20 @@ class NativeProtocolTests(unittest.TestCase):
         for text in malformed:
             with self.subTest(text=text), self.assertRaises(NativeOutputError):
                 protocol.parse_output(text, 10, 12)
+
+    def test_full_race_protocol_allows_only_v1_to_v2_revision(self):
+        def v2(frame):
+            return finish.STATE_MAGIC_V2 + frame.to_bytes(4, 'little') + bytes(321) + bytes(36)
+        rows = []
+        for frame, state in ((10, state_bytes(10)), (11, v2(11)), (12, v2(12))):
+            rows.append(f"{frame} " + " ".join(['0'] * 13) + " " + state.hex())
+        text = protocol.HEADER + '\n' + '\n'.join(rows) + '\n'
+        parsed, states = finish.parse_output(text, 10, 12)
+        self.assertEqual([row[0] for row in parsed], [10, 11, 12])
+        self.assertEqual([len(state) for state in states], [333, 369, 369])
+        regressed = text.replace(rows[-1], f"12 " + " ".join(['0'] * 13) + " " + state_bytes(12).hex())
+        with self.assertRaises(NativeOutputError):
+            finish.parse_output(regressed, 10, 12)
 
 
 class NativeCommandTests(unittest.TestCase):

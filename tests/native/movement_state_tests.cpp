@@ -41,6 +41,21 @@ int main(int argc, char** argv) {
     malformed=encoded; malformed.push_back(0); rejected=false;
     try { (void)unirally::deserialize_movement_state(malformed); } catch(const std::invalid_argument&) { rejected=true; }
     require(rejected);
+    state.finish.rider_finished={true,true};
+    state.finish.finish_time_centiseconds={3357,3358};
+    state.finish.finish_time_digits={{{0,3,3,5,7},{0,3,3,5,8}}};
+    state.finish.finish_animation_countdown={119,120};
+    state.finish.player_finish_delay=1;
+    state.finish.phase=unirally::RacePhase::FinishDelay;
+    state.finish.outcome=unirally::RaceOutcome::PlayerLost;
+    const auto finish_encoded=unirally::serialize_movement_state(state);
+    require(finish_encoded.size()==369);
+    require(finish_encoded[0]=='U' && finish_encoded[7]=='2');
+    require(unirally::serialize_movement_state(
+            unirally::deserialize_movement_state(finish_encoded))==finish_encoded);
+    invalid=finish_encoded; invalid[367]=4; require(rejects(invalid));
+    invalid=finish_encoded; invalid[368]=3; require(rejects(invalid));
+    invalid=finish_encoded; invalid[363]=241; invalid[364]=0; require(rejects(invalid));
     if(argc==2) {
         std::ifstream input(argv[1],std::ios::binary);
         require(input.good());

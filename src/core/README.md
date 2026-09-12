@@ -72,6 +72,23 @@ truncated toward zero by 16 and applied before contact impulse and reflection at
 `$83:F09E-$83:F0F7`. The primary, cadence-17 and release-2347 cases all agree on
 all 13 projected fields through frame 2999 in two fresh deterministic processes.
 
+## Full-race finish state
+
+M3-01 extends that semantic update through both frozen CRAWLER / DRAGSTER
+full-race paths. `RaceFinishState` names each finish flag, stored decimal time
+and centiseconds, animation countdown, the 240-update player delay, outcome,
+and result-transition phase/counter. Crossing is observed after ordinary rider
+movement; the dispatcher reacts on the next update, forces the derived axis
+neutral, freezes the timer, and later stops movement during result loading.
+These finish-boundary and low-speed-tail claims are limited to the two
+identity-bound paths in R-0013.
+
+The 333-byte `URMV0001` representation remains byte-identical while finish
+state is empty. After the first crossing, serialization switches one way to
+369-byte `URMV0002`, appending every finish/result field as fixed-width
+little-endian values. The reader accepts both revisions and validates enums,
+flags and the bounded delay without using native struct layout.
+
 ## Native continuation boundary
 
 `serialize_movement_state` is also the save/restore boundary; there is no second
@@ -91,3 +108,8 @@ the latter bracket the recovered idle/contact transition. An authored ROM-free
 32-update continuation test pins FNV-1a series hash `7c799b4393d171f2` for
 cross-platform CI. These claims apply to the recovered CRAWLER/DRAGSTER domain;
 they do not imply that later game modes need no additional state.
+
+`native finish-check` is the additive full-race successor. It requires the V1
+to V2 transition, checks the frozen gameplay and finish/result state through
+the first stable result frame in two fresh processes, and can repeat
+fresh-process save/restore checks at requested finish boundaries.

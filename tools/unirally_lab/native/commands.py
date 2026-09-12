@@ -17,7 +17,7 @@ import sys
 
 from .. import report as reports
 from ..procs import run_bounded
-from . import compare, protocol
+from . import compare, finish, protocol
 
 ROOT = reports.repo_root()
 STATIC_SIZES = {
@@ -94,6 +94,44 @@ def load_case(root: Path, case_path: Path, rep: reports.Report) -> tuple:
     if {p.name for p in content.iterdir()} != seen:
         raise compare.ReferenceError("content directory contains unbound entries")
     return reference, replay, seed, seed_bytes, content
+
+
+def load_finish_case(root: Path, case_path: Path, rep: reports.Report) -> tuple:
+    case = json.loads(case_path.read_text())
+    if (case.get("schema_version"), case.get("kind")) != (1, "native_full_race_case"):
+        raise compare.ReferenceError("unsupported native full-race case")
+    rep.add_input("native_case", case_path, reports.file_sha256(case_path))
+    replay_path = checked_file(root, case.get("replay"), rep, "replay")
+    expected_path = checked_file(root, case.get("expected"), rep, "expected")
+    contract_path = checked_file(root, case.get("finish_contract"), rep, "finish_contract")
+    reference, replay, contract, finish_case = finish.load_reference(
+        expected_path, replay_path, contract_path)
+    runtime_path = checked_file(root, case.get("runtime"), rep, "runtime")
+    runtime = json.loads(runtime_path.read_text())
+    if runtime.get("schema_version") != 1 or runtime.get("rom_sha256") != reference["rom_sha256"]:
+        raise compare.ReferenceError("runtime identity differs from full-race reference")
+    seed = checked_file(root, runtime.get("seed"), rep, "seed")
+    seed_bytes = seed.read_bytes()
+    if (len(seed_bytes) != finish.STATE_V1_BYTES or seed_bytes[:8] != protocol.STATE_MAGIC
+            or int.from_bytes(seed_bytes[8:12], "little") != reference["initial_frame"]):
+        raise compare.ReferenceError("full-race seed is not canonical URMV0001")
+    content = relative_path(root, runtime.get("content_dir"))
+    files = runtime.get("files")
+    if not isinstance(files, list) or len(files) != len(STATIC_SIZES):
+        raise compare.ReferenceError("runtime must bind the complete static content inventory")
+    seen = set()
+    for entry in files:
+        name = entry.get("name") if isinstance(entry, dict) else None
+        if name not in STATIC_SIZES or name in seen or entry.get("size") != STATIC_SIZES[name]:
+            raise compare.ReferenceError("invalid static content entry")
+        seen.add(name)
+        path = checked_file(root, {"path": str((content / name).relative_to(root)),
+                            "sha256": entry.get("sha256")}, rep, f"content:{name}")
+        if path.stat().st_size != entry["size"]:
+            raise compare.ReferenceError(f"static file size differs: {name}")
+    if {path.name for path in content.iterdir()} != seen:
+        raise compare.ReferenceError("content directory contains unbound entries")
+    return reference, replay, finish_case, seed, seed_bytes, content
 
 
 def build_runner(root: Path, preset: str, timeout: float, artifacts: Path):
@@ -369,6 +407,104 @@ def cmd_restore_check(args: argparse.Namespace) -> int:
     return status
 
 
+def cmd_finish_check(args: argparse.Namespace) -> int:
+    """Compare both gameplay and finish state, optionally across restore boundaries."""
+    root = ROOT.resolve()
+    rep = reports.Report(sys.argv, task_id=args.task)
+    artifacts = (Path(args.artifacts).resolve() if args.artifacts else
+                 Path(args.report).resolve().parent if args.report else
+                 root / "artifacts" / f"native-finish-{rep.data['run_id']}")
+    report_path = Path(args.report).resolve() if args.report else artifacts / "report.json"
+    if (not artifacts.is_relative_to(root / "artifacts") or artifacts == root / "artifacts"
+            or not report_path.is_relative_to(artifacts) or artifacts.exists()
+            or not math.isfinite(args.timeout) or args.timeout <= 0):
+        print("native finish-check requires a fresh artifacts directory and positive timeout", file=sys.stderr)
+        return 3
+    artifacts.mkdir(parents=True)
+    status = 0
+    try:
+        reference, replay, finish_case, seed, seed_bytes, content = load_finish_case(
+            root, Path(args.manifest).resolve(), rep)
+        boundaries = sorted(args.save_frame or [])
+        if (len(boundaries) != len(set(boundaries)) or any(frame <= reference["initial_frame"]
+                or frame >= reference["last_frame"] for frame in boundaries)):
+            raise ValueError("save frames must be unique and interior")
+        rep.data["save_frames"] = boundaries
+        rep.add_check("input_identities", "passed")
+        runner = root / "build" / args.preset / "src" / "core" / "movement_runner"
+        if runner.is_file() or runner.is_symlink(): runner.unlink()
+        result = build_runner(root, args.preset, args.timeout, artifacts)
+        rep.add_check("native_build", result.outcome, detail=result.tail(1500))
+        status = process_exit(result)
+        if status == 0:
+            rep.add_input("native_binary", runner, reports.file_sha256(runner))
+            stream = artifacts / "inputs.txt"
+            stream.write_text(protocol.input_text(replay, reference["initial_frame"], reference["last_frame"]))
+            rep.add_input("controller_inputs", stream, reports.file_sha256(stream))
+            series = []
+            for number in (1, 2):
+                result = run_bounded([str(runner), "--seed", str(seed), "--content-dir", str(content),
+                                      "--inputs", str(stream)], timeout=args.timeout, cwd=artifacts)
+                rep.add_check(f"native_process_{number}", result.outcome, detail=result.stderr[-1500:])
+                output = artifacts / f"run{number}.txt"; output.write_text(result.stdout)
+                (artifacts / f"run{number}.stderr.txt").write_text(result.stderr)
+                rep.add_artifact(f"native_output_{number}", output)
+                status = process_exit(result)
+                if status: break
+                rows, states = finish.parse_output(result.stdout, reference["initial_frame"], reference["last_frame"])
+                if states[0] != seed_bytes: raise compare.NativeOutputError("native process changed the initial seed")
+                comparison = finish.validate(rows, states, reference, finish_case)
+                series.append((rows, states)); rep.data[f"run{number}"] = {
+                    **finish.state_digests(states), "comparison": comparison}
+            if status == 0:
+                repeatable = series[0] == series[1]
+                rep.add_check("native_fresh_process_repeatability", "passed" if repeatable else "failed")
+                rep.add_check("gameplay_and_finish_identical", "passed" if rep.data["run1"]["comparison"]["identical"] else "failed")
+                status = 0 if repeatable and rep.data["run1"]["comparison"]["identical"] else 1
+        if status == 0 and boundaries:
+            baseline_rows, baseline_states = series[0]
+            rep.data["boundaries"] = {}
+            for frame in boundaries:
+                offset = frame - reference["initial_frame"]
+                prefix = artifacts / f"prefix-{frame}.txt"; suffix = artifacts / f"suffix-{frame}.txt"
+                prefix.write_text(protocol.input_text(replay, reference["initial_frame"], frame))
+                suffix.write_text(protocol.input_text(replay, frame, reference["last_frame"]))
+                prefix_result = run_bounded([str(runner), "--seed", str(seed), "--content-dir", str(content), "--inputs", str(prefix)], timeout=args.timeout, cwd=artifacts)
+                rep.add_check(f"prefix_{frame}", prefix_result.outcome,
+                              detail=prefix_result.stderr[-1500:])
+                if process_exit(prefix_result): raise compare.NativeOutputError(f"prefix process failed at {frame}")
+                prefix_rows, prefix_states = finish.parse_output(prefix_result.stdout, reference["initial_frame"], frame)
+                if (prefix_rows, prefix_states) != (baseline_rows[:offset + 1], baseline_states[:offset + 1]):
+                    raise compare.NativeOutputError(f"prefix differs at {frame}")
+                saved = prefix_states[-1]; saved_path = artifacts / f"state-{frame}.bin"; saved_path.write_bytes(saved)
+                rep.add_artifact(f"saved_state_{frame}", saved_path)
+                suffix_result = run_bounded([str(runner), "--seed", str(saved_path), "--content-dir", str(content), "--inputs", str(suffix)], timeout=args.timeout, cwd=artifacts)
+                rep.add_check(f"suffix_{frame}", suffix_result.outcome,
+                              detail=suffix_result.stderr[-1500:])
+                if process_exit(suffix_result): raise compare.NativeOutputError(f"suffix process failed at {frame}")
+                suffix_rows, suffix_states = finish.parse_output(suffix_result.stdout, frame, reference["last_frame"])
+                divergence = continuation_divergence(baseline_rows[offset:], suffix_rows,
+                                                     baseline_states[offset:], suffix_states)
+                rep.add_check(f"continuation_{frame}_identical", "passed" if divergence is None else "failed")
+                rep.data["boundaries"][str(frame)] = {"saved_state_bytes": len(saved),
+                    "saved_state_sha256": hashlib.sha256(saved).hexdigest(), "first_divergence": divergence}
+                if divergence is not None: status = 1; break
+                verify_unchanged_inputs(rep, content)
+        verify_unchanged_inputs(rep, content)
+    except FileNotFoundError as exc:
+        rep.add_check("prerequisite", "missing", detail=str(exc)); status = 2
+    except compare.NativeOutputError as exc:
+        rep.add_check("native_output", "failed", detail=str(exc)); status = 1
+    except (ValueError, KeyError, TypeError, OSError) as exc:
+        rep.add_check("case_or_arguments", "failed", detail=str(exc)); status = 3
+    rep.finish("passed" if status == 0 else "failed")
+    if rep.data["source_changed_during_run"]:
+        rep.add_check("source_stable", "failed", detail="source changed during finish check")
+        status = 1; rep.finish("failed")
+    rep.write(report_path); reports.print_summary(rep)
+    return status
+
+
 def register(subparsers) -> None:
     parser = subparsers.add_parser("native", help="native movement comparison")
     commands = parser.add_subparsers(dest="native_command", required=True)
@@ -392,3 +528,12 @@ def register(subparsers) -> None:
     restore.add_argument("--timeout", type=float, default=120)
     restore.add_argument("--task", default="M2-02")
     restore.set_defaults(func=cmd_restore_check)
+    finish_check = commands.add_parser("finish-check", help="compare full-race gameplay/finish state and optional restored continuations")
+    finish_check.add_argument("--manifest", required=True)
+    finish_check.add_argument("--save-frame", type=int, action="append")
+    finish_check.add_argument("--preset", choices=("lab-debug", "lab-release", "lab-sanitize"), default="lab-debug")
+    finish_check.add_argument("--artifacts")
+    finish_check.add_argument("--report")
+    finish_check.add_argument("--timeout", type=float, default=120)
+    finish_check.add_argument("--task", default="M3-01")
+    finish_check.set_defaults(func=cmd_finish_check)

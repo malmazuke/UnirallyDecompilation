@@ -61,3 +61,13 @@ from frame1533 through the last finish-display frame. The continuous expectation
 has 1,921 rows and SHA-256 `748ae6ed...2042`; the variation has 2,026 rows and
 SHA-256 `feae3706...77db`. Their case manifests bind those files, the original
 12,000-frame replay bytes, the accepted runtime identity and the finish contract.
+
+## Native candidate result
+
+The M3-01 candidate computes the stored digits/centiseconds at crossing from the
+timer-at-update-start, derives outcome from opponent-finished order, and switches
+from byte-identical `URMV0001` to explicit `URMV0002`. On both frozen inputs the
+native process exactly matches every gameplay row through frames3453/3558 and
+the finish contract through stable-result frames3679/3800. Fresh-process restores
+are identical before, at and after both player crossings and delay completion;
+the focused reports are retained under ignored `artifacts/m3-01-*-check*`.

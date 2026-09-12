@@ -106,4 +106,44 @@ int main() {
     const auto positive_crossing=zero_crossing(24,0xffff); // reference 40
     require(positive_crossing.velocity==1 && positive_crossing.wobble_offset==1,
             "idle pose positive zero crossing");
+
+    // Authored finish boundaries: crossing is recorded after movement, the
+    // dispatcher reacts on the following update, and delay 240 transitions on
+    // the update after it was displayed.
+    unirally::MovementState finish_state{};
+    finish_state.frame=3212; finish_state.countdown=0;
+    finish_state.contact_phase=1; finish_state.progress_phase=1;
+    finish_state.rewards.write_cursor=1; finish_state.rewards.event_one_weight=4;
+    finish_state.timer={0,3,3,5,3};
+    for(auto& rider:finish_state.riders) {
+        rider.motion.y=64; rider.pose.previous_y=64; rider.pose.reflected=true;
+    }
+    finish_state.riders[0].motion.x=0x62ac;
+    finish_state.riders[0].pose.previous_x=0x62ac;
+    unirally::update_movement(finish_state,neutral,
+        {{track,poses,templates},{columns,flags},transitions,slopes,displacement,idle_pose,reward,reward_class,
+         {masks,decrements}});
+    require(finish_state.finish.rider_finished[0] &&
+            finish_state.finish.phase==unirally::RacePhase::FinishDelay &&
+            finish_state.finish.player_finish_delay==0,
+            "crossing/next-frame dispatcher order");
+    require(finish_state.finish.finish_time_centiseconds[0]==3357 &&
+            finish_state.finish.finish_time_digits[0]==std::array<std::uint16_t,5>{0,3,3,5,7},
+            "stored finish time");
+    unirally::update_movement(finish_state,neutral,
+        {{track,poses,templates},{columns,flags},transitions,slopes,displacement,idle_pose,reward,reward_class,
+         {masks,decrements}});
+    require(finish_state.finish.player_finish_delay==1 &&
+            finish_state.player_input.horizontal==1,
+            "first finish delay/neutral override");
+    finish_state.finish.player_finish_delay=240;
+    const auto frozen_timer=finish_state.timer;
+    unirally::update_movement(finish_state,neutral,
+        {{track,poses,templates},{columns,flags},transitions,slopes,displacement,idle_pose,reward,reward_class,
+         {masks,decrements}});
+    require(finish_state.finish.phase==unirally::RacePhase::ResultLoading &&
+            finish_state.finish.result_loading_updates==1 &&
+            finish_state.timer.minutes==frozen_timer.minutes &&
+            finish_state.timer.subframe==frozen_timer.subframe,
+            "delay completion/result transition");
 }

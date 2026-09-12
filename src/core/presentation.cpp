@@ -177,10 +177,11 @@ std::uint8_t tile_pixel(const std::array<std::uint8_t, 65536> &vram,
   const auto bit = static_cast<unsigned>(7 - x);
   const auto plane01 = at + static_cast<std::size_t>(y) * 2;
   const auto plane23 = plane01 + 16;
-  return static_cast<std::uint8_t>(((vram[plane01] >> bit) & 1U) |
-                                   (((vram[plane01 + 1] >> bit) & 1U) << 1U) |
-                                   (((vram[plane23] >> bit) & 1U) << 2U) |
-                                   (((vram[plane23 + 1] >> bit) & 1U) << 3U));
+  return static_cast<std::uint8_t>(
+      ((static_cast<unsigned>(vram[plane01]) >> bit) & 1U) |
+      (((static_cast<unsigned>(vram[plane01 + 1]) >> bit) & 1U) << 1U) |
+      (((static_cast<unsigned>(vram[plane23]) >> bit) & 1U) << 2U) |
+      (((static_cast<unsigned>(vram[plane23 + 1]) >> bit) & 1U) << 3U));
 }
 
 std::uint8_t tile_pixel_8bpp(const std::array<std::uint8_t, 65536> &vram,
@@ -193,9 +194,9 @@ std::uint8_t tile_pixel_8bpp(const std::array<std::uint8_t, 65536> &vram,
     const auto plane_byte =
         at + static_cast<std::size_t>(y) * 2U + (plane / 2U) * 16U +
         (plane & 1U);
-    value |= static_cast<std::uint8_t>(((vram[plane_byte & 0xffffU] >> bit) &
-                                        1U)
-                                       << plane);
+    value |= static_cast<std::uint8_t>(
+        ((static_cast<unsigned>(vram[plane_byte & 0xffffU]) >> bit) & 1U)
+        << plane);
   }
   return value;
 }

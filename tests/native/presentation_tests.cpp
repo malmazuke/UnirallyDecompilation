@@ -130,6 +130,14 @@ int main() {
   const auto split_result = unirally::render_dragster_headless(
       {result_state, 0, 0, 0, 0, 0}, content);
   require(empty_result.pixels[0] != split_result.pixels[0]);
+  // Exercise both ends of the planar shift range. The same first plane byte
+  // selects the leftmost pixel with bit 7 and the rightmost pixel with bit 0.
+  result_base_vram[39814] = 0x01;
+  const auto low_bit_result = unirally::render_dragster_headless(
+      {result_state, 0, 0, 0, 0, 0}, content);
+  require(empty_result.pixels[7 * 3] != low_bit_result.pixels[7 * 3]);
+  require(empty_result.pixels[0] == low_bit_result.pixels[0]);
+  result_base_vram[39814] = 0x80;
   require(before == unirally::serialize_movement_state(state));
 
   // Result presentation becomes visible at the observed end-of-frame 3678

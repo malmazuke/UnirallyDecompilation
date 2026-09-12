@@ -71,7 +71,7 @@ struct RequiredEntry {
   std::size_t size;
   std::string_view sha256;
 };
-const std::array<RequiredEntry, 20> required{
+const std::array<RequiredEntry, 22> required{
     {{"physics.track.dragster.data", 33815,
       "8f5cef67dc57977af8ff614b8178514a26e9fe0059e02ed27aad5978185580d4"},
      {"physics.rider.collision-poses", 32768,
@@ -111,7 +111,11 @@ const std::array<RequiredEntry, 20> required{
      {"presentation.rider.mike.race-tiles.v1", 3456,
       "f401d2ade33b05b5125f0862f5aa490f304cf66ab18c4f3bb141aa4120b70ea9"},
      {"presentation.result.classic.font-layout.v1", 5224,
-      "63146ede94a8947ac632bf39d6f51b86f1cea31e70678e2fedbdeca14a993ca0"}}};
+      "63146ede94a8947ac632bf39d6f51b86f1cea31e70678e2fedbdeca14a993ca0"},
+     {"presentation.effect.go-window.v1", 898,
+      "33f19daed02ec2f968d1a1ba27675a4da794c96772af28edfc1e321e113c4b29"},
+     {"presentation.effect.winner-window.v1", 898,
+      "b6fddc697a55984d607220aff50ab465881297de3f94fd9e434c0c9be3d4df20"}}};
 
 std::array<std::uint8_t, 32> hex_digest(std::string_view text) {
   if (text.size() != 64)
@@ -234,7 +238,7 @@ ClassicContentPack::ClassicContentPack(const std::filesystem::path &path) {
         "Classic pack source ROM identity is unsupported");
   if (rules_identity !=
       hex_digest(
-          "b8b9bf3cc367df271adda0519e1791204ea21c5c8ab0bb440c3c56a50d41868b"))
+          "714c2a0840c5a018132655fc24a57ffc1fd4f13838fd2acc63ce73cbc24a219b"))
     throw std::invalid_argument(
         "Classic pack extraction-rules identity is unsupported");
   if (in.text() != "classic.pal.crawler.dragster.v1")

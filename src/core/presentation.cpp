@@ -27,6 +27,43 @@ void rect(RgbFrame &f, int x, int y, int w, int h,
       pixel(f, px, py, c);
 }
 
+void render_window_xor(RgbFrame &frame, std::span<const std::uint8_t> table,
+                       std::array<std::uint8_t, 3> fixed_colour) {
+  // Channel 6 uses HDMA mode 4: each active line writes WH0..WH3 ($2126-$2129).
+  // The race setup combines its two inclusive horizontal windows with XOR.
+  std::size_t source = 0;
+  int screen_y = 0;
+  while (screen_y < 224) {
+    if (source >= table.size())
+      throw std::invalid_argument("Classic window HDMA table is truncated");
+    const auto line_control = table[source++];
+    const int line_count = line_control & 0x7fU;
+    if (line_count == 0 || (line_control & 0x80U) == 0)
+      throw std::invalid_argument("unsupported Classic window HDMA state");
+    for (int line = 0; line < line_count && screen_y < 224;
+         ++line, ++screen_y) {
+      if (table.size() - source < 4)
+        throw std::invalid_argument("Classic window HDMA row is truncated");
+      const int window1_left = table[source++];
+      const int window1_right = table[source++];
+      const int window2_left = table[source++];
+      const int window2_right = table[source++];
+      for (int screen_x = 0; screen_x < 256; ++screen_x) {
+        const bool in_window1 = window1_left <= window1_right &&
+                                screen_x >= window1_left &&
+                                screen_x <= window1_right;
+        const bool in_window2 = window2_left <= window2_right &&
+                                screen_x >= window2_left &&
+                                screen_x <= window2_right;
+        if (in_window1 != in_window2)
+          pixel(frame, screen_x, screen_y, fixed_colour);
+      }
+    }
+  }
+  if (source != table.size())
+    throw std::invalid_argument("Classic window HDMA table has trailing bytes");
+}
+
 std::uint8_t channel8(std::uint16_t value) {
   const auto expanded = static_cast<unsigned>((value << 3U) | (value >> 2U));
   const auto wide = expanded * 257U;
@@ -254,6 +291,7 @@ void render_rider(RgbFrame &frame, const std::array<std::uint8_t, 65536> &vram,
         }
     }
 }
+
 } // namespace
 RiderFrameSelection rider_frame_for_pose(std::uint16_t pose, bool reflected) {
   RiderFrameId id{};
@@ -367,13 +405,18 @@ RgbFrame render_dragster_headless(const PresentationSample &s,
   if (content.bg1_tiles.size() != 2560 || content.bg2_tiles.size() != 992 ||
       content.bg2_map.size() != 8192 || content.palette.size() != 352 ||
       content.font.size() != 2048 || content.rider_tiles.size() != 3456 ||
-      content.result_assets.size() != 5224)
+      content.result_assets.size() != 5224 || content.go_window.size() != 898 ||
+      content.winner_window.size() != 898)
     throw std::invalid_argument(
         "Classic presentation entry size is unsupported");
   const auto map = build_dragster_bg1_map(content.track, s.bg1_scroll_x,
                                           s.bg1_scroll_y);
   RgbFrame f{};
   render_race_background(f, s, content, map);
+  const auto player_pose = s.movement.riders[0].pose.pose_index;
+  const auto opponent_pose = s.movement.riders[1].pose.pose_index;
+  if (player_pose == 0x04f9 && opponent_pose == 0x0263)
+    render_window_xor(f, content.go_window, {255, 255, 255});
   const auto &t = s.movement.timer;
   const std::array<unsigned, 4> d{
       {t.minutes, t.tens_seconds, t.seconds, t.tenths}};
@@ -392,6 +435,8 @@ RgbFrame render_dragster_headless(const PresentationSample &s,
                  rider_index == 0 ? 0 : 136,
                  rider_index == 0 ? 0x66 : 0x68);
   }
+  if (player_pose == 0x04fe && opponent_pose == 0x037c)
+    render_window_xor(f, content.winner_window, {98, 98, 255});
   if (s.movement.finish.phase == RacePhase::ResultScreen) {
     rect(f, 36, 48, 184, 112, {12, 18, 38});
     rect(f, 52, 64, 152, 8, {238, 238, 224});

@@ -48,6 +48,7 @@ struct RgbFrame {
 struct PresentationContent {
   std::span<const std::uint8_t> track, bg1_tiles, bg2_tiles, bg2_map;
   std::span<const std::uint8_t> palette, font, rider_tiles, result_assets;
+  std::span<const std::uint8_t> go_window, winner_window;
 };
 RgbFrame render_dragster_headless(const PresentationSample &,
                                   const PresentationContent &);

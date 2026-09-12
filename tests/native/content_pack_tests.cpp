@@ -14,7 +14,7 @@ struct Entry {
   std::uint64_t size;
   std::string_view digest;
 };
-constexpr std::array<Entry, 20> entries{
+constexpr std::array<Entry, 22> entries{
     {{"physics.track.dragster.data", 33815,
       "8f5cef67dc57977af8ff614b8178514a26e9fe0059e02ed27aad5978185580d4"},
      {"physics.rider.collision-poses", 32768,
@@ -54,7 +54,11 @@ constexpr std::array<Entry, 20> entries{
      {"presentation.rider.mike.race-tiles.v1", 3456,
       "f401d2ade33b05b5125f0862f5aa490f304cf66ab18c4f3bb141aa4120b70ea9"},
      {"presentation.result.classic.font-layout.v1", 5224,
-      "63146ede94a8947ac632bf39d6f51b86f1cea31e70678e2fedbdeca14a993ca0"}}};
+      "63146ede94a8947ac632bf39d6f51b86f1cea31e70678e2fedbdeca14a993ca0"},
+     {"presentation.effect.go-window.v1", 898,
+      "33f19daed02ec2f968d1a1ba27675a4da794c96772af28edfc1e321e113c4b29"},
+     {"presentation.effect.winner-window.v1", 898,
+      "b6fddc697a55984d607220aff50ab465881297de3f94fd9e434c0c9be3d4df20"}}};
 
 void put16(std::vector<std::uint8_t> &out, std::uint16_t value) {
   out.push_back(static_cast<std::uint8_t>(value));
@@ -84,10 +88,10 @@ std::pair<std::vector<std::uint8_t>, std::size_t> authored_pack() {
   put_digest(
       out, "a1105819d48c04d680c8292bbfa9abbce05224f1bc231afd66af43b7e0a1fd4e");
   put_digest(
-      out, "b8b9bf3cc367df271adda0519e1791204ea21c5c8ab0bb440c3c56a50d41868b");
+      out, "714c2a0840c5a018132655fc24a57ffc1fd4f13838fd2acc63ce73cbc24a219b");
   put_text(out, "classic.pal.crawler.dragster.v1");
   put_text(out, "classic.crawler.dragster.race-start.v1");
-  put16(out, 20);
+  put16(out, 22);
   std::size_t table_bytes{};
   for (const auto &entry : entries)
     table_bytes += 2 + entry.id.size() + 48;

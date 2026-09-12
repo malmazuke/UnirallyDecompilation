@@ -63,15 +63,54 @@ int main() {
   state.riders[1].pose.pose_index = 0x895;
   const auto before = unirally::serialize_movement_state(state);
   std::vector<std::uint8_t> bg1(2560), bg2(992), bg2_map(8192), palette(352),
-      font(2048), rider(3456), result(5224);
+      font(2048), rider(3456), result(5224), go_window, winner_window;
+  const auto empty_window_table = [] {
+    std::vector<std::uint8_t> table;
+    for (const unsigned lines : {127U, 97U}) {
+      table.push_back(static_cast<std::uint8_t>(0x80U | lines));
+      for (unsigned line = 0; line < lines; ++line)
+        table.insert(table.end(), {255, 0, 255, 0});
+    }
+    return table;
+  };
+  go_window = empty_window_table();
+  winner_window = empty_window_table();
   const unirally::PresentationContent content{track,   bg1,  bg2,   bg2_map,
-                                              palette, font, rider, result};
+                                              palette, font, rider, result,
+                                              go_window, winner_window};
   const auto first = unirally::render_dragster_headless({state, 0, 0, 0, 0, 0},
                                                         content),
              second = unirally::render_dragster_headless({state, 0, 0, 0, 0, 0},
                                                          content);
   require(first.pixels == second.pixels);
   require(before == unirally::serialize_movement_state(state));
+  auto winner_state = state;
+  winner_state.riders[0].pose.pose_index = 0x04fe;
+  winner_state.riders[1].pose.pose_index = 0x037c;
+  auto visible_window = winner_window;
+  visible_window[1] = 10;
+  visible_window[2] = 20;
+  auto visible_content = content;
+  visible_content.winner_window = visible_window;
+  const auto masked = unirally::render_dragster_headless(
+      {winner_state, 0, 0, 0, 0, 0}, visible_content);
+  if (masked.pixels[(15 * 3)] != 98)
+    throw std::runtime_error("window mask did not cover its inclusive edge");
+  if (masked.pixels == first.pixels)
+    throw std::runtime_error("window table mutation did not affect output");
+  auto invalid_window = winner_window;
+  invalid_window[0] = 0;
+  auto invalid_content = content;
+  invalid_content.winner_window = invalid_window;
+  rejected = false;
+  try {
+    (void)unirally::render_dragster_headless({winner_state, 0, 0, 0, 0, 0},
+                                             invalid_content);
+  } catch (const std::invalid_argument &) {
+    rejected = true;
+  }
+  if (!rejected)
+    throw std::runtime_error("unsupported window HDMA control was accepted");
   rejected = false;
   try {
     auto short_content = content;

@@ -71,3 +71,23 @@ updates, and the 64-byte signed lookup at ROM file offset `0x1B4`. Its wobble is
 truncated toward zero by 16 and applied before contact impulse and reflection at
 `$83:F09E-$83:F0F7`. The primary, cadence-17 and release-2347 cases all agree on
 all 13 projected fields through frame 2999 in two fresh deterministic processes.
+
+## Native continuation boundary
+
+`serialize_movement_state` is also the save/restore boundary; there is no second
+snapshot representation. Its333 bytes include the frame, decoded player input,
+both complete rider states (motion, contact, speed, progress, jump, pose,
+idle-pose, quarter-turn, integration residues and launch state), timer,
+opponent-AI continuation, reward queue/learned value, countdown and alternating
+update phases/counters. Static decoded content and future controller inputs stay
+outside the state and remain identity-bound process inputs.
+
+`native restore-check` runs an uninterrupted baseline, regenerates each prefix
+in a separate process, writes only the prefix's final canonical bytes, then uses
+those bytes as the seed of another fresh process. It requires the entire resumed
+canonical series—not only the13 displayed projections—to equal the baseline.
+M2-02 exercises primary boundaries1631/2200 and release boundaries2761/2787;
+the latter bracket the recovered idle/contact transition. An authored ROM-free
+32-update continuation test pins FNV-1a series hash `7c799b4393d171f2` for
+cross-platform CI. These claims apply to the recovered CRAWLER/DRAGSTER domain;
+they do not imply that later game modes need no additional state.

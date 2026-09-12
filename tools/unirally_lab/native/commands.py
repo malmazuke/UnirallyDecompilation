@@ -8,6 +8,7 @@ actual gameplay agreement is recorded separately.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 from pathlib import Path
@@ -118,6 +119,44 @@ def verify_unchanged_inputs(rep: reports.Report, content: Path) -> None:
             raise compare.NativeOutputError(f"input changed during comparison: {name}")
 
 
+def native_process(runner: Path, seed: Path, content: Path, stream: Path,
+                   timeout: float, artifacts: Path, label: str,
+                   initial_frame: int, last_frame: int, rep: reports.Report):
+    result = run_bounded([str(runner), "--seed", str(seed), "--content-dir", str(content),
+                          "--inputs", str(stream)], timeout=timeout, cwd=artifacts)
+    rep.add_check(label, result.outcome, detail=result.stderr[-1500:])
+    output = artifacts / f"{label}.txt"
+    output.write_text(result.stdout)
+    (artifacts / f"{label}.stderr.txt").write_text(result.stderr)
+    rep.add_artifact(label, output)
+    status = process_exit(result)
+    if status:
+        return status, None, None
+    rows, states = protocol.parse_output(result.stdout, initial_frame, last_frame)
+    return 0, rows, states
+
+
+def continuation_divergence(expected_rows, actual_rows, expected_states, actual_states):
+    for index, (expected_row, actual_row, expected_state, actual_state) in enumerate(
+            zip(expected_rows, actual_rows, expected_states, actual_states)):
+        if expected_row == actual_row and expected_state == actual_state:
+            continue
+        fields = [{"field": compare.COLUMNS[column], "uninterrupted": expected_row[column],
+                   "restored": actual_row[column]}
+                  for column in range(len(compare.COLUMNS))
+                  if expected_row[column] != actual_row[column]]
+        offsets = [offset for offset, pair in enumerate(zip(expected_state, actual_state))
+                   if pair[0] != pair[1]]
+        return {"frame": expected_row[0],
+                "prior_frame": expected_rows[index - 1][0] if index else None,
+                "projection_differences": fields,
+                "canonical_byte_offsets": offsets[:32],
+                "canonical_byte_difference_count": len(offsets),
+                "uninterrupted_state_sha256": hashlib.sha256(expected_state).hexdigest(),
+                "restored_state_sha256": hashlib.sha256(actual_state).hexdigest()}
+    return None
+
+
 def cmd_compare(args: argparse.Namespace) -> int:
     root = ROOT.resolve()
     rep = reports.Report(sys.argv, task_id=args.task)
@@ -199,6 +238,131 @@ def cmd_compare(args: argparse.Namespace) -> int:
     return status
 
 
+def cmd_restore_check(args: argparse.Namespace) -> int:
+    root = ROOT.resolve()
+    rep = reports.Report(sys.argv, task_id=args.task)
+    artifacts = (Path(args.artifacts).resolve() if args.artifacts else
+                 Path(args.report).resolve().parent if args.report else
+                 root / "artifacts" / f"native-restore-{rep.data['run_id']}")
+    report_path = Path(args.report).resolve() if args.report else artifacts / "report.json"
+    reserved = {"build.json", "baseline-inputs.txt", "baseline.txt",
+                "baseline.stderr.txt"}
+    if (not artifacts.is_relative_to(root / "artifacts") or artifacts == root / "artifacts"
+            or not report_path.is_relative_to(artifacts) or report_path == artifacts
+            or report_path.relative_to(artifacts).parts[0] in reserved
+            or artifacts.exists() or not math.isfinite(args.timeout) or args.timeout <= 0):
+        print("native restore-check requires a fresh directory under artifacts/, its report inside that directory, and a positive timeout", file=sys.stderr)
+        return 3
+    artifacts.mkdir(parents=True)
+    status = 0
+    try:
+        reference, replay, seed, seed_bytes, content = load_case(root, Path(args.manifest).resolve(), rep)
+        if len(seed_bytes) != 333:
+            raise compare.ReferenceError("M2-02 requires the canonical 333-byte movement state")
+        boundaries = args.save_frame
+        if (not boundaries or len(set(boundaries)) != len(boundaries)
+                or any(frame <= reference["initial_frame"] or frame >= reference["last_frame"]
+                       for frame in boundaries)):
+            raise ValueError("save frames must be distinct and strictly inside the native case")
+        boundaries = sorted(boundaries)
+        rep.data["save_frames"] = boundaries
+        rep.add_check("input_identities", "passed")
+        runner = root / "build" / args.preset / "src" / "core" / "movement_runner"
+        if runner.is_file() or runner.is_symlink():
+            runner.unlink()
+        result = build_runner(root, args.preset, args.timeout, artifacts)
+        rep.add_check("native_build", result.outcome, detail=result.tail(1500))
+        status = process_exit(result)
+        if status and result.returncode in (2, 3, 4):
+            status = result.returncode
+        if status == 0:
+            rep.add_input("native_binary", runner, reports.file_sha256(runner))
+            baseline_stream = artifacts / "baseline-inputs.txt"
+            baseline_stream.write_text(protocol.input_text(
+                replay, reference["initial_frame"], reference["last_frame"]))
+            rep.add_input("controller_inputs", baseline_stream, reports.file_sha256(baseline_stream))
+            status, baseline_rows, baseline_states = native_process(
+                runner, seed, content, baseline_stream, args.timeout, artifacts, "baseline",
+                reference["initial_frame"], reference["last_frame"], rep)
+            if status == 0:
+                verify_unchanged_inputs(rep, content)
+        if status == 0:
+            if baseline_states[0] != seed_bytes:
+                raise compare.NativeOutputError("uninterrupted process changed the initial canonical seed")
+            baseline_comparison = compare.compare_rows(reference, baseline_rows, replay)
+            rep.data["baseline"] = {**protocol.state_digests(baseline_states),
+                                    "comparison": baseline_comparison}
+            rep.add_check("baseline_reference_identical",
+                          "passed" if baseline_comparison["identical"] else "failed")
+            status = 0 if baseline_comparison["identical"] else 1
+        if status == 0:
+            rep.data["boundaries"] = {}
+            process_count = 1
+            for frame in boundaries:
+                offset = frame - reference["initial_frame"]
+                prefix_stream = artifacts / f"prefix-{frame}-inputs.txt"
+                suffix_stream = artifacts / f"suffix-{frame}-inputs.txt"
+                prefix_stream.write_text(protocol.input_text(replay, reference["initial_frame"], frame))
+                suffix_stream.write_text(protocol.input_text(replay, frame, reference["last_frame"]))
+                status, prefix_rows, prefix_states = native_process(
+                    runner, seed, content, prefix_stream, args.timeout, artifacts,
+                    f"prefix-{frame}", reference["initial_frame"], frame, rep)
+                process_count += 1
+                if status:
+                    break
+                verify_unchanged_inputs(rep, content)
+                if prefix_rows != baseline_rows[:offset + 1] or prefix_states != baseline_states[:offset + 1]:
+                    raise compare.NativeOutputError(f"prefix differs from uninterrupted execution at save frame {frame}")
+                saved = prefix_states[-1]
+                if (len(saved) != len(seed_bytes) or saved[:8] != protocol.STATE_MAGIC
+                        or int.from_bytes(saved[8:12], "little") != frame):
+                    raise compare.NativeOutputError(f"saved canonical state is invalid at frame {frame}")
+                state_path = artifacts / f"state-{frame}.bin"
+                state_path.write_bytes(saved)
+                rep.add_artifact(f"saved_state_{frame}", state_path)
+                rep.add_input(f"restore_seed_{frame}", state_path,
+                              reports.file_sha256(state_path))
+                status, suffix_rows, suffix_states = native_process(
+                    runner, state_path, content, suffix_stream, args.timeout, artifacts,
+                    f"suffix-{frame}", frame, reference["last_frame"], rep)
+                process_count += 1
+                if status:
+                    break
+                verify_unchanged_inputs(rep, content)
+                divergence = continuation_divergence(
+                    baseline_rows[offset:], suffix_rows,
+                    baseline_states[offset:], suffix_states)
+                identical = divergence is None
+                rep.add_check(f"continuation_{frame}_identical",
+                              "passed" if identical else "failed")
+                rep.data["boundaries"][str(frame)] = {
+                    "saved_state_bytes": len(saved),
+                    "saved_state_sha256": hashlib.sha256(saved).hexdigest(),
+                    **protocol.state_digests(suffix_states),
+                }
+                if divergence is not None:
+                    rep.data["boundaries"][str(frame)]["first_divergence"] = divergence
+                if not identical:
+                    status = 1
+                    break
+            rep.data["fresh_processes"] = process_count
+        verify_unchanged_inputs(rep, content)
+    except FileNotFoundError as exc:
+        rep.add_check("prerequisite", "missing", detail=str(exc)); status = 2
+    except compare.NativeOutputError as exc:
+        rep.add_check("native_output", "failed", detail=str(exc)); status = 1
+    except (ValueError, KeyError, TypeError, OSError) as exc:
+        rep.add_check("case_or_arguments", "failed", detail=str(exc)); status = 3
+    rep.finish("passed" if status == 0 else "failed")
+    if rep.data["source_changed_during_run"]:
+        rep.add_check("source_stable", "failed", detail="source changed during restore check")
+        status = 1
+        rep.finish("failed")
+    rep.write(report_path)
+    reports.print_summary(rep)
+    return status
+
+
 def register(subparsers) -> None:
     parser = subparsers.add_parser("native", help="native movement comparison")
     commands = parser.add_subparsers(dest="native_command", required=True)
@@ -212,3 +376,13 @@ def register(subparsers) -> None:
     command.add_argument("--timeout", type=float, default=120)
     command.add_argument("--task", default="M2-01")
     command.set_defaults(func=cmd_compare)
+    restore = commands.add_parser("restore-check", help="compare uninterrupted movement with fresh-process save/restore continuations")
+    restore.add_argument("--manifest", required=True, help="identity-bound native case JSON")
+    restore.add_argument("--save-frame", type=int, action="append", required=True,
+                         help="interior frame to serialize and resume; repeat for multiple boundaries")
+    restore.add_argument("--preset", choices=("lab-debug", "lab-release", "lab-sanitize"), default="lab-debug")
+    restore.add_argument("--artifacts", help="fresh output directory below repository artifacts/")
+    restore.add_argument("--report", help="report path inside this run's fresh artifacts directory")
+    restore.add_argument("--timeout", type=float, default=120)
+    restore.add_argument("--task", default="M2-02")
+    restore.set_defaults(func=cmd_restore_check)

@@ -9,9 +9,18 @@ from unirally_lab.native import protocol
 from unirally_lab.native.compare import NativeOutputError
 
 
-def output():
-    rows = [f"{frame} " + " ".join(['0'] * 13) + " " + (protocol.STATE_MAGIC + frame.to_bytes(4, "little") + b"\x01\x00").hex() for frame in range(10, 13)]
+def state_bytes(frame):
+    return protocol.STATE_MAGIC + frame.to_bytes(4, "little") + bytes(319) + b"\x01\x00"
+
+
+def output_range(first=10, last=12):
+    rows = [f"{frame} " + " ".join(['0'] * 13) + " " + state_bytes(frame).hex()
+            for frame in range(first, last + 1)]
     return protocol.HEADER + '\n' + '\n'.join(rows) + '\n'
+
+
+def output():
+    return output_range()
 
 
 class NativeProtocolTests(unittest.TestCase):
@@ -25,8 +34,8 @@ class NativeProtocolTests(unittest.TestCase):
     def test_complete_output_and_hashes_use_canonical_bytes(self):
         rows, states = protocol.parse_output(output(), 10, 12)
         self.assertEqual([row[0] for row in rows], [10, 11, 12])
-        self.assertEqual(states[-1], protocol.STATE_MAGIC + (12).to_bytes(4, 'little') + b'\x01\x00')
-        self.assertEqual(protocol.state_digests(states)['canonical_state_bytes'], 14)
+        self.assertEqual(states[-1], state_bytes(12))
+        self.assertEqual(protocol.state_digests(states)['canonical_state_bytes'], 333)
         changed = copy.deepcopy(states)
         changed[1] = changed[1][:-1] + b'\x01'
         self.assertNotEqual(protocol.state_digests(states)['state_series_sha256'],
@@ -37,7 +46,7 @@ class NativeProtocolTests(unittest.TestCase):
     def test_malformed_or_incomplete_output_is_a_producer_failure(self):
         valid = output()
         lines = valid.splitlines()
-        state = (protocol.STATE_MAGIC + (11).to_bytes(4, 'little') + b'\x01\x00').hex()
+        state = state_bytes(11).hex()
         malformed = ['', valid.replace(protocol.HEADER, 'v2'), '\n'.join(lines[:-1]),
                      valid + lines[-1] + '\n', valid.replace('11 ', '12 ', 1),
                      valid.replace(state, '0100'), valid.replace(state, 'FF'),
@@ -64,7 +73,7 @@ class NativeCommandTests(unittest.TestCase):
         self.content = self.root / 'local' / 'content'
         self.content.mkdir(parents=True)
         self.seed = self.root / 'local' / 'seed.bin'
-        self.seed.write_bytes(protocol.STATE_MAGIC + (10).to_bytes(4, 'little') + b'\x01\x00')
+        self.seed.write_bytes(state_bytes(10))
         self.binary = self.root / 'build/lab-debug/src/core/movement_runner'
         self.binary.parent.mkdir(parents=True)
         self.binary.write_bytes(b'authored producer placeholder')
@@ -96,6 +105,7 @@ class NativeCommandTests(unittest.TestCase):
             'runtime': binding(self.runtime_path)}
         self.case_path = self.root / 'case.json'
         self.case_path.write_text(json.dumps(self.case))
+        self.restore_invocations = 0
 
     def invoke(self, outputs=None, *, build=None, rebuild=True, producer_hook=None, **overrides):
         import argparse
@@ -126,6 +136,43 @@ class NativeCommandTests(unittest.TestCase):
             code = self.commands.cmd_compare(args)
         report = self.art / 'report.json'
         return code, json.loads(report.read_text()) if report.exists() else None, builder, runner
+
+    def invoke_restore(self, outputs=None, *, build=None, rebuild=True,
+                       producer_hook=None, **overrides):
+        import argparse
+        import contextlib
+        import io
+        import json
+        from unittest.mock import patch
+        self.restore_invocations += 1
+        art = self.root / 'artifacts' / f'restore-{self.restore_invocations}'
+        args = argparse.Namespace(manifest=str(self.case_path), artifacts=str(art),
+            report=None, preset='lab-debug', timeout=10, task='authored-restore-test',
+            save_frame=[11])
+        for key, value in overrides.items(): setattr(args, key, value)
+        outputs = outputs or [
+            self.Result([], 0, output_range(10, 12), '', 0),
+            self.Result([], 0, output_range(10, 11), '', 0),
+            self.Result([], 0, output_range(11, 12), '', 0),
+        ]
+        build = build or self.Result([], 0, '', '', 0)
+        def authored_build(*args):
+            if build.returncode == 0 and rebuild:
+                self.binary.write_bytes(b'authored rebuilt restore producer')
+            return build
+        output_iterator = iter(outputs)
+        def authored_producer(*args, **kwargs):
+            if producer_hook:
+                producer_hook()
+            return next(output_iterator)
+        with patch.object(self.commands, 'ROOT', self.root), \
+             patch.object(self.commands.compare, 'load_reference', return_value=(self.reference, self.replay)), \
+             patch.object(self.commands, 'build_runner', side_effect=authored_build) as builder, \
+             patch.object(self.commands, 'run_bounded', side_effect=authored_producer) as runner, \
+             contextlib.redirect_stderr(io.StringIO()):
+            code = self.commands.cmd_restore_check(args)
+        report = art / 'report.json'
+        return code, json.loads(report.read_text()) if report.exists() else None, builder, runner, art
 
     def test_two_processes_receive_only_runtime_inputs_and_hash_canonical_state(self):
         code, rep, builder, runner = self.invoke()
@@ -208,3 +255,86 @@ class NativeCommandTests(unittest.TestCase):
         code, _, _, runner = self.invoke(producer_hook=mutate)
         self.assertEqual(code, 1)
         self.assertEqual(runner.call_count, 1)
+
+    def test_restore_check_uses_fresh_prefix_and_suffix_processes(self):
+        code, rep, builder, runner, art = self.invoke_restore()
+        self.assertEqual(code, 0)
+        self.assertEqual(builder.call_count, 1)
+        self.assertEqual(runner.call_count, 3)
+        self.assertEqual(rep['fresh_processes'], 3)
+        self.assertEqual(rep['save_frames'], [11])
+        self.assertEqual(rep['boundaries']['11']['saved_state_bytes'], 333)
+        self.assertEqual((art / 'state-11.bin').read_bytes(), state_bytes(11))
+        calls = runner.call_args_list
+        self.assertEqual(calls[0].args[0][1:3], ['--seed', str(self.seed)])
+        self.assertEqual(calls[1].args[0][1:3], ['--seed', str(self.seed)])
+        self.assertEqual(calls[2].args[0][1:3], ['--seed', str(art / 'state-11.bin')])
+
+    def test_restore_check_rejects_invalid_boundaries_before_build(self):
+        for frames in ([10], [12], [11, 11], []):
+            with self.subTest(frames=frames):
+                code, _, builder, runner, _ = self.invoke_restore(save_frame=frames)
+                self.assertEqual(code, 3)
+                builder.assert_not_called()
+                runner.assert_not_called()
+
+    def test_restore_check_rejects_changed_prefix_and_suffix_state(self):
+        changed_prefix = output_range(10, 11).replace(
+            state_bytes(11).hex(), state_bytes(11)[:-2].hex() + '0200')
+        code, rep, _, runner, _ = self.invoke_restore([
+            self.Result([], 0, output(), '', 0),
+            self.Result([], 0, changed_prefix, '', 0)])
+        self.assertEqual(code, 1); self.assertEqual(runner.call_count, 2)
+        self.assertTrue(any(c['name']=='native_output' for c in rep['checks']))
+
+        changed_suffix = output_range(11, 12).replace(
+            state_bytes(12).hex(), state_bytes(12)[:-2].hex() + '0200')
+        code, rep, _, runner, _ = self.invoke_restore([
+            self.Result([], 0, output(), '', 0),
+            self.Result([], 0, output_range(10, 11), '', 0),
+            self.Result([], 0, changed_suffix, '', 0)])
+        self.assertEqual(code, 1); self.assertEqual(runner.call_count, 3)
+        self.assertFalse(next(c for c in rep['checks'] if c['name']=='continuation_11_identical')['outcome']=='passed')
+        divergence = rep['boundaries']['11']['first_divergence']
+        self.assertEqual(divergence['frame'], 12)
+        self.assertEqual(divergence['prior_frame'], 11)
+        self.assertEqual(divergence['canonical_byte_offsets'], [331])
+
+    def test_restore_check_rejects_malformed_boundary_state(self):
+        wrong_frame = output_range(10, 11).replace(
+            state_bytes(11).hex(), state_bytes(10).hex())
+        wrong_width = output_range(10, 11).replace(
+            state_bytes(11).hex(), (state_bytes(11) + b'\x00').hex())
+        for prefix in (wrong_frame, wrong_width):
+            with self.subTest(prefix=prefix[-32:]):
+                code, _, _, runner, _ = self.invoke_restore([
+                    self.Result([], 0, output(), '', 0),
+                    self.Result([], 0, prefix, '', 0)])
+                self.assertEqual(code, 1); self.assertEqual(runner.call_count, 2)
+
+    def test_restore_check_rehashes_inputs_between_processes(self):
+        mutated = False
+        def mutate_once():
+            nonlocal mutated
+            if not mutated:
+                (self.content / 'producer-cache.bin').write_bytes(b'unbound')
+                mutated = True
+        code, rep, _, runner, _ = self.invoke_restore(producer_hook=mutate_once)
+        self.assertEqual(code, 1); self.assertEqual(runner.call_count, 1)
+        self.assertTrue(any(c['name']=='native_output' for c in rep['checks']))
+
+    def test_restore_check_rejects_report_outside_artifacts(self):
+        code, _, builder, runner, _ = self.invoke_restore(
+            report=str(self.root / 'outside.json'))
+        self.assertEqual(code, 3); builder.assert_not_called(); runner.assert_not_called()
+
+    def test_restore_check_propagates_crash_timeout_and_build_failure(self):
+        for result, expected in ((self.Result([], -9, '', 'crash', 0), 1),
+                                 (self.Result([], None, '', '', 10, timed_out=True), 4)):
+            with self.subTest(expected=expected):
+                code, rep, _, runner, _ = self.invoke_restore([result])
+                self.assertEqual(code, expected); self.assertEqual(runner.call_count, 1)
+                self.assertEqual(rep['fresh_processes'] if 'fresh_processes' in rep else 0, 0)
+        code, _, _, runner, _ = self.invoke_restore(
+            build=self.Result([], 2, '', 'missing compiler', 0))
+        self.assertEqual(code, 2); runner.assert_not_called()

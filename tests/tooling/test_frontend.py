@@ -51,6 +51,21 @@ class FrontendLaunchTests(unittest.TestCase):
         values.update(changed)
         return Namespace(**values)
 
+    def test_default_executable_is_platform_specific(self):
+        with mock.patch.object(commands.sys, "platform", "darwin"):
+            mac = commands._frontend_paths(self.args(executable=None)).executable
+        with mock.patch.object(commands.sys, "platform", "linux"):
+            linux = commands._frontend_paths(self.args(executable=None)).executable
+        self.assertEqual(
+            mac,
+            ROOT / "build" / "app-debug" / "src" / "app" /
+            "unirally.app" / "Contents" / "MacOS" / "unirally",
+        )
+        self.assertEqual(
+            linux,
+            ROOT / "build" / "app-debug" / "src" / "app" / "unirally",
+        )
+
     def test_first_launch_then_pack_only_relaunch(self):
         self.assertEqual(commands.cmd_run(self.args(rom=str(self.rom_path))), EXIT_OK)
         self.rom_path.unlink()

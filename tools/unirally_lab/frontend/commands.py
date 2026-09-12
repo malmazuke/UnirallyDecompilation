@@ -33,9 +33,16 @@ def _canonical_path(value: str | Path) -> Path:
     return Path(value).resolve(strict=False)
 
 
+def _default_executable(preset: str) -> Path:
+    app_directory = ROOT / "build" / preset / "src" / "app"
+    if sys.platform == "darwin":
+        return app_directory / "unirally.app" / "Contents" / "MacOS" / "unirally"
+    return app_directory / "unirally"
+
+
 def _frontend_paths(args: argparse.Namespace) -> FrontendPaths:
     executable = (Path(args.executable) if args.executable else
-                  ROOT / "build" / args.preset / "src" / "app" / "unirally")
+                  _default_executable(args.preset))
     rom = (None if args.rom is None or not args.rom.strip()
            else _canonical_path(args.rom))
     return FrontendPaths(

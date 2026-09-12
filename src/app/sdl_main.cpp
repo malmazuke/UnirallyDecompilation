@@ -302,6 +302,12 @@ int main(int argc, char **argv) try {
       current_identical_fallback_race_run{},
       longest_identical_fallback_race_run{};
   std::optional<unirally::RgbFrame> previous_frame;
+  std::uint32_t mapped_key_down_events{}, mapped_key_up_events{};
+  std::uint32_t nonzero_input_updates{}, simultaneous_input_updates{};
+  std::uint32_t neutral_updates_after_input{}, focus_loss_events{};
+  std::uint32_t focus_loss_nonzero_clears{};
+  bool observed_nonzero_input{};
+  std::array<std::uint16_t, 2> last_ports{};
   auto position = unirally::app::presentation_position(state.riders[0].motion.x);
   unirally::app::LivePresentation live_presentation;
   bool reported_held_frame{};
@@ -311,6 +317,9 @@ int main(int argc, char **argv) try {
       switch (event.type) {
       case SDL_EVENT_QUIT: running = false; break;
       case SDL_EVENT_WINDOW_FOCUS_LOST:
+        ++focus_loss_events;
+        if (input.snapshot() != std::array<std::uint16_t, 2>{})
+          ++focus_loss_nonzero_clears;
         input.clear();
         scheduler.pause(SDL_GetTicksNS());
         break;
@@ -321,8 +330,13 @@ int main(int argc, char **argv) try {
       case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED: redraw = true; break;
       case SDL_EVENT_KEY_DOWN:
       case SDL_EVENT_KEY_UP:
-        if (const auto key = keyboard_key(event.key.scancode))
+        if (const auto key = keyboard_key(event.key.scancode)) {
           input.keyboard(*key, event.type == SDL_EVENT_KEY_DOWN);
+          if (event.type == SDL_EVENT_KEY_DOWN)
+            ++mapped_key_down_events;
+          else
+            ++mapped_key_up_events;
+        }
         break;
       case SDL_EVENT_GAMEPAD_ADDED: gamepads.added(event.gdevice.which); break;
       case SDL_EVENT_GAMEPAD_REMOVED: gamepads.removed(event.gdevice.which); break;
@@ -341,6 +355,15 @@ int main(int argc, char **argv) try {
       auto ports = input.snapshot();
       if (parsed->fixed_controller_mask.has_value())
         ports[0] = *parsed->fixed_controller_mask;
+      last_ports = ports;
+      if (ports[0] != 0) {
+        ++nonzero_input_updates;
+        observed_nonzero_input = true;
+        if ((ports[0] & static_cast<std::uint16_t>(ports[0] - 1U)) != 0)
+          ++simultaneous_input_updates;
+      } else if (observed_nonzero_input) {
+        ++neutral_updates_after_input;
+      }
       unirally::update_movement(state,
                                 unirally::app::controller_buttons(ports[0]),
                                 movement_content);
@@ -400,7 +423,19 @@ int main(int argc, char **argv) try {
             << identical_fallback_race_redraws
             << "; longest identical fallback race run: "
             << longest_identical_fallback_race_run
-            << '\n';
+            << '\n'
+            << "Live input: mapped key down/up " << mapped_key_down_events
+            << '/' << mapped_key_up_events << "; nonzero updates "
+            << nonzero_input_updates << "; simultaneous updates "
+            << simultaneous_input_updates << "; neutral updates after input "
+            << neutral_updates_after_input << "; focus losses/active clears "
+            << focus_loss_events << '/' << focus_loss_nonzero_clears << '\n'
+            << "Final native state: updates " << updates << "; frame "
+            << state.frame << "; controller-0 mask " << last_ports[0]
+            << "; player x " << state.riders[0].motion.x << "; velocity x "
+            << state.riders[0].motion.velocity_x << "; race phase "
+            << static_cast<unsigned>(state.finish.phase) << "; outcome "
+            << static_cast<unsigned>(state.finish.outcome) << '\n';
   return 0;
 } catch (const std::exception &error) {
   std::cerr << "Unirally launch failed: " << error.what() << '\n';

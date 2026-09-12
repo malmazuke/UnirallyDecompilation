@@ -24,8 +24,8 @@ The coordinator maintains the status registry below. Work orders further below d
 | M3-02A | accepted 12 September 2026 after one returned finding and green macOS/Linux CI | [Classic content pack and ROM extraction](M3-02A.md) |
 | M3-02 | accepted 12 September 2026 after three review rounds and green macOS/Linux CI | [Native presentation contract](M3-02.md) |
 | M3-03 | accepted 13 September 2026 after five returned review rounds, final approval and green macOS/Linux SDL CI | [Minimal frontend and controls](M3-03.md) |
-| M3-04 | claimed 13 September 2026: playable-slice acceptance | [Playable-slice acceptance](M3-04.md) |
-| M4 – M6 | planned | See milestone definitions |
+| M3-04 | accepted 13 September 2026 after independent approval and green macOS/Linux CI; M3 accepted, tag `m3` | [Playable-slice acceptance](M3-04.md) |
+| M4 – M6 | planned; M4 is next | See milestone definitions |
 
 ## M0 — repeatable laboratory
 
@@ -59,7 +59,7 @@ The synthetic executable in M0-02 is infrastructure validation, not game progres
 | M3-02A | Classic content pack and user-ROM extraction | M3-01, D-0005 | Deterministic atomic ROM-to-pack extraction, logical content IDs, ROM-free pack validation and archive-only native relaunch |
 | M3-02 | Native presentation contract (accepted) | M3-02A | Rider-frame mapping, BG1 gather and minimum HUD/result assets addressed through logical pack entries |
 | M3-03 | Minimal frontend and controls (accepted) | M3-02 | SDL3 window, keyboard/gamepad masks, PAL scheduler, first-launch ROM selection/cache flow and declared audio omission |
-| M3-04 | Playable-slice acceptance (claimed) | M3-03 | Clean checkout plus supported ROM, archive-only relaunch, sustained play, full-track comparison and independent review |
+| M3-04 | Playable-slice acceptance (accepted) | M3-03 | Clean checkout plus supported ROM, archive-only relaunch, sustained play, full-track comparison and independent review |
 
 For M2 withheld cases, include at least two variations not used to develop the routine: for example a different trick timing and a different landing/acceleration sequence, chosen after the game behavior is observed. Do not decide numeric tolerances by looking at candidate errors.
 

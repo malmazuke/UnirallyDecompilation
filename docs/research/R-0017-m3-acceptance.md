@@ -1,7 +1,7 @@
 # R-0017 — M3 playable-slice acceptance
 
 - Task: [M3-04](../../tasks/M3-04.md)
-- Status: evidence candidate; independent review/hosted gates remain pending
+- Status: accepted 13 September 2026
 - Candidate base: `55fb1d5882f00a0a791a752ec605cc4b5dc6c0e9`;
   correction candidate `0803735`
 - Tested host: macOS arm64, 13 September 2026
@@ -9,8 +9,8 @@
 - Classic pack: 25 entries, 154,030 bytes, SHA-256
   `5c1fc5b0...1529`; extraction rules SHA-256 `70712c47...d768`
 
-This record maps the component regressions and completed local real-play
-integration evidence. It does not accept M3-04 or M3.
+This record maps the component regressions, local real-play evidence,
+independent review and hosted integration gates that accept M3-04 and M3.
 
 ## Clean installation and archive-only launch
 
@@ -189,5 +189,40 @@ frame3533
 (`f0fa6ed60bc509e9cb869359ba4ea536eda7d86f8a680660ba251585cd917bc3`).
 Active-mask clearing remains covered by the authored input-state regression,
 not a live claim. Final hygiene found no tracked ROM, pack, binary image or
-locator and `git diff --check` passed. Fresh review and hosted exact-candidate
-CI remain pending. This record does not accept M3-04 or M3.
+locator and `git diff --check` passed.
+
+## Independent review and integration acceptance
+
+A fresh Sol/medium reviewer started from a clean review worktree and approved
+the candidate without a material finding. It independently regenerated and
+inspected the exact-gated 25-entry pack, proved pack-only relaunch with the ROM
+and locator absent, reproduced the pinned original replay, reran the
+opponent-first and three full-race paths with restores, retained all seven
+presentation counts, and passed app-debug/app-sanitize 314/314. Its own visible
+pack-only SDL run sustained 2,500 updates/50.353 seconds through frame4033
+without a crash. Review commit `9cd49cd` is integrated in the task branch as
+`e3868ef`; see `tasks/M3-04-review.md`.
+
+The reviewed branch merged to `main` as exact integration candidate
+`4cd9d666e946fad8cdfec4b6768d0221c6f4499b`. Serial local app-debug and
+app-sanitize suites each passed 314/314 on that commit. The ignored report
+SHA-256 values are
+`3011c76a1f5832556e0e36faf3e13ab10898dd8e7e04514a84b4c298b14ba0a8`
+and
+`a3526d8e5c5b605c31b3de6bc413c75c7237b76691849ef03fee7d2c2d6ab86f`.
+The first hosted run `34707493699` passed its gameplay suites but exposed that
+the workflow's final macOS help check still named the pre-bundle executable
+path. Correction `2be0aa6` selects
+`unirally.app/Contents/MacOS/unirally` on macOS while retaining the Linux path.
+A focused independent re-review approved the exact hunk without findings,
+parsed the workflow, ran the macOS command and passed the focused frontend
+suite 10/10; its record is integrated as `0b34278`. Replacement hosted run
+`34707742489` then passed every macOS 15 and Ubuntu 24.04 step, including the
+corrected runtime/help checks and Linux app sanitizers.
+
+These results accept M3-04 and milestone M3 for the exact identified PAL
+one-player CRAWLER/DRAGSTER domain. They do not claim audio, unrecovered
+intermediate rider artwork, other tracks/riders/modes, menus/progression, local
+multiplayer, public packaging or publication. No original CPU executes in the
+accepted native runtime. Annotated tag `m3` identifies the final acceptance
+commit.

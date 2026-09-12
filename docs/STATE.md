@@ -1,14 +1,15 @@
 # Project state
 
-Updated: 13 September 2026 (M3-03 accepted; M3-04 claimed).
+Updated: 13 September 2026 (M3-04 and milestone M3 accepted; tag `m3`).
 
 ## Current facts
 
-- Target baseline: **PAL Unirally (European/Australian version)**. Identified in M0-01: headerless 2 MiB LoROM FastROM image, country code 0x02 (Europe), internal checksum verified, SHA-256 `a1105819d48c04d680c8292bbfa9abbce05224f1bc231afd66af43b7e0a1fd4e`. See [R-0001](research/R-0001-rom-identity.md). PAL timing and mapping under execution remain unverified.
+- Target baseline: **PAL Unirally (European/Australian version)**. Identified in M0-01: headerless 2 MiB LoROM FastROM image, country code 0x02 (Europe), internal checksum verified, SHA-256 `a1105819d48c04d680c8292bbfa9abbce05224f1bc231afd66af43b7e0a1fd4e`. See [R-0001](research/R-0001-rom-identity.md). The accepted M3 slice verifies one game update per PAL frame after race load and a bounded 50 Hz native scheduler; this is not a claim about untested modes.
 - The ROM stays outside the repository; ignored `local/rom-location.txt` holds its path and `python3 tools/project.py rom inspect --expect tests/manifests/rom/unirally-pal.json` verifies a copy.
 - Classic content pack and ROM extraction (M3-02A, [R-0014](research/R-0014-classic-content-pack.md), [review](../tasks/M3-02A-review.md)): `content pack` exact-gates the supported PAL ROM and atomically creates a deterministic 86,485-byte `URCP0001` pack with thirteen logical gameplay entries (SHA-256 `0b9a0557...343f`); `content pack-inspect` validates its complete identity and payload inventory. The C++ reader independently binds the PAL source, rules and every entry hash before exposing content. A semantic 333-byte playable start replaces the runtime WRAM/SRAM seed dependency. Pack-backed full-race/restores remain exact with the ROM absent; debug/sanitizer suites pass 296/296 locally and hosted run 34685007265 passes macOS 15 and Ubuntu 24.04. The first review returned a direct-reader identity bypass, corrected before acceptance. Generated packs and original bytes remain ignored; publication, licensing and legal review remain separate.
 - Native presentation (M3-02, [R-0015](research/R-0015-native-presentation.md), [review](../tasks/M3-02-review.md)): the Classic pack now has 25 identity-bound entries (13 gameplay, 12 presentation). Native code reconstructs the rolling BG1 gather, maps the supported rider poses and renders the race, finish delay and stable result headlessly without a ROM. Seven frozen/withheld frames pass predeclared limits with exact mismatches 36/26,656, 697/50,176, 279/50,176, 445/50,176, 653/50,176, 962/57,344 and 961/57,344; contradictory identities and content fail before rendering. Reviews returned five presentation issues and one manifest-identity seam, all corrected. A later GCC-only shift warning was fixed without changing any pixel count and independently approved. Integration `759ed9e` passes debug/sanitizer 300-record suites locally and hosted run 34696469012 on macOS 15 and Ubuntu 24.04. **M3-02 is accepted.**
 - Minimal frontend (M3-03, [R-0016](research/R-0016-minimal-frontend.md), [review](../tasks/M3-03-review.md)): SDL3 3.4.10 is checksum-pinned and built locally by opt-in app presets. The desktop boundary validates the 25-entry Classic pack, advances at bounded PAL 50 Hz, maps keyboard/two gamepads to the accepted masks, renders 256x224 with integer nearest scaling, exact-gates first-launch ROM extraction and later runs without the ROM. Audio is explicitly omitted. Unsupported intermediate poses retain only prior rider art while the current scene/camera/HUD/effects remain live. Reviews returned whole-screen and scene-history freezes, timeout/process leakage, unchecked present errors, missing Linux desktop compilation and path-alias overwrite defects; all were corrected and the final collision review approved. Merge `36f742f` passes 310-record app-debug/app-sanitize suites locally and hosted run 34703787445 on macOS 15 and Ubuntu 24.04, including Linux SDL sanitizers. **M3-03 is accepted.**
+- Playable-slice acceptance (M3-04, [R-0017](research/R-0017-m3-acceptance.md), [review](../tasks/M3-04-review.md)): a clean checkout exact-gates the supported PAL ROM into a deterministic 25-entry Classic pack and later launches pack-only with the ROM and locator absent. Three full-race paths, cross-phase restores, opponent-first continuation and seven presentation cases retain their frozen results. A real macOS bundle sustained 4,000 PAL updates beyond the former neutral-run failure, sampled actual keyboard input, returned to neutral and stayed visually current; a separate minimize/restore run observed SDL focus loss. Simultaneous nonmodifier input was unavailable through the automation API, and active-held focus clearing remains authored-test rather than live evidence. A bounded Astra audit recovered the missing per-rider finish slowdown and finish-pose cycle before independent Sol review approved the correction. Exact gameplay merge `4cd9d66` passes local app-debug/app-sanitize 314/314. The first hosted run exposed a stale pre-bundle macOS help path; reviewed correction `2be0aa6` retains the Linux path and replacement run 34707742489 passes macOS 15 and Ubuntu 24.04, including Linux app sanitizers. No original CPU executes in native play. **M3-04 and milestone M3 are accepted and tagged `m3`**, limited to the identified PAL one-player CRAWLER/DRAGSTER slice and declared visual/audio omissions.
 - `tools/project.py` implements `rom inspect`, `doctor`, `bootstrap`, `build --preset` and `test --suite synthetic` with JSON reports (schema 1) and exit codes 0/1/2/3/4 for success, failure, missing prerequisite, invalid input and timeout.
 - Pinned CMake 3.31.10 and Ninja 1.13.2 are fetched as digest-verified wheel archives into ignored `local/toolchain/`; bootstrap is idempotent. No dependency is installed globally.
 - `src/lab/` is a synthetic C++20 determinism probe, not game code. Its 1000-step state hash `0be347c529fadda9` is identical on macOS arm64 (AppleClang, Homebrew clang, with sanitizers) and Linux x86_64 (GCC 13.3, with sanitizers).
@@ -39,7 +40,7 @@ Updated: 13 September 2026 (M3-03 accepted; M3-04 claimed).
 - Remaining content notes (R-0008/R-0009): `provenance.py` labels cartridge-RAM block moves "work RAM" and hard-codes the block-move pc; header words in R-0008 mix byte order; renderer priority/high-table/vertical-flip paths remain weakly tested. M1-04 closed the exact watch-list and RNC high-symbol test notes; they are not prerequisites still waiting to be done.
 - Remaining tool notes: tracked coverage maps embed a build-specific core `library_sha256`; move it outside the coverage-digest input through a separately reviewed identity change. R-0004 G6 divergence-localization wording remains open. M1-04 added the unknown ROM-edge, per-frame vector and unresolved-store cases and tightened the NMI rule, closing those former test notes.
 - Concurrency decision (coordinator, from R-0004): two workers may run at the same time only on tasks with disjoint owned paths, each in its own worktree or clone, with the claim written into the task record and the registry row in the same commit (G1) and a check for live `reference/worker.py` processes, matched by the `--samples-out` path in their argv, before any stale task is reassigned (G2). No lease store exists (G4), so two workers are never dispatched from the same queue entry, and each attempt uses its own artifacts directory (G3).
-- Remote: private `git@github.com:malmazuke/UnirallyDecompilation.git`. A reviewed autonomous movement slice exists for the tested M2-01 domain; no playable native game or scheduler exists yet.
+- Remote: private `git@github.com:malmazuke/UnirallyDecompilation.git`. The reviewed M3 PAL one-player CRAWLER/DRAGSTER slice is playable natively with a bounded PAL scheduler; broader original-game coverage remains M4 scope.
 - Historical cleanup: `.worktrees/native` (branch `task/M0-02-native`) and `.worktrees/m0-05` were removed by the user on 11 September 2026; the M0-05 evidence directory therefore no longer exists on this host and R-0005 cites M0-05's recorded digests instead.
 
 ## Scope
@@ -55,7 +56,7 @@ First implementation milestone: M0 repeatable laboratory. First gameplay feasibi
 | PAL baseline | Identified (M0-01); execution behaviour to be confirmed in M0-03 |
 | Model-independent repository state and task handoffs | Core process requirement; exercised by independent review sessions in M0-01/M0-02, five in M0-03, two in M0-04, in M0-05 and M0-06 by workers of a different model plus one review each, and in M1-04 by a reviewer of a different model (Claude Opus 5) reproducing the whole M1 acceptance re-run from its own clone — all from the records alone |
 | Differential validation against the original | Core accuracy strategy |
-| C++20/CMake/Python/SDL3 | C++20, CMake presets and Python tooling validated by M0-02 on macOS and Linux; SDL3 not yet exercised |
+| C++20/CMake/Python/SDL3 | Native core/tooling and checksum-pinned SDL3 frontend validated locally and by hosted macOS/Linux M3 gates |
 | Primary reference emulator and pinned revision | Decided in M0-03: bsnes `7d5aa1e656b9` with laboratory patch, `Strict` state synchronization ([D-0001](decisions/D-0001-reference-emulator.md)) |
 | macOS development and Linux validation first | In effect via CI |
 | Original behavior plus separately versioned extensions | Proposed architecture |
@@ -71,26 +72,22 @@ First implementation milestone: M0 repeatable laboratory. First gameplay feasibi
 For the next Sol coordinator, start with [the compact handover](../tasks/NEXT_SESSION.md).
 The prior Astra run is complete; no conversation replay is required.
 
-**M3-04 is claimed.** Reproduce a clean supported-ROM first launch and a later
-pack-only relaunch, exercise the real SDL window and live controls through a
-sustained complete race, rerun the full-track gameplay/presentation gates, and
-assemble the evidence-backed M3 acceptance report with independent review.
+**M3 is accepted.** Begin M4 by inventorying the remaining original-game
+features from evidence, then create bounded work orders for the next uncovered
+dependency. Preserve the exact M3 identities, acceptance regressions and
+Classic pack boundary rather than broadening claims from the finite slice.
 
 Implementation choices should be made through bounded experiments. Original-content handling for Classic is decided by D-0005; remote hosting beyond the private repository, source/replacement-content licensing, legal clearance, online service topology, public accounts/ranking and paid execution budgets remain undecided and do not block M3 implementation. A Linux build of the pinned core (ROM-free) is a natural CI addition when convenient.
 
 ## Milestone status
 
-M0: accepted on 11 September 2026 (M0-00 through M0-06; evidence report [R-0005](research/R-0005-m0-acceptance.md); tag `m0`). M1: M1-01 accepted on 11 September 2026 ([R-0006](research/R-0006-observed-code-map.md)); M1-02 accepted on 11 September 2026 ([R-0007](research/R-0007-player-state.md), [D-0002](decisions/D-0002-data-access-observation.md)); M1-03 accepted on 12 September 2026 ([R-0008](research/R-0008-track-decode.md)); M1-04 accepted and **milestone M1 accepted on 12 September 2026, tagged `m1`** ([R-0009](research/R-0009-m1-acceptance.md)). M2: M2-01A and M2-01 accepted through PR2/PR4; M2-02 accepted through PR5; **milestone M2 accepted on 12 September 2026, tag `m2`** ([R-0011](research/R-0011-m2-acceptance.md)). M3: M3-00, M3-01, M3-02A, M3-02 and M3-03 are accepted; M3-04 is claimed. M4–M6: not started. No calendar/cost promise has been established.
+M0: accepted on 11 September 2026 (M0-00 through M0-06; evidence report [R-0005](research/R-0005-m0-acceptance.md); tag `m0`). M1: M1-01 accepted on 11 September 2026 ([R-0006](research/R-0006-observed-code-map.md)); M1-02 accepted on 11 September 2026 ([R-0007](research/R-0007-player-state.md), [D-0002](decisions/D-0002-data-access-observation.md)); M1-03 accepted on 12 September 2026 ([R-0008](research/R-0008-track-decode.md)); M1-04 accepted and **milestone M1 accepted on 12 September 2026, tagged `m1`** ([R-0009](research/R-0009-m1-acceptance.md)). M2: M2-01A and M2-01 accepted through PR2/PR4; M2-02 accepted through PR5; **milestone M2 accepted on 12 September 2026, tag `m2`** ([R-0011](research/R-0011-m2-acceptance.md)). M3: M3-00 through M3-04 are accepted; **milestone M3 accepted on 13 September 2026, tag `m3`** ([R-0017](research/R-0017-m3-acceptance.md)). M4–M6: not started. No calendar/cost promise has been established.
 
 ## Handoff
 
-The next agent should read [the compact M3 handoff](../tasks/NEXT_SESSION.md),
-this file, `AGENTS.md`, [R-0011](research/R-0011-m2-acceptance.md) and
-[R-0012](research/R-0012-complete-race-evidence.md),
-[R-0013](research/R-0013-native-finish-reference-freeze.md),
-[D-0005](decisions/D-0005-classic-content-distribution.md),
-[M3-02A](../tasks/M3-02A.md), [M3-02](../tasks/M3-02.md) and
-[M3-03](../tasks/M3-03.md) and [M3-04](../tasks/M3-04.md). Start from current `main`; do not repeat M2,
-M3-00, M3-01, pack-boundary or presentation research. Preserve the
-PAL and frozen replay/pack identities and keep original content, generated
-packs and captures ignored.
+The next agent should read [the compact handoff](../tasks/NEXT_SESSION.md), this
+file, `AGENTS.md`, [R-0017](research/R-0017-m3-acceptance.md),
+[M3-04](../tasks/M3-04.md) and [D-0005](decisions/D-0005-classic-content-distribution.md).
+Start from tagged M3 `main`; do not repeat accepted M3 mechanics, pack,
+presentation or frontend research. Preserve the PAL and frozen replay/pack
+identities and keep original content, generated packs and captures ignored.

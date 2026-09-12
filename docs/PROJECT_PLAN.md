@@ -115,6 +115,16 @@ frontend integration), so its initial planning range is **6 to 20 worker hours
 and 3 to 8 review rounds**, split into bounded evidence tasks rather than one
 long implementation. This is a prioritization range, not a date or cost promise.
 
+M3 acceptance update (13 September 2026): M3-00 through M3-04 are accepted and
+annotated tag `m3` identifies the final acceptance state. The supported PAL
+one-player CRAWLER/DRAGSTER slice now installs from an exact-gated user ROM,
+relaunches from its validated local pack with the ROM absent, runs entirely in
+native gameplay code, accepts live controls and reaches a stable result. The
+finite differential, restore, presentation, sanitizer and hosted macOS/Linux
+gates are mapped in [R-0017](research/R-0017-m3-acceptance.md). This does not
+expand acceptance to M4's remaining tracks, opponents, modes, local multiplayer,
+menus/progression or audio; inventory those features before estimating M4.
+
 ## Future features without premature implementation
 
 ### Online play

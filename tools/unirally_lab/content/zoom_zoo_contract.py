@@ -20,10 +20,20 @@ CORE_COMMIT = "7d5aa1e656b9171524d01b1b22917197d8121cb4"
 CORE_PATCH_SHA256 = "a719f5ffe2222dad4c1ab04336633319ad85004f74e32fc14893a058be333885"
 REPLAY_MANIFEST = "tests/manifests/replay/race-crawler-zoom-zoo-3300.json"
 REPLAY_MANIFEST_SHA256 = "acd29bfb72aeaad0791923e22e17a791f5c182220f64b6686dd687984411aefd"
+SAMPLE_DIGEST = "791a786370913136e21ed34c841e9a3d892852bf6804e2e0aef21e1df6557b68"
+FINAL_STATE_SHA256 = "2a843314d19e60d13dab746541d43ffa9ad84adfe6f95b9cc6d3c45bd9a16aeb"
+CAPTURE_SHA256 = {
+    "load_1286_1291": "bc733d1c39bda5076f4548897510aa1b9f09bce4baa139e0ad9f0435b94cd56c",
+    "gather_1376_1384": "36aeac919fa7f48bccf31fba35d064a0c550096829a96e203bd9244a03fe4b78",
+    "sample_1700": "02f497194d481e370ce07935e825edd3a664dc6463ae691567437cc178628285",
+    "sample_2220": "fa3e5e2d4352e79391461a09b9219127b133d5c592d6c24f0ff22f82ad794b3a",
+    "next_builder_2220": "ecb45a173dafca37d56258162082ec2c3216fad81c79051d243cd4d6c47e71d9",
+}
 TRACK_LIST_START = 0xC5CF
 TRACK_LIST_TERMINATOR = 0xC5E7
 COARSE_MAP_OFFSET = 0x000F
 SAMPLE_BLOCKS_OFFSET = 0x800F
+GATHER_DESTINATION_START = 0x0437
 TILE_DIRECTORY_BUS = 0x82B7DD
 TABLE_DIRECTORY_BUS = 0x17A000
 FLAGS_BASE_BUS = 0x17C4E4
@@ -53,6 +63,24 @@ def _bus(value: Any, label: str) -> int:
     if not 0 <= result <= 0xFFFFFF:
         raise ContractError(f"{label} is outside the 24-bit bus")
     return result
+
+
+def _inclusive_range(value: Any, label: str) -> tuple[int, int]:
+    if not isinstance(value, str) or value.count("-") != 1:
+        raise ContractError(f"{label} must be an inclusive 0xSTART-0xEND range")
+    start_text, end_text = value.split("-")
+    start, end = _bus(start_text, f"{label} start"), _bus(end_text, f"{label} end")
+    if start > 0xFFFF or end > 0xFFFF or end < start:
+        raise ContractError(f"{label} must be an ascending 16-bit range")
+    return start, end
+
+
+def _validate_gather_destination(sample: dict[str, Any], byte_count: int) -> None:
+    start, end = _inclusive_range(sample["destination"], "gather destination")
+    if start != GATHER_DESTINATION_START or end - start + 1 != byte_count:
+        raise ContractError(
+            f"gather destination must begin at 0x{GATHER_DESTINATION_START:04X} "
+            f"and contain exactly {byte_count} reconstructed bytes")
 
 
 def _u16(data: bytes, offset: int) -> int:
@@ -98,6 +126,11 @@ def validate_manifest(data: Any) -> dict[str, Any]:
             identity["replay_manifest"], identity["replay_manifest_sha256"]) != (
             CORE_COMMIT, CORE_PATCH_SHA256, REPLAY_MANIFEST, REPLAY_MANIFEST_SHA256):
         raise ContractError("core or replay source identity differs")
+    if (identity["sample_digest"], identity["final_state_sha256"]) != (
+            SAMPLE_DIGEST, FINAL_STATE_SHA256):
+        raise ContractError("replay sample or final-state identity differs")
+    if identity["captures"] != CAPTURE_SHA256:
+        raise ContractError("capture identity inventory differs")
     source = _exact_keys(root["source"], {
         "asset", "bus", "file_offset", "packed_length", "consumed_source_end",
         "rnc_header", "decoded_length", "decoded_sha256", "runtime_base",
@@ -159,6 +192,20 @@ def validate_manifest(data: Any) -> dict[str, Any]:
     if [(sample.get("frame"), sample.get("input"), sample.get("builder_frame"))
             for sample in root["gather_samples"]] != [(1700, "Right", 1700), (2220, "Right+Up", 2224)]:
         raise ContractError("gather sample domain differs")
+    for sample in root["gather_samples"]:
+        sample = _exact_keys(sample, {
+            "frame", "input", "builder_frame", "destination", "runs", "expected_sha256",
+        }, "gather sample")
+        if not isinstance(sample["runs"], list) or not sample["runs"]:
+            raise ContractError("gather sample runs must be a nonempty list")
+        byte_count = 0
+        for run in sample["runs"]:
+            run = _exact_keys(run, {"source_x", "step", "words"}, "gather run")
+            if (not isinstance(run["source_x"], int) or not isinstance(run["step"], int)
+                    or not isinstance(run["words"], int) or run["step"] <= 0 or run["words"] <= 0):
+                raise ContractError("gather run offsets, counts and steps must be integers with positive counts and steps")
+            byte_count += run["words"] * 2
+        _validate_gather_destination(sample, byte_count)
     if not isinstance(root["collision_samples"], list) or len(root["collision_samples"]) != 4:
         raise ContractError("the contract requires both riders at two collision frames")
     if [(sample.get("frame"), sample.get("input"), sample.get("rider"))
@@ -249,6 +296,7 @@ def _validate_gather(contract: dict[str, Any], decoded: bytes) -> int:
             for index in range(run["words"]):
                 offset = COARSE_MAP_OFFSET + ((run["source_x"] + index * run["step"]) & 0xFFFF)
                 assembled += _u16(decoded, offset).to_bytes(2, "little")
+        _validate_gather_destination(sample, len(assembled))
         if _sha(assembled) != sample["expected_sha256"]:
             raise ContractError(f"gather reconstruction differs at builder frame {sample['builder_frame']}")
         compared += len(assembled)

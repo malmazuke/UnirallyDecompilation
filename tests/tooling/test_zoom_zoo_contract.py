@@ -2,17 +2,22 @@
 
 from __future__ import annotations
 
+import argparse
 import copy
 import hashlib
+import io
 import json
 import sys
+import tempfile
 import unittest
+from contextlib import redirect_stdout
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "tools"))
 
-from unirally_lab.content import zoom_zoo_contract as contractmod  # noqa: E402
+from unirally_lab import EXIT_INVALID_INPUT  # noqa: E402
+from unirally_lab.content import commands, zoom_zoo_contract as contractmod  # noqa: E402
 
 
 CONTRACT = ROOT / "tests/manifests/content/zoom-zoo-reference-contract.json"
@@ -38,6 +43,21 @@ class ZoomZooManifestTests(unittest.TestCase):
                 changed = copy.deepcopy(self.contract)
                 mutate(changed)
                 with self.assertRaises(contractmod.ContractError):
+                    contractmod.validate_manifest(changed)
+
+    def test_replay_and_capture_identities_are_exact(self) -> None:
+        mutations = [
+            lambda value: value["identity"].__setitem__("sample_digest", "0" * 64),
+            lambda value: value["identity"].__setitem__("final_state_sha256", "0" * 64),
+        ]
+        mutations.extend(
+            lambda value, name=name: value["identity"]["captures"].__setitem__(name, "0" * 64)
+            for name in self.contract["identity"]["captures"])
+        for mutate in mutations:
+            with self.subTest(mutate=mutate):
+                changed = copy.deepcopy(self.contract)
+                mutate(changed)
+                with self.assertRaisesRegex(contractmod.ContractError, "identity"):
                     contractmod.validate_manifest(changed)
 
     def test_contradictory_rnc_metadata_fails(self) -> None:
@@ -87,6 +107,26 @@ class ZoomZooManifestTests(unittest.TestCase):
         decoded[contractmod.COARSE_MAP_OFFSET + 20] ^= 1
         with self.assertRaisesRegex(contractmod.ContractError, "gather reconstruction"):
             contractmod._validate_gather(changed, decoded)
+
+    def test_gather_destination_start_and_inclusive_length_are_bound(self) -> None:
+        for destination in ("0x0000-0x0001", "0x0437-0x0437", "0x0438-0x0439",
+                            "0x0438-0x0437", "not-a-range"):
+            with self.subTest(destination=destination):
+                changed = copy.deepcopy(self.contract)
+                changed["gather_samples"][0]["destination"] = destination
+                with self.assertRaisesRegex(contractmod.ContractError, "gather destination"):
+                    contractmod.validate_manifest(changed)
+
+    def test_cli_rejects_wrong_gather_destination_without_reading_a_rom(self) -> None:
+        changed = copy.deepcopy(self.contract)
+        changed["gather_samples"][0]["destination"] = "0x0000-0x0001"
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "wrong-gather-destination.json"
+            path.write_text(json.dumps(changed), encoding="utf-8")
+            args = argparse.Namespace(contract=str(path), rom=None, report=None, task="M4-03-test")
+            with redirect_stdout(io.StringIO()):
+                status = commands.cmd_zoom_zoo_contract(args)
+        self.assertEqual(status, EXIT_INVALID_INPUT)
 
     def test_collision_addressing_preserves_width_stride_and_wrapping(self) -> None:
         decoded = bytearray(0x18020)

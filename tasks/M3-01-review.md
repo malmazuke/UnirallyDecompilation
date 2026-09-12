@@ -1,6 +1,6 @@
 # M3-01 independent review — native finish and full-race state
 
-- Review status: **returned for a material behavioral mismatch**
+- Review status: **corrected re-review returned for a signed boundary mismatch**
 - Submitted head inspected: `f985bebb9ca0d8f9e420c4e9cef8374cefc23b16`
 - Behavioral candidate returned: `ee87a71273dc6b7a717d1d5348c742284a4ab204`
 - Reference freezes: `dcbc896b14a4ae8d715d437894f55474b6a7e186` and
@@ -153,3 +153,109 @@ single pair as an unexplained special case. Add a focused authored regression,
 then run the reviewer-owned case, both submitted full-race cases/restores, the
 five M2 regressions, and debug/sanitizer suites on the corrected behavioral
 commit. A fresh sequential reviewer should approve that exact corrected commit.
+
+## Corrected sequential re-review
+
+- Re-review decision: **return for one exact signed arithmetic boundary**
+- Exact submitted head: `073bb9d19263947a26b82a0972c576db43f20666`
+- Behavioral correction: `d0d5cfbc2966ea274108b681c78a04413962cefc`
+  versus returned-review base `e62f296fb8a85ddbf2652f9900e1e5aadb88a98d`
+- Review checkout: `review/M3-01-native-finish-correction` in
+  `.worktrees/m3-01-rereview`
+- Reviewer/runtime: fresh sequential OpenAI Codex session, no child agent. The
+  executable on PATH reports Codex CLI `0.46.0`, not the requested `0.153.4`;
+  the runtime did not expose a separately verifiable model identifier. The
+  user-supplied quota baseline was 50% used with a 54% stop threshold; no later
+  percentage was exposed, and no credits/reset were redeemed.
+
+### Decision
+
+Return the corrected behavioral commit without changing its implementation.
+The positive reviewer-owned case and every requested regression pass, and the
+correction does replace the enumerated seven-value tail with ordered arithmetic.
+However, its newly public and documented signed helper does not exactly match
+the cited PAL routine at velocity `-10`.
+
+At PAL `$83:E91A` the negative path executes `CMP #$FFF6` followed by `BPL` to
+the store. Consequently signed `-10` is stored unchanged; only values below
+`-10` receive `ADC #10`. The positive path uses `CMP #10` / `BMI`, so positive
+`10` does become zero. Candidate `speed_toward_zero` instead tests
+`speed <= -amount`, making `-10 -> 0`. This asymmetry is an original integer
+boundary and must be preserved under D-0003. It is also inside the correction's
+asserted surface: `movement.hpp` documents signed 16-bit input/output, the
+implementation says it reproduces `$83:E90D-$83:E932`, and the new authored
+test calls the negative side while describing the arithmetic as general.
+
+Reproduce the source-side result against the built exact-head test executable:
+
+```sh
+lldb --batch \
+  -o 'breakpoint set -n main' -o run \
+  -o 'expr -- (unsigned short)unirally::finish_speed_toward_zero((unsigned short)65526)' \
+  -o 'expr -- (short)unirally::finish_speed_toward_zero((unsigned short)65525)' \
+  build/lab-debug/tests/native/movement_update_tests
+```
+
+Observed values are `0` for input bit-pattern 65526 (`-10`) and `-1` for
+65525 (`-11`). Inspect the identity-verified PAL bytes at LoROM file offset
+`0x01E91A`:
+
+```sh
+rom_path=$(sed -n '1p' local/rom-location.txt)
+xxd -g1 -s 0x1e91a -l 27 "$rom_path"
+```
+
+They decode as `LDA $04BB; BPL positive; CMP #$FFF6; BPL store; CLC;
+ADC #10; ... positive: CMP #10; BMI store; SEC; SBC #10; store $04BB`.
+The ROM identity check passed all 10 expected identity fields for PAL SHA-256
+`a1105819...1fd4`.
+
+### Correction and baseline audit
+
+`git diff e62f296..d0d5cfb` changes only code, authored tests, diagnostics and
+records. No replay manifest, native case, reference projection or expected row
+changes in that range, and `git diff --check` passes. The correction removes the
+per-speed table and orders its ten-unit pre-adjustment before ordinary limiting,
+then conditionally removes 24 units without crossing zero. The new incoming-37
+full-update assertion is meaningful: the returned implementation's `<40`
+fallback would produce zero directly, while the test requires `37 -> 1 -> 0`.
+The finish divergence enhancement also preserves the prior sample and previous
+and current inputs, and its command-layer regression passes. The missing `-10`
+boundary is the only defect found in the corrected diff.
+
+### Exact-head validation
+
+All successful reports below record source `073bb9d`, `dirty: false`, zero
+failed/missing/skipped/timeout checks:
+
+- Reviewer release-3213 finish check, restores
+  3213/3214/3225/3226/3227/3228: 24 passed; report SHA-256
+  `60e204786665f25fb427ac4ca144f347d9e12d18a2981700a64844ecb241da06`.
+- Continuous finish check, restores 3212/3213/3214/3453/3454: 21 passed;
+  `39454aced801493dde6fdd91c72bcc2ee38727d767e1d3f41d37df1cf25212c1`.
+- Release-3000--3299 finish check, restores
+  3213/3214/3317/3318/3319/3558/3559: 27 passed;
+  `6ed7717cf4fbfaf91b22bbf1727a767a03a1399a7eefa7aee24a000015c9f9fe`.
+- M2 primary, cadence-17 and release-2347 comparisons: six passed each;
+  report hashes `1ab93583...19c1`, `dcd4d099...186b`, and
+  `08d994b9...6c3a`.
+- M2 primary restores 1631/2200 and release restores 2761/2787: ten passed
+  each; report hashes `6f419211...25c0` and `8d82dfd0...2781`.
+- Debug and sanitizer synthetic suites: 288/288 each (268 Python, 17 CTest,
+  three fresh-process repeatability), hashes `a57a4f2d...cbe9` and
+  `dc8eab94...6abb`. No sanitizer finding occurred.
+
+The first debug build correctly reported the missing isolated toolchain and was
+rerun after successful pinned bootstrap. An attempted concurrent launch of the
+two original finish checks produced two `ninja` recompaction failures because
+both commands reconfigured the same build directory; both cases were then rerun
+sequentially into the clean passing reports above. Neither failed attempt is
+reported as a gameplay pass.
+
+### Required correction
+
+Preserve the PAL negative equality boundary in the general helper and add the
+missing authored assertion for signed `-10` (neighboring `-9` and `-11` are
+useful guards). Rerun the focused CTest and debug/sanitizer suites; the frozen
+positive full-race cases need no expectation change. Submit the new behavioral
+commit for another fresh sequential review.

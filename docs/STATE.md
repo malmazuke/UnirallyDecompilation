@@ -1,18 +1,22 @@
 # Project state
 
-Updated: 13 September 2026 (M4-00 feature-inventory candidate; M3 remains the
-latest accepted milestone, tag `m3`).
+Updated: 13 September 2026 (M4-00 accepted; M4-01 ready; M3 remains the latest
+accepted milestone, tag `m3`).
 
 ## Current facts
 
-- M4-00 candidate ([R-0018](research/R-0018-m4-feature-inventory.md)) separates
+- M4-00 ([R-0018](research/R-0018-m4-feature-inventory.md),
+  [review](../tasks/M4-00-review.md)) separates
   accepted native behavior, reference observations, menu labels and unobserved
   scope. Its bounded Astra audit found that exact loser gameplay had been
   conflated with presentation: the seven frozen visual cases cover the winner
   result only, and current composition rejects `PlayerLost`. The proposed first
   M4 implementation task therefore closes the already evidenced DRAGSTER loser
   result; second-track reference discovery follows with an explicit gate for
-  opponent/event coupling. M4-00 remains unaccepted pending independent review.
+  opponent/event coupling. Independent Astra review returned the missing
+  SRAM-derived opponent-learning classification and an invalid expanded base
+  hash; both were corrected and approved. Merge `3a3f977` passes link/diff
+  checks and the ROM-free app-debug suite 314/314. **M4-00 is accepted.**
 - Target baseline: **PAL Unirally (European/Australian version)**. Identified in M0-01: headerless 2 MiB LoROM FastROM image, country code 0x02 (Europe), internal checksum verified, SHA-256 `a1105819d48c04d680c8292bbfa9abbce05224f1bc231afd66af43b7e0a1fd4e`. See [R-0001](research/R-0001-rom-identity.md). The accepted M3 slice verifies one game update per PAL frame after race load and a bounded 50 Hz native scheduler; this is not a claim about untested modes.
 - The ROM stays outside the repository; ignored `local/rom-location.txt` holds its path and `python3 tools/project.py rom inspect --expect tests/manifests/rom/unirally-pal.json` verifies a copy.
 - Classic content pack and ROM extraction (M3-02A, [R-0014](research/R-0014-classic-content-pack.md), [review](../tasks/M3-02A-review.md)): `content pack` exact-gates the supported PAL ROM and atomically creates a deterministic 86,485-byte `URCP0001` pack with thirteen logical gameplay entries (SHA-256 `0b9a0557...343f`); `content pack-inspect` validates its complete identity and payload inventory. The C++ reader independently binds the PAL source, rules and every entry hash before exposing content. A semantic 333-byte playable start replaces the runtime WRAM/SRAM seed dependency. Pack-backed full-race/restores remain exact with the ROM absent; debug/sanitizer suites pass 296/296 locally and hosted run 34685007265 passes macOS 15 and Ubuntu 24.04. The first review returned a direct-reader identity bypass, corrected before acceptance. Generated packs and original bytes remain ignored; publication, licensing and legal review remain separate.
@@ -81,10 +85,8 @@ First implementation milestone: M0 repeatable laboratory. First gameplay feasibi
 For the next Sol coordinator, start with [the compact handover](../tasks/NEXT_SESSION.md).
 The M4-00 candidate and bounded Astra audit need no conversation replay.
 
-**M3 is accepted; M4-00 is in review.** Review the feature classifications,
-README reconciliation and task ordering in [M4-00](../tasks/M4-00.md). If the
-candidate is accepted, claim [M4-01](../tasks/M4-01.md) to recover the existing
-DRAGSTER player-loss result composition. [M4-02](../tasks/M4-02.md) then moves
+**M3 and M4-00 are accepted.** Claim [M4-01](../tasks/M4-01.md) to recover the
+existing DRAGSTER player-loss result composition. [M4-02](../tasks/M4-02.md) then moves
 one alternate track from a menu label to reference evidence, but must measure
 opponent/event coupling before calling it a one-variable track comparison.
 Preserve the exact M3 identities, regressions and Classic pack boundary.
@@ -93,14 +95,14 @@ Implementation choices should be made through bounded experiments. Original-cont
 
 ## Milestone status
 
-M0: accepted on 11 September 2026 (M0-00 through M0-06; evidence report [R-0005](research/R-0005-m0-acceptance.md); tag `m0`). M1: M1-01 accepted on 11 September 2026 ([R-0006](research/R-0006-observed-code-map.md)); M1-02 accepted on 11 September 2026 ([R-0007](research/R-0007-player-state.md), [D-0002](decisions/D-0002-data-access-observation.md)); M1-03 accepted on 12 September 2026 ([R-0008](research/R-0008-track-decode.md)); M1-04 accepted and **milestone M1 accepted on 12 September 2026, tagged `m1`** ([R-0009](research/R-0009-m1-acceptance.md)). M2: M2-01A and M2-01 accepted through PR2/PR4; M2-02 accepted through PR5; **milestone M2 accepted on 12 September 2026, tag `m2`** ([R-0011](research/R-0011-m2-acceptance.md)). M3: M3-00 through M3-04 are accepted; **milestone M3 accepted on 13 September 2026, tag `m3`** ([R-0017](research/R-0017-m3-acceptance.md)). M4: M4-00 is in review; no M4 implementation is accepted. M5–M6: not started. No calendar/cost promise has been established.
+M0: accepted on 11 September 2026 (M0-00 through M0-06; evidence report [R-0005](research/R-0005-m0-acceptance.md); tag `m0`). M1: M1-01 accepted on 11 September 2026 ([R-0006](research/R-0006-observed-code-map.md)); M1-02 accepted on 11 September 2026 ([R-0007](research/R-0007-player-state.md), [D-0002](decisions/D-0002-data-access-observation.md)); M1-03 accepted on 12 September 2026 ([R-0008](research/R-0008-track-decode.md)); M1-04 accepted and **milestone M1 accepted on 12 September 2026, tagged `m1`** ([R-0009](research/R-0009-m1-acceptance.md)). M2: M2-01A and M2-01 accepted through PR2/PR4; M2-02 accepted through PR5; **milestone M2 accepted on 12 September 2026, tag `m2`** ([R-0011](research/R-0011-m2-acceptance.md)). M3: M3-00 through M3-04 are accepted; **milestone M3 accepted on 13 September 2026, tag `m3`** ([R-0017](research/R-0017-m3-acceptance.md)). M4: M4-00 is accepted; M4-01 is ready; no M4 implementation task is accepted yet. M5–M6: not started. No calendar/cost promise has been established.
 
 ## Handoff
 
 The next agent should read [the compact handoff](../tasks/NEXT_SESSION.md), this
 file, `AGENTS.md`, [M4-00](../tasks/M4-00.md),
-[R-0018](research/R-0018-m4-feature-inventory.md) and
-[R-0017](research/R-0017-m3-acceptance.md). Review M4-00 before implementation;
-do not repeat accepted M3 mechanics, pack, winner presentation or frontend
-research. Preserve the PAL and frozen replay/pack identities and keep original
-content, generated packs and captures ignored.
+[R-0018](research/R-0018-m4-feature-inventory.md),
+[M4-01](../tasks/M4-01.md) and [R-0017](research/R-0017-m3-acceptance.md).
+Claim M4-01; do not repeat accepted M3 mechanics, pack, winner presentation or
+frontend research. Preserve the PAL and frozen replay/pack identities and keep
+original content, generated packs and captures ignored.

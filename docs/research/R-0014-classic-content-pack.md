@@ -88,3 +88,37 @@ sanitizer suites locally and hosted run 34685007265 on macOS 15 and Ubuntu
 24.04, including Linux sanitizers. The independent finding, withheld frame-3212
 restore and correction recheck are recorded in
 [M3-02A-review](../../tasks/M3-02A-review.md).
+
+## M3-02 presentation extension
+
+M3-02 first evolved the exact rules identity to `b8b9bf3c...868b` and twenty
+entries while retaining the accepted source/profile/start identities and all
+thirteen gameplay payload identities. Seven presentation entries are exact-ROM
+gated: BG1 tiles (2,560 bytes), BG2 tiles (992), BG2 map (8,192), race palette
+(352), HUD font (2,048), the five preregistered rider-DMA inventories (3,456),
+and result palette/tiles/layout seed (5,224). Pack SHA-256
+`a90549bd...0ccb` was extracted atomically in ignored artifacts; the ROM-absent
+headless reader accepted all twenty entries.
+
+The failed frozen window-effect cases then exposed an internal presentation
+prerequisite before their consumer was committed. The additive extraction
+rules SHA-256 is `714c2a08...19b`; the inventory is twenty-two entries. It adds
+the 898-byte GO and winner mode-4 HDMA window tables with payload SHA-256
+`33f19dae...b29` and `b6fddc69...df20`. All thirteen accepted gameplay payload
+identities and the source/profile/start identities remain unchanged.
+
+The stable result association additionally freezes the retained 41,536-byte
+base-VRAM entry, SHA-256 `c1f19c30...e04f4`, from four copier runs that precede
+the already packed result DMAs. This makes the additive inventory twenty-three
+entries under extraction-rules SHA-256 `43d14175...82a53`; earlier logical
+payload identities remain unchanged.
+
+The final copier association also adds the later 216-byte stable-result CGRAM
+payload (`155799e6...0e18`) as a distinct entry; the earlier 216-byte transition
+palette is retained. The resulting inventory is twenty-four entries under
+rules SHA-256 `11aeefa1...265c3`.
+
+The final M3-02 palette-writer association adds the 128-byte retained/CPU-
+written palette tail as the twelfth presentation entry. The completed Classic
+inventory is exactly twenty-five entries: thirteen gameplay and twelve
+presentation, under extraction-rules SHA-256 `70712c470db436ad95b02d3a6d51f737be7bb5b27689ca0d99a8297bac31d768`.

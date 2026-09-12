@@ -116,6 +116,15 @@ to V2 transition, checks the frozen gameplay and finish/result state through
 the first stable result frame in two fresh processes, and can repeat
 fresh-process save/restore checks at requested finish boundaries.
 
+M3-02 keeps that gameplay transition unchanged while defining an earlier
+presentation-only boundary: for the accepted player-win path, the original
+result screen is visible when `ResultLoading` reaches update 225 (frame 3678),
+one update before the semantic gameplay phase becomes `ResultScreen`. The
+headless renderer consumes this counter without mutating or extending the
+canonical state. `native presentation-check` binds private states/reference
+PNGs by hash and enforces every tracked regional mismatch limit from a
+validated Classic pack; no ROM is opened by that command.
+
 ## Classic content pack and playable start
 
 M3-02A's schema-1 `URCP0001` pack replaces the thirteen loose runtime filenames

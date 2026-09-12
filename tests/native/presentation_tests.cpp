@@ -118,6 +118,7 @@ int main() {
   auto result_state = state;
   result_state.finish.phase = unirally::RacePhase::ResultScreen;
   result_state.finish.outcome = unirally::RaceOutcome::PlayerWon;
+  result_state.finish.result_loading_updates = 226;
   result_state.finish.rider_finished = {true, true};
   result_state.finish.finish_time_centiseconds = {3357, 3358};
   result_state.finish.finish_time_digits = {{{0, 3, 3, 5, 7}, {0, 3, 3, 5, 8}}};
@@ -159,6 +160,7 @@ int main() {
 
   auto loser_state = result_state;
   loser_state.finish.outcome = unirally::RaceOutcome::PlayerLost;
+  loser_state.finish.result_loading_updates = 242;
   loser_state.finish.finish_time_centiseconds = {3566, 3358};
   loser_state.finish.finish_time_digits[0] = {0, 3, 5, 6, 6};
   const auto loser_before = unirally::serialize_movement_state(loser_state);
@@ -186,6 +188,16 @@ int main() {
   rejected = false;
   try {
     (void)unirally::build_dragster_result_map(contradictory, result);
+  } catch (const std::invalid_argument &) {
+    rejected = true;
+  }
+  require(rejected);
+  contradictory = loser_state;
+  contradictory.finish.result_loading_updates = 241;
+  rejected = false;
+  try {
+    (void)unirally::render_dragster_headless(
+        {contradictory, 0, 0, 0, 0, 0}, content);
   } catch (const std::invalid_argument &) {
     rejected = true;
   }

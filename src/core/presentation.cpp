@@ -418,10 +418,16 @@ void build_result_map(std::array<std::uint8_t, 65536> &vram,
       reinterpret_cast<const char *>(title_seed.data()),
       static_cast<std::size_t>(terminator - title_seed.begin()));
   const auto &finish = sample.movement.finish;
-  const bool observed_phase = finish.phase == RacePhase::ResultScreen ||
-                              (finish.phase == RacePhase::ResultLoading &&
-                               finish.outcome == RaceOutcome::PlayerWon &&
-                               finish.result_loading_updates == 225);
+  const bool observed_winner_publication =
+      finish.outcome == RaceOutcome::PlayerWon &&
+      ((finish.phase == RacePhase::ResultLoading &&
+        finish.result_loading_updates == 225) ||
+       (finish.phase == RacePhase::ResultScreen &&
+        finish.result_loading_updates == 226));
+  const bool observed_loser_publication =
+      finish.outcome == RaceOutcome::PlayerLost &&
+      finish.phase == RacePhase::ResultScreen &&
+      finish.result_loading_updates == 242;
   const auto time_is_consistent = [](const std::array<std::uint16_t, 5> &digits,
                                      std::uint16_t centiseconds) {
     if (digits[0] > 9 || digits[1] > 5 || digits[2] > 9 || digits[3] > 9 ||
@@ -445,7 +451,9 @@ void build_result_map(std::array<std::uint8_t, 65536> &vram,
            finish.finish_time_centiseconds[1]) ||
       (finish.outcome == RaceOutcome::PlayerLost &&
        finish.finish_time_centiseconds[0] > finish.finish_time_centiseconds[1]);
-  if (title != "dragster" || !observed_phase || !times_are_consistent ||
+  if (title != "dragster" ||
+      (!observed_winner_publication && !observed_loser_publication) ||
+      !times_are_consistent ||
       !outcome_is_consistent)
     throw std::invalid_argument("unsupported Classic result composition");
 

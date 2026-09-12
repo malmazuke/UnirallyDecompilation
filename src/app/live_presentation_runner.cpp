@@ -98,6 +98,21 @@ int main(int argc, char **argv) try {
         "live presentation history changed the stable result");
   if (unirally::serialize_movement_state(state) != before)
     throw std::runtime_error("live presentation changed canonical state");
+  if (state.finish.outcome == unirally::RaceOutcome::PlayerLost) {
+    auto prior_counter = state;
+    if (prior_counter.finish.result_loading_updates == 0)
+      throw std::runtime_error("loser result has no prior loading counter");
+    --prior_counter.finish.result_loading_updates;
+    bool rejected = false;
+    try {
+      (void)fresh.render(prior_counter, position, content);
+    } catch (const std::invalid_argument &) {
+      rejected = true;
+    }
+    if (!rejected)
+      throw std::runtime_error(
+          "live presentation accepted a contradictory loser boundary");
+  }
 
   std::ofstream output(out_path, std::ios::binary | std::ios::trunc);
   if (!output)

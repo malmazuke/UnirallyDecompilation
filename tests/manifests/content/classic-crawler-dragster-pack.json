@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "kind": "classic_pack_rules",
+  "profile_id": "classic.pal.crawler.dragster.v1",
+  "source_rom": {
+    "size": 2097152,
+    "sha256": "a1105819d48c04d680c8292bbfa9abbce05224f1bc231afd66af43b7e0a1fd4e"
+  },
+  "rules_id": "classic-crawler-dragster-extraction-v1",
+  "start_state_id": "classic.crawler.dragster.race-start.v1",
+  "entries": [
+    {"id": "physics.track.dragster.data", "source": {"kind": "rnc", "bank": 24, "address": 32768}, "size": 33815, "sha256": "8f5cef67dc57977af8ff614b8178514a26e9fe0059e02ed27aad5978185580d4"},
+    {"id": "physics.rider.collision-poses", "source": {"kind": "raw", "pieces": [{"file_offset": 1081344, "length": 32768}]}, "size": 32768, "sha256": "9d1754d38c20cb2900239557550211ab6fc23d9b0237e17b78fb29f3bf272c32"},
+    {"id": "physics.rider.collision-templates", "source": {"kind": "raw", "pieces": [{"file_offset": 1064095, "length": 17249}]}, "size": 17249, "sha256": "2f03a8cb985899436603ef36b233b28f7b4213e4ba106fca328a6b02cdb081c7"},
+    {"id": "physics.track.progress-transitions", "source": {"kind": "raw", "pieces": [{"file_offset": 1227, "length": 80}]}, "size": 80, "sha256": "8a90513f349bc7836513d3495a9bbb90563b9eb7a716fd4aff5b9a4c74fc83df"},
+    {"id": "physics.track.dragster.tile-columns", "source": {"kind": "raw", "pieces": [{"file_offset": 762020, "length": 32}, {"file_offset": 762052, "length": 32}, {"file_offset": 767684, "length": 128}, {"file_offset": 770948, "length": 288}, {"file_offset": 767940, "length": 128}, {"file_offset": 768196, "length": 32}]}, "size": 640, "sha256": "bb95427aa2a307c9874b6140b145dce5a4e279112d57a5efcae77eb444951a72"},
+    {"id": "physics.track.dragster.tile-flags", "source": {"kind": "raw", "pieces": [{"file_offset": 771300, "length": 1}, {"file_offset": 771301, "length": 1}, {"file_offset": 771477, "length": 4}, {"file_offset": 771579, "length": 9}, {"file_offset": 771485, "length": 4}, {"file_offset": 771493, "length": 1}]}, "size": 20, "sha256": "590e52f2640bb1b70f602622aa07285ed51d7c4b84707b4d77c5cc33fc230846"},
+    {"id": "physics.speed.masks", "source": {"kind": "raw", "pieces": [{"file_offset": 1307, "length": 9}]}, "size": 9, "sha256": "0ca19a78da56137e0926c4ba602d8041648a422b9cf5d0a7c3de4a30998cf58b"},
+    {"id": "physics.speed.decrements", "source": {"kind": "raw", "pieces": [{"file_offset": 1316, "length": 18}]}, "size": 18, "sha256": "c1fab1d9aa1e691d34c1a78e8658cfd52b8334cc5bdec8efb23bedc672988068"},
+    {"id": "physics.rider.pose-slopes", "source": {"kind": "raw", "pieces": [{"file_offset": 8, "length": 128}]}, "size": 128, "sha256": "f6b1ea6a34c78336ca25449c8ddbd23e2417ef829ec09765e695f957cd714584"},
+    {"id": "physics.rider.displacement-table", "source": {"kind": "raw", "pieces": [{"file_offset": 777588, "length": 512}]}, "size": 512, "sha256": "27894923de2aaeb58ca24dedbddadcf0d4d154fbc61ea484e7c248d066e24e1b"},
+    {"id": "physics.rider.idle-pose-table", "source": {"kind": "raw", "pieces": [{"file_offset": 436, "length": 64}]}, "size": 64, "sha256": "05d2af9f8c0d1d8d8dd1915086f4f4c58456510f3daf357dbd7fdd66e4a8031e"},
+    {"id": "physics.reward.rotation-value", "source": {"kind": "raw", "pieces": [{"file_offset": 50323, "length": 2}]}, "size": 2, "sha256": "8509b81230019d2ad970d970f791dfbdc8caf54f5c594fcd327cef9feed206c1"},
+    {"id": "physics.reward.rotation-class", "source": {"kind": "raw", "pieces": [{"file_offset": 50442, "length": 1}]}, "size": 1, "sha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"}
+  ]
+}

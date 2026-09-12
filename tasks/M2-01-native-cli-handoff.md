@@ -38,3 +38,37 @@ Authored command tests may stub the producer and must be labelled accordingly.
 No expected row/path may be passed to the native process. Withheld output stays
 sealed until full native routine is fixed. Native cases/public command are not
 accepted merely by passing these protocol tests.
+
+## Resumed command submission (Astra coordinator)
+
+Implemented `python3 tools/project.py native compare --manifest <case.json>`
+with optional preset, from/to frame, timeout, artifacts and report. Output uses
+a fresh directory under repository artifacts/; if only --report is supplied,
+its parent is that fresh directory. Reports cannot overwrite internal artifacts.
+No ROM or reference execution occurs in this command.
+
+Case schema1/kind `native_movement_case` binds `replay`, `expected`, and `runtime`,
+each `{path, sha256}`, repository-relative paths. Runtime follows the previously
+agreed schema and exact 12-file static inventory; unbound content entries reject.
+`movement_runner` is built at `build/<preset>/src/core/movement_runner` through
+the existing bounded build command. Two fresh processes receive only canonical
+seed, static content directory and controller input file. Complete rows, exact
+initial seed, all projected fields and canonical states are validated; content,
+seed, binary and other inputs are rehashed after execution. Exit codes0/1/2/3/4
+retain success/failure/missing/invalid/timeout meanings.
+
+Ten authored CLI/protocol tests pass, including no-reference process argv,
+first divergence, invisible state nondeterminism, altered seed, truncated output,
+crash/timeout, invalid identity/window and artifact collision. Producer/build are
+stubbed in command tests; these do not prove native execution or gameplay.
+The first full synthetic run had240 Python tests pass but exited2 because this
+worktree had no isolated toolchain/build. Bootstrap/build and a final complete
+suite follow; missing checks are not treated as passes. Early authored fixture
+failures were an absent two-port controller declaration and a macOS resolved-path
+expectation; corrected only test setup, no expected gameplay outputs changed.
+
+Preparation and native runner remain unimplemented. The movement worker should
+produce the agreed runtime.json and a primary.case.json binding existing frozen
+primary.replay.json/primary.expected.json hashes, without changing either file.
+Do not open withheld expectations before fixing the full native implementation.
+Independent command review and real primary/withheld executions remain required.

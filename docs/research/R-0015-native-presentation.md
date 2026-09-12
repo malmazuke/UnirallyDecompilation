@@ -175,3 +175,13 @@ pixels (0.89%), down from the rejected static renderer's 33,561/50,176
 (66.89%) and within the preregistered 3% limit.  The residual is confined to
 the declared HUD and colour-math omissions.  Other frozen cases and the result
 screen still require automated reference checks before candidate submission.
+
+The first four additional raw regional comparisons produced: frame 1600
+10,230/50,176 (20.39%, failing 2%; the preregistered windowed `G` dominates),
+frame 2000 697/50,176 (1.39%, passing 2%), frame 2400 279/50,176 (0.56%,
+passing 2%), and frame 3453 5,654/50,176 (11.27%, failing 3%; the fixed-colour
+winner overlay dominates).  These failures are retained as failures; no limit
+or expected image was changed.  A result-mode PPU capture has access SHA-256
+`7096ed7850cfdac0...` and records mode 3, BG map/tile base registers, the
+result palette transfer and the two tile transfers needed for the stable
+screen reconstruction.

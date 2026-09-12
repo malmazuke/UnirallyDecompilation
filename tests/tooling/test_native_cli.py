@@ -97,7 +97,7 @@ class NativeCommandTests(unittest.TestCase):
         self.case_path = self.root / 'case.json'
         self.case_path.write_text(json.dumps(self.case))
 
-    def invoke(self, outputs=None, *, build=None, **overrides):
+    def invoke(self, outputs=None, *, build=None, rebuild=True, producer_hook=None, **overrides):
         import argparse
         import contextlib
         import io
@@ -109,10 +109,19 @@ class NativeCommandTests(unittest.TestCase):
         for key, value in overrides.items(): setattr(args, key, value)
         outputs = outputs or [self.Result([], 0, output(), '', 0)] * 2
         build = build or self.Result([], 0, '', '', 0)
+        def authored_build(*args):
+            if build.returncode == 0 and rebuild:
+                self.binary.write_bytes(b'authored rebuilt producer')
+            return build
+        output_iterator = iter(outputs)
+        def authored_producer(*args, **kwargs):
+            if producer_hook:
+                producer_hook()
+            return next(output_iterator)
         with patch.object(self.commands, 'ROOT', self.root), \
              patch.object(self.commands.compare, 'load_reference', return_value=(self.reference, self.replay)), \
-             patch.object(self.commands, 'build_runner', return_value=build) as builder, \
-             patch.object(self.commands, 'run_bounded', side_effect=outputs) as runner, \
+             patch.object(self.commands, 'build_runner', side_effect=authored_build) as builder, \
+             patch.object(self.commands, 'run_bounded', side_effect=authored_producer) as runner, \
              contextlib.redirect_stderr(io.StringIO()):
             code = self.commands.cmd_compare(args)
         report = self.art / 'report.json'
@@ -180,6 +189,22 @@ class NativeCommandTests(unittest.TestCase):
     def test_output_collision_and_nonfinite_timeout_reject_before_writing(self):
         code, _, builder, runner = self.invoke(report=str(self.art / 'inputs.txt'))
         self.assertEqual(code, 3); builder.assert_not_called(); runner.assert_not_called()
+        code, _, _, runner = self.invoke(report=str(self.art / 'run1.txt/report.json'))
+        self.assertEqual(code, 3); runner.assert_not_called()
         code, _, _, runner = self.invoke(timeout=float('nan'))
         self.assertEqual(code, 3); runner.assert_not_called()
         self.assertFalse(self.art.exists())
+
+
+    def test_noop_build_cannot_reuse_a_stale_native_executable(self):
+        code, _, _, runner = self.invoke(rebuild=False)
+        self.assertEqual(code, 2)
+        self.assertFalse(self.binary.exists())
+        runner.assert_not_called()
+
+    def test_content_added_by_first_process_blocks_second_process(self):
+        def mutate():
+            (self.content / 'producer-cache.bin').write_bytes(b'unbound')
+        code, _, _, runner = self.invoke(producer_hook=mutate)
+        self.assertEqual(code, 1)
+        self.assertEqual(runner.call_count, 1)

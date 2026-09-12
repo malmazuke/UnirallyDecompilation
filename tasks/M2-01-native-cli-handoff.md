@@ -72,3 +72,19 @@ produce the agreed runtime.json and a primary.case.json binding existing frozen
 primary.replay.json/primary.expected.json hashes, without changing either file.
 Do not open withheld expectations before fixing the full native implementation.
 Independent command review and real primary/withheld executions remain required.
+
+### Independent review corrections
+
+Sol reviewer reproduced three defects at20d3816: stale movement_runner survived
+a successful build with no target; producer-added content was not re-inventoried;
+report paths descending below reserved output files raised uncaught errors.
+Fixed by removing only the generated runner before rebuilding (missing target
+then exits2), checking complete directory inventory and every input hash after
+each successful process, and rejecting reserved output paths and descendants.
+Authored regressions exercise all three. Original review failures retained under
+reviewer artifacts/native-cli-review/. Final reviewed head/checks follow.
+
+The clean20d3816 full suite passed256/256 with zero skips/missing/failures;
+report artifacts/m2-resume/cli-suite-final.json SHA256
+5440e991cf70925db928891e69c99ac90315b2588d68cbbfaa7b4cdab63c6693.
+This does not erase the independent findings; final corrections need checks.

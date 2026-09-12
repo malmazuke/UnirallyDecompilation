@@ -109,6 +109,14 @@ def process_exit(result) -> int:
     return 0 if result.returncode == 0 else 1
 
 
+def verify_unchanged_inputs(rep: reports.Report, content: Path) -> None:
+    if {path.name for path in content.iterdir()} != set(STATIC_SIZES):
+        raise compare.NativeOutputError("static content directory changed during execution")
+    for name, entry in rep.data["inputs"].items():
+        if reports.file_sha256(Path(entry["path"])) != entry["sha256"]:
+            raise compare.NativeOutputError(f"input changed during comparison: {name}")
+
+
 def cmd_compare(args: argparse.Namespace) -> int:
     root = ROOT.resolve()
     rep = reports.Report(sys.argv, task_id=args.task)
@@ -119,7 +127,8 @@ def cmd_compare(args: argparse.Namespace) -> int:
     report_path = Path(args.report).resolve() if args.report else artifacts / "report.json"
     if (not artifacts.is_relative_to(root / "artifacts") or artifacts == root / "artifacts"
             or not report_path.is_relative_to(artifacts) or report_path == artifacts
-            or report_path in {artifacts / name for name in ("inputs.txt", "build.json", "run1.txt", "run2.txt", "run1.stderr.txt", "run2.stderr.txt")}
+            or any(report_path.is_relative_to(artifacts / name) for name in
+                   ("inputs.txt", "build.json", "run1.txt", "run2.txt", "run1.stderr.txt", "run2.stderr.txt"))
             or artifacts.exists() or not math.isfinite(args.timeout) or args.timeout <= 0):
         print("native compare requires a fresh directory under artifacts/, its report inside that directory, and a positive timeout", file=sys.stderr)
         return 3
@@ -131,13 +140,17 @@ def cmd_compare(args: argparse.Namespace) -> int:
         compare.compare_rows(reference, reference["rows"], replay,
                              from_frame=args.from_frame, to_frame=args.to_frame)
         rep.add_check("input_identities", "passed")
+        runner = root / "build" / args.preset / "src" / "core" / "movement_runner"
+        # A successful build with no movement target must never reuse an old binary.
+        # Remove only this generated executable, leaving source/content untouched.
+        if runner.is_file() or runner.is_symlink():
+            runner.unlink()
         result = build_runner(root, args.preset, args.timeout, artifacts)
         rep.add_check("native_build", result.outcome, detail=result.tail(1500))
         status = process_exit(result)
         if status and result.returncode in (2, 3, 4):
             status = result.returncode
         if status == 0:
-            runner = root / "build" / args.preset / "src" / "core" / "movement_runner"
             rep.add_input("native_binary", runner, reports.file_sha256(runner))
             stream = artifacts / "inputs.txt"
             stream.write_text(protocol.input_text(replay, reference["initial_frame"], reference["last_frame"]))
@@ -153,6 +166,7 @@ def cmd_compare(args: argparse.Namespace) -> int:
                 status = process_exit(result)
                 if status:
                     break
+                verify_unchanged_inputs(rep, content)
                 rows, states = protocol.parse_output(result.stdout, reference["initial_frame"], reference["last_frame"])
                 if states[0] != seed_bytes:
                     raise compare.NativeOutputError("native process changed the initial canonical seed")
@@ -167,9 +181,7 @@ def cmd_compare(args: argparse.Namespace) -> int:
                 equal = rep.data["comparison"]["identical"]
                 rep.add_check("projected_fields_identical", "passed" if equal else "failed")
                 status = 0 if deterministic and equal else 1
-        for name, entry in rep.data["inputs"].items():
-            if reports.file_sha256(Path(entry["path"])) != entry["sha256"]:
-                raise compare.NativeOutputError(f"input changed during comparison: {name}")
+        verify_unchanged_inputs(rep, content)
     except FileNotFoundError as exc:
         rep.add_check("prerequisite", "missing", detail=str(exc)); status = 2
     except compare.NativeOutputError as exc:

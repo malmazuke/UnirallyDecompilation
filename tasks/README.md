@@ -15,9 +15,9 @@ The coordinator maintains the status registry below. Work orders further below d
 | M1-02 | accepted: integrated 11 September 2026 after one independent review | [Validated player-state schema and update timing](M1-02.md) |
 | M1-03 | accepted: integrated 12 September 2026 after one independent review | [Minimal track/asset decode](M1-03.md) |
 | M1-04 | accepted: integrated 12 September 2026 after one independent review; M1 accepted, tag `m1` | [M1 acceptance report](M1-04.md) |
-| M2-01 | in progress: approved components, native CLI and movement assembly; full gameplay not accepted | [Native movement experiment](M2-01.md) |
+| M2-01 | review approved: exact autonomous primary/withheld agreement; coordinator integration and CI in progress | [Native movement experiment](M2-01.md) |
 | M2-01A | accepted: PR2 merged after independent review and macOS/Linux CI; native gameplay remains M2-01 | [Close riding dependencies](M2-01A.md) |
-| M2-01 movement | review checkpoint: semantic state/seed at476834d; update and gameplay validation unfinished | [Movement implementation](M2-01-movement.md) |
+| M2-01 movement | review approved at245765d after one corrected finding; integration and CI in progress | [Movement implementation](M2-01-movement.md) |
 | M2-02, M3 – M6 | planned | See milestone definitions |
 
 ## M0 — repeatable laboratory

@@ -1,14 +1,12 @@
 # M2-01 movement implementation — semantic autonomous update
 
-Status: review checkpoint; movement_impl (Sol/medium) stopped at the usage guardrail.
-Provider: OpenAI. Previous coordinator Astra; next user-initiated continuation
-uses Sol/medium per [the compact handover](NEXT_SESSION.md). Workers use Sol/medium
-with compact fresh context. No additional child workers.
+Status: independently approved at `245765d`; coordinator integration in progress.
+Provider: OpenAI. Implementation and review used Sol/medium under D-0004. No
+additional child workers.
 Base: `f6ca7f1c6e90aad896f5694a4493b13ff101e509`, branch
 `codex/M2-01-movement`, isolated `.worktrees/m2-01-movement`.
-Previous run: quota baseline3%, checkpoint13%. On the next user-initiated run,
-measure a fresh baseline under D-0004; keep its10-point allowance and20% reserve;
-checkpoint at least every10min and before expensive experiments. No purchases.
+The user explicitly lifted the session percentage ceiling on 12 September 2026;
+the OpenAI provider, checkpoint, no-purchase and no-credit rules remain unchanged.
 
 ## Outcome and ownership
 
@@ -28,7 +26,7 @@ Read AGENTS/STATE/workflow, M2-01, R-0010, all R-0011 research, and the componen
 headers/handoffs. Motion research9b840a8 plus completed handoffc025318 is approved;
 speed68fcdd9 is independently approved. Input/contact/sampling/progress approved
 as recorded in M2-01A. Exact combined local component suite7ce2ba5 passed259/259;
-final candidatef6ca7f1 passed macOS/Linux CI and merged through PR2. No gameplay acceptance.
+final integration candidatef6ca7f1 is in final checks/CI. No gameplay acceptance.
 
 ## Interfaces and evidence
 
@@ -56,9 +54,8 @@ execution, and no silently assumed SRAM/seed values.
 New primary.case.json uses schema_version1, kind native_movement_case and
 replay/expected/runtime each {path,sha256}, binding existing frozen primary
 replay/expected files and generated runtime metadata. Coordinator CLI command
-corrected candidate758363c implements this interface and was independently
-approved; combined candidate4ef64d5 merged through PR3 as628efd7. The worker
-base already contains the command fixes.
+candidate20d3816 implements this interface and is independently reviewed
+separately; merge that branch only after coordinator supplies approval.
 
 Existing ignored source artifacts can be read in .worktrees/m2-01a-motion,
 m2-01a-contact, m2-01a-speed, m2-01 and m2-01-sampling-review. Each has its own
@@ -84,27 +81,55 @@ an independently chosen variation. If a new internal dependency appears, record
 its smallest reproducer for coordinator scope amendment. No user choice is
 needed for ordinary implementation/research decisions.
 
-## Active first implementation session
+## 12 September 2026 continuation checkpoint
 
-Dispatch base3909c1c6519b96100d21e1e581c18c1f81fce827 includes reviewed command
-758363c and combined components. Its worktree has the earlier ready work order;
-this root claim is canonical. Worker owns a new tasks/M2-01-movement-handoff.md
-in its branch in addition to the paths above. Parent remains owner of this
-assignment record. First bounded checkpoint: semantic state/serialization and
-validated single-seed preparation; then one native update if quota allows.
-Do not attempt a full uncheckpointed rewrite. Current quota10% used; whole-run
-boundary13% still applies. No recursive workers. Coordinator handles PR2 CI and
-review integration while this independent implementation proceeds.
+The independently audited 297-byte seed and static-content boundary now drive a
+semantic two-rider update. Two fresh processes agree and all 13 required fields
+match for primary frames 1534–2999. The first formal withheld executions were
+made only after that primary pass: cadence-17 also matches through 2999;
+release-2347 matches through 2787, then differs at 2788 only in displacement
+(native 0, original 3). A prior broad `rg` accidentally displayed isolated
+withheld JSON lines; it did not drive an implementation change, but the process
+deviation is recorded and prevents claiming perfectly sealed coordinator
+independence.
 
-## Preserved result
+Focused original access captures identify release coasting damping at
+`$82:A5FA–A61E`: on the active phase a nonzero flat-surface velocity with
+magnitude below 64 moves one unit toward zero before `$82:A8A7–A8C8` friction.
+After speed reaches zero, the original enters the previously excluded idle-pose
+machine, writing `$0F35/$0F37/$0F75/$0F77/$0F79/$0F7B/$0F7D/$0F7F`; its pose
+feedback changes y/contact and produces the required displacement 3 at 2788.
+Those persistent fields and arithmetic are not yet in canonical state. The next
+bounded prerequisite is to recover `$82:A0B7–A237`, add only its future-affecting
+semantic state, and rerun release-2347 before exact-candidate review.
 
-Code476834d9767dc55dbb3de26a4e44fa5e42903d87; documentation-only completion
-f0150710f9f9b6fb1ae0d37bffc05794ee673a1b, clean isolated branch. Semantic state,
-295-byte serialization and approved end1533 importer implemented; full12-file
-runtime preparation is draft. Debug build, CTest1/1, Python2/2 and py_compile
-passed; no full suite, sanitizer or independent review yet. Actual seed hash
-1264e64d82314ae5c276515a81202d65aab5ff2b801c5de26548e750d000fdbb.
-Next: independently review state inventory/Python-to-C++ decoding, especially
-three zero-at-seed displacement-history fields whose addresses need verification,
-then complete runtime/case generation and the first native update. No autonomous
-movement or withheld comparison was performed. Read worker handoff on its branch.
+## 12 September 2026 idle-pose closure
+
+The bounded source review recovered `$82:A0B7-$82:A236` and the preceding
+`$81:8625-$81:8672` damping path. The semantic state now contains nine
+future-affecting words per rider, all imported from established persistent
+addresses. The canonical seed is333 bytes, SHA-256
+`7cd034fcdee04e8f306712707c01c05ae02a50f2e91668127a7c3ef64492b4ab`.
+The runtime adds the identity-bound64-byte signed table from ROM file offset
+`0x1B4`; runtime metadata SHA-256 is
+`a38d58f2295c5be0569e83b4d77d995eceb031b5ff93118123af06002ab637da`.
+
+Release-2347 now passes all13 fields for every update through2999, as do the
+unchanged primary and cadence-17 cases; every command uses two fresh processes
+and the canonical states are byte-identical. Reports are
+`idle-release-4/report.json`, `idle-primary-final/report.json`, and
+`idle-cadence-final/report.json` under ignored `artifacts/m2-01-movement/`.
+The ROM-free synthetic suite passes273/273 and sanitizer movement tests pass2/2.
+
+## Exact-candidate review
+
+Independent review initially blocked `17e13cf`: zero velocity at references9–31
+and32–57 incorrectly remained zero instead of being forced to−1 and+1 by
+`$82:A201–A20C`. Candidate `245765d` corrects both branches and adds the
+reviewer-owned boundary cases. The same reviewer then approved that exact clean
+commit from a separate checkout after passing273/273 synthetic checks, debug
+and sanitizer movement CTests2/2, preparation tests3/3, and all1,466 frames of
+primary, cadence-17 and release-2347 with deterministic fresh processes. Frozen
+expectations and manifests were unchanged. Reviewer reports remain ignored under
+the review checkout's `artifacts/m2-final-review-*` paths; portable commands,
+input identities and results are also recorded in the worker handoff.

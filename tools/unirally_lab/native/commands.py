@@ -25,6 +25,7 @@ STATIC_SIZES = {
     "tile-tables.bin": 640, "tile-flags.bin": 20,
     "speed-masks.bin": 9, "speed-decrements.bin": 18,
     "pose-slopes.bin": 128, "displacement-table.bin": 512,
+    "idle-pose-table.bin": 64,
     "rotation-reward.bin": 2, "rotation-class.bin": 1,
 }
 

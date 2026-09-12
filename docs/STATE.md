@@ -55,10 +55,10 @@ First implementation milestone: M0 repeatable laboratory. First gameplay feasibi
 For the next Sol coordinator, start with [the compact handover](../tasks/NEXT_SESSION.md).
 The prior Astra run is complete; no conversation replay is required.
 
-**M2-02 native save/restore continuation is the next ready work.** M2-01 is
+**M2-02 native save/restore continuation is claimed and in progress.** M2-01 is
 accepted through PR4/`f33155e`; its detailed evidence and retained failed CI
 experiment are in the task and compact handoff. Create/finalize the M2-02 work
-order from the project-plan gate, test meaningful restore boundaries in fresh
+order is [M2-02](../tasks/M2-02.md): test meaningful restore boundaries in fresh
 processes on macOS and Linux, audit the complete state inventory, and retain
 independent exact-candidate review. M2 remains open until that task passes.
 

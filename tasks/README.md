@@ -18,7 +18,8 @@ The coordinator maintains the status registry below. Work orders further below d
 | M2-01 | accepted: PR4 merged 12 September 2026 after independent review and macOS/Linux CI | [Native movement experiment](M2-01.md) |
 | M2-01A | accepted: PR2 merged after independent review and macOS/Linux CI; native gameplay remains M2-01 | [Close riding dependencies](M2-01A.md) |
 | M2-01 movement | accepted: exact primary/two withheld agreement; integrated through PR4 | [Movement implementation](M2-01-movement.md) |
-| M2-02, M3 – M6 | planned | See milestone definitions |
+| M2-02 | in progress: native save/restore and portability | [Native save/restore and portability](M2-02.md) |
+| M3 – M6 | planned | See milestone definitions |
 
 ## M0 — repeatable laboratory
 

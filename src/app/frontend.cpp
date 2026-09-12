@@ -113,4 +113,42 @@ PresentationPosition presentation_position(std::uint16_t player_x) {
   return {camera, bg1, 208, static_cast<std::int16_t>(bg1 / 2), 104};
 }
 
+bool is_recovered_pose_pair(const MovementState &state) {
+  const auto player = state.riders[0].pose.pose_index;
+  const auto opponent = state.riders[1].pose.pose_index;
+  if (!state.riders[0].pose.reflected || !state.riders[1].pose.reflected)
+    return false;
+  return (player == 0x04f9 && opponent == 0x0263) ||
+         (player == 0x0855 && opponent == 0x0895) ||
+         (player == 0x0895 && opponent == 0x0895) ||
+         (player == 0x0855 && opponent == 0x08d5) ||
+         (player == 0x04fe && opponent == 0x037c);
+}
+
+LiveFrame LivePresentation::render(const MovementState &state,
+                                   const PresentationPosition &position,
+                                   const PresentationContent &content) {
+  const bool fallback = !is_recovered_pose_pair(state);
+  if (!fallback) {
+    for (std::size_t rider = 0; rider < 2; ++rider) {
+      recovered_pair_.pose_indices[rider] = state.riders[rider].pose.pose_index;
+      recovered_pair_.reflected[rider] = state.riders[rider].pose.reflected;
+    }
+  }
+  auto presentation_state = state;
+  if (fallback) {
+    for (std::size_t rider = 0; rider < 2; ++rider) {
+      presentation_state.riders[rider].pose.pose_index =
+          recovered_pair_.pose_indices[rider];
+      presentation_state.riders[rider].pose.reflected =
+          recovered_pair_.reflected[rider];
+    }
+  }
+  return {render_dragster_headless(
+              {presentation_state, position.camera_x, position.bg1_x,
+               position.bg1_y, position.bg2_x, position.bg2_y},
+              content),
+          fallback};
+}
+
 } // namespace unirally::app

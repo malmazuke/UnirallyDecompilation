@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import sys
 from pathlib import Path
 
@@ -25,8 +26,12 @@ def _finish(rep: reportmod.Report, args: argparse.Namespace, status: int) -> int
 
 def cmd_run(args: argparse.Namespace) -> int:
     rep = reportmod.Report(sys.argv, task_id=args.task)
-    if args.timeout <= 0 or args.updates is not None and args.updates <= 0:
-        rep.add_check("arguments", "failed", detail="--timeout and --updates must be positive")
+    if (
+        not math.isfinite(args.timeout)
+        or args.timeout <= 0
+        or (args.updates is not None and args.updates <= 0)
+    ):
+        rep.add_check("arguments", "failed", detail="--timeout must be finite and positive; --updates must be positive")
         return _finish(rep, args, EXIT_INVALID_INPUT)
     pack_path = Path(args.pack).expanduser()
     rules_path = Path(args.rules)
@@ -81,6 +86,8 @@ def cmd_run(args: argparse.Namespace) -> int:
         command.append("--hidden")
     if args.updates is not None:
         command.extend(["--updates", str(args.updates)])
+    if args.fixed_controller_mask is not None:
+        command.extend(["--fixed-controller-mask", str(args.fixed_controller_mask)])
     launched = run_bounded(command, timeout=args.timeout, cwd=ROOT)
     detail = launched.tail(2000)
     if launched.outcome == "timeout":
@@ -108,6 +115,7 @@ def register(sub: argparse._SubParsersAction) -> None:
     run.add_argument("--executable", help=argparse.SUPPRESS)
     run.add_argument("--rules", default=str(ROOT / packmod.RULES_PATH), help=argparse.SUPPRESS)
     run.add_argument("--updates", type=int, help="exit after this many updates (smoke-test aid)")
+    run.add_argument("--fixed-controller-mask", type=int, choices=range(0, 65536), help=argparse.SUPPRESS)
     run.add_argument("--hidden", action="store_true", help="create a hidden window (smoke-test aid)")
     run.add_argument("--timeout", type=float, default=86400)
     run.add_argument("--report")

@@ -190,3 +190,32 @@ compilation on macOS/Linux. Re-run both local app suites, the two dummy-video
 smokes, the continuous-race staleness check, the non-finite-timeout mutation and
 hosted app builds on the exact correction candidate. Do not accept M3-03 or the
 M3 playable gate before those results pass independent re-review.
+
+## Worker correction response — 13 September 2026
+
+All four findings are addressed on the assigned task branch without changing
+the accepted core, pack, state, cases, visual limits or scheduler contract:
+
+1. `LivePresentation` now retains only the last recovered pose pair and renders
+   a fresh current-state frame through a temporary copy. The native regression
+   proves two distinct unsupported gameplay/camera/timer states produce
+   distinct RGB frames, each equal to a current-state render with only pose
+   fields substituted. A 1533–3679 SDL dummy continuous-right run rendered
+   2,145 frames (two batched display iterations), used fallback on 1,419, and
+   found zero identical consecutive fallback redraws while Racing.
+2. `frontend run` rejects NaN and both infinities before pack access or child
+   execution. Each authored mutation requires a failed requested JSON report
+   and a mocked child-call count of zero. The review's exact NaN CLI shape now
+   exits 3, writes the report, and `pgrep` finds no matching app.
+3. `SDL_RenderPresent` is checked and throws `cannot present rendered frame`
+   with SDL's error on false.
+4. The ROM-free workflow retains headless debug/sanitizer steps, adds
+   `app-debug` build/test and pack-free `--help` on macOS 15 and Ubuntu 24.04,
+   and adds `app-sanitize` build/test/help on Ubuntu. Every new command has a
+   600-second command bound inside the existing 30-minute job bound.
+
+Local broad debug and sanitizer suites passed on the uncommitted correction
+(282 Python tests, 20 CTests and repeatability). Exact-commit reports, private
+finish/presentation reruns, commit IDs and hashes are recorded in M3-03 after
+the coherent correction commit. Fresh sequential re-review and hosted results
+remain required; this response does not approve the task.

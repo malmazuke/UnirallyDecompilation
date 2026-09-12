@@ -22,11 +22,14 @@ Status: frozen before SDL UI implementation, 12 September 2026. Task M3-03.
 
 SDL 3.4.10 is fetched by CMake from the pinned upstream release URL with the
 above required digest and built inside `build/app-*`; it is never installed.
-`LAB_BUILD_APP` defaults off, so `lab-debug`, `lab-release`, `lab-sanitize` and
-ROM-free headless CI do not download, configure, link or require SDL. The
-tracked `app-debug` and `app-sanitize` presets enable the desktop target. SDL
-examples, tests and install targets are disabled. macOS uses the platform SDK;
-Linux uses the host window-system development interfaces SDL detects.
+`LAB_BUILD_APP` defaults off, so `lab-debug`, `lab-release` and `lab-sanitize`
+remain window-independent and do not download, configure, link or require SDL.
+The tracked `app-debug` and `app-sanitize` presets enable the desktop target.
+ROM-free hosted CI retains the headless jobs and additionally builds/tests
+`app-debug` on macOS and Linux and `app-sanitize` on Linux, with a pack-free
+`--help` runtime-link smoke. SDL examples, tests and install targets are
+disabled. macOS uses the platform SDK; Linux uses the host window-system
+development interfaces SDL detects.
 
 ### Scheduler
 
@@ -91,12 +94,14 @@ so explicitly.
 
 The accepted atlas boundary intentionally recognizes only the five recovered
 rider-pose pairs frozen by M3-02. The frontend calls it unchanged. Between
-supported pairs it holds the last successfully rendered frame; before the first
-supported pair it seeds only a presentation copy with the opening recovered
-pair. Canonical gameplay is never changed. Startup reports this visual omission
-once. This makes the whole accepted simulation controllable without pretending
-that unrecovered animation frames exist; extending pose coverage belongs to a
-later presentation task.
+supported pairs it renders a fresh frame from the current gameplay state,
+camera, scroll, rider positions and timer, but substitutes the last recovered
+pair's pose indices/reflection in a temporary presentation copy. Before the
+first supported pair that copy uses the opening recovered pair. Canonical
+gameplay is never changed. Startup reports this rider-art omission once. This
+makes the whole accepted simulation readable without pretending that
+unrecovered animation frames exist; extending pose coverage belongs to a later
+presentation task.
 
 ## Validation domain and limits
 
@@ -107,3 +112,43 @@ input/cadence test must compare the complete canonical state sequence under two
 display poll schedules and require presentation rendering not to alter it.
 Real window/backend availability remains an M3-04 sustained-play check; a CI
 machine without a display builds but does not claim an interactive launch.
+
+## Returned-review observations and correction
+
+Independent review of `6489c64` established that 1,421 of the 2,147 canonical
+continuous-right states use an unrecovered atlas pair (66.185%). The first
+implementation held the complete prior RGB frame for those states, including
+race freezes as long as 153 updates / 3.06 seconds. That behavior contradicted
+the rider-only omission above and is rejected; see `tasks/M3-03-review.md` for
+the input/output hashes and interval inventory.
+
+The corrected pure adapter stores only two pose indices and reflection flags.
+Every redraw copies the current semantic state, substitutes those four
+presentation-only fields when needed, and renders current camera, scroll,
+positions and HUD. An authored regression uses two distinct unsupported
+states, camera values and timer digits: their RGB frames differ, each exactly
+equals a direct render of that current state with only the recovered pair
+substituted, and both canonical states remain unchanged.
+
+An actual dummy-video, fixed continuous-right launch from frame 1533 through
+3679 produced 2,145 redraws; two display iterations batched updates under the
+unchanged scheduler. It used rider-pose fallback on 1,419 redraws and had
+**zero identical consecutive fallback redraws while Racing** (longest such run
+zero). Across all phases it had 383 identical redraws and a longest run of 228,
+which the metric reports rather than misclassifying as the former race fallback
+freeze. The launch report is
+`artifacts/m3-03-correction-continuous-right-3.json`; ignored artifacts are not
+tracked.
+
+The review also reproduced `--timeout nan` escaping the bounded-process helper,
+losing the requested report and orphaning a child. Frontend argument validation
+now requires a finite positive timeout before pack access or process creation.
+Authored NaN, positive-infinity and negative-infinity cases require exit 3, a
+failed JSON report and zero calls to the child runner. The exact NaN CLI
+reproduction now emits its report and leaves no matching app process.
+
+Finally, SDL 3.4.10 declares `SDL_RenderPresent` as returning `bool`. The prior
+discarded return is rejected; the app now throws a renderer-specific launch
+failure when it is false. No backend-independent way to force that SDL call to
+fail was introduced merely for the test, so source inspection plus hosted/local
+runtime smokes cover this narrow error check.

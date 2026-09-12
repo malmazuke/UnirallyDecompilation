@@ -6,6 +6,7 @@ import tempfile
 import unittest
 from argparse import Namespace
 from pathlib import Path
+from unittest import mock
 
 from unirally_lab import EXIT_FAILURE, EXIT_INVALID_INPUT, EXIT_MISSING_PREREQUISITE, EXIT_OK
 from unirally_lab.content import pack
@@ -39,7 +40,8 @@ class FrontendLaunchTests(unittest.TestCase):
     def args(self, **changed):
         values = dict(pack=str(self.root / "classic.pack"), rom=None, preset="app-debug",
                       executable="/usr/bin/true", rules=str(self.rules_path), updates=1,
-                      hidden=True, timeout=10, report=None, task="M3-03")
+                      fixed_controller_mask=None, hidden=True, timeout=10,
+                      report=None, task="M3-03")
         values.update(changed)
         return Namespace(**values)
 
@@ -60,6 +62,21 @@ class FrontendLaunchTests(unittest.TestCase):
 
     def test_frontend_failure_is_not_a_successful_launch(self):
         self.assertEqual(commands.cmd_run(self.args(rom=str(self.rom_path), executable="/usr/bin/false")), EXIT_FAILURE)
+
+    def test_nonfinite_timeout_reports_without_starting_child(self):
+        for index, timeout in enumerate((float("nan"), float("inf"), float("-inf"))):
+            with self.subTest(timeout=timeout):
+                report = self.root / f"nonfinite-{index}.json"
+                with mock.patch.object(commands, "run_bounded") as child:
+                    status = commands.cmd_run(self.args(timeout=timeout, report=str(report)))
+                self.assertEqual(status, EXIT_INVALID_INPUT)
+                child.assert_not_called()
+                self.assertTrue(report.is_file())
+                document = json.loads(report.read_text())
+                self.assertEqual(document["status"], "failed")
+                check = next(c for c in document["checks"] if c["name"] == "arguments")
+                self.assertEqual(check["outcome"], "failed")
+                self.assertIn("finite and positive", check["detail"])
 
 
 if __name__ == "__main__":

@@ -131,6 +131,7 @@ private:
 struct Options {
   std::filesystem::path pack;
   std::uint32_t maximum_updates{};
+  std::optional<std::uint16_t> fixed_controller_mask;
   bool hidden{};
 };
 
@@ -141,6 +142,17 @@ std::uint32_t parse_updates(std::string_view value) {
       parsed == 0)
     throw std::invalid_argument("--updates requires a positive integer");
   return parsed;
+}
+
+std::uint16_t parse_controller_mask(std::string_view value) {
+  unsigned parsed{};
+  const auto result =
+      std::from_chars(value.data(), value.data() + value.size(), parsed);
+  if (result.ec != std::errc{} || result.ptr != value.data() + value.size() ||
+      parsed > 0xffffU)
+    throw std::invalid_argument(
+        "--fixed-controller-mask requires an integer from 0 through 65535");
+  return static_cast<std::uint16_t>(parsed);
 }
 
 void print_help() {
@@ -171,6 +183,8 @@ std::optional<Options> options(int argc, char **argv) {
       result.pack = value;
     else if (option == "--updates")
       result.maximum_updates = parse_updates(value);
+    else if (option == "--fixed-controller-mask")
+      result.fixed_controller_mask = parse_controller_mask(value);
     else
       throw std::invalid_argument("unknown option: " + std::string(option));
   }
@@ -237,7 +251,8 @@ void draw(SDL_Renderer *renderer, SDL_Texture *texture,
                               static_cast<float>(view.height)};
   if (!SDL_RenderTexture(renderer, texture, nullptr, &destination))
     throw sdl_error("cannot draw presentation texture");
-  SDL_RenderPresent(renderer);
+  if (!SDL_RenderPresent(renderer))
+    throw sdl_error("cannot present rendered frame");
 }
 } // namespace
 
@@ -280,8 +295,15 @@ int main(int argc, char **argv) try {
   unirally::app::PalScheduler scheduler(SDL_GetTicksNS());
   bool running = true, redraw = true;
   std::uint32_t updates{};
+  std::uint32_t rendered_frames{}, pose_fallback_frames{};
+  std::uint32_t identical_redraws{}, current_identical_run{},
+      longest_identical_run{};
+  std::uint32_t identical_fallback_race_redraws{},
+      current_identical_fallback_race_run{},
+      longest_identical_fallback_race_run{};
+  std::optional<unirally::RgbFrame> previous_frame;
   auto position = unirally::app::presentation_position(state.riders[0].motion.x);
-  std::optional<unirally::RgbFrame> last_supported_frame;
+  unirally::app::LivePresentation live_presentation;
   bool reported_held_frame{};
   while (running) {
     SDL_Event event{};
@@ -316,7 +338,9 @@ int main(int argc, char **argv) try {
     const auto now = SDL_GetTicksNS();
     const auto due = scheduler.updates_due(now);
     for (std::uint32_t index = 0; index < due; ++index) {
-      const auto ports = input.snapshot();
+      auto ports = input.snapshot();
+      if (parsed->fixed_controller_mask.has_value())
+        ports[0] = *parsed->fixed_controller_mask;
       unirally::update_movement(state,
                                 unirally::app::controller_buttons(ports[0]),
                                 movement_content);
@@ -331,39 +355,52 @@ int main(int argc, char **argv) try {
     }
     if (redraw) {
       const auto canonical_before = unirally::serialize_movement_state(state);
-      try {
-        last_supported_frame = unirally::render_dragster_headless(
-            {state, position.camera_x, position.bg1_x, position.bg1_y,
-             position.bg2_x, position.bg2_y},
-            presentation_content);
-      } catch (const std::invalid_argument &error) {
-        const std::string_view detail(error.what());
-        if (detail.find("unsupported Classic rider") == std::string_view::npos)
-          throw;
-        if (!last_supported_frame) {
-          auto opening = state;
-          opening.riders[0].pose.pose_index = 0x04f9;
-          opening.riders[1].pose.pose_index = 0x0263;
-          opening.riders[0].pose.reflected = true;
-          opening.riders[1].pose.reflected = true;
-          last_supported_frame = unirally::render_dragster_headless(
-              {opening, position.camera_x, position.bg1_x, position.bg1_y,
-               position.bg2_x, position.bg2_y},
-              presentation_content);
-        }
-        if (!reported_held_frame) {
-          std::cout << "Presentation note: unsupported intermediate rider poses hold the last recovered frame.\n";
-          reported_held_frame = true;
-        }
+      const auto live_frame =
+          live_presentation.render(state, position, presentation_content);
+      if (live_frame.used_pose_fallback && !reported_held_frame) {
+        std::cout << "Presentation note: unsupported intermediate rider poses use the last recovered rider art while the scene stays current.\n";
+        reported_held_frame = true;
+      }
+      ++rendered_frames;
+      if (live_frame.used_pose_fallback)
+        ++pose_fallback_frames;
+      if (previous_frame && previous_frame->pixels == live_frame.frame.pixels) {
+        ++identical_redraws;
+        ++current_identical_run;
+        longest_identical_run =
+            std::max(longest_identical_run, current_identical_run);
+      } else {
+        current_identical_run = 0;
+      }
+      if (previous_frame && previous_frame->pixels == live_frame.frame.pixels &&
+          live_frame.used_pose_fallback &&
+          state.finish.phase == unirally::RacePhase::Racing) {
+        ++identical_fallback_race_redraws;
+        ++current_identical_fallback_race_run;
+        longest_identical_fallback_race_run = std::max(
+            longest_identical_fallback_race_run,
+            current_identical_fallback_race_run);
+      } else {
+        current_identical_fallback_race_run = 0;
       }
       if (unirally::serialize_movement_state(state) != canonical_before)
         throw std::logic_error("presentation mutated canonical gameplay state");
-      draw(renderer.get(), texture.get(), *last_supported_frame);
+      draw(renderer.get(), texture.get(), live_frame.frame);
+      previous_frame = live_frame.frame;
       redraw = false;
     }
     if (running)
       SDL_Delay(1);
   }
+  std::cout << "Presentation frames: " << rendered_frames
+            << "; rider-pose fallback frames: " << pose_fallback_frames
+            << "; identical consecutive redraws: " << identical_redraws
+            << "; longest identical run: " << longest_identical_run
+            << "; identical fallback race redraws: "
+            << identical_fallback_race_redraws
+            << "; longest identical fallback race run: "
+            << longest_identical_fallback_race_run
+            << '\n';
   return 0;
 } catch (const std::exception &error) {
   std::cerr << "Unirally launch failed: " << error.what() << '\n';

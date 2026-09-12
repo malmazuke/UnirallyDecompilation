@@ -178,4 +178,46 @@ int main() {
           "accepted native-resolution frame displayed");
   require(unirally::serialize_movement_state(presentation_state) == before,
           "presentation leaves canonical state unchanged");
+
+  LivePresentation live;
+  auto unsupported_one = presentation_state;
+  unsupported_one.riders[0].pose.pose_index = 0x04fa;
+  unsupported_one.riders[1].pose.pose_index = 0x04fa;
+  unsupported_one.timer.seconds = 1;
+  const PresentationPosition first_position{100, 86, 208, 43, 104};
+  const auto first_live = live.render(unsupported_one, first_position,
+                                      {track, bg1, bg2, bg2_map, palette, font,
+                                       rider_tiles, result_assets, go, winner,
+                                       result_vram, result_palette, result_tail});
+  require(first_live.used_pose_fallback, "unsupported pair uses rider fallback");
+  auto expected_one = unsupported_one;
+  expected_one.riders[0].pose.pose_index = 0x04f9;
+  expected_one.riders[1].pose.pose_index = 0x0263;
+  const auto direct_one = unirally::render_dragster_headless(
+      {expected_one, first_position.camera_x, first_position.bg1_x,
+       first_position.bg1_y, first_position.bg2_x, first_position.bg2_y},
+      {track, bg1, bg2, bg2_map, palette, font, rider_tiles, result_assets,
+       go, winner, result_vram, result_palette, result_tail});
+  require(first_live.frame.pixels == direct_one.pixels,
+          "fallback changes only rider pose fields");
+
+  auto unsupported_two = unsupported_one;
+  unsupported_two.frame += 1;
+  unsupported_two.riders[0].motion.x += 32;
+  unsupported_two.riders[1].motion.x += 16;
+  unsupported_two.timer.seconds = 2;
+  const PresentationPosition second_position{132, 118, 208, 59, 104};
+  const auto second_live = live.render(unsupported_two, second_position,
+                                       {track, bg1, bg2, bg2_map, palette, font,
+                                        rider_tiles, result_assets, go, winner,
+                                        result_vram, result_palette, result_tail});
+  require(second_live.used_pose_fallback, "later unsupported pair uses fallback");
+  require(first_live.frame.pixels != second_live.frame.pixels,
+          "unsupported gameplay/camera/timer states produce fresh frames");
+  require(unirally::serialize_movement_state(unsupported_one) !=
+              unirally::serialize_movement_state(unsupported_two),
+          "regression states are distinct");
+  require(live.last_recovered_pose_pair().pose_indices ==
+              std::array<std::uint16_t, 2>{0x04f9, 0x0263},
+          "rider art remains the recovered fallback pair");
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "input_timer.hpp"
+#include "presentation.hpp"
 
 #include <array>
 #include <cstdint>
@@ -64,5 +65,30 @@ struct PresentationPosition {
   std::int16_t bg1_x{}, bg1_y{}, bg2_x{}, bg2_y{};
 };
 PresentationPosition presentation_position(std::uint16_t player_x);
+
+struct RiderPosePair {
+  std::array<std::uint16_t, 2> pose_indices{};
+  std::array<bool, 2> reflected{};
+};
+
+bool is_recovered_pose_pair(const MovementState &state);
+
+struct LiveFrame {
+  RgbFrame frame;
+  bool used_pose_fallback{};
+};
+
+// Render the current gameplay/camera/HUD. Only the pose indices/reflection
+// consumed by the bounded M3-02 atlas are held when a pair is unrecovered.
+class LivePresentation {
+public:
+  LiveFrame render(const MovementState &state,
+                   const PresentationPosition &position,
+                   const PresentationContent &content);
+  RiderPosePair last_recovered_pose_pair() const { return recovered_pair_; }
+
+private:
+  RiderPosePair recovered_pair_{{0x04f9, 0x0263}, {true, true}};
+};
 
 } // namespace unirally::app

@@ -1,6 +1,6 @@
 # M2-01 movement implementation — semantic autonomous update
 
-Status: ready; coordinator will claim when the one review worker finishes.
+Status: active; primary and cadence-17 exact, release-2347 idle-pose prerequisite open.
 Provider: OpenAI. Coordinator Astra (current-session exception); worker Sol,
 medium reasoning, compact fresh context. No additional child workers.
 Base: `f6ca7f1c6e90aad896f5694a4493b13ff101e509`, branch
@@ -80,3 +80,25 @@ primary implementation first; coordinator/reviewer then runs withheld tests and
 an independently chosen variation. If a new internal dependency appears, record
 its smallest reproducer for coordinator scope amendment. No user choice is
 needed for ordinary implementation/research decisions.
+
+## 12 September 2026 continuation checkpoint
+
+The independently audited 297-byte seed and static-content boundary now drive a
+semantic two-rider update. Two fresh processes agree and all 13 required fields
+match for primary frames 1534–2999. The first formal withheld executions were
+made only after that primary pass: cadence-17 also matches through 2999;
+release-2347 matches through 2787, then differs at 2788 only in displacement
+(native 0, original 3). A prior broad `rg` accidentally displayed isolated
+withheld JSON lines; it did not drive an implementation change, but the process
+deviation is recorded and prevents claiming perfectly sealed coordinator
+independence.
+
+Focused original access captures identify release coasting damping at
+`$82:A5FA–A61E`: on the active phase a nonzero flat-surface velocity with
+magnitude below 64 moves one unit toward zero before `$82:A8A7–A8C8` friction.
+After speed reaches zero, the original enters the previously excluded idle-pose
+machine, writing `$0F35/$0F37/$0F75/$0F77/$0F79/$0F7B/$0F7D/$0F7F`; its pose
+feedback changes y/contact and produces the required displacement 3 at 2788.
+Those persistent fields and arithmetic are not yet in canonical state. The next
+bounded prerequisite is to recover `$82:A0B7–A237`, add only its future-affecting
+semantic state, and rerun release-2347 before exact-candidate review.

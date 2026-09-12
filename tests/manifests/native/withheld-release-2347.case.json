@@ -1,0 +1,16 @@
+{
+  "expected": {
+    "path": "tests/manifests/native/withheld-release-2347.expected.json",
+    "sha256": "719ed922e57598a29abfe148c89266cab367c5119c35f7997aa45486c6943de0"
+  },
+  "kind": "native_movement_case",
+  "replay": {
+    "path": "tests/manifests/native/withheld-release-2347.replay.json",
+    "sha256": "ba7f6048c3ff4c574fc8754e50537fad03dd04ae5e6349e20c2e224981bdac12"
+  },
+  "runtime": {
+    "path": "local/native/dragster/runtime.json",
+    "sha256": "e8d2898408d369b2ed1b9ca91a8891acb88d938fb49d96c05e1ef94d78a4fe89"
+  },
+  "schema_version": 1
+}

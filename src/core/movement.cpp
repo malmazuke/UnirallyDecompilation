@@ -1,5 +1,6 @@
 #include "movement.hpp"
 
+#include <algorithm>
 #include <stdexcept>
 
 namespace unirally {
@@ -61,8 +62,9 @@ std::uint16_t add_word(std::uint16_t left, std::uint16_t right) {
     return static_cast<std::uint16_t>(static_cast<std::uint32_t>(left) + right);
 }
 
-void update_horizontal(RiderMovementState& rider, bool brake, bool opponent,
-                       const MovementState& whole, const MovementContent& content) {
+void update_horizontal(RiderMovementState& rider, bool brake, bool accelerate, bool opponent,
+                       const MovementState& whole, const MovementContent& content,
+                       int& animation_override,bool& use_throttle_target) {
     // $81:8592 common reset clears the one-update launch override before the
     // throttle routine. The value written by a launch remains in the serialized
     // end-of-frame state and is cleared at the next call.
@@ -73,23 +75,31 @@ void update_horizontal(RiderMovementState& rider, bool brake, bool opponent,
         if (brake && rider.motion.velocity_x != 0) {
             throw std::invalid_argument("moving brake is outside the recovered movement domain");
         }
-        // Player inputs and the recovered opponent AI both request Right in the
-        // primary domain. Leftward throttle remains explicitly unsupported.
-        rider.motion.velocity_x = add_word(rider.motion.velocity_x, 24);
-        const auto signed_boost = static_cast<std::int16_t>(rider.speed.boost);
-        const auto limit = static_cast<std::uint16_t>(448U +
-            (signed_boost > 0 ? static_cast<unsigned>(signed_boost) : 0U));
-        const auto candidate = add_word(rider.throttle, 16);
-        if (negative(static_cast<std::uint16_t>(candidate - limit))) rider.throttle = candidate;
+        if (accelerate) {
+            rider.motion.velocity_x = add_word(rider.motion.velocity_x, 24);
+            const auto signed_boost = static_cast<std::int16_t>(rider.speed.boost);
+            const auto limit = static_cast<std::uint16_t>(448U +
+                (signed_boost > 0 ? static_cast<unsigned>(signed_boost) : 0U));
+            const auto candidate = add_word(rider.throttle, 16);
+            if (negative(static_cast<std::uint16_t>(candidate - limit))) rider.throttle = candidate;
+        } else {
+            rider.throttle = 0;
+        }
         if (brake) {
             rider.motion.velocity_x = 0;
-        } else if (rider.previous_brake != 0 && rider.throttle != 0) {
+        } else if (accelerate && rider.previous_brake != 0 && rider.throttle != 0) {
             rider.motion.velocity_x = add_word(rider.motion.velocity_x, rider.throttle);
             rider.throttle = 0;
             rider.launch_override = 256;
         }
     }
-    rider.previous_brake = brake ? 1 : 0;
+        rider.previous_brake = brake ? 1 : 0;
+
+    if(accelerate && static_cast<std::int16_t>(rider.motion.previous_x_displacement)<4) {
+        if(rider.small_motion_counter!=4)rider.small_motion_counter=add_word(rider.small_motion_counter,1);
+        animation_override=static_cast<std::int16_t>(rider.small_motion_counter);
+        use_throttle_target=true;
+    }
 
     SpeedLimitContext context{};
     context.opponent = opponent;
@@ -101,19 +111,309 @@ void update_horizontal(RiderMovementState& rider, bool brake, bool opponent,
     context.adjustment_limit = 96;
     context.player_base_cap = 448;
     context.update_counter = whole.update_counter;
-    context.friction_mode = 2;
+    context.friction_mode = accelerate ? 2 : 1;
     limit_rider_speed(rider.motion.velocity_x, rider.motion.velocity_y,
                       rider.speed, context, content.speed_decay);
+}
 
-    const auto total = static_cast<std::int32_t>(static_cast<std::int16_t>(rider.motion.velocity_x)) +
-                       static_cast<std::int16_t>(rider.residue_x);
-    const auto magnitude = total < 0 ? -total : total;
-    auto whole_units = magnitude / 32;
-    auto remainder = magnitude % 32;
-    if (total < 0) { whole_units = -whole_units; remainder = -remainder; }
-    rider.motion.x = static_cast<std::uint16_t>(rider.motion.x + whole_units);
-    rider.residue_x = static_cast<std::uint16_t>(remainder);
-    rider.motion.previous_x_displacement = static_cast<std::uint16_t>(whole_units);
+void update_jump(RiderMovementState& rider,bool jump_input) {
+    bool advance=rider.jump.impulse_phase!=0;
+    if (!advance && rider.jump.pending) {
+        if (rider.contact.angle_unspecified) {
+            rider.jump.previous_input=jump_input?1:0;
+            return;
+        }
+        rider.jump.pending=0;
+        advance=true;
+    }
+    if (!advance) {
+        if (!rider.jump.previous_input && jump_input && rider.contact.unsupported_count<2) {
+            rider.jump.pending=1;
+        }
+    } else if (!jump_input) {
+        rider.jump.impulse_phase=0;
+    } else {
+        rider.jump.impulse_phase=add_word(rider.jump.impulse_phase,1);
+        if (rider.jump.impulse_phase>=9) {
+            rider.jump.impulse_phase=0;
+        } else {
+            const auto impulse=static_cast<std::uint16_t>(rider.jump.baseline+
+                (rider.jump.impulse_phase<5 ? -144 : -192));
+            if (!negative(static_cast<std::uint16_t>(rider.motion.velocity_y-impulse))) {
+                rider.motion.velocity_y=impulse;
+            }
+        }
+    }
+    rider.jump.previous_input=jump_input?1:0;
+}
+
+void update_active_low_speed_damping(RiderMovementState& rider) {
+    // $82:A5FA-A61E runs only on the rider's alternating active phase. In the
+    // recovered flat branch it moves nonzero velocities with magnitude below
+    // 64 one unit toward zero before the general speed limiter/friction pass.
+    if (rider.contact.surface_angle != 0 || rider.motion.velocity_x == 0) return;
+    const auto velocity = static_cast<std::int16_t>(rider.motion.velocity_x);
+    if (velocity > 0 && velocity < 64) {
+        rider.motion.velocity_x = static_cast<std::uint16_t>(velocity - 1);
+    } else if (velocity < 0 && velocity >= -64) {
+        rider.motion.velocity_x = static_cast<std::uint16_t>(velocity + 1);
+    }
+}
+
+void update_gravity(RiderMovementState& rider) {
+    const auto vertical=static_cast<std::int16_t>(rider.motion.velocity_y);
+    if (vertical>=512) return;
+    const auto increment=vertical<0 ? 19 : 19-(vertical>>5);
+    rider.motion.velocity_y=static_cast<std::uint16_t>(vertical+increment);
+    rider.motion.y=add_word(rider.motion.y,1);
+}
+
+void integrate_motion(RiderMovementState& rider) {
+    auto axis=[](std::uint16_t& position,std::uint16_t velocity,std::uint16_t& residue) {
+        const auto total=static_cast<std::int32_t>(static_cast<std::int16_t>(velocity))+
+                         static_cast<std::int16_t>(residue);
+        const auto magnitude=total<0?-total:total;
+        auto whole=magnitude/32;
+        auto remainder=magnitude%32;
+        if(total<0){whole=-whole;remainder=-remainder;}
+        position=static_cast<std::uint16_t>(position+whole);
+        residue=static_cast<std::uint16_t>(remainder);
+        return static_cast<std::int16_t>(whole);
+    };
+    (void)axis(rider.motion.x,rider.motion.velocity_x,rider.residue_x);
+    (void)axis(rider.motion.y,rider.motion.velocity_y,rider.residue_y);
+}
+
+unsigned content_word(std::span<const std::uint8_t> bytes,unsigned index) {
+    if(index+1>=bytes.size())throw std::out_of_range("movement table word is unavailable");
+    return bytes[index]|(static_cast<unsigned>(bytes[index+1])<<8U);
+}
+
+unsigned integer_sqrt(unsigned value) {
+    unsigned root=0;
+    while((root+1U)*(root+1U)<=value)++root;
+    return root;
+}
+
+void update_rolling_mode(RiderMovementState& rider) {
+    if (rider.contact.unsupported_count == 9 || rider.pose.reflected_orientation < 45) {
+        rider.pose.rolling = false;
+    } else if (rider.pose.rolling &&
+               static_cast<std::int16_t>(rider.motion.previous_x_displacement) < 14) {
+        rider.pose.rolling = false;
+    } else if (!rider.pose.rolling &&
+               static_cast<std::int16_t>(rider.motion.previous_x_displacement) < 16) {
+        return;
+    } else {
+        const bool moving_nonnegative = static_cast<std::int16_t>(rider.motion.velocity_x) >= 0;
+        rider.pose.rolling = rider.pose.reflected ? moving_nonnegative : !moving_nonnegative;
+    }
+}
+
+void update_pose(RiderMovementState& rider,std::uint8_t counter,std::uint8_t contact_phase,
+                 const MovementContent& content,int animation_override,bool use_throttle_target) {
+    if(content.pose_slopes.size()!=128 || content.displacement_table.size()!=512) {
+        throw std::invalid_argument("movement pose tables have the wrong size");
+    }
+    if (!rider.contact.angle_unspecified) {
+        int target_signed{};
+        if (rider.pose.rolling && rider.pose.rolling_level != 0) {
+            target_signed = static_cast<std::int16_t>(rider.contact.surface_angle) +
+                            (rider.pose.reflected ? 23 : -23);
+        } else {
+            const auto target_source=static_cast<std::int16_t>(
+                use_throttle_target?rider.throttle:rider.motion.velocity_x);
+            target_signed=target_source>>5;
+        }
+        target_signed=std::clamp(target_signed,-31,31);
+        const unsigned target_index=target_signed>=0?static_cast<unsigned>(target_signed):
+                                    static_cast<unsigned>(-target_signed+32);
+        rider.pose.target_orientation=content.pose_slopes[target_index];
+    }
+    auto orientation=static_cast<std::uint16_t>(rider.pose.orientation+rider.motion.response_b);
+    if(rider.motion.response_a) {
+        orientation=add_word(orientation,rider.motion.response_a);
+    } else if(rider.contact.unsupported_count<9 && rider.pose.target_orientation!=rider.pose.orientation) {
+        const auto target=rider.pose.target_orientation;
+        const bool increase=target>=32 ?
+            (static_cast<std::int16_t>(target-rider.pose.orientation)>=1 &&
+             static_cast<std::int16_t>(target-rider.pose.orientation)<=32) :
+            !(static_cast<std::int16_t>(rider.pose.orientation-target)>=1 &&
+              static_cast<std::int16_t>(rider.pose.orientation-target)<=32);
+        const int direction=increase?1:-1;
+        orientation=static_cast<std::uint16_t>(rider.pose.orientation+direction);
+        if(static_cast<std::int16_t>(rider.motion.previous_x_displacement)>=16) {
+            for(unsigned step=0;step<2 && (orientation&63U)!=target;++step) {
+                orientation=static_cast<std::uint16_t>(
+                    static_cast<int>(orientation&63U)+direction);
+            }
+        }
+    }
+    rider.pose.orientation=orientation&63U;
+    const int combined=static_cast<int>(rider.pose.orientation)+
+        (static_cast<std::int16_t>(rider.motion.orientation_impulse)>>1);
+    rider.pose.reflected_orientation=static_cast<std::uint16_t>(combined)&63U;
+    if((counter&1U)==0 && rider.motion.orientation_impulse) {
+        const auto impulse=static_cast<std::int16_t>(rider.motion.orientation_impulse);
+        rider.motion.orientation_impulse=static_cast<std::uint16_t>(impulse+(impulse>=0?-1:1));
+    }
+    if(rider.pose.reflected_orientation && rider.pose.reflected) {
+        rider.pose.reflected_orientation=64-rider.pose.reflected_orientation;
+    }
+    rider.pose.displacement_history[2]=rider.pose.displacement_history[1];
+    rider.pose.displacement_history[1]=rider.pose.displacement_history[0];
+    rider.pose.displacement_history[0]=rider.motion.previous_x_displacement;
+    int steering{};
+    if(rider.jump.impulse_phase>=1 || rider.contact.angle_unspecified) {
+        steering=static_cast<std::int16_t>(rider.pose.animation_increment);
+        if((counter&3U)==3) steering+=steering>0?-1:(steering<0?1:0);
+        rider.pose.animation_increment=static_cast<std::uint16_t>(steering);
+    } else {
+        int dx=static_cast<std::int16_t>(rider.pose.previous_x-rider.motion.x);
+        int dy=static_cast<std::int16_t>(rider.pose.previous_y-rider.motion.y);
+        if(std::abs(dy)<3)dy=0;
+        const auto square_x=content_word(content.displacement_table,2U*(std::abs(dx)&255));
+        const auto square_y=content_word(content.displacement_table,2U*(std::abs(dy)&255));
+        int distance=static_cast<int>(integer_sqrt((square_x+square_y)&65535U));
+        if(dx<0)distance=-distance;
+        rider.motion.previous_x_displacement=static_cast<std::uint16_t>(distance);
+        const int accumulation=static_cast<std::int16_t>(rider.pose.displacement_remainder+distance);
+        int remainder{};
+        if(accumulation) {
+            steering=std::abs(accumulation)/3;
+            remainder=std::abs(accumulation)%3;
+            if(accumulation<0)steering=-steering;
+            if(dx<0)remainder=-remainder;
+        } else {
+            steering=distance;
+        }
+        rider.pose.displacement_remainder=static_cast<std::uint16_t>(remainder);
+        rider.pose.animation_increment=static_cast<std::uint16_t>(steering);
+    }
+    if(rider.pose.reflected)steering=-steering;
+    if(animation_override)steering=animation_override;
+    int phase=static_cast<std::int16_t>(rider.pose.animation_phase)+steering;
+    phase%=24;if(phase<0)phase+=24;
+    rider.pose.animation_phase=static_cast<std::uint16_t>(phase);
+    int animation=phase*64;
+    if (rider.pose.rolling) {
+        const auto rate=std::abs(static_cast<std::int16_t>(rider.pose.animation_increment));
+        if(rate<3 && static_cast<std::uint8_t>(rider.pose.rolling_level)!=0) {
+            rider.pose.rolling_level=static_cast<std::uint16_t>(
+                static_cast<std::uint8_t>(rider.pose.rolling_level)-1U);
+        } else if(rate>=5 && static_cast<std::uint8_t>(rider.pose.rolling_level)!=2) {
+            rider.pose.rolling_level=static_cast<std::uint16_t>(
+                static_cast<std::uint8_t>(rider.pose.rolling_level)+1U);
+        }
+        if(static_cast<std::uint8_t>(rider.pose.rolling_level)!=0) {
+            int alternate=static_cast<std::uint16_t>(rider.pose.alternate_animation_phase)+
+                          (phase&1)+contact_phase;
+            if(alternate>=3)alternate-=3;
+            rider.pose.alternate_animation_phase=static_cast<std::uint16_t>(alternate);
+            animation=alternate*64+
+                (static_cast<std::uint8_t>(rider.pose.rolling_level)==1?0x8e0:0x820);
+        }
+    }
+    rider.pose.pose_index=static_cast<std::uint16_t>(animation+rider.pose.reflected_orientation);
+    rider.motion.previous_x_displacement=static_cast<std::uint16_t>(
+        std::abs(static_cast<std::int16_t>(rider.motion.previous_x_displacement)));
+    rider.pose.previous_x=rider.motion.x;
+    rider.pose.previous_y=rider.motion.y;
+    (void)contact_phase;
+}
+
+int stationary_animation_override(const RiderMovementState& rider,std::uint8_t horizontal) {
+    const bool prior_motion=
+        std::any_of(rider.pose.displacement_history.begin(),rider.pose.displacement_history.end(),
+                    [](auto value){return static_cast<std::int16_t>(value)>=2;}) ||
+        static_cast<std::int16_t>(rider.motion.previous_x_displacement)>=2;
+    if((rider.contact.unsupported_count<2 && prior_motion) || horizontal==1)return 0;
+    int value=horizontal<1?2:-2;
+    return rider.pose.reflected?-value:value;
+}
+
+bool update_quarter_turns(RiderMovementState& rider) {
+    auto& turns=rider.quarter_turn;
+    if(!rider.motion.response_a && rider.contact.unsupported_count>=2) {
+        if(rider.contact.unsupported_count==2 || !turns.initialized) {
+            const auto rotation=static_cast<std::int8_t>(rider.motion.response_b&0xffU);
+            const int prior=static_cast<int>(rider.pose.orientation)-rotation;
+            turns.previous_quadrant=static_cast<std::uint16_t>(prior)&63U;
+            turns.previous_quadrant=static_cast<std::uint16_t>(turns.previous_quadrant>>4U);
+            turns.reflected_at_start=rider.pose.reflected;
+            turns.initialized=true;
+            turns.forward_turns=turns.reverse_turns=0;
+            turns.forward_quarters=turns.reverse_quarters=0;
+        } else {
+            const auto current=static_cast<std::uint16_t>(rider.pose.orientation>>4U);
+            const auto previous=turns.previous_quadrant;
+            if(current!=previous) {
+                bool increasing{};
+                if(current==3)increasing=previous==2;
+                else if(previous==3)increasing=current!=2;
+                else increasing=current>previous;
+                auto& quarters=increasing?turns.forward_quarters:turns.reverse_quarters;
+                auto& opposite=increasing?turns.reverse_quarters:turns.forward_quarters;
+                auto& completed=increasing?turns.forward_turns:turns.reverse_turns;
+                quarters=add_word(quarters,1);
+                if(quarters>=4){completed=add_word(completed,1);quarters=0;}
+                opposite=0;
+            }
+            turns.previous_quadrant=current;
+        }
+        return false;
+    }
+    if(!turns.initialized)return false;
+    if(turns.forward_quarters==3)turns.forward_turns=add_word(turns.forward_turns,1);
+    if(turns.reverse_quarters==3)turns.reverse_turns=add_word(turns.reverse_turns,1);
+    const auto forward=std::min<std::uint16_t>(turns.forward_turns,4);
+    const auto reverse=std::min<std::uint16_t>(turns.reverse_turns,4);
+    unsigned event{};
+    if(forward)event=forward+(turns.reflected_at_start?0U:4U);
+    if(reverse) {
+        if(event)throw std::invalid_argument("combined rotation reward is outside the recovered domain");
+        event=reverse+(turns.reflected_at_start?4U:0U);
+    }
+    turns.previous_quadrant=turns.forward_turns=turns.reverse_turns=0;
+    turns.forward_quarters=turns.reverse_quarters=0;
+    turns.initialized=false;
+    if(event==0)return false;
+    if(event==1)return true;
+    throw std::invalid_argument("rotation reward is outside the recovered event-one domain");
+}
+
+void update_reward_queue(MovementState& state,bool event_one,const MovementContent& content) {
+    if(content.rotation_reward.size()!=2 || content.rotation_class.size()!=1) {
+        throw std::invalid_argument("rotation reward content has the wrong size");
+    }
+    if(event_one && state.rewards.write_cursor!=state.rewards.read_cursor) {
+        state.rewards.entries[state.rewards.write_cursor]=1;
+        state.rewards.write_cursor=static_cast<std::uint8_t>((state.rewards.write_cursor+1U)&31U);
+    }
+    if(state.rewards.cooldown)return;
+    const auto next=static_cast<std::uint8_t>((state.rewards.read_cursor+1U)&31U);
+    if(next==state.rewards.write_cursor) {
+        state.rewards.cooldown=10;
+        return;
+    }
+    state.rewards.read_cursor=next;
+    const auto event=state.rewards.entries[next];
+    if(event!=1 || content.rotation_class[0]!=0 || state.rewards.event_one_weight==0) {
+        throw std::invalid_argument("reward queue left the recovered event-one domain");
+    }
+    state.rewards.feature_total=add_word(state.rewards.feature_total,state.rewards.event_one_weight);
+    state.rewards.event_one_weight=std::max<std::uint8_t>(state.rewards.event_one_weight>>1U,1);
+    const auto amount=static_cast<std::int16_t>(content_word(content.rotation_reward,0));
+    auto& boost=state.riders[1].speed.boost;
+    if(negative(static_cast<std::uint16_t>(boost+1U)))boost=static_cast<std::uint16_t>((boost>>1U)|0x8000U);
+    if(amount>=0) {
+        boost=add_word(boost,static_cast<std::uint16_t>(amount));
+        state.riders[1].speed.vertical_boost=add_word(
+            state.riders[1].speed.vertical_boost,static_cast<std::uint16_t>(amount));
+    }
+    const auto remaining=static_cast<unsigned>(
+        (state.rewards.write_cursor-state.rewards.read_cursor-1U)&31U);
+    state.rewards.cooldown=static_cast<std::uint16_t>(std::max(5,40-static_cast<int>(4U*remaining)));
 }
 }
 
@@ -159,7 +459,6 @@ void update_movement(MovementState& state, const ControllerButtons& player_butto
     state.update_counter = static_cast<std::uint8_t>(state.update_counter + 1U);
     state.animation_counter = static_cast<std::uint8_t>((state.animation_counter + 1U) & 31U);
     state.contact_phase = static_cast<std::uint8_t>(1U - state.contact_phase);
-    state.progress_phase = static_cast<std::uint8_t>(1U - state.progress_phase);
 
     // The countdown handler publishes a forced brake while entering with 70 or
     // more, then decrements. End-1533 contains 69, so frame 1534 releases the
@@ -168,12 +467,86 @@ void update_movement(MovementState& state, const ControllerButtons& player_butto
     const bool timer_enabled = state.countdown < 69;
     if (state.countdown != 0) --state.countdown;
     const bool player_brake = forced_brake || player_buttons.b;
-    if (state.player_input.horizontal != 2 && !player_brake) {
-        throw std::invalid_argument("neutral player throttle is not implemented yet");
+    bool opponent_jump=(state.riders[1].progress.marker_word&0x2000U)!=0;
+    if(opponent_jump && state.riders[1].contact.unsupported_count<4 &&
+       state.rewards.feature_total!=0) {
+        const auto catch_up=static_cast<std::int16_t>(
+            state.riders[0].progress.transition_count-
+            state.riders[1].progress.transition_count-3U);
+        if(catch_up>=0) {
+            throw std::invalid_argument("opponent catch-up jump is outside the recovered domain");
+        }
+        // After a scored feature, the recovered AI copies the alternating
+        // motion phase instead of asserting another continuous jump input.
+        opponent_jump=state.contact_phase!=0;
     }
-    update_horizontal(state.riders[0], player_brake, false, state, content);
-    update_horizontal(state.riders[1], forced_brake, true, state, content);
+    bool opponent_trick=false;
+    if(opponent_jump && state.opponent_ai.impulse_countdown) {
+        opponent_trick=(state.opponent_ai.trick_selector&1U)!=0;
+    } else if(opponent_jump && state.riders[1].contact.unsupported_count>=4) {
+        state.opponent_ai.impulse_countdown=static_cast<std::uint16_t>(
+            std::abs(static_cast<std::int16_t>(state.riders[1].motion.velocity_y))>>1);
+        state.opponent_ai.trick_selector=1;
+        state.opponent_ai.suppression_counter=30;
+        opponent_trick=true;
+    } else if(!opponent_jump) {
+        state.opponent_ai.impulse_countdown=0;
+        state.opponent_ai.trick_selector=0;
+    }
+    const unsigned active=state.contact_phase?0U:1U;
+    bool opponent_event_one=false;
+    state.rewards.cooldown=state.rewards.cooldown>2?
+        static_cast<std::uint16_t>(state.rewards.cooldown-2U):0;
+    for(unsigned index=0;index<state.riders.size();++index) {
+        auto& rider=state.riders[index];
+        const auto horizontal=index==0?state.player_input.horizontal:2U;
+        int animation_override=index==active?
+            stationary_animation_override(rider,static_cast<std::uint8_t>(horizontal)):0;
+        bool use_throttle_target=false;
+        if(index==active) {
+            const bool event_one=update_quarter_turns(rider);
+            if(index==1)opponent_event_one=event_one;
+            else if(event_one)throw std::invalid_argument("player reward is outside the primary domain");
+            update_jump(rider,index==0?player_buttons.b:opponent_jump);
+            // In the recovered branch rotation input is accepted only after the
+            // contact count reaches nine; the synthesized opponent trick is the
+            // positive two-step direction.
+            if(index==1 && opponent_trick && rider.contact.unsupported_count>=9) {
+                rider.motion.response_b=2;
+            } else {
+                rider.motion.response_b=0;
+            }
+            update_active_low_speed_damping(rider);
+        }
+        update_horizontal(rider,index==0?player_brake:forced_brake,horizontal==2,index==1,state,content,
+                          animation_override,use_throttle_target);
+        update_rolling_mode(rider);
+        update_gravity(rider);
+        integrate_motion(rider);
+        update_pose(rider,state.animation_counter,state.contact_phase,content,animation_override,
+                    use_throttle_target);
+    }
     (void)advance_timer_digits(state.timer, timer_enabled);
+    update_reward_queue(state,opponent_event_one,content);
+    std::array<TrackSamples,2> samples{};
+    for (std::size_t rider=0;rider<state.riders.size();++rider) {
+        const auto& movement=state.riders[rider];
+        const auto points=collision_points(content.sampling,movement.pose.pose_index,
+                                           movement.pose.reflected);
+        samples[rider]=sample_track(content.sampling,points,movement.motion.x,
+                                    movement.motion.y,1024);
+        const auto summary=summarize_flat_contact(content.flat_contact,points,samples[rider],
+                                                  movement.motion.x,movement.motion.y);
+        resolve_flat_contact(state.riders[rider].contact,state.riders[rider].motion,summary,
+                             {state.contact_phase,rider==1,0,0});
+    }
+    ProgressUpdateState progress{{state.riders[0].progress,state.riders[1].progress},
+                                 state.progress_phase};
+    update_track_progress(progress,samples,content.progress_transitions);
+    state.progress_phase=progress.phase;
+    for (std::size_t rider=0;rider<state.riders.size();++rider) {
+        state.riders[rider].progress=progress.riders[rider];
+    }
     ++state.frame;
 }
 } // namespace unirally

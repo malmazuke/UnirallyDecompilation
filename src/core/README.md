@@ -62,4 +62,9 @@ binary flags and cursors, and contains no CPU registers or captured calls.
 `tools/unirally_lab/native/prepare.py` accepts only the identity-verified
 end-of-frame 1533 WRAM/SRAM observation and a complete named 12-file static
 inventory. It emits an ignored semantic seed, static content and runtime
-metadata. No autonomous movement update exists at this checkpoint.
+metadata. `movement_runner` then advances that state using only controller
+inputs and the bound static content. The update order is input/counters and AI,
+each rider's active and every-frame motion, timer/reward handling, pose-based
+sampling/contact, and alternating marker progress. The full primary and
+cadence-17 cases agree exactly; the release-2347 case currently reaches a
+source-confirmed idle-pose state outside the implemented continuation fields.

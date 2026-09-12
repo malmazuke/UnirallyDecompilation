@@ -100,3 +100,41 @@ divergence is the predicted coupled boundary at frame 1632: native player speed
 diagnostic checkpoint, not gameplay acceptance; opponent jump/contact,
 reward/AI feedback, pose and marker progress remain to be composed. Usage at
 this checkpoint is 19% of the seven-day window (baseline 17%, ceiling 27%).
+
+## Autonomous movement checkpoint at the 25% usage guard
+
+The update now composes the reviewed sampler, progress, flat contact, speed,
+input/timer, jump, pose/rolling, quarter-turn, reward and opponent-AI contracts.
+Primary comparison passes all 13 fields for all 1,466 computed frames and both
+fresh native processes are byte-identical. Cadence-17, first run after the
+primary fix, also passes in full. Reports are
+`artifacts/m2-01-movement/ai-feature-primary/report.json` and
+`artifacts/m2-01-movement/final-withheld-cadence-17/report.json`.
+
+Release-2347 initially exposed neutral coasting. Source access and disassembly
+established two independent operations: friction flag 1 at `$82:A8A7–A8C8`,
+and active-phase low-speed damping at `$82:A5FA–A61E` for nonzero magnitude
+below 64. After implementing both, required fields agree through frame 2787.
+Frame 2788 then differs only in displacement (native 0, original 3). The full
+release WRAM capture local to the research worktree shows the causal boundary:
+idle pose first diverges at 2762 and contact y at 2786. Focused access SHA-256
+prefixes are `27ea8d928d5a11df`, `bcc1b4a2e70a3723`,
+`daeef08a7f497d74` and `02c8827cd17a80e6`. The original writes the excluded
+idle fields `$0F35/$0F37/$0F75…$0F7F` throughout `$82:A0B7–A237`; native state
+does not yet contain them. Do not approximate the one-frame displacement.
+
+The full ROM-free synthetic suite passes 273/273 and sanitizer movement tests
+pass 2/2 with no diagnostics. Reports:
+`checkpoint-synthetic.json`, `checkpoint-sanitize-build.json`. A broad `rg`
+before formal unsealing accidentally printed a few isolated withheld expected
+lines; no series was deliberately inspected or used for primary tuning, but
+this is a recorded process deviation. Formal withheld runs occurred only after
+the complete primary pass. No reset credit was redeemed. Usage moved from 17%
+to 25% against the documented 27% ceiling.
+
+Exact next work: recover the bounded idle-pose routine `$82:A0B7–A237`, extend
+the canonical seed with only future-affecting semantic fields (all zero at the
+current seed must still be imported from their established storage), add
+authored arithmetic/serialization tests, then rerun release-2347. Only after it
+passes should a fresh independent reviewer test the exact candidate and own an
+additional withheld variation. M2-01 remains active, not accepted.

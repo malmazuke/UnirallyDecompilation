@@ -64,6 +64,13 @@ struct MovementState {
 };
 
 struct MovementContent {
+    SamplingContent sampling{};
+    FlatContactContent flat_contact{};
+    std::span<const std::uint8_t> progress_transitions;
+    std::span<const std::uint8_t> pose_slopes;
+    std::span<const std::uint8_t> displacement_table;
+    std::span<const std::uint8_t> rotation_reward;
+    std::span<const std::uint8_t> rotation_class;
     SpeedDecayContent speed_decay{};
 };
 

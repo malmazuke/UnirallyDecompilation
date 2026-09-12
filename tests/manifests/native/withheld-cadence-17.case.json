@@ -1,0 +1,16 @@
+{
+  "expected": {
+    "path": "tests/manifests/native/withheld-cadence-17.expected.json",
+    "sha256": "7b76e10cd763361ec4faa208d0b61b96229ba71023752b76f6f3dfe9308bcc7f"
+  },
+  "kind": "native_movement_case",
+  "replay": {
+    "path": "tests/manifests/native/withheld-cadence-17.replay.json",
+    "sha256": "e3e27d3db0928034fb1d2c7ccc280505fc3d88d24a6c4c6c694bf4b0266e52c5"
+  },
+  "runtime": {
+    "path": "local/native/dragster/runtime.json",
+    "sha256": "e8d2898408d369b2ed1b9ca91a8891acb88d938fb49d96c05e1ef94d78a4fe89"
+  },
+  "schema_version": 1
+}

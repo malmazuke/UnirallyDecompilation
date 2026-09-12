@@ -61,7 +61,19 @@ int main(int argc,char** argv) try {
     auto state=unirally::deserialize_movement_state(read_bytes(seed));
     const auto masks=read_bytes(content/"speed-masks.bin");
     const auto decrements=read_bytes(content/"speed-decrements.bin");
-    const unirally::MovementContent movement_content{{masks,decrements}};
+    const auto track=read_bytes(content/"track-data.bin");
+    const auto poses=read_bytes(content/"collision-poses.bin");
+    const auto templates=read_bytes(content/"collision-templates.bin");
+    const auto transitions=read_bytes(content/"progress-transitions.bin");
+    const auto columns=read_bytes(content/"tile-tables.bin");
+    const auto flags=read_bytes(content/"tile-flags.bin");
+    const auto slopes=read_bytes(content/"pose-slopes.bin");
+    const auto displacement=read_bytes(content/"displacement-table.bin");
+    const auto reward=read_bytes(content/"rotation-reward.bin");
+    const auto reward_class=read_bytes(content/"rotation-class.bin");
+    const unirally::MovementContent movement_content{{track,poses,templates},{columns,flags},
+                                                       transitions,slopes,displacement,reward,reward_class,
+                                                       {masks,decrements}};
     std::ifstream stream(inputs);
     if (!stream) throw std::runtime_error("cannot open controller input stream");
     std::cout << "unirally-movement-v1\n";

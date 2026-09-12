@@ -25,6 +25,10 @@ incompatible pack is rejected and never silently replaced. The application
 reports SDL/window/renderer failures as failed launches. A `--report` path
 must not alias the ROM, pack, extraction rules or frontend executable; such a
 collision exits before reading, extracting, launching or writing the report.
+All frontend path operands are resolved once with the operating system's
+symlink-aware semantics and those exact paths are used for both the preflight
+and later opens. Python does not expand a quoted leading `~`: leave it unquoted
+for shell expansion or pass an absolute path.
 
 Keyboard controls are arrows, Z=B, X=Y, A=A, S=X, Q=L, W=R, Enter=Start and
 Backspace=Select. Standard gamepad buttons follow the equivalent SNES layout.

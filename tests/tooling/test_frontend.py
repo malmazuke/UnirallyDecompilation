@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import json
 import subprocess
@@ -197,6 +198,75 @@ class FrontendLaunchTests(unittest.TestCase):
         self.assertIn("refusing to write --report onto --pack", pack_collision.stderr)
         self.assertEqual(pack_path.read_bytes(), original_pack)
         self.assertFalse(marker.exists())
+
+    def test_cli_quoted_tilde_alias_is_refused(self):
+        literal_home = self.root / "~"
+        literal_home.mkdir()
+        pack_path = literal_home / "victim.pack"
+        self.assertEqual(commands.cmd_run(self.args(
+            pack=str(pack_path), rom=str(self.rom_path))), EXIT_OK)
+        original_pack = pack_path.read_bytes()
+        with contextlib.chdir(self.root), \
+                mock.patch.object(commands, "run_bounded") as launched, \
+                mock.patch.object(commands.reportmod, "Report") as report:
+            self.assertEqual(commands.cmd_run(self.args(
+                pack=str(pack_path), report="~/victim.pack")),
+                EXIT_INVALID_INPUT)
+        launched.assert_not_called()
+        report.assert_not_called()
+        self.assertEqual(pack_path.read_bytes(), original_pack)
+        marker = self.root / "tilde-child-started"
+        child = self.root / "tilde-child"
+        child.write_text(
+            "#!/usr/bin/env python3\n"
+            "from pathlib import Path\n"
+            f"Path({str(marker)!r}).write_text('started')\n"
+        )
+        child.chmod(0o755)
+        result = subprocess.run(
+            [sys.executable, str(PROJECT), "frontend", "run",
+             "--pack", str(pack_path), "--rules", str(self.rules_path),
+             "--executable", str(child), "--updates", "1",
+             "--timeout", "30", "--report", "~/victim.pack"],
+            cwd=self.root, capture_output=True, text=True, timeout=30,
+        )
+        self.assertEqual(result.returncode, EXIT_INVALID_INPUT)
+        self.assertIn("refusing to write --report onto --pack", result.stderr)
+        self.assertEqual(pack_path.read_bytes(), original_pack)
+        self.assertFalse(marker.exists())
+
+    def test_cli_symlink_parent_traversal_keeps_distinct_report(self):
+        directory_a = self.root / "a"
+        directory_b = self.root / "b"
+        (directory_b / "sub").mkdir(parents=True)
+        directory_a.mkdir()
+        (directory_a / "link").symlink_to(directory_b / "sub")
+        pack_path = directory_a / "report.json"
+        self.assertEqual(commands.cmd_run(self.args(
+            pack=str(pack_path), rom=str(self.rom_path))), EXIT_OK)
+        original_pack = pack_path.read_bytes()
+        marker = self.root / "distinct-child-started"
+        child = self.root / "distinct-child"
+        child.write_text(
+            "#!/usr/bin/env python3\n"
+            "from pathlib import Path\n"
+            f"Path({str(marker)!r}).write_text('started')\n"
+        )
+        child.chmod(0o755)
+        report_spelling = directory_a / "link" / ".." / "report.json"
+        actual_report = directory_b / "report.json"
+        result = subprocess.run(
+            [sys.executable, str(PROJECT), "frontend", "run",
+             "--pack", str(pack_path), "--rules", str(self.rules_path),
+             "--executable", str(child), "--updates", "1",
+             "--timeout", "30", "--report", str(report_spelling)],
+            cwd=self.root, capture_output=True, text=True, timeout=30,
+        )
+        self.assertEqual(result.returncode, EXIT_OK, result.stderr)
+        self.assertEqual(pack_path.read_bytes(), original_pack)
+        self.assertTrue(marker.is_file())
+        self.assertEqual(json.loads(actual_report.read_text())["status"],
+                         "passed")
 
 
 if __name__ == "__main__":

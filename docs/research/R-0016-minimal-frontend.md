@@ -200,14 +200,38 @@ or another frontend input. The original private ROM was not used by the probe
 and remained unchanged.
 
 The frontend now performs a report/input collision preflight before timeout
-reporting, input reads, extraction or process creation. It compares normalized
-absolute paths, non-strict resolved paths and existing-file identity, covering
-lexical aliases, `..`, symlinks and hardlinks even when a target does not yet
-exist. The guarded inputs are ROM, pack, extraction rules and explicit or
-default executable. A collision prints a clear error and exits 3 without
-writing the requested report, since doing so would itself overwrite the input.
-For non-collision failures the existing failed-report behavior is unchanged.
-At exact candidate `8682b17`, broad debug/sanitizer suites and real Classic
-first-launch/pack-only smokes passed. Subsequent refused report-equals-ROM and
-report-equals-pack commands left the disposable input hashes unchanged and
-created no first-launch output pack.
+reporting, input reads, extraction or process creation. The first correction
+compared normalized absolute paths, non-strict resolved paths and existing-file
+identity, covering ordinary lexical aliases, `..`, symlinks and hardlinks even
+when a target did not yet exist. The guarded inputs are ROM, pack, extraction
+rules and explicit or default executable. A collision prints a clear error and
+exits 3 without writing the requested report, since doing so would itself
+overwrite the input. For non-collision failures the existing failed-report
+behavior is unchanged. At exact candidate `8682b17`, broad debug/sanitizer
+suites and real Classic first-launch/pack-only smokes passed. Subsequent refused
+report-equals-ROM and report-equals-pack commands left the disposable input
+hashes unchanged and created no first-launch output pack.
+
+### Collision re-review observation and final path decision
+
+The next independent review demonstrated that the first guard did not use the
+same path semantics as the later opens. Its comparison expanded `~`, while the
+report writer did not: from a temporary working directory, quoted
+`~/victim.pack` consequently replaced an authored pack stored in the literal
+`~` directory. The review also demonstrated the opposite error. Lexically
+collapsing `a/link/../report.json` reported an alias with `a/report.json`, even
+though `a/link -> b/sub` makes the operating system open `b/report.json`.
+These are observed destructive-miss and false-refusal cases, respectively.
+
+The correction resolves every frontend operand exactly once, before report
+construction or any input access, using non-strict symlink-aware resolution.
+The resulting `Path` objects are used unchanged for report collision checks,
+rules/ROM/pack reads, pack creation, executable launch and report writing.
+Existing-file `samefile` identity additionally detects hardlinks. There is no
+Python `expanduser` step: a quoted leading `~` is an ordinary literal path
+component, while an unquoted tilde has already been expanded by the invoking
+shell. Authored direct and subprocess regressions require the literal-tilde
+alias to exit 3 without constructing a report or starting a child, and require
+the symlink-parent/`..` distinct target to launch and write the actual resolved
+report while preserving the pack. The earlier ordinary nonexistent, symlink
+and hardlink alias coverage remains frozen.

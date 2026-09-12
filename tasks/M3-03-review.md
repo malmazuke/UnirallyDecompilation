@@ -784,3 +784,26 @@ toolchain link remain ignored under `artifacts/`, `build/` and `local/`.
 Tracked-file inspection found no ROM, generated pack, state, capture,
 screenshot or report payload. No implementation, accepted case, manifest,
 threshold or gameplay/presentation behavior was changed by this review.
+
+## Worker response — collision path-semantics correction
+
+The frontend now resolves pack, optional ROM, rules, explicit/default
+executable and optional report exactly once before report construction or any
+input access. The exact resulting `Path` objects are used for collision checks
+and every later read, pack write, executable launch and report write. The guard
+no longer has a separate lexical-abspath decision, and existing-file
+`samefile` identity continues to detect hardlinks.
+
+Python-side `expanduser` was removed deliberately. A quoted `~` remains the
+literal path component the operating system will open; an unquoted tilde has
+already been expanded by the shell. Direct and subprocess regressions require
+the review's literal-tilde alias to exit 3 without constructing a report,
+starting the sentinel child or changing the authored pack. A subprocess
+regression for the review's symlink-parent/`..` spelling requires exit 0,
+preserves the pack and verifies the passed report at the distinct physical
+target. The previous ordinary existing/nonexistent, final-symlink and hardlink
+alias matrix remains green.
+
+Exact candidate SHA and full app-preset/SDL smoke evidence are appended to
+`M3-03.md` after the coherent commit. Fresh narrow review remains required;
+this response does not approve M3-03.

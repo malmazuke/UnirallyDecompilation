@@ -182,11 +182,19 @@ captured inputs were supplied; no pose arithmetic or expectation was changed.
   signed remainder, cached pre-contact x/y, and final pose index.
 - `$82:A237` only clears `$0F97` in this domain; `$82:A027` sees the unchanged
   positive field `$11F7=48` and returns. `$82:A35B` takes no state-changing
-  turnaround branch. `$82:A0B7` clears dormant idle-animation fields
-  `$0F75/$0F77/$0F79/$0F7B/$0F35/$0F7D/$0F7F`, all alreadyzero here. These
-  observations support explicit native zero-domain guards, not a universal
-  claim that the routines are unnecessary. The speed clamp/decay is independently
-  recovered by the coordinator's speed research, not duplicated here.
+  turnaround branch. The primary does not exercise `$82:A0B7` beyond clearing
+  idle-animation fields. The later frozen release-2347 variation reaches rest
+  and establishes the full `$82:A0B7-$82:A236` recurrence: persistent player
+  words `$0E8B/$0E77/$0E83/$0E7F/$0E87/$0BD7/$0D5B/$0D6B/$0BDF` load to
+  `$0F35/$0F37/$0F75/$0F77/$0F79/$0F7B/$0F7D/$0F7F/$0F83`; the opponent uses
+  the adjacent stride. Reset preserves `$0F37/$0F83`, the active recurrence
+  integrates a bounded signed velocity, and its zero-velocity branch reads the
+  signed 64-byte table at ROM file offset `0x1B4`. `$81:8625-$81:8672` damps an
+  inactive offset toward zero by five (two with response), while
+  `$83:F09E-$83:F0F7` adds signed truncation-toward-zero `offset/16` before the
+  contact impulse and reflection. The exact native translation makes the
+  release case agree through frame2999. The speed clamp/decay remains the
+  independently recovered coordinator component.
 
 ### Quarter tracking, queue latency and reward feedback
 

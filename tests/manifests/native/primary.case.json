@@ -1,0 +1,16 @@
+{
+  "expected": {
+    "path": "tests/manifests/native/primary.expected.json",
+    "sha256": "5b6b2f6f2d513d1ef2b230f21b0774229bdbc6a207ff4a530245e8c7051fb640"
+  },
+  "kind": "native_movement_case",
+  "replay": {
+    "path": "tests/manifests/native/primary.replay.json",
+    "sha256": "c90ab5539097c780d8f33f49c81b522f44aceacdb4b2c0f4784d553407fbe007"
+  },
+  "runtime": {
+    "path": "local/native/dragster-idle/runtime.json",
+    "sha256": "a38d58f2295c5be0569e83b4d77d995eceb031b5ff93118123af06002ab637da"
+  },
+  "schema_version": 1
+}

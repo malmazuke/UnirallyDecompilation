@@ -100,6 +100,10 @@ inline constexpr std::array<std::uint8_t, 8> movement_state_magic{
 inline constexpr std::array<std::uint8_t, 8> movement_state_magic_v2{
     'U', 'R', 'M', 'V', '0', '0', '0', '2'};
 
+// $83:E90D-$83:E932 non-crossing finish-display velocity adjustment.
+// Input/output are signed 16-bit bit patterns in 1/32 units per update.
+std::uint16_t finish_speed_toward_zero(std::uint16_t velocity);
+
 // Fixed-order little-endian encoding. It contains semantic continuation fields
 // only: no WRAM image, CPU registers, frame-indexed events or captured calls.
 std::vector<std::uint8_t> serialize_movement_state(const MovementState& state);

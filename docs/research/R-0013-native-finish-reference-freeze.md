@@ -71,3 +71,13 @@ native process exactly matches every gameplay row through frames3453/3558 and
 the finish contract through stable-result frames3679/3800. Fresh-process restores
 are identical before, at and after both player crossings and delay completion;
 the focused reports are retained under ignored `artifacts/m3-01-*-check*`.
+
+The first independent review added a one-frame Right release at crossing and
+froze a neighboring positive-speed tail. It exposed that the initial candidate's
+seven enumerated tail values were not the general source arithmetic. Ordered
+access writers and PAL `$83:E90D`–`$83:E932` show a non-crossing ten-unit
+pre-adjustment on two of each three finish updates. After ordinary limiting,
+neutral finish response conditionally removes the 24-unit drive contribution;
+remainders smaller than either decrement persist rather than wrapping or being
+forced to zero. This produces accepted `38 -> 2 -> 1 -> 0`, variation
+`19 -> 8 -> 6`, and reviewer-owned `37 -> 1 -> 0` tails without per-value cases.

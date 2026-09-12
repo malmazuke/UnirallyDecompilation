@@ -8,6 +8,16 @@ static void require(bool value, const char* expectation) {
 }
 
 int main() {
+    // These neighboring values pin the finish pre-adjustment's general
+    // non-crossing ten-unit arithmetic. In the reviewer-owned full update,
+    // incoming37 becomes27 here and the ordinary limiter then produces1.
+    require(unirally::finish_speed_toward_zero(12)==2 &&
+            unirally::finish_speed_toward_zero(11)==1 &&
+            unirally::finish_speed_toward_zero(10)==0 &&
+            unirally::finish_speed_toward_zero(9)==9 &&
+            static_cast<std::int16_t>(unirally::finish_speed_toward_zero(
+                static_cast<std::uint16_t>(-11)))==-1,
+            "finish speed changes only without crossing zero");
     unirally::MovementState state{};
     state.frame = 1533;
     state.countdown = 69;
@@ -106,6 +116,29 @@ int main() {
     const auto positive_crossing=zero_crossing(24,0xffff); // reference 40
     require(positive_crossing.velocity==1 && positive_crossing.wobble_offset==1,
             "idle pose positive zero crossing");
+
+    unirally::MovementState low_tail{};
+    low_tail.frame=3226; low_tail.contact_phase=0; low_tail.progress_phase=0;
+    low_tail.rewards.write_cursor=1; low_tail.rewards.event_one_weight=4;
+    low_tail.finish.rider_finished[0]=true;
+    low_tail.finish.phase=unirally::RacePhase::FinishDelay;
+    low_tail.finish.outcome=unirally::RaceOutcome::PlayerWon;
+    low_tail.finish.player_finish_delay=13;
+    for(auto& rider:low_tail.riders) {
+        rider.motion.y=64; rider.pose.previous_y=64;
+        rider.pose.reflected=true;
+    }
+    low_tail.riders[0].motion.velocity_x=37;
+    unirally::update_movement(low_tail,neutral,
+        {{track,poses,templates},{columns,flags},transitions,slopes,displacement,idle_pose,reward,reward_class,
+         {masks,decrements}});
+    require(low_tail.riders[0].motion.velocity_x==1,
+            "reviewer finish tail incoming37 reaches1");
+    unirally::update_movement(low_tail,neutral,
+        {{track,poses,templates},{columns,flags},transitions,slopes,displacement,idle_pose,reward,reward_class,
+         {masks,decrements}});
+    require(low_tail.riders[0].motion.velocity_x==0,
+            "reviewer finish tail reaches0 next update");
 
     // Authored finish boundaries: crossing is recorded after movement, the
     // dispatcher reacts on the following update, and delay 240 transitions on

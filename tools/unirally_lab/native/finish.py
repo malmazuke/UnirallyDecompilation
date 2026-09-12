@@ -89,18 +89,28 @@ def state_digests(states: list[bytes]) -> dict:
             "state_series_sha256": hashlib.sha256(b"".join(states)).hexdigest()}
 
 
-def validate(rows: list, states: list[bytes], expected: dict, case: dict) -> dict:
+def validate(rows: list, states: list[bytes], expected: dict, case: dict,
+             manifest: dict) -> dict:
     gameplay_count = expected["last_gameplay_frame"] - expected["initial_frame"] + 1
     compare._validate_rows(rows[:gameplay_count], expected["initial_frame"],
                            expected["last_gameplay_frame"], compare.NativeOutputError)
     # Identity and shape were validated while loading the case; compare the
     # frozen tested-domain rows directly and retain the first useful divergence.
     differences = []
-    for frozen, native in zip(expected["rows"], rows[:gameplay_count], strict=True):
+    for index, (frozen, native) in enumerate(
+            zip(expected["rows"], rows[:gameplay_count], strict=True)):
         if frozen != native:
+            prior = None if index == 0 else {
+                "frame": frozen[0] - 1,
+                "frozen": dict(zip(compare.COLUMNS[1:], expected["rows"][index - 1][1:], strict=True)),
+                "native": dict(zip(compare.COLUMNS[1:], rows[index - 1][1:], strict=True)),
+            }
             differences.append({"frame": frozen[0], "differences": [
                 {"field": compare.COLUMNS[i], "frozen": frozen[i], "native": native[i]}
-                for i in range(1, len(frozen)) if frozen[i] != native[i]]})
+                for i in range(1, len(frozen)) if frozen[i] != native[i]],
+                "prior_sample": prior,
+                "inputs": {"previous": replay.inputs_at(manifest, frozen[0] - 1),
+                           "current": replay.inputs_at(manifest, frozen[0])}})
             break
     comparison = {"identical": not differences, "compared_frames": gameplay_count}
     if differences: comparison["first_divergence"] = differences[0]

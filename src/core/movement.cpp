@@ -66,6 +66,13 @@ void read_rider(Reader& in, RiderMovementState& r) {
 
 bool negative(std::uint16_t value) { return (value & 0x8000U) != 0; }
 
+std::uint16_t speed_toward_zero(std::uint16_t velocity, std::int16_t amount) {
+    const auto speed=static_cast<std::int16_t>(velocity);
+    if(speed>=amount)return static_cast<std::uint16_t>(speed-amount);
+    if(speed<=-amount)return static_cast<std::uint16_t>(speed+amount);
+    return velocity;
+}
+
 bool has_finish_state(const RaceFinishState& finish) {
     return finish.rider_finished[0] || finish.rider_finished[1] ||
            finish.player_finish_delay != 0 || finish.result_loading_updates != 0 ||
@@ -194,33 +201,12 @@ void update_active_low_speed_damping(RiderMovementState& rider) {
     }
 }
 
-void apply_finish_slowdown(RiderMovementState& rider, std::uint16_t speed_before,
-                           std::uint32_t frame) {
-    // $83:E90D-$83:E9B4 replaces ordinary coasting while the finish banner is
-    // active. In the recovered positive-speed domain two updates remove 35
-    // units and every third removes 25; the final 38-unit case lands on 2,
-    // after which ordinary one-unit decay completes the stop.
-    // The low-speed tail takes a separate source branch whose integer results
-    // are not equivalent to extending the high-speed decrement. Keep its
-    // recovered values explicit; these are the complete positive-speed tails
-    // exercised by the two frozen DRAGSTER paths.
-    constexpr std::array<std::pair<std::uint16_t,std::uint16_t>,7> low_speed_tail{{
-        {45,19},{38,2},{19,8},{8,6},{6,5},{5,3},{3,2},
-    }};
-    for(const auto [before,after]:low_speed_tail) {
-        if(speed_before==before) {
-            rider.motion.velocity_x=after;
-            return;
-        }
-    }
-    auto speed=static_cast<std::int16_t>(rider.motion.velocity_x);
-    unsigned extra{};
-    if(speed_before>=64)extra=frame%3U==0U?24U:34U;
-    else if(speed_before>=40)extra=25U;
-    else if(speed_before>=32)extra=35U;
-    else if(speed_before>=10)extra=10U;
-    speed=static_cast<std::int16_t>(std::max(0,static_cast<int>(speed)-static_cast<int>(extra)));
-    rider.motion.velocity_x=static_cast<std::uint16_t>(speed);
+void apply_finish_slowdown(RiderMovementState& rider) {
+    // $83:E90D-$83:E932 runs before the ordinary horizontal update. It moves
+    // signed velocity ten units toward zero only when it cannot cross zero.
+    // Keeping that ordering is what produces both the 38->2 accepted
+    // tail and the reviewer-owned 37->1 neighboring case.
+    rider.motion.velocity_x=finish_speed_toward_zero(rider.motion.velocity_x);
 }
 
 void update_gravity(RiderMovementState& rider) {
@@ -601,6 +587,10 @@ void update_reward_queue(MovementState& state,bool event_one,const MovementConte
 }
 }
 
+std::uint16_t finish_speed_toward_zero(std::uint16_t velocity) {
+    return speed_toward_zero(velocity,10);
+}
+
 std::vector<std::uint8_t> serialize_movement_state(const MovementState& s) {
     if(s.contact_phase>1 || s.progress_phase>1) throw std::invalid_argument("movement phase is not binary");
     const bool version_two=has_finish_state(s.finish);
@@ -756,9 +746,19 @@ void update_movement(MovementState& state, const ControllerButtons& player_butto
             }
             update_active_low_speed_damping(rider);
         }
+        // The source dispatcher skips this pre-adjustment on each third
+        // update; the ordinary limiter/damping still runs on every update.
+        if(finish_delay && (state.frame+1U)%3U!=0U)apply_finish_slowdown(rider);
         update_horizontal(rider,index==0?player_brake:forced_brake,horizontal==2,index==1,state,content,
                           animation_override,use_throttle_target);
-        if(finish_delay)apply_finish_slowdown(rider,speed_before,state.frame+1U);
+        if(finish_delay) {
+            // Neutral finish response removes the 24-unit drive contribution
+            // after ordinary limiting only when subtraction cannot cross zero.
+            // Unlike the ten-unit pre-adjustment, a smaller remainder persists.
+            const auto limited=static_cast<std::int16_t>(rider.motion.velocity_x);
+            if(limited>=24)rider.motion.velocity_x=static_cast<std::uint16_t>(limited-24);
+            else if(limited<=-24)rider.motion.velocity_x=static_cast<std::uint16_t>(limited+24);
+        }
         update_rolling_mode(rider);
         update_gravity(rider);
         integrate_motion(rider);

@@ -81,7 +81,9 @@ and result-transition phase/counter. Crossing is observed after ordinary rider
 movement; the dispatcher reacts on the next update, forces the derived axis
 neutral, freezes the timer, and later stops movement during result loading.
 These finish-boundary and low-speed-tail claims are limited to the two
-identity-bound paths in R-0013.
+submitted identity-bound paths plus the reviewer-owned crossing release in
+R-0013. The tail uses ordered non-crossing ten- and 24-unit adjustments, not a
+table of observed speed pairs.
 
 The 333-byte `URMV0001` representation remains byte-identical while finish
 state is empty. After the first crossing, serialization switches one way to

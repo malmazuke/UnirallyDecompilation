@@ -453,7 +453,7 @@ def cmd_finish_check(args: argparse.Namespace) -> int:
                 if status: break
                 rows, states = finish.parse_output(result.stdout, reference["initial_frame"], reference["last_frame"])
                 if states[0] != seed_bytes: raise compare.NativeOutputError("native process changed the initial seed")
-                comparison = finish.validate(rows, states, reference, finish_case)
+                comparison = finish.validate(rows, states, reference, finish_case, replay)
                 series.append((rows, states)); rep.data[f"run{number}"] = {
                     **finish.state_digests(states), "comparison": comparison}
             if status == 0:

@@ -115,6 +115,89 @@ class FrontendLaunchTests(unittest.TestCase):
                                  "failed")
                 self.assertFalse(marker.exists())
 
+    def test_report_aliases_never_modify_inputs_or_start_child(self):
+        original_rom = self.rom_path.read_bytes()
+        alias_dir = self.root / "aliases"
+        alias_dir.mkdir()
+        symlink = alias_dir / "rom-link"
+        symlink.symlink_to(self.rom_path)
+        hardlink = alias_dir / "rom-hardlink"
+        hardlink.hardlink_to(self.rom_path)
+        resolved_absent = alias_dir / ".." / "absent.pack"
+        cases = (
+            ("rom", self.args(rom=str(self.rom_path), report=str(self.rom_path))),
+            ("rom-symlink", self.args(rom=str(self.rom_path), report=str(symlink))),
+            ("rom-hardlink", self.args(rom=str(self.rom_path), report=str(hardlink))),
+            ("rules", self.args(rom=str(self.rom_path), report=str(self.rules_path))),
+            ("executable", self.args(rom=str(self.rom_path),
+                                     report="/usr/bin/true")),
+            ("absent-pack", self.args(pack=str(self.root / "absent.pack"),
+                                      rom=str(self.rom_path),
+                                      report=str(resolved_absent))),
+        )
+        for label, args in cases:
+            with self.subTest(label=label), \
+                    mock.patch.object(commands, "run_bounded") as child, \
+                    mock.patch.object(commands.reportmod, "Report") as report:
+                self.assertEqual(commands.cmd_run(args), EXIT_INVALID_INPUT)
+                child.assert_not_called()
+                report.assert_not_called()
+                self.assertEqual(self.rom_path.read_bytes(), original_rom)
+                self.assertFalse((self.root / "absent.pack").exists())
+
+        self.assertEqual(commands.cmd_run(self.args(rom=str(self.rom_path))),
+                         EXIT_OK)
+        pack_path = Path(self.args().pack)
+        original_pack = pack_path.read_bytes()
+        with mock.patch.object(commands, "run_bounded") as child, \
+                mock.patch.object(commands.reportmod, "Report") as report:
+            self.assertEqual(
+                commands.cmd_run(self.args(report=str(pack_path))),
+                EXIT_INVALID_INPUT,
+            )
+        child.assert_not_called()
+        report.assert_not_called()
+        self.assertEqual(pack_path.read_bytes(), original_pack)
+
+    def test_cli_report_rom_and_pack_aliases_preserve_bytes_and_skip_child(self):
+        marker = self.root / "collision-child-started"
+        child = self.root / "collision-child"
+        child.write_text(
+            "#!/usr/bin/env python3\n"
+            "from pathlib import Path\n"
+            f"Path({str(marker)!r}).write_text('started')\n"
+        )
+        child.chmod(0o755)
+        pack_path = self.root / "cli.pack"
+        original_rom = self.rom_path.read_bytes()
+        common = [
+            sys.executable, str(PROJECT), "frontend", "run",
+            "--pack", str(pack_path), "--rom", str(self.rom_path),
+            "--rules", str(self.rules_path), "--executable", str(child),
+            "--updates", "1", "--timeout", "30",
+        ]
+        rom_collision = subprocess.run(
+            [*common, "--report", str(self.rom_path)],
+            capture_output=True, text=True, timeout=30,
+        )
+        self.assertEqual(rom_collision.returncode, EXIT_INVALID_INPUT)
+        self.assertIn("refusing to write --report onto --rom", rom_collision.stderr)
+        self.assertEqual(self.rom_path.read_bytes(), original_rom)
+        self.assertFalse(pack_path.exists())
+        self.assertFalse(marker.exists())
+
+        self.assertEqual(commands.cmd_run(self.args(
+            pack=str(pack_path), rom=str(self.rom_path))), EXIT_OK)
+        original_pack = pack_path.read_bytes()
+        pack_collision = subprocess.run(
+            [*common, "--report", str(pack_path)],
+            capture_output=True, text=True, timeout=30,
+        )
+        self.assertEqual(pack_collision.returncode, EXIT_INVALID_INPUT)
+        self.assertIn("refusing to write --report onto --pack", pack_collision.stderr)
+        self.assertEqual(pack_path.read_bytes(), original_pack)
+        self.assertFalse(marker.exists())
+
 
 if __name__ == "__main__":
     unittest.main()

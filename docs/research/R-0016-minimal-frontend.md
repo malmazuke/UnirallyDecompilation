@@ -190,3 +190,20 @@ at handoff SHA `6b4ac12`: macOS passed app-debug build/test/help, and Ubuntu
 passed bounded X11 preparation, app-debug build/test/help and the complete
 app-sanitize step. That is the required hosted evidence rather than an
 inference from local macOS builds.
+
+### Final-review path-collision observation and decision
+
+Fresh review used a disposable exact ROM and observed that a successful
+first-launch `--report` path equal to `--rom` replaced the ROM with the final
+JSON report. The same unconditional final write could replace a validated pack
+or another frontend input. The original private ROM was not used by the probe
+and remained unchanged.
+
+The frontend now performs a report/input collision preflight before timeout
+reporting, input reads, extraction or process creation. It compares normalized
+absolute paths, non-strict resolved paths and existing-file identity, covering
+lexical aliases, `..`, symlinks and hardlinks even when a target does not yet
+exist. The guarded inputs are ROM, pack, extraction rules and explicit or
+default executable. A collision prints a clear error and exits 3 without
+writing the requested report, since doing so would itself overwrite the input.
+For non-collision failures the existing failed-report behavior is unchanged.

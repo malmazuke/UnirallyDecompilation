@@ -22,7 +22,9 @@ python3 tools/project.py frontend run
 
 Pass `--pack PATH` to use another pack location. An existing corrupt or
 incompatible pack is rejected and never silently replaced. The application
-reports SDL/window/renderer failures as failed launches.
+reports SDL/window/renderer failures as failed launches. A `--report` path
+must not alias the ROM, pack, extraction rules or frontend executable; such a
+collision exits before reading, extracting, launching or writing the report.
 
 Keyboard controls are arrows, Z=B, X=Y, A=A, S=X, Q=L, W=R, Enter=Start and
 Backspace=Select. Standard gamepad buttons follow the equivalent SNES layout.

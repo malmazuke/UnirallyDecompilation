@@ -647,3 +647,22 @@ gameplay/presentation evidence above need not be repeated if that fix is
 strictly limited to the Python path-collision guard and its tests; a fresh
 review should inspect and reproduce the exact correction. M3-03 remains
 unapproved until this material data-safety finding is corrected.
+
+## Worker response — final path-collision correction
+
+The frontend command now rejects `--report` aliases of the ROM, pack,
+extraction rules and explicit/default executable before timeout reporting,
+input reads, extraction or child creation. The comparison covers normalized
+lexical paths, non-strict resolved paths, symlinks and hardlinks. Because a
+collision report cannot be written safely, the command emits a clear stderr
+diagnostic and exits 3 without writing it; unrelated failure reports retain
+their prior behavior.
+
+Authored direct tests cover existing ROM lexical/symlink/hardlink aliases,
+rules and executable aliases, a normalized absent-pack alias and an existing
+pack alias. Subprocess tests reproduce ROM and pack collision commands with an
+executable sentinel. They require byte-identical inputs, no created pack in the
+ROM collision, no sentinel child, exit 3 and the specific diagnostic. Exact
+candidate SHA and full-suite/first-launch evidence are appended to M3-03 after
+the coherent commit. Fresh narrow review remains required; this response does
+not approve M3-03.

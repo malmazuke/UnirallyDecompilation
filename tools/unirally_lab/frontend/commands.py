@@ -6,6 +6,7 @@ import argparse
 import hashlib
 import json
 import math
+import os
 import sys
 from pathlib import Path
 
@@ -17,6 +18,44 @@ from ..procs import run_bounded
 ROOT = reportmod.repo_root()
 
 
+def _paths_alias(first: Path, second: Path) -> bool:
+    """Compare existing files and safely resolve lexical paths that do not exist."""
+    first = first.expanduser()
+    second = second.expanduser()
+    if os.path.normcase(os.path.abspath(first)) == os.path.normcase(
+        os.path.abspath(second)
+    ):
+        return True
+    try:
+        if first.resolve(strict=False) == second.resolve(strict=False):
+            return True
+    except (OSError, RuntimeError):
+        pass
+    try:
+        return first.samefile(second)
+    except (FileNotFoundError, OSError):
+        return False
+
+
+def _report_collision(args: argparse.Namespace) -> tuple[str, Path] | None:
+    if not args.report:
+        return None
+    report_path = Path(args.report)
+    executable = (Path(args.executable) if args.executable else
+                  ROOT / "build" / args.preset / "src" / "app" / "unirally")
+    candidates = [
+        ("--pack", Path(args.pack)),
+        ("--rules", Path(args.rules)),
+        ("frontend executable", executable),
+    ]
+    if args.rom is not None and args.rom.strip():
+        candidates.append(("--rom", Path(args.rom)))
+    for label, input_path in candidates:
+        if _paths_alias(report_path, input_path):
+            return label, input_path
+    return None
+
+
 def _finish(rep: reportmod.Report, args: argparse.Namespace, status: int) -> int:
     rep.finish("passed" if status == EXIT_OK else "failed")
     rep.write(Path(args.report) if args.report else None)
@@ -25,6 +64,12 @@ def _finish(rep: reportmod.Report, args: argparse.Namespace, status: int) -> int
 
 
 def cmd_run(args: argparse.Namespace) -> int:
+    collision = _report_collision(args)
+    if collision is not None:
+        label, input_path = collision
+        print(f"refusing to write --report onto {label} path {input_path}",
+              file=sys.stderr)
+        return EXIT_INVALID_INPUT
     rep = reportmod.Report(sys.argv, task_id=args.task)
     if (
         not math.isfinite(args.timeout)

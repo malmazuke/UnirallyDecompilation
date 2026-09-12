@@ -17,7 +17,7 @@ The coordinator maintains the status registry below. Work orders further below d
 | M1-04 | accepted: integrated 12 September 2026 after one independent review; M1 accepted, tag `m1` | [M1 acceptance report](M1-04.md) |
 | M2-01 | in progress: approved components, native CLI and movement assembly; full gameplay not accepted | [Native movement experiment](M2-01.md) |
 | M2-01A | review: native speed approved; motion final checks pass; Sol resume_review checks native command while coordinator assembles components | [Close riding dependencies](M2-01A.md) |
-| M2-01 movement | ready: semantic native update from reviewed components | [Movement implementation](M2-01-movement.md) |
+| M2-01 movement | claimed: movement_impl Sol/medium; semantic state and seed first | [Movement implementation](M2-01-movement.md) |
 | M2-02, M3 – M6 | planned | See milestone definitions |
 
 ## M0 — repeatable laboratory

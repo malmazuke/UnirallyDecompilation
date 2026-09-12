@@ -1,6 +1,6 @@
 # M2-01 movement implementation — semantic autonomous update
 
-Status: ready; coordinator will claim when the one review worker finishes.
+Status: claimed by movement_impl (Sol/medium), after reviewer finished.
 Provider: OpenAI. Coordinator Astra (current-session exception); worker Sol,
 medium reasoning, compact fresh context. No additional child workers.
 Base: `f6ca7f1c6e90aad896f5694a4493b13ff101e509`, branch
@@ -80,3 +80,15 @@ primary implementation first; coordinator/reviewer then runs withheld tests and
 an independently chosen variation. If a new internal dependency appears, record
 its smallest reproducer for coordinator scope amendment. No user choice is
 needed for ordinary implementation/research decisions.
+
+## Active first implementation session
+
+Dispatch base3909c1c6519b96100d21e1e581c18c1f81fce827 includes reviewed command
+758363c and combined components. Its worktree has the earlier ready work order;
+this root claim is canonical. Worker owns a new tasks/M2-01-movement-handoff.md
+in its branch in addition to the paths above. Parent remains owner of this
+assignment record. First bounded checkpoint: semantic state/serialization and
+validated single-seed preparation; then one native update if quota allows.
+Do not attempt a full uncheckpointed rewrite. Current quota10% used; whole-run
+boundary13% still applies. No recursive workers. Coordinator handles PR2 CI and
+review integration while this independent implementation proceeds.

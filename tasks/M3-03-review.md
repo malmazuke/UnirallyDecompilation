@@ -461,3 +461,189 @@ Post-push hosted run `34700625467` completed successfully at handoff SHA
 `6b4ac12cf7d9c1097a5cf7e41c3f159be34898ee`: macOS app-debug and Ubuntu
 X11 preparation, app-debug and app-sanitize all passed, including both
 runtime-link help smokes. Fresh independent review remains required.
+
+## Final fresh independent re-review — correction round 3
+
+- Handoff head reviewed:
+  `509d43fac4666a6c95716dbcff35e740817a8ee1`
+- Behavioral correction reviewed:
+  `457ba885f82856b5b328243ecffcacce03312bf5`
+- Complete behavioral diff:
+  `759ed9e0b130819d09392b61946c27e433f44438..457ba885f82856b5b328243ecffcacce03312bf5`
+- Reviewer: fresh sequential OpenAI Codex Sol/medium session
+- Worktree/branch: `.worktrees/m3-03-final-review`,
+  `review/M3-03-minimal-frontend-r3`
+- Date: 13 September 2026 AEST
+- Verdict: **returned with one material CLI safety finding; not approved**
+
+### Finding: `--report` can overwrite the user-supplied ROM or validated pack
+
+The frontend command does not reject a report path that aliases an input or
+runtime artifact. It reads the ROM at `frontend/commands.py:59-69`, launches
+the child, and then unconditionally writes the report to `args.report` at
+`frontend/commands.py:20-23`. Consequently a first-launch command with
+`--report` equal to `--rom` completes successfully and replaces the user's ROM
+with JSON. The corresponding existing-pack spelling can replace a validated
+Classic pack after a successful pack-only launch. This is a material
+first-launch/data-safety defect, particularly because the supported ROM is a
+user-owned prerequisite that may not be recoverable from the generated pack.
+
+I reproduced the ROM case only on an ignored disposable copy. The original
+source ROM was checked before and after and remained unchanged:
+
+```text
+cp '/Users/markfeaver/Projects/Unirally Decompilation - Assets/Unirally (Europe).sfc' artifacts/m3-03-final-review/disposable-rom.sfc
+python3 tools/project.py frontend run \
+  --pack artifacts/m3-03-final-review/collision.pack \
+  --rom artifacts/m3-03-final-review/disposable-rom.sfc \
+  --executable /usr/bin/true --updates 1 --timeout 30 \
+  --report artifacts/m3-03-final-review/disposable-rom.sfc \
+  --task M3-03-final-review-collision
+```
+
+The command exited 0 and reported successful exact-ROM validation, atomic
+25-entry pack creation and frontend launch. The collision target changed from
+2,097,152 bytes with PAL ROM SHA-256
+`a1105819d48c04d680c8292bbfa9abbce05224f1bc231afd66af43b7e0a1fd4e`
+to a 2,724-byte passed JSON report with SHA-256
+`a65d3aa96c0669f468c1f62f29b42d8429d7e5dab80a9288f65172cbbdd19ee1`.
+The report itself still recorded the overwritten input's former size and
+identity, demonstrating that the overwrite occurs only at final report write.
+
+Reject `--report` aliases of at least `--rom` and `--pack` before reading,
+extracting or spawning, including resolved/same-file aliases, and add
+subprocess regressions proving both inputs remain byte-identical and no child
+starts. The same guard should cover the explicit rules/executable paths so a
+hidden testing override cannot overwrite those files either. This correction
+does not require a gameplay, pack-format, renderer or scheduler change.
+
+### Round-2 corrections independently confirmed
+
+The rider-art seam now has the required boundary. `LivePresentation` passes
+the current `MovementState` unchanged and supplies recovered history only as
+two additive `RiderArtPose` values (`frontend.cpp:128-149`). In the core,
+current state selects the background, race palette, GO/winner windows, HUD,
+camera and rider positions; only the temporary atlas state and rider-pose
+validation consume the override (`presentation.cpp:757-803`). The original
+M3-02 `render_dragster_headless` entry point remains and delegates without an
+override, so its source/API behavior is preserved.
+
+The authored same-state/off-screen history regression passed in both broad
+suites. I also compiled an independent pack-backed boundary using the current
+GO semantic state and two different rolling/finish art overrides. With visible
+riders it found 800 different pixels and every difference was inside the two
+64-pixel rider rectangles. With the same riders wholly off-screen it found zero
+different pixels. Canonical serialization was byte-identical before and after.
+This independently confirms that palette/window/history leakage is corrected,
+not merely hidden by the authored test's data.
+
+All required real CLI spellings now behave correctly: `nan`, `inf`, separated
+`--timeout -inf`, and `--timeout=-inf` each exited 3 and wrote its requested
+failed report at exact head `509d43f`. A separate executable-sentinel run of
+the natural separated `--timeout -inf` form also exited 3, wrote the failed
+report and left the sentinel absent, proving no child started. Source and an
+independent direct assertion confirm normalization changes only a separated
+`-inf`/`-infinity` immediately following `frontend run --timeout`; native and
+other subcommands, ordinary negative numbers, `nan`, and unrelated frontend
+arguments retain generic argparse behavior.
+
+The exact hosted evidence is valid. `gh run view 34700625467` reports success
+at `6b4ac12cf7d9c1097a5cf7e41c3f159be34898ee`, whose only successor before
+this review is the documentation-only `509d43f`. macOS 15 passed headless
+debug, app-debug build/test and the executable help/link smoke in 2m59s.
+Ubuntu 24.04 first passed the headless suite, then completed both explicitly
+300-second-bounded APT operations for the tracked X11 package set, configured
+and built the pinned SDL desktop frontend, passed app-debug test/help, and
+passed lab-sanitize plus app-sanitize build/test/help in 4m38s. Downloaded
+hosted reports bind the app builds and tests to clean `6b4ac12`; both app
+suites ran 283 Python tests, the frontend contract CTest and fresh-process
+repeatability. The workflow retains its 30-minute job bound and 600-second app
+build/test bounds. The only annotations/log warnings are the recorded GitHub
+Node-action deprecations; no product warning or skipped required Linux app step
+remains.
+
+### Local exact-head validation
+
+The following commands passed at `509d43f`:
+
+```text
+python3 tools/project.py build --preset app-debug --report artifacts/m3-03-final-review/app-debug-build.json --timeout 600 --task M3-03-final-review
+python3 tools/project.py test --suite synthetic --preset app-debug --artifacts artifacts/m3-03-final-review/app-debug-synthetic --report artifacts/m3-03-final-review/app-debug-synthetic/report.json --timeout 600 --test-timeout 120 --task M3-03-final-review
+python3 tools/project.py build --preset app-sanitize --report artifacts/m3-03-final-review/app-sanitize-build.json --timeout 600 --task M3-03-final-review
+python3 tools/project.py test --suite synthetic --preset app-sanitize --artifacts artifacts/m3-03-final-review/app-sanitize-synthetic --report artifacts/m3-03-final-review/app-sanitize-synthetic/report.json --timeout 600 --test-timeout 120 --task M3-03-final-review
+SDL_VIDEODRIVER=dummy python3 tools/project.py frontend run --pack <ignored-pack> --preset app-debug --hidden --updates 20 --timeout 30 --report artifacts/m3-03-final-review/dummy-debug.json --task M3-03-final-review
+SDL_VIDEODRIVER=dummy python3 tools/project.py frontend run --pack <ignored-pack> --preset app-sanitize --hidden --updates 20 --fixed-controller-mask 128 --timeout 30 --report artifacts/m3-03-final-review/dummy-sanitize.json --task M3-03-final-review
+SDL_VIDEODRIVER=dummy python3 tools/project.py frontend run --pack <ignored-pack> --preset app-debug --hidden --updates 2146 --fixed-controller-mask 128 --timeout 90 --report artifacts/m3-03-final-review/continuous-right.json --task M3-03-final-review
+python3 tools/project.py native finish-check --manifest tests/manifests/native/full-race-continuous.case.json --content-pack <ignored-pack> --save-frame 3213 --save-frame 3453 --preset lab-debug --artifacts artifacts/m3-03-final-review/finish --report artifacts/m3-03-final-review/finish/report.json --timeout 600 --task M3-03-final-review
+python3 tools/project.py native presentation-check --manifest tests/manifests/presentation/classic-crawler-dragster-v1.json --fixtures artifacts/m3-03-final-review/private-fixtures --content-pack <ignored-pack> --preset lab-debug --artifacts artifacts/m3-03-final-review/presentation --report artifacts/m3-03-final-review/presentation/report.json --timeout 600 --task M3-03-final-review
+```
+
+Both broad app suites passed 283 Python tests, 20 CTests and three fresh
+processes: 306 required checks, no failure or skip. The 2,146-update diagnostic
+rendered 2,146 frames, used rider-art fallback on 1,421, and retained zero
+identical consecutive fallback redraws while Racing. Private finish passed the
+full-race identity and both continuation boundaries. Private presentation
+retained exact accepted mismatch counts 36, 697, 279, 445, 653, 962 and 961.
+Focused frontend CTest, all five frontend tooling tests and executable help
+also passed. The SDL archive independently hashes to the lock
+`12b34280415ec8418c864408b93d008a20a6530687ee613d60bfbd20411f2785`;
+the macOS executable links the build-local SDL dylib and exports both the old
+and additive presentation symbols.
+
+Report SHA-256 values:
+
+| Evidence | SHA-256 |
+| --- | --- |
+| app-debug build | `30abc0de2351b7526210186ae713158c21d34d1ee222ccf2c0395a9c5649b0eb` |
+| app-debug synthetic | `05db83b30cc4632d26d6317ac88b658f707443386f0ab3fef66b0cd99a590c2d` |
+| app-sanitize build | `9265333e87ff78fee1f2fd3d23e54c5e5ca43971652e04993cbc41272c02fb13` |
+| app-sanitize synthetic | `8212a9d2c2a2ad1103c9c01c9a4fdfb6dbb2d83f5fafdb58bd8be7576d54f430` |
+| dummy debug | `62a36b82f00877889df6ebb27236b01b8688d744280e5e669e9578a40bc61d96` |
+| dummy sanitizer | `8f52d433bc8f6542053f5b727d0228d0f011977507c5d43961488e32eafb8caa` |
+| continuous right | `bc82aa769c18fb41ecb2b07d2f95d07544d57264a59997e43eb8fec9b7555c66` |
+| rejected `nan` | `278bd7ffc7ecf27653efb872cb3f4820e014c26905c01ad9031bea5ba42c578d` |
+| rejected `inf` | `28b61bc2595244f65d4ffe3c14e96f849f1d3a4e1e8164369659180db614e9d1` |
+| rejected separated `-inf` | `0b0341f89ab28e7a5d3ed1019223bedbfeb0c00832353bb85b7381e691c812bd` |
+| rejected equals `-inf` | `d923c106c6c5860ed717f865d2a1f7b1fa0449e8b05d654085d907c1007da40f` |
+| separated `-inf` sentinel | `2fc6d958393c89c54dbb4349dda23a461949a568508d9648e907300f3038e461` |
+| private finish | `649a469fac8d6d47aaa4a02dc06baa45fa5c8e67826887b82deb756d7b078e21` |
+| private presentation | `bb53ed7061581a375eb477579db94e65d757d91c0ffcfd354ef5ee20a71589df` |
+
+Every listed local report names `509d43f`. The timeout reports intentionally
+have failed overall status; all other listed reports passed.
+
+### Remaining audit conclusions and hygiene
+
+No additional scheduler, SDL lifetime/error, input ownership, renderer,
+canonical-state, pack-validation or accepted-core regression was found.
+`SDL_RenderPresent` remains checked. Pack validation still precedes SDL and
+gameplay, existing corruption is not silently replaced, and pack-only launches
+do not open the ROM. Scheduler boundaries/catch-up/debt drop, focus clearing,
+all 12 logical controls, simultaneous/released inputs, gamepad disconnect and
+two-port ownership remain explicit and covered. Nearest integer scaling and
+the 256x224 render boundary remain unchanged. Audio omission is explicit.
+
+The declared rider-art hold is acceptable for M3-03 now that history is
+strictly confined to rider rectangles and canonical gameplay remains current.
+The fixed-mask sustained diagnostic is not evidence of actual keyboard/gamepad
+delivery; the task record correctly defers a real sustained live-input/window
+check and the final readability judgment to M3-04. That stated evidence limit
+is not itself a blocker for M3-03.
+
+`git diff --check 759ed9e..509d43f` passed. The implementation does not change
+accepted gameplay serialization, cases, private expectations or visual
+thresholds. `git ls-files` finds no ROM, generated pack, state, capture,
+screenshot or report payload. All local builds, hosted downloads, private
+fixtures, the disposable collision input and boundary probes are ignored under
+`build/`, `local/` or `artifacts/`. Before this appended report the worktree had
+no tracked modification.
+
+### Required correction and re-review
+
+Reject report/input aliases before any pack/ROM access or child creation, prove
+the ROM and pack remain byte-identical for collision attempts, and rerun the
+focused frontend tooling test. The local/hosted build, renderer and private
+gameplay/presentation evidence above need not be repeated if that fix is
+strictly limited to the Python path-collision guard and its tests; a fresh
+review should inspect and reproduce the exact correction. M3-03 remains
+unapproved until this material data-safety finding is corrected.

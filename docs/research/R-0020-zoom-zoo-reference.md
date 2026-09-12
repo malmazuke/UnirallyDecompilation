@@ -196,11 +196,20 @@ python3 tools/project.py replay compare --manifest tests/manifests/replay/race-c
 python3 tools/project.py replay compare --manifest tests/manifests/replay/race-crawler-zoom-zoo-3300.json --against tests/manifests/replay/race-crawler-zoom-zoo-3300-release-2500-2599.json --artifacts artifacts/m4-02/perturb-compare/runs
 python3 tools/project.py coverage capture --manifest tests/manifests/replay/race-crawler-zoom-zoo-3300.json --out artifacts/m4-02/coverage/capture-1
 python3 tools/project.py coverage map --coverage artifacts/m4-02/coverage/capture-1/coverage.json --out docs/map/race-crawler-zoom-zoo-3300.map.json --summary docs/map/race-crawler-zoom-zoo-3300.md --detail artifacts/m4-02/coverage/capture-1/detail.json --baseline docs/map/race-crawler-dragster-3000.map.json --scenario race-crawler-zoom-zoo-3300
+python3 tools/project.py access capture --manifest tests/manifests/replay/race-crawler-zoom-zoo-3300.json --out artifacts/access/race-crawler-zoom-zoo-3300 --from-frame 1150 --to-frame 1750 --watch-address 0x002115 --watch-address 0x002116 --watch-address 0x002117 --watch-address 0x002118 --watch-address 0x002119 --watch-address 0x002121 --watch-address 0x002122 --watch-address 0x002102 --watch-address 0x002103 --watch-address 0x002104 --watch-address 0x00420B --watch-address 0x00420C --watch-address 0x770825 --watch-address 0x7E0415 --watch-address 0x7E04BB --watch-address 0x7E0BEB --watch-address 0x7E0E19 --watch-address 0x7E0E1D --watch-address 0x7E0E21 --watch-address 0x7E0E25 --watch-address 0x7E0E29 --watch-pc 0x82B2DD --watch-pc 0x81B8E2 --watch-pc 0x82E12B --watch-pc 0x82E1A7 --watch-pc 0x828DB9 --watch-pc 0x828E9A --watch-pc 0x82AAA4 --watch-pc 0x82AADF --watch-pc 0x81C6C9 --watch-pc 0x81C6ED
+python3 tools/project.py content provenance --access artifacts/m4-02/access/load-riding/access.json --out artifacts/m4-02/provenance/load --from-frame 1200 --to-frame 1426 --task M4-02 --report artifacts/m4-02/provenance/load-report.json
+python3 tools/project.py content provenance --access artifacts/m4-02/access/load-riding/access.json --out artifacts/m4-02/provenance/riding --from-frame 1645 --to-frame 1700 --task M4-02 --report artifacts/m4-02/provenance/riding-report.json
 python3 tools/project.py content decode --manifest tests/manifests/content/zoom-zoo-reference-inventory.json --out artifacts/m4-02/content/decode-tracked
 ```
 
-The exact access command, including all watched ports, fields and PCs, is the
-`regeneration_command` in the ignored access record and is also preserved in
-the M4-02 handoff. Independent review should reproduce the freeze from clean
-SRAM and use the adjacent release boundary (2499 or 2501), declared before its
-run, as the withheld case.
+The access line above is the exact canonical `regeneration_command` recovered
+from the ignored accepted record. It includes every watched port, field and PC;
+because it has no explicit `--ring`, it uses the recorded default ring of
+262,144 entries. A fresh execution regenerated access SHA-256
+`25c47f266e393ad7071727e88475cf890974ce35b0750969c86ee07fcb51f85f`.
+The following two provenance lines are the exact successful worker invocations,
+including their access path, output path, frame bounds, task and report values;
+they regenerated provenance SHA-256 values `f968585d7736986b...` and
+`ad78116903821d9f...`. Independent focused re-review should verify these
+commands and the record-only diff; the first review already exercised the
+adjacent withheld boundary and reproduced the other candidate claims.

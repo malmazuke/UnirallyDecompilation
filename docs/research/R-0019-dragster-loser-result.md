@@ -2,7 +2,8 @@
 
 - Task: [M4-01](../../tasks/M4-01.md)
 - Status: reference evidence and visual contract frozen before implementation;
-  implemented by candidate `f438741`, pending independent review
+  implementation `f438741` plus publication-boundary correction `a3106f4`
+  pending focused re-review
 - Freeze base: task claim `55eadf7`; no presentation source changed before this
   record and the additive loser contract
 - ROM: PAL Unirally SHA-256
@@ -103,3 +104,10 @@ The exact clean candidate report hashes and negative identity checks are
 recorded in M4-01. These implementation results do not widen the evidence above:
 only the independently observed stable loss state and adjacent publication
 boundary are claimed.
+
+Independent review reproduced the original capture and returned one semantic
+boundary finding: the first candidate accepted `ResultScreen` with a forged
+loser loading counter of 241. Correction `a3106f4` binds the compositor to the
+observed loser `ResultScreen`/242 tuple and the separately observed winner
+`ResultLoading`/225 and `ResultScreen`/226 tuples. Its live pack-backed regression
+derives and rejects the counter-241 mutation; all visual counts remain exact.

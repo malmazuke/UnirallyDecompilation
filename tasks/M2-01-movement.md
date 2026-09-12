@@ -1,6 +1,7 @@
 # M2-01 movement implementation — semantic autonomous update
 
-Status: independently approved at `245765d`; coordinator integration in progress.
+Status: accepted; integrated through PR4 as `f33155e` after independent review
+and macOS/Linux CI.
 Provider: OpenAI. Implementation and review used Sol/medium under D-0004. No
 additional child workers.
 Base: `f6ca7f1c6e90aad896f5694a4493b13ff101e509`, branch

@@ -182,3 +182,12 @@ fresh deterministic processes. The reviewer confirmed the frozen manifests and
 expectations were unchanged and found no remaining blocker. Its ignored reports
 are `artifacts/m2-final-review-{primary,cadence,release}/report.json`,
 `m2-final-review-synthetic.json`, and `m2-final-review-sanitize-build.json`.
+
+Coordinator merge candidate `7c952a5` repeated273/273 synthetic checks,
+debug/sanitizer movement CTests2/2 and all three1,466-frame comparisons. Initial
+CI run34674260023 retained a real Linux-only failure: GCC rejected an unsigned
+span index under `-Wsign-conversion`. Integration commit `e8f2c69` uses
+`std::size_t` for the already bounded `<64` index; the reviewer confirmed this
+was semantics-neutral and repeated the full evidence. Exact documentation-complete
+head `07049bb` is independently approved and passed macOS15/Ubuntu24.04 in CI
+runs34674450433 and34674452134. PR4 merged as `f33155e`; M2-01 is accepted.

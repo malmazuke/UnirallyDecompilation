@@ -1,8 +1,8 @@
 # Sol coordinator handover — start M2-02 native continuation
 
-Prepared from M2-01 integration branch `task/M2-01-acceptance`, whose reviewed
-gameplay source is `245765d` plus the semantics-neutral portable index correction
-`e8f2c69`. PR4 is the acceptance integration. Check its merged state and use the
+Prepared after M2-01 integrated through PR4 as `f33155e`. Reviewed gameplay
+source is `245765d` plus the semantics-neutral portable index correction
+`e8f2c69`; the exact documentation-complete PR head is `07049bb`. Start from the
 current `main` head; do not restart M2-01 implementation.
 
 ## Operating instructions

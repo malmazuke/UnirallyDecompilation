@@ -91,8 +91,14 @@ expand_dragster_bg1(std::span<const std::uint8_t> track) {
   return out;
 }
 RgbFrame render_dragster_headless(const PresentationSample &s,
-                                  std::span<const std::uint8_t> track) {
-  const auto map = expand_dragster_bg1(track);
+                                  const PresentationContent &content) {
+  if (content.bg1_tiles.size() != 2560 || content.bg2_tiles.size() != 992 ||
+      content.bg2_map.size() != 8192 || content.palette.size() != 352 ||
+      content.font.size() != 2048 || content.rider_tiles.size() != 3456 ||
+      content.result_assets.size() != 5224)
+    throw std::invalid_argument(
+        "Classic presentation entry size is unsupported");
+  const auto map = expand_dragster_bg1(content.track);
   RgbFrame f{};
   rect(f, 0, 0, 256, 224, {18, 24, 52});
   for (int y = 28; y < 224; ++y)

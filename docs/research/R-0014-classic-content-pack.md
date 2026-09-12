@@ -88,3 +88,14 @@ sanitizer suites locally and hosted run 34685007265 on macOS 15 and Ubuntu
 24.04, including Linux sanitizers. The independent finding, withheld frame-3212
 restore and correction recheck are recorded in
 [M3-02A-review](../../tasks/M3-02A-review.md).
+
+## M3-02 presentation extension
+
+M3-02 evolves the exact rules identity to `b8b9bf3c...868b` and twenty
+entries while retaining the accepted source/profile/start identities and all
+thirteen gameplay payload identities. Seven presentation entries are exact-ROM
+gated: BG1 tiles (2,560 bytes), BG2 tiles (992), BG2 map (8,192), race palette
+(352), HUD font (2,048), the five preregistered rider-DMA inventories (3,456),
+and result palette/tiles/layout seed (5,224). Pack SHA-256
+`a90549bd...0ccb` was extracted atomically in ignored artifacts; the ROM-absent
+headless reader accepted all twenty entries.

@@ -43,10 +43,19 @@ int main(int argc, char **argv) try {
         "presentation runner requires --content-pack, --state and --out");
   unirally::ClassicContentPack content(pack);
   const auto state = unirally::deserialize_movement_state(read(state_path));
+  const unirally::PresentationContent assets{
+      content.entry("physics.track.dragster.data"),
+      content.entry("presentation.track.dragster.bg1-tiles.v1"),
+      content.entry("presentation.track.dragster.bg2-tiles.v1"),
+      content.entry("presentation.track.dragster.bg2-map.v1"),
+      content.entry("presentation.classic.palette.v1"),
+      content.entry("presentation.classic.font.v1"),
+      content.entry("presentation.rider.mike.race-tiles.v1"),
+      content.entry("presentation.result.classic.font-layout.v1")};
   const auto frame = unirally::render_dragster_headless(
       {state, camera, static_cast<std::int16_t>(sx),
        static_cast<std::int16_t>(sy), 0, 0},
-      content.entry("physics.track.dragster.data"));
+      assets);
   std::ofstream out(out_path, std::ios::binary | std::ios::trunc);
   if (!out)
     throw std::runtime_error("cannot create presentation output");

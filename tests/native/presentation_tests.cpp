@@ -49,10 +49,24 @@ int main() {
   state.riders[0].pose.pose_index = 0x855;
   state.riders[1].pose.pose_index = 0x895;
   const auto before = unirally::serialize_movement_state(state);
+  std::vector<std::uint8_t> bg1(2560), bg2(992), bg2_map(8192), palette(352),
+      font(2048), rider(3456), result(5224);
+  const unirally::PresentationContent content{track,   bg1,  bg2,   bg2_map,
+                                              palette, font, rider, result};
   const auto first = unirally::render_dragster_headless({state, 0, 0, 0, 0, 0},
-                                                        track),
+                                                        content),
              second = unirally::render_dragster_headless({state, 0, 0, 0, 0, 0},
-                                                         track);
+                                                         content);
   require(first.pixels == second.pixels);
   require(before == unirally::serialize_movement_state(state));
+  rejected = false;
+  try {
+    auto short_content = content;
+    short_content.palette = std::span<const std::uint8_t>(palette).first(351);
+    (void)unirally::render_dragster_headless({state, 0, 0, 0, 0, 0},
+                                             short_content);
+  } catch (const std::invalid_argument &) {
+    rejected = true;
+  }
+  require(rejected);
 }

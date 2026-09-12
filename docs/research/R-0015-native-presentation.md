@@ -75,9 +75,10 @@ unchanged. A ROM-absent frame-3213 run produced SHA-256
 `8c975f8f...ca651`.
 
 This is an intermediate diagnostic composition, not a visual acceptance
-result. The current 13-entry pack does not yet contain the seven frozen
-presentation assets. The renderer therefore uses authored diagnostic map
-colours and rider shapes and has not satisfied the frozen mismatch limits.
+result. The first 13-entry pack did not contain the seven frozen presentation
+assets. The rules have since been extended to twenty exact entries, but the
+renderer still uses diagnostic map colours and rider shapes and has not
+satisfied the frozen mismatch limits.
 Sprite frame descriptors, BG tile/palette placement and stable-result
 provenance remain required; the frozen limits must not be enlarged.
 

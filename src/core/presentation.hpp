@@ -40,6 +40,10 @@ struct RgbFrame {
   static constexpr std::size_t width = 256, height = 224;
   std::array<std::uint8_t, width * height * 3> pixels{};
 };
+struct PresentationContent {
+  std::span<const std::uint8_t> track, bg1_tiles, bg2_tiles, bg2_map;
+  std::span<const std::uint8_t> palette, font, rider_tiles, result_assets;
+};
 RgbFrame render_dragster_headless(const PresentationSample &,
-                                  std::span<const std::uint8_t> decoded_track);
+                                  const PresentationContent &);
 } // namespace unirally

@@ -7,13 +7,16 @@ Extraction provenance is tracked in
 entries only by the logical IDs in that file and never by ROM offsets or loose
 filenames.
 
-The current native runner reads exactly thirteen immutable byte spans once,
-before its first update. They populate `SamplingContent` (track data, collision
+The movement runner reads exactly thirteen immutable byte spans once, before
+its first update. They populate `SamplingContent` (track data, collision
 poses and templates), `FlatContactContent` (tile columns and flags), progress,
 pose/displacement/idle-pose, rotation reward/class, and speed mask/decrement
 tables. Controller input and canonical continuation state are process inputs,
 not content entries. No other static-content read occurs in the accepted
-M3-01 runner.
+M3-01 runner. M3-02 extends the same schema/profile with seven immutable
+presentation spans: Dragster BG1/BG2 tiles and BG2 map, race palette, HUD font,
+the preregistered rider tile-DMA atlas, and result palette/tiles/layout seed.
+Presentation consumers do not alter or serialize gameplay state.
 
 Schema 1 is a single deterministic binary file. It has an eight-byte
 `URCP0001` magic, a canonical metadata section, and concatenated entry payloads
@@ -24,9 +27,9 @@ little-endian. Readers reject a changed magic/schema/profile/source/rules/start
 identity, duplicate/missing/unknown IDs, non-canonical layout, trailing bytes,
 or any entry size/hash mismatch before exposing an entry.
 
-The presentation namespace is reserved under `presentation.*`; adding such an
-entry changes the rules/profile identity and requires a new compatible pack
-contract. Schema 1 does not promise arbitrary extension or another ROM.
+The presentation namespace is reserved under `presentation.*`; the M3-02
+extension changes the exact rules identity and native inventory to twenty
+entries. Schema 1 does not promise arbitrary extension or another ROM.
 
 ## Semantic playable start
 

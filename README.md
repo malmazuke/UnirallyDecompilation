@@ -1,6 +1,6 @@
 # Unirally reconstruction and modern port
 
-Status: M0 laboratory in progress, 10 September 2026. The selected PAL ROM has been identified (see `docs/research/R-0001-rom-identity.md`) and a reproducible toolchain, synthetic native build and structured test reports exist. No game code has been recovered and no agent scheduler exists.
+Status: M0 and M1 accepted; M2 native movement implementation underway, 12 September 2026. Reviewed native components exist, but autonomous gameplay equivalence is not yet established. See [project state](docs/STATE.md) for current evidence and the usage-interruption checkpoint. No agent scheduler exists.
 
 The long-term goal is an editable, portable Unirally with online multiplayer, custom tracks, a track editor and high-resolution asset replacements. The first goal is much smaller: reproduce a short sequence of original gameplay in native code, with automated evidence that its state matches the original.
 
@@ -19,10 +19,16 @@ Progress belongs in source control and reproducible experiments, so work can mov
 | [Evidence template](docs/templates/EVIDENCE.md) | How to record a reverse-engineering finding |
 | [Decision template](docs/templates/DECISION.md) | How to preserve an architectural decision |
 
+Human-readable native source is an explicit goal from the first routine
+([D-0003](docs/decisions/D-0003-human-readable-native-code.md)). Agents make
+routine project decisions autonomously. [D-0004](docs/decisions/D-0004-model-and-usage-budget.md)
+sets Sol as the routine model, bounded frontier review and usage guardrails.
+
 ## Immediate next step
 
-Execute the M0 environment and reproducibility milestone in the backlog. It must establish a repeatable build, a known ROM identity, deterministic emulator playback, and a resumable agent task before broad decompilation begins.
+Resume M2 from [the usage checkpoint](tasks/M2-01-usage-checkpoint.md), finish
+pending review, then assemble and validate the autonomous native sequence.
 
-The implementation defaults are proposals: C++20 for the simulation, CMake for builds, Python for research tooling and SDL3 for the desktop shell. M0 should validate these choices on this machine and a Linux runner before locking versions. Commands marked implemented in [build and validation](docs/BUILD_AND_VALIDATION.md) exist; the rest remain proposals until a task record demonstrates them. Quick start: `python3 tools/project.py doctor`, then `bootstrap`, `build --preset lab-debug` and `test --suite synthetic`.
+C++20, CMake and Python tooling are established; SDL3 remains unexercised. Commands marked implemented in [build and validation](docs/BUILD_AND_VALIDATION.md) exist; the rest remain proposals until a task record demonstrates them. Quick start: `python3 tools/project.py doctor`, then `bootstrap`, `build --preset lab-debug` and `test --suite synthetic`.
 
 Original binary inputs, extracted assets and emulator snapshots belong in ignored local storage. Version the extraction procedures, manifests and provenance needed to regenerate them. Use synthetic fixtures for tests that should run without a ROM.

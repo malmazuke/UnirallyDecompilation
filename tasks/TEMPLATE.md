@@ -6,6 +6,8 @@
 - Milestone:
 - Coordinator:
 - Worker/session/runtime/model:
+- Actual model/reasoning effort, routing rationale and frontier escalation question (if any):
+- Provider quota window/baseline timestamp, used/remaining or unknown, reserve and session allowance (D-0004):
 - Reviewer:
 - Dependencies and evidence of acceptance:
 - Base commit:
@@ -47,7 +49,8 @@ Link concise evidence records and full local artifacts. Do not paste an entire t
 - Exact next experiment/command:
 - Remaining dependencies:
 - Runtime needs (network, build time, fixtures, memory):
-- Elapsed work and provider usage when known:
+- Aggregate parent/child time, provider usage before/after (or unknown), other-account-work caveat:
+- Accepted outcome, review/fix rounds and next routing decision:
 
 ## Review and integration
 

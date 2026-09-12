@@ -1,6 +1,6 @@
 # Project state
 
-Updated: 12 September 2026 (M2-01 continuation: research review and native assembly).
+Updated: 12 September 2026 (usage interruption checkpoint and D-0004 model routing).
 
 ## Current facts
 
@@ -46,12 +46,20 @@ First implementation milestone: M0 repeatable laboratory. First gameplay feasibi
 | Original behavior plus separately versioned extensions | Proposed architecture |
 | Human-readable native source from the first routine | Explicit project goal and review requirement ([D-0003](decisions/D-0003-human-readable-native-code.md)); stable mod APIs deferred until concrete needs |
 | Two-player first online prototype | Planning default, later product decision |
-| Two concurrent workers | Allowed under the M0-05 conditions above (disjoint paths, own worktree, claim in record and registry together, orphan check); a shared queue needs a lease store first. Not used for M1-02/M1-03: both needed the same additive worker options, so they were sequenced |
+| Model routing and usage | Adopted [D-0004](decisions/D-0004-model-and-usage-budget.md): Sol/medium default, one child, bounded frontier audits and sampled quota reserves; no hard limiter or scheduler |
+| Two concurrent workers | Exception requiring D-0004 quota justification; allowed under the M0-05 conditions above (disjoint paths, own worktree, claim in record and registry together, orphan check); a shared queue needs a lease store first. Not used for M1-02/M1-03: both needed the same additive worker options, so they were sequenced |
 | Data-access observation without a core change | Decided in M1-02 ([D-0002](decisions/D-0002-data-access-observation.md)): derive accesses from the unchanged trace ring plus ROM bytes; a bus hook in the core patch is the recorded fallback if the residual blocks an acceptance criterion |
 
 ## Next work
 
-Active work continues through **[M2-01A](../tasks/M2-01A.md)** into **[M2-01](../tasks/M2-01.md)** without user intervention. Contact research and its native component have independent approval; input/timer and strict comparison components are approved; speed arithmetic and evidence checks are approved and its C++ port is submitted; motion/pose/AI/reward research is in final independent review. These branches are not yet accepted as an integrated game update. Coordinator integration and the native comparison command are active work, not a handoff requiring the user to choose the next step.
+**Resume from [the usage checkpoint](../tasks/M2-01-usage-checkpoint.md).** The
+three child sessions hit provider usage limits before final review/assembly
+finished. Branches and a motion handoff draft are preserved; no M2 acceptance
+is claimed. D-0004 now defaults to Sol/medium, one child, bounded frontier review
+and recorded quota guardrails. No reset credit was redeemed. Earlier active
+assignments below describe pending work, not currently running workers.
+
+The continuation runs through **[M2-01A](../tasks/M2-01A.md)** into **[M2-01](../tasks/M2-01.md)** without user intervention. Contact research and its native component have independent approval; input/timer and strict comparison components are approved; speed arithmetic and evidence checks are approved and its C++ port is submitted; motion/pose/AI/reward research is in final independent review. These branches are not yet accepted as an integrated game update. Coordinator integration and the native comparison command remain unfinished; the next agent follows the checkpoint without asking the user to choose the next step.
 
 The dependency includes a real feedback path: opponent quarter-turn tracking enqueues a landing reward, its delayed consumer changes speed boosts and a cartridge-RAM feature total, and that total changes later AI jump requests. Motion research now inventories these states along with the exact GO brake/throttle transition. Native code will evolve them from one validated end-of-frame1533 seed. Frozen withheld outputs remain unopened until the full native routine is fixed.
 
@@ -65,4 +73,4 @@ M0: accepted on 11 September 2026 (M0-00 through M0-06; evidence report [R-0005]
 
 ## Handoff
 
-The next agent should read this file, `AGENTS.md`, M2-01's continuation records and M2-01A. Reproduce the baseline with `python3 tools/project.py doctor`, `bootstrap`, `build --preset lab-debug` and `test --suite synthetic` (211 checks), then the unchanged primary fields replay and the relevant sampling/progress command from R-0010. Original content and captures stay ignored; regenerate them from the tracked manifests and exact watch lists. Preserve the PAL identity and all frozen expectations. Update this summary with observed results and decisions; keep execution details in the task and research records.
+The next agent should first read [the usage checkpoint](../tasks/M2-01-usage-checkpoint.md), this file, `AGENTS.md`, M2-01's continuation records and M2-01A. Reproduce the baseline with `python3 tools/project.py doctor`, `bootstrap`, `build --preset lab-debug` and `test --suite synthetic` (211 checks), then the unchanged primary fields replay and the relevant sampling/progress command from R-0010. Original content and captures stay ignored; regenerate them from the tracked manifests and exact watch lists. Preserve the PAL identity and all frozen expectations. Update this summary with observed results and decisions; keep execution details in the task and research records.

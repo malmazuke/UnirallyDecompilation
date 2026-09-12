@@ -30,6 +30,7 @@ Updated: 12 September 2026 (M2 accepted).
   `5c065db`. Independent review approved exact behavioral commit `f7a3386`;
   PR5 merged as `144fd48` after runs34675475186 and34675476818 both passed on
   macOS15 and Ubuntu24.04. **M2-02 and milestone M2 are accepted.**
+- Complete-race reference evidence (M3-00, [R-0012](research/R-0012-complete-race-evidence.md), [finish-state contract](state/race-finish.md)): two input streams frozen before execution run the same Crawler/DRAGSTER path for 12,000 PAL frames. Continuous acceleration finishes the player/opponent at frames3213/3214; releasing Right for frames3000–3299 moves only the player finish to3318 while the opponent still finishes at3214. A 240-update post-player delay begins on the following frame, forces derived horizontal axes neutral, then black/result loading starts at3454/3559; results are visible by3679/3800. Two fresh continuous processes agree on all declared fields and A/V (sample digest `22e9babdcb867936…`). Whole-run coverage adds3,467 executed bytes in92 ranges and180 entry points without losing baseline coverage. Every one of16,849 observed complete-suffix bank-$7F reads lies inside the accepted33,815-byte decoded track block. A compact verifier binds25 finish/coverage/content claims; independent review reproduced the long replays, transition order and a239/240 boundary, returned one missing provenance-total check, and approved its focused correction. Coordinator integration at `d3269be` passes287/287 checks. **M3-00 is accepted; it establishes evidence and task boundaries, not native full-race play.**
 - M2-01's coupled dependency is closed: player speed depends on opponent progress, while opponent landing rewards alter boosts, cartridge-RAM learned state and later AI requests. **[M2-01A](../tasks/M2-01A.md) is accepted** through PR2 (merge692ad1c, CI34665548538), and those reviewed contact/motion/AI/reward contracts are composed by the movement candidate; none of the original required player outputs was waived.
 - Remaining content notes (R-0008/R-0009): `provenance.py` labels cartridge-RAM block moves "work RAM" and hard-codes the block-move pc; header words in R-0008 mix byte order; renderer priority/high-table/vertical-flip paths remain weakly tested. M1-04 closed the exact watch-list and RNC high-symbol test notes; they are not prerequisites still waiting to be done.
 - Remaining tool notes: tracked coverage maps embed a build-specific core `library_sha256`; move it outside the coverage-digest input through a separately reviewed identity change. R-0004 G6 divergence-localization wording remains open. M1-04 added the unknown ROM-edge, per-frame vector and unresolved-store cases and tightened the NMI rule, closing those former test notes.
@@ -65,21 +66,23 @@ First implementation milestone: M0 repeatable laboratory. First gameplay feasibi
 For the next Sol coordinator, start with [the compact handover](../tasks/NEXT_SESSION.md).
 The prior Astra run is complete; no conversation replay is required.
 
-**M3 is next.** Continue with the existing Crawler/DRAGSTER scenario. First
-extend its reference evidence through an actual race finish and inventory the
-missing gameplay, controls and presentation dependencies; then divide the
-playable slice along observed interfaces. Do not infer complete-race, trick,
-rendering or audio behavior from M2's short accepted movement domain.
+**M3-01 is next.** Extend the native Crawler/DRAGSTER simulation through the two
+frozen M3-00 finish paths. Revise the333-byte state format explicitly for the
+observed per-rider flags and240-update delay, investigate and freeze the stored
+finish-time/outcome state before implementing it, and preserve exact full-race
+differential checks. Presentation extraction, the SDL frontend and final M3
+acceptance remain separate M3-02 through M3-04 slices from R-0012.
 
 Implementation choices should be made through bounded experiments. Remote hosting beyond the private repository, release license/distribution arrangements, online service topology, public accounts/ranking and paid execution budgets remain undecided and do not block the next research task. A Linux build of the pinned core (ROM-free) is a natural CI addition when convenient.
 
 ## Milestone status
 
-M0: accepted on 11 September 2026 (M0-00 through M0-06; evidence report [R-0005](research/R-0005-m0-acceptance.md); tag `m0`). M1: M1-01 accepted on 11 September 2026 ([R-0006](research/R-0006-observed-code-map.md)); M1-02 accepted on 11 September 2026 ([R-0007](research/R-0007-player-state.md), [D-0002](decisions/D-0002-data-access-observation.md)); M1-03 accepted on 12 September 2026 ([R-0008](research/R-0008-track-decode.md)); M1-04 accepted and **milestone M1 accepted on 12 September 2026, tagged `m1`** ([R-0009](research/R-0009-m1-acceptance.md)). M2: M2-01A and M2-01 accepted through PR2/PR4; M2-02 accepted through PR5; **milestone M2 accepted on 12 September 2026, tag `m2`** ([R-0011](research/R-0011-m2-acceptance.md)). M3–M6: not started. No calendar/cost promise has been established.
+M0: accepted on 11 September 2026 (M0-00 through M0-06; evidence report [R-0005](research/R-0005-m0-acceptance.md); tag `m0`). M1: M1-01 accepted on 11 September 2026 ([R-0006](research/R-0006-observed-code-map.md)); M1-02 accepted on 11 September 2026 ([R-0007](research/R-0007-player-state.md), [D-0002](decisions/D-0002-data-access-observation.md)); M1-03 accepted on 12 September 2026 ([R-0008](research/R-0008-track-decode.md)); M1-04 accepted and **milestone M1 accepted on 12 September 2026, tagged `m1`** ([R-0009](research/R-0009-m1-acceptance.md)). M2: M2-01A and M2-01 accepted through PR2/PR4; M2-02 accepted through PR5; **milestone M2 accepted on 12 September 2026, tag `m2`** ([R-0011](research/R-0011-m2-acceptance.md)). M3: M3-00 complete-race evidence accepted; implementation slices M3-01 through M3-04 remain. M4–M6: not started. No calendar/cost promise has been established.
 
 ## Handoff
 
 The next agent should read [the compact M3 handoff](../tasks/NEXT_SESSION.md),
-this file, `AGENTS.md`, and [R-0011](research/R-0011-m2-acceptance.md). Start
-from current `main`; do not repeat M2 implementation. Preserve the PAL and
-frozen movement identities and keep original content/captures ignored.
+this file, `AGENTS.md`, [R-0011](research/R-0011-m2-acceptance.md) and
+[R-0012](research/R-0012-complete-race-evidence.md). Start from current `main`;
+do not repeat M2 or M3-00 research. Preserve the PAL and frozen replay
+identities and keep original content/captures ignored.

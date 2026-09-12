@@ -35,7 +35,8 @@
     "presentation.rider.mike.race-tiles.v1",
     "presentation.result.classic.font-layout.v1",
     "presentation.effect.go-window.v1",
-    "presentation.effect.winner-window.v1"
+    "presentation.effect.winner-window.v1",
+    "presentation.result.classic.base-vram.v1"
   ],
   "reference_cases": [
     {

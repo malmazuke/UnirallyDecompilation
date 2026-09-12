@@ -219,3 +219,21 @@ the frozen 15% limit. Mode 3, BG map/character registers, the final constructed
 unresolved relationship is which BG owns each transition tile payload and the
 retained tile-76 background used by the filled map. No limit or expected image
 was changed.
+
+A narrow follow-up capture at the copier byte load `$82:B296` closes the
+missing retained content. It passed the unchanged identities and produced
+`access.json` SHA-256 `157073878b192100...`. Partitioning its ordered source
+addresses at the observed VMADD writes yields four final-state runs: 8,192
+bytes from `$07:A9D8` to VRAM word `$6000`, 2,816 from `$06:CCB8` to `$0000`,
+8,960 from `$04:DFF8` to `$2000`, and 21,568 from `$04:8BB8` to `$31A0`.
+The previously packed 1,920-byte DMA then starts at the retained `$3D80`
+VMADD, the 3,072-byte DMA writes at `$7A00`, and the constructed map is last at
+word `$1000`. The four retained runs total 41,536 bytes with concatenated
+SHA-256 `c1f19c30...e04f4`.
+
+This content existed before the later result DMAs and was therefore absent
+from the first narrow inventory; it is not derivable from the four small
+pieces. Before its consumer, the manifests additively freeze it as
+`presentation.result.classic.base-vram.v1`. The twenty-three-entry extraction
+rules SHA-256 is `43d14175...82a53`; all prior payload identities and the 15%
+gate remain unchanged.

@@ -106,3 +106,9 @@ rules SHA-256 is `714c2a08...19b`; the inventory is twenty-two entries. It adds
 the 898-byte GO and winner mode-4 HDMA window tables with payload SHA-256
 `33f19dae...b29` and `b6fddc69...df20`. All thirteen accepted gameplay payload
 identities and the source/profile/start identities remain unchanged.
+
+The stable result association additionally freezes the retained 41,536-byte
+base-VRAM entry, SHA-256 `c1f19c30...e04f4`, from four copier runs that precede
+the already packed result DMAs. This makes the additive inventory twenty-three
+entries under extraction-rules SHA-256 `43d14175...82a53`; earlier logical
+payload identities remain unchanged.

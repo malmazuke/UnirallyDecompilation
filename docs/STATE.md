@@ -1,6 +1,6 @@
 # Project state
 
-Updated: 12 September 2026 (M2 accepted).
+Updated: 12 September 2026 (M3-01 accepted).
 
 ## Current facts
 
@@ -10,7 +10,7 @@ Updated: 12 September 2026 (M2 accepted).
 - `tools/project.py` implements `rom inspect`, `doctor`, `bootstrap`, `build --preset` and `test --suite synthetic` with JSON reports (schema 1) and exit codes 0/1/2/3/4 for success, failure, missing prerequisite, invalid input and timeout.
 - Pinned CMake 3.31.10 and Ninja 1.13.2 are fetched as digest-verified wheel archives into ignored `local/toolchain/`; bootstrap is idempotent. No dependency is installed globally.
 - `src/lab/` is a synthetic C++20 determinism probe, not game code. Its 1000-step state hash `0be347c529fadda9` is identical on macOS arm64 (AppleClang, Homebrew clang, with sanitizers) and Linux x86_64 (GCC 13.3, with sanitizers).
-- ROM-free CI (`.github/workflows/synthetic.yml`) runs on `ubuntu-24.04` and `macos-15` for pushes to `main` and `task/**`; both are green at the M0-02 candidate. No private-fixture runner exists.
+- ROM-free CI (`.github/workflows/synthetic.yml`) runs on `ubuntu-24.04` and `macos-15` for pushes to `main` and `task/**`; both are green at M3-01 merge `c393c54` in run34682900511, including Linux sanitizers. No private-fixture runner exists.
 - Reference adapter (M0-03, [D-0001](decisions/D-0001-reference-emulator.md), [R-0002](research/R-0002-reference-adapter-determinism.md)): a pinned **bsnes** libretro core (commit `7d5aa1e656b9`, tracked patch `tools/unirally_lab/reference/patches/`) driven from Python in fresh worker processes; `python3 tools/project.py reference build|run|verify|restore-check`. On this ROM three fresh processes give identical per-frame work RAM, registers, video and audio (memory/register sample digest `f210eecacf63cbeb…` for `tests/manifests/reference/boot-300.json`); the core reports PAL; inputs are delivered per frame; a save/restore in a fresh process continues identically at every save point of both tracked scripts, while saving at boot-sequence points 29–96 (with holes) perturbs the run, which `restore-check` detects. Video/audio are not restorable. Mesen Community Edition is pinned as an investigation tool only.
 - Replay manifests and comparator (M0-04, [R-0003](research/R-0003-replay-comparator.md)): `tests/manifests/replay/*.json` (manifest schema 1: scenario, ROM and core identity, cold-start or validated-state origin, both controllers' frame-timed inputs, declared fields, regeneration command, expected digests) drive `python3 tools/project.py replay validate|run|compare`. Every reference execution is a separate worker process (reference samples schema 2 adds declared work RAM ranges, a stop frame, a WRAM dump and process identity; the M0-03 sample digest is unchanged). On this ROM two fresh runs of `boot-start-600` are identical (sample digest `583d1ec544ec61a2…`); removing or moving the Start press at frames 300–305 is reported as a first divergence at frame 300 and localized to one work RAM byte, `$7E0073` (`0x10` held, `0x00` not), with identical final states; absent ROM/state/evidence exit 2, an unreachable manifest exits 4, invalid manifests exit 3. Two independent reviews with their own withheld perturbations agreed with manual frame-by-frame comparisons. A state is a valid origin only with its restore-check report at the same save point.
 - The Python test runner now records failing subtests and `test --suite synthetic` fails when the runner does (a defect since M0-02 that let three erroring subtests read as 101/101 was found by the first M0-04 review). The suite has 118 checks, 110 Python tests.
@@ -32,6 +32,7 @@ Updated: 12 September 2026 (M2 accepted).
   PR5 merged as `144fd48` after runs34675475186 and34675476818 both passed on
   macOS15 and Ubuntu24.04. **M2-02 and milestone M2 are accepted.**
 - Complete-race reference evidence (M3-00, [R-0012](research/R-0012-complete-race-evidence.md), [finish-state contract](state/race-finish.md)): two input streams frozen before execution run the same Crawler/DRAGSTER path for 12,000 PAL frames. Continuous acceleration finishes the player/opponent at frames3213/3214; releasing Right for frames3000–3299 moves only the player finish to3318 while the opponent still finishes at3214. A 240-update post-player delay begins on the following frame, forces derived horizontal axes neutral, then black/result loading starts at3454/3559; results are visible by3679/3800. Two fresh continuous processes agree on all declared fields and A/V (sample digest `22e9babdcb867936…`). Whole-run coverage adds3,467 executed bytes in92 ranges and180 entry points without losing baseline coverage. Every one of16,849 observed complete-suffix bank-$7F reads lies inside the accepted33,815-byte decoded track block. A compact verifier binds25 finish/coverage/content claims; independent review reproduced the long replays, transition order and a239/240 boundary, returned one missing provenance-total check, and approved its focused correction. Coordinator integration at `d3269be` passes287/287 checks. **M3-00 is accepted; it establishes evidence and task boundaries, not native full-race play.**
+- Native full-race continuation (M3-01, [R-0013](research/R-0013-native-finish-reference-freeze.md), [review](../tasks/M3-01-review.md)): the human-readable C++ Crawler/DRAGSTER simulation now matches the continuous, release-3000--3299 and reviewer-owned release-3213 paths through stable results. It records exact per-rider finish times/outcome, preserves the240-update delay and neutral override, and changes canonical serialization explicitly from333-byte `URMV0001` to369-byte `URMV0002` only after finish state exists. Fresh-process restores pass at18 finish/result boundaries; all M2 comparisons and four M2 restore boundaries remain exact. Reviews returned and corrected the positive low-speed ordering and the PAL `-10` equality asymmetry before approving `be63215`. Coordinator merge `c393c54` passes debug and sanitizer288/288 locally; private CI run34682900511 passes macOS15 and Ubuntu24.04, including Linux sanitizers. **M3-01 is accepted.**
 - M2-01's coupled dependency is closed: player speed depends on opponent progress, while opponent landing rewards alter boosts, cartridge-RAM learned state and later AI requests. **[M2-01A](../tasks/M2-01A.md) is accepted** through PR2 (merge692ad1c, CI34665548538), and those reviewed contact/motion/AI/reward contracts are composed by the movement candidate; none of the original required player outputs was waived.
 - Remaining content notes (R-0008/R-0009): `provenance.py` labels cartridge-RAM block moves "work RAM" and hard-codes the block-move pc; header words in R-0008 mix byte order; renderer priority/high-table/vertical-flip paths remain weakly tested. M1-04 closed the exact watch-list and RNC high-symbol test notes; they are not prerequisites still waiting to be done.
 - Remaining tool notes: tracked coverage maps embed a build-specific core `library_sha256`; move it outside the coverage-digest input through a separately reviewed identity change. R-0004 G6 divergence-localization wording remains open. M1-04 added the unknown ROM-edge, per-frame vector and unresolved-store cases and tightened the NMI rule, closing those former test notes.
@@ -68,28 +69,26 @@ First implementation milestone: M0 repeatable laboratory. First gameplay feasibi
 For the next Sol coordinator, start with [the compact handover](../tasks/NEXT_SESSION.md).
 The prior Astra run is complete; no conversation replay is required.
 
-**M3-01 is in progress in its isolated worktree.** Extend the native Crawler/DRAGSTER simulation through the two
-frozen M3-00 finish paths. Revise the333-byte state format explicitly for the
-observed per-rider flags and240-update delay, investigate and freeze the stored
-finish-time/outcome state before implementing it, and preserve exact full-race
-differential checks. Do not widen its implementation for D-0005. After M3-01
-integration, [M3-02A](../tasks/M3-02A.md) establishes deterministic user-ROM
-extraction and the logical Classic content-pack boundary. Presentation
-extraction, the SDL frontend and final M3 acceptance then remain separate
-M3-02 through M3-04 slices.
+**M3-02A is ready.** Establish deterministic user-ROM extraction and the
+logical Classic content-pack boundary from D-0005. Start by reproducing M3-01
+and inventorying every current runtime content read; freeze schema1 and the
+public semantic start-state contract before implementation. Presentation
+extraction, the SDL frontend and final M3 acceptance remain separate M3-02
+through M3-04 slices.
 
 Implementation choices should be made through bounded experiments. Original-content handling for Classic is decided by D-0005; remote hosting beyond the private repository, source/replacement-content licensing, legal clearance, online service topology, public accounts/ranking and paid execution budgets remain undecided and do not block M3 implementation. A Linux build of the pinned core (ROM-free) is a natural CI addition when convenient.
 
 ## Milestone status
 
-M0: accepted on 11 September 2026 (M0-00 through M0-06; evidence report [R-0005](research/R-0005-m0-acceptance.md); tag `m0`). M1: M1-01 accepted on 11 September 2026 ([R-0006](research/R-0006-observed-code-map.md)); M1-02 accepted on 11 September 2026 ([R-0007](research/R-0007-player-state.md), [D-0002](decisions/D-0002-data-access-observation.md)); M1-03 accepted on 12 September 2026 ([R-0008](research/R-0008-track-decode.md)); M1-04 accepted and **milestone M1 accepted on 12 September 2026, tagged `m1`** ([R-0009](research/R-0009-m1-acceptance.md)). M2: M2-01A and M2-01 accepted through PR2/PR4; M2-02 accepted through PR5; **milestone M2 accepted on 12 September 2026, tag `m2`** ([R-0011](research/R-0011-m2-acceptance.md)). M3: M3-00 complete-race evidence accepted; M3-01 is claimed/in progress; M3-02A content-pack work is planned; M3-02 through M3-04 remain. M4–M6: not started. No calendar/cost promise has been established.
+M0: accepted on 11 September 2026 (M0-00 through M0-06; evidence report [R-0005](research/R-0005-m0-acceptance.md); tag `m0`). M1: M1-01 accepted on 11 September 2026 ([R-0006](research/R-0006-observed-code-map.md)); M1-02 accepted on 11 September 2026 ([R-0007](research/R-0007-player-state.md), [D-0002](decisions/D-0002-data-access-observation.md)); M1-03 accepted on 12 September 2026 ([R-0008](research/R-0008-track-decode.md)); M1-04 accepted and **milestone M1 accepted on 12 September 2026, tagged `m1`** ([R-0009](research/R-0009-m1-acceptance.md)). M2: M2-01A and M2-01 accepted through PR2/PR4; M2-02 accepted through PR5; **milestone M2 accepted on 12 September 2026, tag `m2`** ([R-0011](research/R-0011-m2-acceptance.md)). M3: M3-00 and M3-01 accepted; M3-02A content-pack work is ready; M3-02 through M3-04 remain. M4–M6: not started. No calendar/cost promise has been established.
 
 ## Handoff
 
 The next agent should read [the compact M3 handoff](../tasks/NEXT_SESSION.md),
 this file, `AGENTS.md`, [R-0011](research/R-0011-m2-acceptance.md) and
-[R-0012](research/R-0012-complete-race-evidence.md). For work after M3-01 also
-read [D-0005](decisions/D-0005-classic-content-distribution.md) and
-[M3-02A](../tasks/M3-02A.md). Start from current `main`;
-do not repeat M2 or M3-00 research. Preserve the PAL and frozen replay
-identities and keep original content/captures ignored.
+[R-0012](research/R-0012-complete-race-evidence.md),
+[R-0013](research/R-0013-native-finish-reference-freeze.md),
+[D-0005](decisions/D-0005-classic-content-distribution.md) and
+[M3-02A](../tasks/M3-02A.md). Start from current `main`; do not repeat M2,
+M3-00 or M3-01 research. Preserve the PAL and frozen replay identities and keep
+original content, generated packs and captures ignored.

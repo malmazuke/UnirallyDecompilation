@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "kind": "zoom_zoo_position_contact_reference",
+  "scenario_id": "race-crawler-zoom-zoo-3300",
+  "source": {
+    "rom_sha256": "a1105819d48c04d680c8292bbfa9abbce05224f1bc231afd66af43b7e0a1fd4e",
+    "core_commit": "7d5aa1e656b9171524d01b1b22917197d8121cb4",
+    "core_patch_sha256": "a719f5ffe2222dad4c1ab04336633319ad85004f74e32fc14893a058be333885",
+    "replay_manifest": "tests/manifests/replay/race-crawler-zoom-zoo-3300.json",
+    "replay_manifest_sha256": "acd29bfb72aeaad0791923e22e17a791f5c182220f64b6686dd687984411aefd",
+    "access_sha256": "f3d0013aa84bfa1d5ab795fe62269745abf93a402d816326c3d2b56ded961465",
+    "wram_series_sha256": "53c03d228999d3c1fbe5ee22be64a3965a77848e9b8f8adbeaba4374cba3d13d"
+  },
+  "frames": {"seed": 1649, "first": 1650, "last": 1700},
+  "calls": 102,
+  "points": 1020,
+  "seed": {"values": {"player_x": 9200, "opponent_x": 8248, "player_y": 1561, "opponent_y": 1452, "player_x_residue": -1, "opponent_x_residue": -24, "player_y_residue": 22, "opponent_y_residue": -1}, "row_sha256": "064dea0e95ffdf1b11fc20d94fe7084a48ede5027ae6e270fd916d617d2be9f4", "track_mask": 16383},
+  "y_adjustment_routine": {"bus": "82:A96F-82:A9B2", "bytes": 68, "sha256": "5f3d24df4c743df33e24d2febc24522cd2abe68fe5597ee2abf3ebfac413653c", "accumulator_width": 16, "index_width": 16},
+  "coarse_width": 256,
+  "rows_sha256": "9582292c872f154b917e7973f4b6b2ba8a3a458feaab49d11889f3fe2b9f9c30",
+  "sample_words_sha256": "98e77e32b3540aa98e796edc5d7fb7c0bb2736e44e8e4b3ee1b4cf1827d188dd",
+  "sample_sources_sha256": "f24ccd2738300030debe07020d4140f4f8d0d6e8e711b0f8ea3d2a8cd526fa27",
+  "position_branch_counts": {"x_negative": 51, "x_nonnegative": 51, "y_negative": 20, "y_nonnegative": 82},
+  "helper_counts": {"increment": 102},
+  "contact_branch_counts": {"continuous": 59, "continuous_reflected": 18, "recontact": 1, "unsupported": 24},
+  "final": {"player_x": 9824, "opponent_x": 7489, "player_y": 1605, "opponent_y": 1520, "player_x_residue": 12, "opponent_x_residue": -4, "player_y_residue": 10, "opponent_y_residue": 12},
+  "external_fields": {"before_y_adjustment": ["first_guard", "indexed_guard", "incoming_velocity_y"], "position_integrator": ["velocity_x", "surface", "guard", "unsupported_count", "direction_word", "mode", "track_mask"], "sampling": ["pose", "reflection"], "contact": ["vx", "vy", "response_a", "response_b", "response_impulse", "unsupported_count", "unsupported_duration", "surface_angle", "angle_sentinel", "auxiliary_flag", "mode", "special", "phase", "previous_x", "previous_y"], "contact_live_dependencies": ["cartridge_option", "rider_selector"]},
+  "phase_order": ["y_adjustment", "position_integration", "collision_point_expansion", "track_sampling", "contact", "caller_publication"],
+  "static_content": {"contract": "tests/manifests/content/zoom-zoo-reference-contract.json", "contract_sha256": "017a4eb941abb0e87ea0e3be4509d9043198466cb461f560517f355938c1d699", "track_data_sha256": "db6770152e399f9d16fc6937b5d56588a8f67e825ae70d6578b77d36053fdd28", "collision_poses_sha256": "9d1754d38c20cb2900239557550211ab6fc23d9b0237e17b78fb29f3bf272c32", "collision_templates_sha256": "2f03a8cb985899436603ef36b233b28f7b4213e4ba106fca328a6b02cdb081c7", "tile_tables_sha256": "649b96ff43ef467fe57bac16eb876f96a1ebc6f0307a5270f97a7ce1f63a84c7", "tile_flags_sha256": "11aa211a148bced17e6c1b63a19e6e9c71ff1f8fed83954613f2ea62b15069c4", "slope_coefficients_sha256": "f5016c76c1f4e60c988c67672b12da1d3b10948934f5f1e8b29135274203e7a1"},
+  "description": "Recurrent eight-word position state feeding width-256 sampling and accepted vertical contact for 102 calls",
+  "limits": "Frames 1650-1700 only; velocity, pose, reflection and non-position contact state remain captured external inputs; no native ZOOM ZOO support"
+}

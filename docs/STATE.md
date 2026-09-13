@@ -1,6 +1,6 @@
 # Project state
 
-Updated: 13 September 2026 (M4-03 accepted; M4-04 planning next; M3 remains the latest
+Updated: 13 September 2026 (M4-03 accepted; M4-04 claimed; M3 remains the latest
 accepted milestone, tag `m3`).
 
 ## Current facts

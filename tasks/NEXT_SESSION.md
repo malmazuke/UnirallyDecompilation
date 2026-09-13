@@ -1,4 +1,4 @@
-# Coordinator handover — M4-03 accepted, M4-04 planning next
+# Coordinator handover — M4-03 accepted, M4-04 claimed
 
 Milestone M3 is accepted on 13 September 2026 and tagged `m3`. M4-00 through
 M4-03 are accepted. Read [M4-03](M4-03.md),
@@ -22,11 +22,12 @@ metadata; correction `029d0df` was approved. Merge `0856621` passes local
 contract/replay/coverage/content/native gates and 325/325; hosted run
 34727349602 passes macOS/Linux including Linux SDL sanitizers.
 
-Use a bounded Astra/high planning consultation to select and write one narrow
-M4-04 work order from the accepted M4-03 evidence before claim. Native ZOOM ZOO
-is still unsupported: full autonomous movement/contact, finish/result and
-presentation are not established, and the Classic pack is unchanged. Preserve
-all frozen M3/M4 identities. The user authorized an unattended M4 continuation
-and at most one weekly usage reset only if an actual provider limit is reached;
-no money, paid credits, provider switching, publication or deployment is
-authorized.
+Continue [M4-04](M4-04.md) in its isolated Sol/medium worktree. Its bounded
+Astra/high checkpoint rejected premature native and pack expansion: freeze the
+field-bearing primary/release riding reference from end-frame 1649, map the
+actual SRAM-dependent state and identify the first exercised native blocker.
+Native ZOOM ZOO, finish/result/presentation and the Classic pack remain
+unchanged. Preserve all frozen M3/M4 identities. The user authorized an
+unattended M4 continuation and at most one weekly usage reset only if an actual
+provider limit is reached; no money, paid credits, provider switching,
+publication or deployment is authorized.

@@ -1,8 +1,9 @@
 # M4-15 independent review
 
 Initial candidate: `e038a5b1a3fe9e1064024eb51b1749400319431e`.
-Accepted corrected candidate: upstream `6faff68`, represented by equivalent local
-cherry-pick `f11fd19`.
+Accepted corrected candidate: upstream `e5e88a8` (`6faff68` gameplay plus the
+metadata-only freeze-rationale correction), with gameplay represented by equivalent
+local cherry-pick `f11fd19`.
 Reviewer: fresh OpenAI Sol/medium session in
 `.worktrees/m4-15-review`, branch `codex/review-m4-15-race-completion`.
 Startup shared weekly usage was 45% used; task allocation was 38% used. Preserve
@@ -170,15 +171,16 @@ correct and were frozen before native evaluation. The actual opponent
 continuations are231 updates for one-step-delay and234 for mid-neutral; this
 review keeps the immutable freeze files and records the accurate values here.
 The helper correction is metadata-only and must compute the value per case. Its
-proposed exact delta was reviewed and accepted; final review of its committed
-diff remains pending.
+exact committed delta in `e5e88a8` was reviewed and accepted. An ephemeral
+serialized freeze changed only `horizon_rationale` and correctly reported240
+player/234 opponent updates for mid-neutral.
 
-Closeout shared weekly usage was52% used, preserving the required20% reserve. No
+Closeout shared weekly usage was53% used, preserving the required20% reserve. No
 reset, purchase, provider switch, or child dispatch occurred.
 
 ## Disposition
 
-Approve corrected candidate `6faff68`. All five material qualifying variations
+Approve corrected candidate `e5e88a8`. All five material qualifying variations
 and the primary now match the original through their complete race and exact
 240-update player-finish display, including restore coverage. The implementation
 corrections resolve every review finding. The declared domain ends before

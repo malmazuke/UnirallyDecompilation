@@ -1,9 +1,9 @@
-# Coordinator handover — M4-06 accepted, M4-07 claimed
+# Coordinator handover — M4-07 accepted, M4-08 planning next
 
 Milestone M3 is accepted on 13 September 2026 and tagged `m3`. M4-00 through
-M4-06 are accepted. Read [M4-06](M4-06.md),
-[R-0024](../docs/research/R-0024-zoom-zoo-vertical-contact.md), its returned
-[review](M4-06-review.md) and approved [re-review](M4-06-rereview.md).
+M4-07 are accepted. Read [M4-07](M4-07.md),
+[R-0025](../docs/research/R-0025-zoom-zoo-reflected-vertical-contact.md), its
+returned [review](M4-07-review.md) and approved [re-review](M4-07-rereview.md).
 
 The accepted scope is the identified PAL one-player CRAWLER/DRAGSTER slice:
 supported-ROM extraction creates a validated local Classic pack, later launches
@@ -35,12 +35,15 @@ their observed direction boundaries. Review returned the capture recipe, not
 the equations; correction `814f787` and a doc-derived CLI test were approved.
 Integration `3694406` and hosted run 34736840760 are green.
 
-Continue [M4-07](M4-07.md) in its isolated Sol/medium worktree. Its bounded
-Astra/high audit split the broad direction/special class: frames 1683--1700 use
-only descriptor bit `0x4000`, mirrored-column sampling and positive slopes up
-to +8; no horizontal, `0x8000` or bit-zero special path is observed. Close that
-36-call suffix and compose it with M4-06's 66-call prefix. Native ZOOM ZOO,
-finish/result/presentation and the Classic pack remain unchanged.
+M4-07 closes the observed 36-call `0x4000` reflected/positive-slope suffix and
+composes all 102 calls/1,020 points through frame 1700. Review returned semantic
+binding and address citations; correction `cfa94e4` was approved, including a
+correction to the reviewer's own off-by-one point-x range. Integration
+`131df54` and hosted run 34738957270 are green.
+
+Run a bounded Astra/high planning audit for M4-08. Challenge remaining contact
+families against the smallest upstream autonomous-producer dependency. Native
+ZOOM ZOO, finish/result/presentation and the Classic pack remain unchanged.
 The user authorized an unattended M4 continuation and at most one weekly usage
 reset only if an actual provider limit is reached; no money, paid credits,
 provider switching, publication or deployment is authorized.

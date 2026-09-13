@@ -1,8 +1,8 @@
 # R-0025 — ZOOM ZOO reflected vertical-contact suffix
 
 - Task: [M4-07](../../tasks/M4-07.md)
-- Status: worker candidate for independent review; production native behavior
-  remains unchanged
+- Status: accepted bounded reference research after returned independent review
+  and approved focused re-review; production native behavior remains unchanged
 - Source: PAL ROM SHA-256
   `a1105819d48c04d680c8292bbfa9abbce05224f1bc231afd66af43b7e0a1fd4e`;
   bsnes `7d5aa1e656b9171524d01b1b22917197d8121cb4`; patch

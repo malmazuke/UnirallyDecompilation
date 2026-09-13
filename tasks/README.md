@@ -38,7 +38,7 @@ The coordinator maintains the status registry below. Work orders further below d
 | M4-10 | accepted 13 September 2026 after independent approval and green macOS/Linux CI | [ZOOM ZOO inter-contact response-B recurrence](M4-10.md) |
 | M4-11 | accepted 13 September 2026 after returned independent review, approved focused re-review and green macOS/Linux CI | [ZOOM ZOO vertical-velocity recurrence](M4-11.md) |
 | M4-12 | accepted; native 200-update trial, independent review | [Autonomous native ZOOM ZOO trial](M4-12.md) under D-0006 |
-| M4-13 | ready/unclaimed for next Astra/medium session | [Player landing and recovery trial](M4-13.md) |
+| M4-13 | in_progress, Astra/medium primary | [Player landing and recovery trial](M4-13.md) |
 | M4-14 – M6 | unclaimed; outside the trial | Do not automatically dispatch |
 
 ## M0 — repeatable laboratory

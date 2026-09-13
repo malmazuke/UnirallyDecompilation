@@ -1,0 +1,13 @@
+{
+  "id": "m4-13-player-jump-1681-1695",
+  "changes": [
+    {
+      "from": 1681,
+      "to": 1695,
+      "buttons": [
+        "right",
+        "b"
+      ]
+    }
+  ]
+}

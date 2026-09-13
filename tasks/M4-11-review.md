@@ -181,3 +181,24 @@ corrected without changing a candidate expectation.
 Private ROM bytes, captures, content, reports and builds remain ignored. The
 candidate should not be accepted until the finding is corrected and focused
 re-review passes.
+
+## Worker correction (not an independent re-review)
+
+Correction `f7ff0e39b8169be64da44dc1ebfb3fa2afd304fc` addresses the returned
+finding against the same accepted primary and frame-1672 captures. It restores
+the complete width-two `$83:F00D` pose-consumption assertion and hashes
+`pose_consumed`; requires width two at all seven motion/contact boundaries;
+asserts the full jump/gravity/cap/boost/integrator/motion/contact sequence; and
+reconciles every frame's complete `$0FAB` writer inventory exactly once.
+Per-row writer evidence now binds sequence, PC, width and value. The observed
+inventory is 102 motion loads, 102 gravity writes, zero cap writes, 102 contact
+loads and 77 `$81:970B` response writes, with no extra writer.
+
+ROM-free semantic mutations independent of the access-document hash now reject
+all seven review contradictions, plus missing/duplicate motion and contact
+writers and an unclassified writer outside the per-rider intervals. Both exact
+manifests and the worker comparison pass from the unchanged captures. Focused
+M4-05--M4-11 passes 60/60; clean `app-debug` and `app-sanitize` at `f7ff0e3`
+each pass 373 Python tests, all 20 CTests and three-process repeatability. This
+section records worker remediation only; the verdict remains returned until a
+coordinator-owned independent re-review.

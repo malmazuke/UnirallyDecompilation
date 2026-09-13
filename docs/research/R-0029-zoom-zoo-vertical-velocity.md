@@ -81,8 +81,8 @@ value.
 The seed is player 0 and opponent 65458 (-78). All 102 rows match motion load,
 jump publication, gravity write, cap result, integrator read, motion
 publication, contact input/output and final persistent publication without a
-later captured-velocity input. Primary rows hash to
-`33a04a8ec39ef59368dc35ace86c9d400357aeb3f464eecd29d90b4d0524d077`;
+later captured-velocity input. Corrected evidence rows hash to
+`a158706a1003744fca35510b55dacd5185e45cb7c11e8615450c32198cbf79b2`;
 final velocity is player 241 and opponent 0.
 
 Computed velocity and response B preserve all 102 calls, 1,020 sample words
@@ -108,10 +108,10 @@ The full player composition first differs at 1672 and is still different at
 1700; opponent composition remains exact. No sample word, response-B value or
 vertical-velocity stage/result differs. The only final recurrent-position
 difference is player x residue 11 rather than 12. This is an honest negative
-relevance result for vertical velocity. Variation velocity rows hash to
-`b7d33835284a35043777a12eaeb9cd01da9ea6262968c00907c9ffc8c3a11b51`;
+relevance result for vertical velocity. Corrected variation evidence rows hash
+to `4ef7dc607af6f2ba0a88c5a10137bda52393a08df635d553bb282384a27b3545`;
 the comparison digest is
-`f8808c2fbe9efc4f174d48a67f5b3007861cab89c0fa5be4710eac0ee1c812c`.
+`4e09d547d3da9d00d2cf9effa40e58bfea34daea3f9d03044d6b6da67183b1ba`.
 
 ## Integrity, reproduction and limits
 
@@ -119,6 +119,21 @@ Exact-bound captures/manifests and ROM-free mutations cover source, seed,
 rider/order, reseeding, captured substitution, phase/order, missing writer,
 cap signed predicates, jump short-circuits, gravity shift/arithmetic and writer
 width. Any changed capture event also changes the bound access identity.
+
+Correction `f7ff0e39b8169be64da44dc1ebfb3fa2afd304fc` closes the independent
+review's semantic-enforcement finding without recollection or arithmetic
+changes. Every call now binds the single complete width-two `$83:F00D` pose
+read to computed response B; those 102 `pose_consumed` values produce corrected
+response evidence digest
+`a40099baffbc778a0715de02100bf886e55c4c901bd259b80cf418175a86ac9e`.
+All seven motion/contact boundary events must be complete width-two accesses.
+The evaluator asserts the actual jump, gravity, cap/boost, integration, motion
+publication, contact-response and final-publication sequence. It enumerates
+every write overlapping `$0FAB` across each complete frame, classifies each
+exactly once, and binds sequence, PC, width and value into the evidence rows.
+The unchanged captures contain 102 motion scratch loads, 102 gravity writes,
+zero cap writes, 102 contact scratch loads and 77 reached `$81:970B` contact
+response writes, with no other `$0FAB` writer.
 
 The preregistration replay intentionally ran while its expected sample and
 final-state digests were still zero. Its four expected-digest checks failed,

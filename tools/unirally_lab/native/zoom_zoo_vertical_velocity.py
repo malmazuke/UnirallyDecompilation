@@ -55,8 +55,8 @@ CAPTURE_IDENTITIES = {
     ),
 }
 COMPONENT_MANIFEST_SHA256 = {
-    "race-crawler-zoom-zoo-3300": "d270f25178f285c1250df22b25bcae573cff97e8114560766c85b0aacf288641",
-    "race-crawler-zoom-zoo-right-release-1672": "8b10d02b65bf88b22f640bb96acf348b0f79cffdecb95ed84187e5758257f285",
+    "race-crawler-zoom-zoo-3300": "5b02a1c37fd40a676ecd474ed9b70acd8c40de3f40be328c55652258cb77021f",
+    "race-crawler-zoom-zoo-right-release-1672": "d1ccc58e2ffb4b9b20a891fe9a8fc05d38e880820da73c098772b499b2846aa7",
 }
 MANIFEST_FIELDS = {
     "schema_version", "kind", "source", "frames", "calls", "seed",
@@ -178,7 +178,7 @@ def validate_recurrence_chain(rows: list[dict], seed: dict[int, int]) -> None:
         "ordinal", "frame", "rider", "phase_0302", "active",
         "recurrent_input", "jump_inputs", "post_jump", "gravity", "cap",
         "integrator_input", "motion_publication", "contact_input",
-        "contact_output", "response_b", "composition",
+        "contact_output", "response_b", "composition", "writer_evidence",
     }
     recurrent = {0: _u16(seed[0]), 1: _u16(seed[1])}
     for ordinal, row in enumerate(rows):
@@ -213,6 +213,124 @@ def _one(events: list[tuple], pc: int, kind: str, address: int | None = None,
     return rows[0]
 
 
+def _overlaps(event: tuple, address: int) -> bool:
+    return event[2] in ("write", "rmw") and event[3] <= address < event[3] + event[4]
+
+
+def validate_pose_consumption(block: list[tuple], produced: int,
+                              frame: int = 0, rider: int = 0) -> int:
+    """Bind the width-two `$83:F00D` pose read to computed response B."""
+    reads = [event for event in block if event[1] == 0x83F00D
+             and event[2] == "read" and event[3] == 0x0F57]
+    if (len(reads) != 1 or reads[0][4] != 2 or reads[0][5] is None
+            or int(reads[0][5]) != _u16(produced)):
+        raise ValueError(
+            f"frame {frame} rider {rider}: pose did not consume width-two computed response B"
+        )
+    return int(reads[0][5])
+
+
+def validate_domain_writer_inventory(events: list[tuple],
+                                     classified: list[tuple], frame: int = 0) -> None:
+    """Require every reached `$0FAB` writer in a frame to be classified once."""
+    observed = [event for event in events if _overlaps(event, 0x0FAB)]
+    expected = sorted(classified, key=lambda event: event[0])
+    if observed != expected or len({event[0] for event in expected}) != len(expected):
+        raise ValueError(f"frame {frame}: complete $0FAB writer inventory differs")
+
+
+def validate_velocity_event_sequence(*, frame: int, rider: int,
+                                     boundaries: dict[str, tuple],
+                                     jump_events: list[tuple],
+                                     jump_state: tuple | None,
+                                     gravity_input: tuple,
+                                     gravity_write: tuple,
+                                     cap_input: tuple,
+                                     cap_writes: list[tuple],
+                                     boost_input: tuple,
+                                     boost_writes: list[tuple],
+                                     integrator: tuple,
+                                     motion_writers: list[tuple],
+                                     contact_response: tuple | None,
+                                     contact_writers: list[tuple]) -> None:
+    """Validate semantic widths, writer inventory and original event order.
+
+    This deliberately accepts decoded event tuples rather than an access
+    document so mutation tests can challenge semantics independently of the
+    outer capture SHA-256 binding.
+    """
+    required_boundaries = {
+        "persistent_load", "scratch_load", "scratch_publication",
+        "persistent_publication", "contact_persistent_load",
+        "contact_scratch_load", "contact_publication",
+    }
+    if set(boundaries) != required_boundaries:
+        raise ValueError("vertical-velocity boundary inventory differs")
+    for name, event in boundaries.items():
+        if event[4] != 2 or event[5] is None:
+            raise ValueError(
+                f"frame {frame} rider {rider}: {name} is not a complete width-two event"
+            )
+    for name, event in (("gravity input", gravity_input),
+                        ("gravity writer", gravity_write),
+                        ("cap input", cap_input), ("boost input", boost_input),
+                        ("integrator", integrator)):
+        if event[4] != 2 or event[5] is None:
+            raise ValueError(f"frame {frame} rider {rider}: {name} width/value differs")
+    if ((gravity_input[1:4], gravity_write[1:4], cap_input[1:4],
+         boost_input[1:4], integrator[1:4]) != (
+            (0x82A97E, "read", 0x0FAB),
+            (0x82A9AA, "write", 0x0FAB),
+            (0x82A832, "read", 0x0FAB),
+            (0x82A86C, "read", 0x11DD),
+            (0x82A674, "read", 0x0FAB))):
+        raise ValueError(f"frame {frame} rider {rider}: stage instruction identity differs")
+    for name, rows in (("cap", cap_writes), ("boost", boost_writes)):
+        if len(rows) > 1 or any(event[4] != 2 or event[5] is None for event in rows):
+            raise ValueError(f"frame {frame} rider {rider}: {name} writer inventory differs")
+    if boost_writes and boost_writes[0][1:4] != (0x82A872, "write", 0x11DD):
+        raise ValueError(f"frame {frame} rider {rider}: boost writer identity differs")
+    if jump_events:
+        if (jump_state is None or jump_state not in jump_events
+                or jump_state[1:5] != (0x82A96B, "write", 0x0FA5, 2)
+                or jump_state[5] is None):
+            raise ValueError(f"frame {frame} rider {rider}: active jump state writer differs")
+        if max(event[0] for event in jump_events) != jump_state[0]:
+            raise ValueError(f"frame {frame} rider {rider}: jump state was not published last")
+    elif jump_state is not None:
+        raise ValueError(f"frame {frame} rider {rider}: inactive jump state writer differs")
+
+    ordered = [boundaries["persistent_load"], boundaries["scratch_load"]]
+    ordered += sorted(jump_events, key=lambda event: event[0])
+    ordered += [gravity_input, gravity_write, cap_input]
+    ordered += cap_writes + [boost_input] + boost_writes
+    ordered += [integrator, boundaries["scratch_publication"],
+                boundaries["persistent_publication"],
+                boundaries["contact_persistent_load"],
+                boundaries["contact_scratch_load"]]
+    if contact_response is not None:
+        if contact_response[1:4] != (0x81970B, "write", 0x0FAB):
+            raise ValueError(f"frame {frame} rider {rider}: contact writer identity differs")
+        ordered.append(contact_response)
+    ordered.append(boundaries["contact_publication"])
+    if any(left[0] >= right[0] for left, right in zip(ordered, ordered[1:])):
+        raise ValueError(f"frame {frame} rider {rider}: vertical-velocity stage order differs")
+
+    expected_motion = [boundaries["scratch_load"], gravity_write, *cap_writes]
+    expected_contact = [boundaries["contact_scratch_load"]]
+    if contact_response is not None:
+        expected_contact.append(contact_response)
+    for name, observed, expected in (
+            ("motion", motion_writers, expected_motion),
+            ("contact", contact_writers, expected_contact)):
+        if observed != expected or any(
+                not _overlaps(event, 0x0FAB) or event[4] != 2 or event[5] is None
+                for event in observed):
+            raise ValueError(
+                f"frame {frame} rider {rider}: {name} $0FAB writer inventory differs"
+            )
+
+
 def _motion_block(access: dict, frame: int, rider: int) -> tuple[list[tuple], dict]:
     events = events_for_frame(access, frame)
     boundary = MOTION_BOUNDARIES[rider]
@@ -223,6 +341,18 @@ def _motion_block(access: dict, frame: int, rider: int) -> tuple[list[tuple], di
     contact_read = _one(events, boundary["contact_read"], "read", boundary["persistent"])
     contact_load = _one(events, boundary["contact_load"], "write", 0x0FAB)
     contact_publish = _one(events, boundary["contact_publish"], "write", boundary["persistent"])
+    named_events = {
+        "persistent_load": start, "scratch_load": load,
+        "scratch_publication": publication, "persistent_publication": end,
+        "contact_persistent_load": contact_read,
+        "contact_scratch_load": contact_load,
+        "contact_publication": contact_publish,
+    }
+    for name, event in named_events.items():
+        if event[4] != 2:
+            raise ValueError(
+                f"frame {frame} rider {rider}: {name} is not width two"
+            )
     if not (start[0] < load[0] < publication[0] < end[0] < contact_read[0]
             < contact_load[0] < contact_publish[0]):
         raise ValueError(f"frame {frame} rider {rider}: velocity phase order differs")
@@ -231,6 +361,13 @@ def _motion_block(access: dict, frame: int, rider: int) -> tuple[list[tuple], di
         "motion_publication": int(publication[5]), "persistent_publication": int(end[5]),
         "contact_read": int(contact_read[5]), "contact_load": int(contact_load[5]),
         "contact_publication": int(contact_publish[5]),
+        "events": named_events,
+        "motion_writers": [event for event in events
+                           if load[0] <= event[0] <= end[0]
+                           and _overlaps(event, 0x0FAB)],
+        "contact_writers": [event for event in events
+                            if contact_load[0] <= event[0] <= contact_publish[0]
+                            and _overlaps(event, 0x0FAB)],
     }
 
 
@@ -301,6 +438,7 @@ def _computed_response_rows(access_path: Path, access: dict, calls: list[dict],
         if (motion["scratch_publication"], motion["persistent_publication"],
                 call["input"]["response_b"]) != (produced,) * 3:
             raise ValueError("computed M4-10 response B was not consumed in order")
+        pose_consumed = validate_pose_consumption(block, produced, frame, rider)
         computed_call = copy.deepcopy(call)
         computed_call["input"]["response_b"] = produced
         contact = compare_composed_contact(computed_call, content)
@@ -309,6 +447,7 @@ def _computed_response_rows(access_path: Path, access: dict, calls: list[dict],
         rows.append({"ordinal": ordinal, "frame": frame, "rider": rider,
                      "phase_0302": phase, "active": active, "recurrent_input": incoming,
                      "producer_inputs": inputs, "producer": producer,
+                     "pose_consumed": pose_consumed,
                      "contact_input": produced, "contact_output": output})
     return rows, {"rows_sha256": _digest(rows),
                   "final_response_b": {"player": recurrent[0], "opponent": recurrent[1]}}
@@ -347,6 +486,7 @@ def velocity_composition(access_path: Path, content_dir: Path) -> tuple[list[dic
     response_rows, response_meta = _computed_response_rows(access_path, access, calls, content)
     rows = []
     writer_counts: Counter[str] = Counter()
+    classified_writers: dict[int, list[tuple]] = {}
     for ordinal, (call, accepted, response) in enumerate(zip(calls, accepted_rows, response_rows, strict=True)):
         frame, rider = call["frame"], call["rider"]
         block, motion = _motion_block(access, frame, rider)
@@ -375,29 +515,39 @@ def velocity_composition(access_path: Path, content_dir: Path) -> tuple[list[dic
             jump = {"branch": "inactive_preserve", "velocity_y": incoming,
                     "previous_input_publication": None}
 
-        first_guard = int(_one(block, 0x82A971, "read", 0x0F4B)[5])
+        gravity_guard_event = _one(block, 0x82A971, "read", 0x0F4B)
+        first_guard = int(gravity_guard_event[5])
         selector = int(_one(block, 0x82A976, "read", 0x0FF9)[5])
         indexed_guard = int(_one(block, 0x82A979, "read", 0x0547 + rider * 2)[5])
-        gravity_input = int(_one(block, 0x82A97E, "read", 0x0FAB)[5])
+        gravity_input_event = _one(block, 0x82A97E, "read", 0x0FAB)
+        gravity_input = int(gravity_input_event[5])
         if selector != rider * 2 or gravity_input != jump["velocity_y"]:
             raise ValueError("jump/gravity rider or publication order differs")
         gravity = reached_y_adjustment(0, gravity_input, first_guard, indexed_guard)
-        gravity_write = _one(block, 0x82A9AA, "write", 0x0FAB)
-        if gravity["velocity_y"] != gravity_write[5] or gravity_write[4] != 2:
+        gravity_write_event = _one(block, 0x82A9AA, "write", 0x0FAB)
+        if gravity["velocity_y"] != gravity_write_event[5] or gravity_write_event[4] != 2:
             raise ValueError("gravity writer/arithmetic differs")
 
         mode = _accumulator(access, 0x82A821, frame, rider)
         extra = int(_one(block, 0x82A82B, "read", 0x0000)[5])
-        cap_input = int(_one(block, 0x82A832, "read", 0x0FAB)[5])
-        boost_input = int(_one(block, 0x82A86C, "read", 0x11DD)[5])
+        cap_input_event = _one(block, 0x82A832, "read", 0x0FAB)
+        cap_input = int(cap_input_event[5])
+        boost_input_event = _one(block, 0x82A86C, "read", 0x11DD)
+        boost_input = int(boost_input_event[5])
         if cap_input != gravity["velocity_y"]:
             raise ValueError("gravity/cap order differs")
         cap = evaluate_vertical_cap(cap_input, extra, mode, boost_input)
         cap_writes = [event for event in block if event[2] == "write" and event[3] == 0x0FAB and 0x82A81A <= event[1] <= 0x82A872]
+        expected_cap_pc = {
+            "ordinary_preserve": None,
+            "ordinary_negative_clamp": 0x82A840,
+            "ordinary_positive_clamp": 0x82A84A,
+        }[cap["branch"]]
         if cap["velocity_y"] == cap_input:
             if cap_writes:
                 raise ValueError("vertical cap preserve unexpectedly wrote velocity")
-        elif len(cap_writes) != 1 or cap_writes[0][4:] != (2, cap["velocity_y"]):
+        elif (len(cap_writes) != 1 or cap_writes[0][1] != expected_cap_pc
+              or cap_writes[0][4:] != (2, cap["velocity_y"])):
             raise ValueError("vertical cap writer differs")
         boost_writes = [event for event in block if event[1] == 0x82A872 and event[2] == "write" and event[3] == 0x11DD]
         if cap["vertical_boost_written"]:
@@ -405,7 +555,8 @@ def velocity_composition(access_path: Path, content_dir: Path) -> tuple[list[dic
                 raise ValueError("vertical boost writer differs")
         elif boost_writes:
             raise ValueError("underflowed vertical boost unexpectedly wrote")
-        integrator = int(_one(block, 0x82A674, "read", 0x0FAB)[5])
+        integrator_event = _one(block, 0x82A674, "read", 0x0FAB)
+        integrator = int(integrator_event[5])
         if integrator != cap["velocity_y"]:
             raise ValueError("cap/integrator publication order differs")
         if (motion["motion_publication"], motion["persistent_publication"],
@@ -428,6 +579,41 @@ def velocity_composition(access_path: Path, content_dir: Path) -> tuple[list[dic
         contact_output = int(contact["response_and_publication"]["vy"]["computed"])
         if contact_output != motion["contact_publication"]:
             raise ValueError("computed contact vertical-velocity publication differs")
+        contact_response_rows = [event for event in motion["contact_writers"]
+                                 if event[1] == 0x81970B]
+        expects_contact_response = contact["branch"] in (
+            "continuous", "continuous_reflected")
+        if expects_contact_response:
+            if (len(contact_response_rows) != 1
+                    or contact_response_rows[0][4:] != (2, contact_output)):
+                raise ValueError("accepted contact vertical-velocity writer differs")
+            contact_response = contact_response_rows[0]
+        else:
+            if contact_response_rows:
+                raise ValueError("preserving contact branch unexpectedly wrote velocity")
+            contact_response = None
+        jump_events = [event for event in block
+                       if 0x82A8C9 <= event[1] <= 0x82A96E]
+        jump_state_rows = [event for event in jump_events
+                           if event[1] == 0x82A96B and event[2] == "write"
+                           and event[3] == 0x0FA5]
+        jump_state = jump_state_rows[0] if len(jump_state_rows) == 1 else None
+        validate_velocity_event_sequence(
+            frame=frame, rider=rider, boundaries=motion["events"],
+            jump_events=jump_events, jump_state=jump_state,
+            gravity_input=gravity_input_event,
+            gravity_write=gravity_write_event, cap_input=cap_input_event,
+            cap_writes=cap_writes, boost_input=boost_input_event,
+            boost_writes=boost_writes, integrator=integrator_event,
+            motion_writers=motion["motion_writers"],
+            contact_response=contact_response,
+            contact_writers=motion["contact_writers"],
+        )
+        classified_writers.setdefault(frame, []).extend(
+            motion["motion_writers"] + motion["contact_writers"])
+        if rider == 1:
+            validate_domain_writer_inventory(
+                events_for_frame(access, frame), classified_writers[frame], frame)
         recurrent[rider] = contact_output
         for name, written in (("motion_load", True),
                               ("jump_state", active and jump["previous_input_publication"] is not None),
@@ -435,6 +621,7 @@ def velocity_composition(access_path: Path, content_dir: Path) -> tuple[list[dic
                               ("vertical_cap_velocity", bool(cap_writes)),
                               ("vertical_boost", cap["vertical_boost_written"]),
                               ("motion_publication", True), ("contact_load", True),
+                              ("contact_response_velocity", contact_response is not None),
                               ("contact_velocity_publication", True)):
             writer_counts[name] += int(written)
         rows.append({
@@ -445,6 +632,14 @@ def velocity_composition(access_path: Path, content_dir: Path) -> tuple[list[dic
             "motion_publication": motion["persistent_publication"],
             "contact_input": integrator, "contact_output": contact_output,
             "response_b": response["contact_input"],
+            "writer_evidence": {
+                "motion": [{"sequence": event[0], "pc": event[1],
+                            "width": event[4], "value": event[5]}
+                           for event in motion["motion_writers"]],
+                "contact": [{"sequence": event[0], "pc": event[1],
+                             "width": event[4], "value": event[5]}
+                            for event in motion["contact_writers"]],
+            },
             "composition": {"x": computed_call["input"]["x"], "y": computed_call["input"]["y"],
                             "samples": [sample["word"] for sample in accepted["samples"]],
                             "contact_branch": contact["branch"]},

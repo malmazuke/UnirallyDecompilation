@@ -1,9 +1,9 @@
-# Coordinator handover — M4-04 accepted, M4-05 claimed
+# Coordinator handover — M4-05 accepted, M4-06 planning next
 
 Milestone M3 is accepted on 13 September 2026 and tagged `m3`. M4-00 through
-M4-04 are accepted. Read [M4-04](M4-04.md),
-[R-0022](../docs/research/R-0022-zoom-zoo-riding-reference.md), its returned
-[review](M4-04-review.md) and approved [re-review](M4-04-rereview.md).
+M4-05 are accepted. Read [M4-05](M4-05.md),
+[R-0023](../docs/research/R-0023-zoom-zoo-contact.md), its returned
+[review](M4-05-review.md) and approved [re-review](M4-05-rereview.md).
 
 The accepted scope is the identified PAL one-player CRAWLER/DRAGSTER slice:
 supported-ROM extraction creates a validated local Classic pack, later launches
@@ -22,13 +22,18 @@ metadata; correction `029d0df` was approved. Merge `0856621` passes local
 contract/replay/coverage/content/native gates and 325/325; hosted run
 34727349602 passes macOS/Linux including Linux SDL sanitizers.
 
-Continue [M4-05](M4-05.md) in its isolated Sol/medium worktree. Its bounded
-Astra/high audit corrected a material interpretation: frame-1650 `0x5800` is
-marker-only because classification precedes the direction guard. Audit both
-riders' 102 calls through frame 1700 and recover only the first genuinely
-exercised unsupported branch as a captured-argument research component. Do not
-conflate pack availability with native correctness. Native ZOOM ZOO,
-finish/result/presentation and the Classic pack remain unchanged.
+M4-05 classifies all 102 calls in frames 1650--1700 and reconstructs only the
+first unsupported call, frame 1661 player point 9, as bounded captured-argument
+research. Independent review found that per-point preprocessing was not
+enforced before lossy reduction; correction `dabb3e5` binds all 30 ordered
+tuples and re-review approved. Merge `34d6ea6` passes 321/321 plus all frozen
+gates; hosted run 34733976248 is green on macOS/Linux including sanitizers.
+
+Run a bounded Astra/high planning audit for M4-06 and claim exactly one smallest
+ready task. Challenge whether the next prerequisite is wider contact closure,
+an autonomous producer, or pack/profile work; do not infer native readiness
+from M4-05's captured arguments. Native ZOOM ZOO, finish/result/presentation
+and the Classic pack remain unchanged.
 The user authorized an unattended M4 continuation and at most one weekly usage
 reset only if an actual provider limit is reached; no money, paid credits,
 provider switching, publication or deployment is authorized.

@@ -1,10 +1,11 @@
 # Project state
 
-Updated: 13 September 2026 (M4-04 accepted; M4-05 claimed; M3 remains the latest
+Updated: 13 September 2026 (M4-05 accepted; M4-06 planning next; M3 remains the latest
 accepted milestone, tag `m3`).
 
 ## Current facts
 
+- ZOOM ZOO contact-path audit (M4-05, [R-0023](research/R-0023-zoom-zoo-contact.md), [review](../tasks/M4-05-review.md), [re-review](../tasks/M4-05-rereview.md)): all 102 player/opponent contact calls on frames 1650--1700 are ordered and classified by the original guard order as 67 compatible, 17 non-flat and 18 direction/special. This corrects the earlier false attribution of marker-only `0x5800` words. The first actual unsupported call is frame 1661, player point 9: descriptor `0x0020`, surface angle -1 and penetration/correction 2. A captured-argument component independently reconstructs its preprocessing, reduction, response and publication plus adjacent calls; a +2 Right-onset variation moves it to frame 1663 with correction 3. Review returned a lossy-summary enforcement gap; correction `dabb3e5` exact-binds all 30 ordered preprocessing tuples and focused re-review approved it. Merge `34d6ea6` passes focused 8/8, app-debug 321/321 plus CTest/repeatability and all frozen M4-03/M4-04/pack/native gates; hosted run 34733976248 passes macOS/Linux including Linux sanitizers. **M4-05 is accepted reference research; it does not add native ZOOM ZOO or pack support.**
 - ZOOM ZOO riding reference freeze (M4-04, [R-0022](research/R-0022-zoom-zoo-riding-reference.md), [review](../tasks/M4-04-review.md), [re-review](../tasks/M4-04-rereview.md)): two field-bearing primary/release replays preserve the accepted controller/whole-state/A/V identities and freeze 124 fields for frames 1650--3299 plus a repeated end-1649 WRAM/SRAM seed. They agree through 2499 and diverge at 2500 in seven input/motion fields without reaching finish. Observed native integration limits include width/stride 256/512 and wrap mask `0x3FFF`; the later M4-05 planning audit corrected the accepted prose's claim that frame-1650 `0x5800` exercises a direction guard, because marker classification occurs first. Review's one-frame Up-release case diverges transiently at 2260 and fully reconverges at 2261; its seed-integrity finding was corrected by exact-binding the complete seed object and independently approved. Merge `4f7b248` passes local projection/replay/pack/native gates and app-debug 336/336; hosted run 34730516561 passes macOS/Linux including Linux SDL sanitizers. **M4-04 is accepted as reference evidence; native ZOOM ZOO remains unsupported and the first actual unsupported contact branch is M4-05 scope.**
 - ZOOM ZOO content/read contract (M4-03, [R-0021](research/R-0021-zoom-zoo-content-contract.md), [review](../tasks/M4-03-review.md), [re-review](../tasks/M4-03-rereview.md)): the accepted `0xC3` object decodes twice to the same 50,665 bytes. Ordered loader observation resolves 24 selected ids plus the consumed terminator, 203 tiles and all 406 transfers; decoded-only reconstruction matches 98 rolling-gather bytes, and both riders' 40 bounded collision words match at frames 1700/2220 with observed ZOOM ZOO width/stride 256/512 rather than DRAGSTER's 1024/2048. A strict reference-only contract and ten ROM-free mutation tests bind source, region, gather and capture identities. Review added a matching frame-2000 collision sample and returned two unenforced metadata fields; correction `029d0df` closed both and focused re-review approved it. Merge `0856621` passes local contract/replay/coverage/content/native gates and app-debug 325/325; hosted run 34727349602 passes macOS 15 and Ubuntu 24.04 including Linux SDL sanitizers. **M4-03 is accepted as a bounded reference contract; native ZOOM ZOO remains unsupported.**
 - ZOOM ZOO reference discovery (M4-02, [R-0020](research/R-0020-zoom-zoo-reference.md), [review](../tasks/M4-02-review.md), [re-review](../tasks/M4-02-rereview.md)): one released Down press selects ZOOM ZOO while the displayed PAL/1P/MIKE/CRAWLER/BRONSEN/three-lap Race context remains stable. Two fresh 3,300-frame runs agree exactly on declared state, final state and A/V; a predeclared release at 2500 and reviewer-owned adjacent release at 2501 diverge on the predicted frame and reach motion writers. Two coverage captures are byte-identical and record a scenario-level delta of 4,014 bytes/268 entry points only in ZOOM ZOO and 1,185 bytes/45 entry points only in the 3,000-frame DRAGSTER baseline, with duration/input/load confounders explicit. Track asset `0xC3` is a 6,599-byte packed RNC object decoding to 50,665 ignored bytes; bounded access/provenance identifies its load seam without assigning unknown geometry. Review returned a missing exact watch-command record; correction `6f38439` reproduced all three tracked command hashes and was approved. Merge `77885be` passes local replay/coverage/content/native gates and app-debug 315/315; hosted run 34722527701 passes macOS 15 and Ubuntu 24.04 including Linux SDL sanitizers. **M4-02 is accepted as reference evidence only; native ZOOM ZOO remains unsupported.**
@@ -89,24 +90,23 @@ First implementation milestone: M0 repeatable laboratory. First gameplay feasibi
 For the next Sol coordinator, start with [the compact handover](../tasks/NEXT_SESSION.md).
 The M4-00 candidate and bounded Astra audit need no conversation replay.
 
-**M3 and M4-00 through M4-02 are accepted.** Start ready
-[M4-03](../tasks/M4-03.md) with its bounded Astra/high planning checkpoint. Use
-the accepted ZOOM ZOO `0xC3` identity and runtime reads to recover the decoded
-content/physics contract before any native or Classic-pack expansion. Preserve
-the exact M3/M4 identities and keep scenario-level coverage differences distinct
-from track-only causal claims.
+**M3 and M4-00 through M4-05 are accepted.** Run the bounded Astra/high
+planning checkpoint for M4-06 and choose the smallest next task that closes a
+demonstrated ZOOM ZOO prerequisite. Preserve native and Classic-pack scope until
+the evidence supports expansion; do not treat the captured-argument M4-05
+component as an autonomous producer.
 
 Implementation choices should be made through bounded experiments. Original-content handling for Classic is decided by D-0005; remote hosting beyond the private repository, source/replacement-content licensing, legal clearance, online service topology, public accounts/ranking and paid execution budgets remain undecided and do not block M3 implementation. A Linux build of the pinned core (ROM-free) is a natural CI addition when convenient.
 
 ## Milestone status
 
-M0: accepted on 11 September 2026 (M0-00 through M0-06; evidence report [R-0005](research/R-0005-m0-acceptance.md); tag `m0`). M1: M1-01 accepted on 11 September 2026 ([R-0006](research/R-0006-observed-code-map.md)); M1-02 accepted on 11 September 2026 ([R-0007](research/R-0007-player-state.md), [D-0002](decisions/D-0002-data-access-observation.md)); M1-03 accepted on 12 September 2026 ([R-0008](research/R-0008-track-decode.md)); M1-04 accepted and **milestone M1 accepted on 12 September 2026, tagged `m1`** ([R-0009](research/R-0009-m1-acceptance.md)). M2: M2-01A and M2-01 accepted through PR2/PR4; M2-02 accepted through PR5; **milestone M2 accepted on 12 September 2026, tag `m2`** ([R-0011](research/R-0011-m2-acceptance.md)). M3: M3-00 through M3-04 are accepted; **milestone M3 accepted on 13 September 2026, tag `m3`** ([R-0017](research/R-0017-m3-acceptance.md)). M4: M4-00 through M4-02 are accepted; M4-03 is ready. M5–M6: not started. No calendar/cost promise has been established.
+M0: accepted on 11 September 2026 (M0-00 through M0-06; evidence report [R-0005](research/R-0005-m0-acceptance.md); tag `m0`). M1: M1-01 accepted on 11 September 2026 ([R-0006](research/R-0006-observed-code-map.md)); M1-02 accepted on 11 September 2026 ([R-0007](research/R-0007-player-state.md), [D-0002](decisions/D-0002-data-access-observation.md)); M1-03 accepted on 12 September 2026 ([R-0008](research/R-0008-track-decode.md)); M1-04 accepted and **milestone M1 accepted on 12 September 2026, tagged `m1`** ([R-0009](research/R-0009-m1-acceptance.md)). M2: M2-01A and M2-01 accepted through PR2/PR4; M2-02 accepted through PR5; **milestone M2 accepted on 12 September 2026, tag `m2`** ([R-0011](research/R-0011-m2-acceptance.md)). M3: M3-00 through M3-04 are accepted; **milestone M3 accepted on 13 September 2026, tag `m3`** ([R-0017](research/R-0017-m3-acceptance.md)). M4: M4-00 through M4-05 are accepted; M4-06 planning is next. M5–M6: not started. No calendar/cost promise has been established.
 
 ## Handoff
 
 The next agent should read [the compact handoff](../tasks/NEXT_SESSION.md), this
-file, `AGENTS.md`, [M4-02](../tasks/M4-02.md),
-[R-0020](research/R-0020-zoom-zoo-reference.md) and [M4-03](../tasks/M4-03.md).
-Claim M4-03; do not repeat accepted M3 mechanics or M4-02 navigation/coverage
-discovery. Preserve the PAL and frozen replay/pack identities and keep original
-content, generated packs and captures ignored.
+file, `AGENTS.md`, [M4-05](../tasks/M4-05.md) and
+[R-0023](research/R-0023-zoom-zoo-contact.md). Run the bounded Astra/high M4-06
+planning audit, then claim its one chosen task. Preserve the PAL and frozen
+replay/pack identities and keep original content, generated packs and captures
+ignored.

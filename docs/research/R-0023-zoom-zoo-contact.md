@@ -1,7 +1,8 @@
 # R-0023 — ZOOM ZOO contact-path audit
 
 - Task: [M4-05](../../tasks/M4-05.md)
-- Status: candidate research, pending independent review
+- Status: accepted bounded reference research after independent review and
+  focused re-review; production native behavior remains unchanged
 - Base: claim commit `93a9efe6c40248d9dcd28137e54861d3c38aa3b7`
 - Source: PAL ROM SHA-256
   `a1105819d48c04d680c8292bbfa9abbce05224f1bc231afd66af43b7e0a1fd4e`;

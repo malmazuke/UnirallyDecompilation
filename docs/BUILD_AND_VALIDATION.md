@@ -189,6 +189,16 @@ producer, selects the public semantic start
 stream and later canonical restore states to `movement_runner`. The legacy
 directory/seed runtime remains available for research regressions.
 
+The additive M4-09 research command
+`python3 -m tools.unirally_lab.native.zoom_zoo_composition` implements
+`capture`, `derive`, `verify` and `compare-inputs`. It composes the accepted
+position/contact equations over the identity-bound frames 1650--1700, seeds
+both riders' eight position/residue words once at end-1649, and derives all
+1,020 track sample words and source offsets from recurrent positions plus
+authenticated content. It remains a bounded reference-analysis surface;
+velocity, pose, reflection and inventoried non-position contact state are
+captured external inputs, and it does not add native ZOOM ZOO gameplay.
+
 If no remote or CI host exists, use the same scripts locally and record their results. Do not describe hosted CI as running until it exists. Integration reruns affected checks on the actual merge candidate; milestones require the broader declared suite. Use sanitizers where supported to expose memory/undefined-behavior defects, alongside replay checks in the release configuration.
 
 Before an unattended run is considered reliable, demonstrate restart after interruption, a failed check reported accurately, and a task resumed from its persisted record. Build success is necessary but cannot substitute for reference comparison.

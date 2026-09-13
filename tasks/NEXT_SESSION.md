@@ -1,7 +1,7 @@
-# Coordinator handover — M4-10 accepted, M4-11 planning next
+# Coordinator handover — M4-10 accepted, M4-11 claimed
 
 Milestone M3 is accepted on 13 September 2026 and tagged `m3`. M4-00 through
-M4-10 are accepted. Read [M4-10](M4-10.md),
+M4-10 are accepted and M4-11 is claimed. Read [M4-11](M4-11.md), [M4-10](M4-10.md),
 [R-0028](../docs/research/R-0028-zoom-zoo-response-b.md) and its approved
 [review](M4-10-review.md).
 
@@ -56,9 +56,10 @@ opponent 254-to-0 gap with an ordered word clear and preserves the accepted
 1,020-sample composition. Worker/reviewer variations both leave response B
 unchanged. Integration `a8d9106` and hosted run 34747306845 are green.
 
-Run a bounded Astra/high planning audit for M4-11 and choose the smallest next
-producer. Velocity, pose and remaining contact state are still external; native
-ZOOM ZOO/pack remain unchanged.
+Continue M4-11's Astra-defined vertical-velocity producer/recurrence. Its worker
+preregisters a frame-1672 one-frame Right release; the independent reviewer owns
+frame 1673 or 1674. Horizontal velocity, pose and remaining contact state are
+still external; native ZOOM ZOO/pack remain unchanged.
 The user authorized an unattended M4 continuation and at most one weekly usage
 reset only if an actual provider limit is reached; no money, paid credits,
 provider switching, publication or deployment is authorized.

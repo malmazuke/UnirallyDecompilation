@@ -6,6 +6,18 @@
       "sha256": "63f15f5116409177c4d41afb8f66fa1927f48989937af982891d8249040b2b67",
       "file_offset": 555,
       "source": "$81:9697\u201396B6, $81:972A\u20139749; ordinary and mode-selected shift/multiplier tables, 32 bytes each"
+    },
+    "sustained-reward-values.bin": {
+      "bytes": 28,
+      "sha256": "e193e7eac222b537b08085014fc9d6779cc93d9748e42a63dfaae010e3c41236",
+      "file_offset": 50323,
+      "source": "$81:C23F\u2013C298 event 1 and event 14 classification/value reads"
+    },
+    "sustained-reward-classes.bin": {
+      "bytes": 14,
+      "sha256": "d914352a4961c9196de41379139bc68c641cc62bed422e56485ae5e938995999",
+      "file_offset": 50442,
+      "source": "$81:C23F\u2013C298 event 1 and event 14 classification/value reads"
     }
   }
 }

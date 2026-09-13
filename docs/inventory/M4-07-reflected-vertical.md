@@ -42,3 +42,11 @@ The preregistered worker replay holds Right on frames 1650--1683, releases it
 for frame 1684 only, restores it at 1685 and retains all other events. Its only
 prediction is exact state through 1683 and first controller divergence at
 1684; no contact timing or reconvergence is preclaimed.
+
+## Additive command inventory
+
+`python3 -m tools.unirally_lab.native.zoom_zoo_reflected_vertical_contact`
+implements exactly three research subcommands: `extract-content`, `verify` and
+`compare-inputs`. Reference capture continues to use the accepted M4-05
+`zoom_zoo_contact capture` command and its complete unchanged watch set. There
+is no M4-07 stable `tools/project.py` interface and no native-gameplay command.

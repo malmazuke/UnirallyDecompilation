@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "kind": "zoom_zoo_reflected_vertical_reference",
+  "scenario_id": "race-crawler-zoom-zoo-right-release-1684",
+  "description": "Exact 102-call captured-argument reconstruction for the preregistered one-frame Right release at frame 1684.",
+  "source": {
+    "rom_sha256": "a1105819d48c04d680c8292bbfa9abbce05224f1bc231afd66af43b7e0a1fd4e",
+    "core_commit": "7d5aa1e656b9171524d01b1b22917197d8121cb4",
+    "core_patch_sha256": "a719f5ffe2222dad4c1ab04336633319ad85004f74e32fc14893a058be333885",
+    "replay_manifest": "tests/manifests/replay/race-crawler-zoom-zoo-right-release-1684.json",
+    "replay_manifest_sha256": "202403bebbf2ae281b625076cbedc1a807a7d239863daab2a629ce3e3c403b78"
+  },
+  "capture_frames": {"start": 1650, "end": 1700, "count": 51},
+  "prefix": {"frames": [1650, 1682], "calls": 66, "points": 660},
+  "suffix": {"frames": [1683, 1700], "calls": 36, "points": 360, "player_reflected": 18, "opponent_flat": 18},
+  "calls": 102,
+  "points": 1020,
+  "access_sha256": "4161f1de56bfe6bf893ab2a26ce6355d8fdb8109e20aeaf9dd6274a25d7762a9",
+  "suffix_inventory_sha256": "9e2db594b1e8a5f3a6c2d2c82c9bad5dccf2555a08772bde742f38708b5ae1b4",
+  "static_content": {
+    "contract": "tests/manifests/content/zoom-zoo-reference-contract.json",
+    "contract_sha256": "017a4eb941abb0e87ea0e3be4509d9043198466cb461f560517f355938c1d699",
+    "coefficients_sha256": "f5016c76c1f4e60c988c67672b12da1d3b10948934f5f1e8b29135274203e7a1",
+    "reached_indices": [6, 7, 8]
+  },
+  "limits": "Captured-argument research only. The input experiment preclaims only exact state through 1683 and first controller divergence at 1684."
+}

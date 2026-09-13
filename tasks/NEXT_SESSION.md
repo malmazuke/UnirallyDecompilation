@@ -1,4 +1,4 @@
-# Coordinator handover — M4-04 accepted, M4-05 planning next
+# Coordinator handover — M4-04 accepted, M4-05 claimed
 
 Milestone M3 is accepted on 13 September 2026 and tagged `m3`. M4-00 through
 M4-04 are accepted. Read [M4-04](M4-04.md),
@@ -22,12 +22,13 @@ metadata; correction `029d0df` was approved. Merge `0856621` passes local
 contract/replay/coverage/content/native gates and 325/325; hosted run
 34727349602 passes macOS/Linux including Linux SDL sanitizers.
 
-Use a bounded Astra/high planning consultation to define M4-05 from the
-accepted blocker: width/stride 256/512, wrap mask `0x3FFF` and point-0
-directional descriptor `0x5800`. Decide whether the next smallest task is the
-directional-contact reference prerequisite or a separated profile/content
-decision; do not conflate pack availability with native correctness. Native
-ZOOM ZOO, finish/result/presentation and the Classic pack remain unchanged.
+Continue [M4-05](M4-05.md) in its isolated Sol/medium worktree. Its bounded
+Astra/high audit corrected a material interpretation: frame-1650 `0x5800` is
+marker-only because classification precedes the direction guard. Audit both
+riders' 102 calls through frame 1700 and recover only the first genuinely
+exercised unsupported branch as a captured-argument research component. Do not
+conflate pack availability with native correctness. Native ZOOM ZOO,
+finish/result/presentation and the Classic pack remain unchanged.
 The user authorized an unattended M4 continuation and at most one weekly usage
 reset only if an actual provider limit is reached; no money, paid credits,
 provider switching, publication or deployment is authorized.

@@ -142,3 +142,20 @@ series SHA-256 is
 `0f0e53b0bb9e42bb29ec36e324a00df462b8e3b2c9154881e077ea6ae423bc0d`;
 the delayed restore report SHA-256 is
 `930fcc2b23f54c299a4539e21a9530378586e4a4acda7cb4ed41ae98d53bdb99`.
+
+## Correction re-review preregistration
+
+Correction candidate `aef2245e9b90ae648356752ca45e7a234910d836` was supplied
+after R1. Before reading or executing its source in this checkout, I froze the
+fresh withheld case `m4-12-rereview-neutral-1769-1781`: controller 0 is neutral
+from frames 1769 through 1781 and returns to Right at 1782. It preserves the
+authentic end-1649 seed, opponent controller and full 1849 horizon.
+
+Prediction: the interval changes the player's throttle/velocity/contact
+continuation and overlaps the submitted opponent support/reacquisition interval
+at 1778. The player's perturbed state and the contemporaneous opponent transition
+must both remain exact. No exact changed frame, branch result or reconvergence is
+preclaimed. Two fresh original references, exact native comparison and restores
+at 1700, 1804 and 1823 are required. The previously failed delayed-Right case
+becomes a disclosed regression; the independently passing landing variation is
+retained as the other required case.

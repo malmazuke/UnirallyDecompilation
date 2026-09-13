@@ -9,6 +9,7 @@ namespace unirally {
 // bit 14 mirrors the terrain column independently (R-0024--R-0026).
 struct VerticalContactSummary : FlatContactSummary {
     bool any_nonnegative_probe{}, boundary_marker{};
+    bool leading_support{}; // $0F5D: winning nonnegative probe is one of first two
 };
 
 VerticalContactSummary summarize_vertical_contact(const FlatContactContent& content,

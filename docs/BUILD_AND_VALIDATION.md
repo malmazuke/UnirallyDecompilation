@@ -336,3 +336,14 @@ in `zoom-zoo-trial-primary.reference.json`. The generalization references use
 fresh original processes with whole-WRAM hashes, all declared native fields and
 excluded-mode guards on every frame. Private captures and extracted bytes must
 remain ignored.
+
+## M4-13 player landing laboratory
+
+`tools.unirally_lab.native.zoom_zoo_player_landing` adds `capture`, `freeze` and
+`compare` commands for the fixed 1649–1849 continuation with B jump plus
+Right/neutral controls. See [R-0032](research/R-0032-player-landing-recovery.md)
+for exact commands. `freeze` requires a full player landing and 100 subsequent
+updates before native evaluation; `compare` binds every reference row to that
+freeze and restores before/after every full player landing. The primary freeze
+precedes implementation; its supplemental guard capture preserves every earlier
+state/WRAM digest. M4-12 manifests and commands remain unchanged.

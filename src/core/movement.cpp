@@ -499,7 +499,9 @@ void update_pose(RiderMovementState& rider,std::uint8_t counter,std::uint8_t con
             rider.pose.rolling_level=static_cast<std::uint16_t>(
                 static_cast<std::uint8_t>(rider.pose.rolling_level)+1U);
         }
-        if(static_cast<std::uint8_t>(rider.pose.rolling_level)!=0) {
+        // $83:EED2-EEDB always returns to the ordinary pose after
+        // the low-rate decrement, even when rolling level remains nonzero.
+        if(rate>=3 && static_cast<std::uint8_t>(rider.pose.rolling_level)!=0) {
             int alternate=static_cast<std::uint16_t>(rider.pose.alternate_animation_phase)+
                           (phase&1)+contact_phase;
             if(alternate>=3)alternate-=3;
@@ -1020,9 +1022,9 @@ ZoomZooState deserialize_zoom_zoo(std::span<const std::uint8_t> bytes) {
     return state;
 }
 void update_zoom_zoo(ZoomZooState& state,const ControllerButtons& buttons,const ZoomZooContent& content) {
-    if(buttons.b || buttons.y || buttons.select || buttons.start || buttons.up || buttons.down ||
+    if(buttons.y || buttons.select || buttons.start || buttons.up || buttons.down ||
        buttons.left || buttons.a || buttons.x || buttons.left_shoulder || buttons.right_shoulder)
-        throw std::invalid_argument("ZOOM ZOO trial currently admits Right/neutral controls only");
+        throw std::invalid_argument("ZOOM ZOO trial currently admits Right/neutral and B jump controls only");
     if(state.movement.frame<1649 || state.movement.frame>=1849)
         throw std::invalid_argument("ZOOM ZOO update is outside the declared trial horizon");
     auto next=state;auto& whole=next.movement;
@@ -1034,8 +1036,9 @@ void update_zoom_zoo(ZoomZooState& state,const ControllerButtons& buttons,const 
     if(whole.countdown>=69)throw std::invalid_argument("ZOOM ZOO countdown is outside continuation domain");
     if(whole.countdown)--whole.countdown;
     auto& player_input=next.reflection[0];
-    player_input.brake_input=buttons.b;player_input.jump_input=buttons.b;
-    player_input.rotate_negative_input=buttons.y;player_input.rotate_positive_input=buttons.a;
+    // $82:AAE2-AAFB: B drives $0331 (jump); Y drives $0325 (brake).
+    player_input.brake_input=buttons.y;player_input.jump_input=buttons.b;
+    player_input.rotate_negative_input=buttons.left_shoulder;player_input.rotate_positive_input=buttons.right_shoulder;
     update_zoom_ai(next);
     const unsigned active=whole.progress_phase?0U:1U;
     bool reward=false;

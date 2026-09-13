@@ -53,4 +53,24 @@ int main() {
     const auto previous_y=motion.y;summary.angle=9;
     rejects([&]{resolve_vertical_contact(rider,motion,summary,{0,true,0,0xc200},shifts,multipliers);});
     require(motion.y==previous_y);
+    // M4-13: the matrix uses the initial displacement angle; the orientation
+    // impulse uses the subsequent quadrant clamp. Authored coordinates differ
+    // from the captured landings, and both impulse signs are exercised.
+    std::array<std::uint8_t,1512> matrices{};
+    auto landing=[&](int dx,int dy,int angle) {
+        RiderContactState contact{};contact.unsupported_count=9;
+        contact.unsupported_duration=60;contact.previous_uncorrected_x=500;
+        contact.previous_uncorrected_y=500;
+        ContactMotion moved{};moved.x=static_cast<std::uint16_t>(500+dx);
+        moved.y=static_cast<std::uint16_t>(500+dy);moved.previous_x_displacement=19;
+        VerticalContactSummary surface{};surface.supported=true;
+        surface.any_nonnegative_probe=true;surface.angle=static_cast<std::int16_t>(angle);
+        resolve_vertical_contact(contact,moved,surface,{1,false,0,0xc200},shifts,multipliers,matrices);
+        require(contact.recontact && contact.unsupported_count==0);
+        return moved.orientation_impulse;
+    };
+    require(landing(18,18,-3)==5);
+    require(landing(-18,-18,0)==static_cast<std::uint16_t>(-5));
+    require(landing(-18,18,0)==0);
+
 }

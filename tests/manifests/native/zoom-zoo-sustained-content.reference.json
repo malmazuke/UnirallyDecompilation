@@ -1,0 +1,11 @@
+{
+  "rom_sha256": "a1105819d48c04d680c8292bbfa9abbce05224f1bc231afd66af43b7e0a1fd4e",
+  "items": {
+    "sustained-slope-coefficients.bin": {
+      "bytes": 128,
+      "sha256": "63f15f5116409177c4d41afb8f66fa1927f48989937af982891d8249040b2b67",
+      "file_offset": 555,
+      "source": "$81:9697\u201396B6, $81:972A\u20139749; ordinary and mode-selected shift/multiplier tables, 32 bytes each"
+    }
+  }
+}

@@ -130,6 +130,14 @@ python3 -m tools.unirally_lab.native.zoom_zoo_response_b derive --access artifac
 python3 -m tools.unirally_lab.native.zoom_zoo_response_b verify --access artifacts/m4-10/primary-a/access.json --content artifacts/m4-10/content --manifest tests/manifests/native/zoom-zoo-response-b-primary.reference.json --report artifacts/m4-10/primary-verified.json
 python3 -m tools.unirally_lab.native.zoom_zoo_response_b compare-inputs --primary-access artifacts/m4-10/primary-a/access.json --variation-access artifacts/m4-10/variation-a/access.json --content artifacts/m4-10/content --report artifacts/m4-10/variation-comparison.json
 python3 -m unittest tests.tooling.test_zoom_zoo_position tests.tooling.test_zoom_zoo_contact tests.tooling.test_zoom_zoo_vertical_contact tests.tooling.test_zoom_zoo_reflected_vertical_contact tests.tooling.test_zoom_zoo_composition tests.tooling.test_zoom_zoo_response_b -v
+python3 tools/project.py build --preset app-debug --clean --report artifacts/m4-10/app-debug-build.json --task M4-10 --timeout 180
+python3 tools/project.py test --suite synthetic --preset app-debug --artifacts artifacts/m4-10/app-debug-test-final --report artifacts/m4-10/app-debug-test-final.json --task M4-10 --timeout 180 --test-timeout 30
+python3 tools/project.py build --preset app-sanitize --clean --report artifacts/m4-10/app-sanitize-build.json --task M4-10 --timeout 180
+python3 tools/project.py test --suite synthetic --preset app-sanitize --artifacts artifacts/m4-10/app-sanitize-test-final --report artifacts/m4-10/app-sanitize-test-final.json --task M4-10 --timeout 180 --test-timeout 30
+python3 tools/project.py replay compare --manifest tests/manifests/replay/race-crawler-zoom-zoo-right-release-1668.json --runs 2 --artifacts artifacts/m4-10/variation-replay-final --report artifacts/m4-10/variation-replay-final.json --task M4-10 --timeout 180
+python3 tools/project.py content zoom-zoo-contract --contract tests/manifests/content/zoom-zoo-reference-contract.json --report artifacts/m4-10/zoom-zoo-contract.json --task M4-10
+python3 tools/project.py content pack-inspect --pack '/Users/markfeaver/Projects/Unirally Decompilation/local/classic-crawler-dragster.pack' --report artifacts/m4-10/pack-inspect.json --task M4-10
+python3 tools/project.py native finish-check --manifest tests/manifests/native/full-race-continuous.case.json --content-pack '/Users/markfeaver/Projects/Unirally Decompilation/local/classic-crawler-dragster.pack' --save-frame 1600 --save-frame 3213 --save-frame 3453 --save-frame 3678 --preset lab-debug --artifacts artifacts/m4-10/native-finish --report artifacts/m4-10/native-finish/report.json --task M4-10 --timeout 180
 ```
 
 The primary and variation reference manifests have canonical document digests
@@ -146,9 +154,12 @@ repeatability. Their final report SHA-256s are
 and `f70476b91a096b2ebf98682192edc99eb5c89077aaeed998238c44b073d39cf3`.
 The finalized worker replay passes all 24 required checks with report
 `1ae31a481ed37c627344cbed25b5f0cbadca7798ec8f3a9045dca89678357403`.
-The frozen ZOOM ZOO contract passes 3/3, the 25-entry Classic pack passes 3/3,
-and DRAGSTER finish plus restores at 1600/3213/3453/3678 pass 18/18; the latter
-two report hashes are `5b31ef4a...f29a1` and `22b14bd2...4a02`.
+The frozen ZOOM ZOO contract passes 3/3 with report
+`5d8c55a32f2a55b5c072b825195a2102ab86dda8931ca8d764e91e455c1f9286`.
+The 25-entry Classic pack passes 3/3 with report
+`5b31ef4a736510c730ec32334784cff98a627c0c99b0605b604241d3089f29a1`.
+DRAGSTER finish plus restores at 1600/3213/3453/3678 pass 18/18 with report
+`22b14bd22d3204c96525b561ac78eab81ddd4a1e06fe47a89f32d52f07e74a02`.
 
 Non-passes are retained honestly. The first replay command used the unsupported
 `--out` option and exited at argument validation. The correctly invoked

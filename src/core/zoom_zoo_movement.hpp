@@ -11,7 +11,29 @@ struct ReflectionTransition {
 struct SurfaceTransition {
     std::uint16_t mode{}, angle{}, tile_mode{}, leading_support{}, tile_pose{}, animation_delta{}, tile_pose_enabled{};
 };
+struct ZoomZooFinishPose {
+    std::uint16_t selector{}, kind{}, locked{}, active{};
+};
+struct ZoomZooRaceRider {
+    std::uint16_t laps_remaining{}, checkpoint{}, next_checkpoint{}, start_line_latch{};
+    std::uint16_t checkpoint_display_countdown{}, finished{};
+    std::array<std::uint16_t,5> time_digits{};
+};
+struct ZoomZooCamera {
+    std::uint16_t x{}, y{}, velocity_x{}, velocity_y{}, lookahead{}, screen_xy{};
+};
+struct ZoomZooRaceState {
+    ZoomZooCamera camera;
+    std::array<ZoomZooFinishPose,2> finish_pose;
+    std::array<std::uint8_t,20> checkpoint_seen{};
+    std::array<ZoomZooRaceRider,2> riders;
+    std::array<std::array<std::uint16_t,10>,2> lap_times;
+    std::array<std::uint16_t,2> total_times{};
+    std::uint16_t provisional_1225{}, provisional_1227{}, finish_delay{};
+};
 struct ZoomZooState {
+    bool complete_race{};
+    ZoomZooRaceState race;
     bool sustained{};
     std::array<SurfaceTransition,2> surface;
     MovementState movement;
@@ -24,6 +46,7 @@ struct ZoomZooContent {
     std::span<const std::uint8_t> slope_coefficients;
     std::span<const std::uint8_t> reflection_pose_table;
     std::span<const std::uint8_t> landing_matrices;
+    std::span<const std::uint8_t> finish_poses;
 };
 // $82:9715–979D: count active updates opposing the track direction, with
 // original wrapped word comparisons at velocities -16 and +16 (1/32 units).

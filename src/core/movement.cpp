@@ -606,7 +606,7 @@ void update_reward_queue(MovementState& state,unsigned event_one,const MovementC
     }
     state.rewards.read_cursor=next;
     const auto event=state.rewards.entries[next];
-    const bool leading_event=event==14 && content.rotation_class.size()>=14 && content.rotation_class[13]==255;
+    const bool leading_event=event>=1 && content.rotation_class.size()>=event && content.rotation_class[event-1]==255;
     if(!leading_event && (event!=1 || content.rotation_class[0]!=0 || state.rewards.event_one_weight==0)) {
         throw std::invalid_argument("reward queue left the recovered event-one domain");
     }
@@ -967,6 +967,16 @@ void update_zoom_ai(ZoomZooState& state) {
 }
 void update_zoom_throttle(RiderMovementState& rider,ReflectionTransition& transition,unsigned horizontal,
                           int& animation_override,bool& throttle_target,bool leading_support=false) {
+    const auto incoming_speed=static_cast<std::int16_t>(rider.motion.velocity_x);
+    const bool braking=transition.brake_input && (incoming_speed>=16 || incoming_speed < -16);
+    if(!leading_support && rider.contact.unsupported_count<2 &&
+       rider.contact.surface_angle!=0xffe1U && rider.contact.surface_angle!=31 && braking) {
+        // $829909-9945 returns before the previous-brake latch publication.
+        rider.motion.velocity_x=static_cast<std::uint16_t>(incoming_speed>0?
+            std::max(0,incoming_speed-24):std::min(0,incoming_speed+24));
+        rider.throttle=0;
+        return;
+    }
     if(leading_support || rider.contact.unsupported_count>=2 || rider.contact.surface_angle==0xffe1U || rider.contact.surface_angle==31) {
         rider.throttle=0;
     } else if(horizontal==1) {
@@ -975,15 +985,19 @@ void update_zoom_throttle(RiderMovementState& rider,ReflectionTransition& transi
         if(transition.brake_input && rider.motion.velocity_x!=0)throw std::invalid_argument("ZOOM ZOO moving brake is unrecovered");
         // $82:A9C1–A9E0 / AA1E–AA3D: on inverted tiles the drive
         // increment follows the existing velocity sign, including zero hold.
-        if(rider.contact.selected_word&0x8000U) {
-            if(rider.motion.velocity_x)rider.motion.velocity_x=add_word(rider.motion.velocity_x,
-                negative(rider.motion.velocity_x)?static_cast<std::uint16_t>(-24):24);
-        } else rider.motion.velocity_x=add_word(rider.motion.velocity_x,horizontal==2?24:static_cast<std::uint16_t>(-24));
-        const auto cap=static_cast<std::uint16_t>(transition.base_velocity_cap+
-            std::max(0,static_cast<int>(static_cast<std::int16_t>(rider.speed.boost)))+rider.launch_override);
-        const auto next=add_word(rider.throttle,horizontal==2?16:static_cast<std::uint16_t>(-16));
-        if(horizontal==2 ? negative(static_cast<std::uint16_t>(next-cap)) :
-                           !negative(static_cast<std::uint16_t>(next-static_cast<std::uint16_t>(-cap))))rider.throttle=next;
+        // Both drive routines return before throttle accumulation when an
+        // inverted tile has zero incoming velocity ($82A9CC / $82AA29).
+        if(!(rider.contact.selected_word&0x8000U) || rider.motion.velocity_x!=0) {
+            if(rider.contact.selected_word&0x8000U) {
+                if(rider.motion.velocity_x)rider.motion.velocity_x=add_word(rider.motion.velocity_x,
+                    negative(rider.motion.velocity_x)?static_cast<std::uint16_t>(-24):24);
+            } else rider.motion.velocity_x=add_word(rider.motion.velocity_x,horizontal==2?24:static_cast<std::uint16_t>(-24));
+            const auto cap=static_cast<std::uint16_t>(transition.base_velocity_cap+
+                std::max(0,static_cast<int>(static_cast<std::int16_t>(rider.speed.boost)))+rider.launch_override);
+            const auto next=add_word(rider.throttle,horizontal==2?16:static_cast<std::uint16_t>(-16));
+            if(horizontal==2 ? negative(static_cast<std::uint16_t>(next-cap)) :
+                               !negative(static_cast<std::uint16_t>(next-static_cast<std::uint16_t>(-cap))))rider.throttle=next;
+        }
         if(static_cast<std::int16_t>(rider.motion.previous_x_displacement)<4) {
             if(rider.small_motion_counter!=4)rider.small_motion_counter=add_word(rider.small_motion_counter,1);
             animation_override=static_cast<std::int16_t>(rider.small_motion_counter);throttle_target=true;
@@ -995,6 +1009,129 @@ void update_zoom_throttle(RiderMovementState& rider,ReflectionTransition& transi
     }
     rider.previous_brake=transition.brake_input;
 }
+void enqueue_zoom_opponent(MovementState& state,unsigned event) {
+    if(state.rewards.write_cursor==state.rewards.read_cursor)return;
+    state.rewards.entries[state.rewards.write_cursor]=static_cast<std::uint8_t>(event);
+    state.rewards.write_cursor=static_cast<std::uint8_t>((state.rewards.write_cursor+1U)&31U);
+}
+// $83E8E0-EC13 and $828953-89C2. Finish animation is a collision-pose input.
+void update_zoom_finish(ZoomZooState& state,const ZoomZooContent& content) {
+    auto& whole=state.movement;
+    if(state.race.riders[0].finished) {
+        if(state.race.finish_delay==240)throw std::invalid_argument("race result loading outside frozen finish display");
+        ++state.race.finish_delay;
+    }
+    for(unsigned index=0;index<2;++index) {
+        if(!state.race.riders[index].finished)continue;
+        auto& input=state.reflection[index];input.brake_input=1;
+        input.jump_input=input.rotate_negative_input=input.rotate_positive_input=0;
+        if(index==0)whole.player_input.horizontal=1;else state.opponent_horizontal=1;
+        if((whole.frame+1U)%3U==0)continue;
+        apply_finish_slowdown(whole.riders[index]);
+        const auto own=state.race.total_times[index],other=state.race.total_times[1-index];
+        const bool won=own!=0xea60U && (other==0xea60U || own<other);
+        const bool tied=own==other;
+        auto& pose=state.race.finish_pose[index];
+        if(index==1 && pose.active)enqueue_zoom_opponent(whole,tied?38U:won?37U:39U);
+        // Both frozen first calls have an empty pending announcement queue.
+        // Subsequent calls bypass that read through the persistent active flag.
+        pose.active=1;
+        const unsigned kind=won||tied?1U:2U;
+        if(pose.kind!=kind && !pose.locked) {pose.kind=static_cast<std::uint16_t>(kind);pose.selector=0;pose.locked=1;}
+        const auto table=content_word(content.finish_poses,2U*pose.kind)-0xc7c8U;
+        auto offset=table+2U*pose.selector;
+        ++pose.selector;
+        auto value=content_word(content.finish_poses,offset);
+        if(value&0x8000U) {
+            pose.selector=static_cast<std::uint16_t>(content_word(content.finish_poses,offset+2));
+            value=content_word(content.finish_poses,table+2U*pose.selector);
+        }
+        input.pose_override=static_cast<std::uint16_t>(value);
+    }
+}
+
+// $818050-82B6: ordered checkpoint tiles and three completed laps after the
+// initial start-line crossing. SRAM slots retain original 0xEA60 sentinels.
+void update_zoom_checkpoint(ZoomZooState& state,unsigned index,const ZoomZooContent& content) {
+    auto& lap=state.race.riders[index];const auto& rider=state.movement.riders[index];
+    if(lap.checkpoint_display_countdown)--lap.checkpoint_display_countdown;
+    const auto descriptor=rider.contact.selected_word;
+    const auto tile=((descriptor&0x3f0U)>>2U)+((descriptor&15U)>>1U);
+    if(tile>=content.movement.flat_contact.flags.size())
+        throw std::invalid_argument("ZOOM ZOO checkpoint tile flag is missing");
+    if(rider.contact.auxiliary_flag || (content.movement.flat_contact.flags[tile]&0xfeU)!=20 || lap.finished)return;
+    const unsigned tag=(descriptor&0x1c00U)>>10U;
+    const unsigned checkpoint=tag<=5?tag:0;
+    if(checkpoint==0) {
+        if(lap.start_line_latch)return;
+        lap.start_line_latch=1;
+        const auto& timer=state.movement.timer;
+        const auto hundredths=static_cast<std::uint16_t>(timer.subframe*2U+state.movement.contact_phase);
+        lap.time_digits={timer.minutes,timer.tens_seconds,timer.seconds,timer.tenths,hundredths};
+        const auto total=static_cast<std::uint16_t>(timer.minutes*6000U+timer.tens_seconds*1000U+timer.seconds*100U+timer.tenths*10U+hundredths);
+        std::uint16_t previous=0;
+        for(auto value:state.race.lap_times[index])if(value!=0xea60U)previous=add_word(previous,value);
+        const int slot=4-static_cast<int>(lap.laps_remaining)-1;
+        if(slot>=0 && slot<10)state.race.lap_times[index][static_cast<unsigned>(slot)]=static_cast<std::uint16_t>(total-previous);
+        --lap.laps_remaining;
+        if(index==1 && lap.laps_remaining==1)enqueue_zoom_opponent(state.movement,15);
+        if(lap.laps_remaining!=3) {
+            if(lap.laps_remaining==0) {lap.finished=1;state.race.total_times[index]=total;}
+            lap.checkpoint_display_countdown=120;
+        }
+        lap.checkpoint=0;lap.next_checkpoint=1;
+    } else {
+        if(checkpoint==2) {
+            if(!lap.start_line_latch)return;
+            --lap.start_line_latch;
+        } else if(checkpoint!=lap.next_checkpoint)return;
+        lap.checkpoint=static_cast<std::uint16_t>(checkpoint);
+        lap.next_checkpoint=static_cast<std::uint16_t>((checkpoint+1)&3U);
+        lap.checkpoint_display_countdown=120;
+        const auto seen_index=lap.laps_remaining*4U+checkpoint;
+        if(seen_index>=state.race.checkpoint_seen.size())throw std::invalid_argument("race checkpoint index invalid");
+        auto& seen=state.race.checkpoint_seen[seen_index];
+        if(seen&0x80U) {
+            seen=0;
+            if(index==1)lap.checkpoint_display_countdown=2;
+        }
+    }
+}
+
+// $819FB0-A16D / $81A520-A53F; PAL one-player camera at 4x horizontal scale.
+// Positions are world units, signed velocity and lookahead are whole units.
+void update_zoom_camera(ZoomZooState& state) {
+    auto& c=state.race.camera;const auto& rider=state.movement.riders[0];
+    const auto target=1-(static_cast<std::int16_t>(rider.motion.velocity_x)>>3);
+    auto look=static_cast<std::int16_t>(c.lookahead);
+    if(look<target)++look;else if(look>target)--look;
+    c.lookahead=static_cast<std::uint16_t>(look);
+    const auto center=static_cast<std::uint16_t>((c.x+c.lookahead+95U)&0x3fffU);
+    const auto delta=static_cast<std::int16_t>(static_cast<std::uint16_t>((rider.motion.x-center)*4U));
+    int vx{};
+    if(delta < -96 || delta>=100)vx=delta<0?-16:16;
+    else {const int distance=delta>>2;vx=distance<0?std::min(0,distance+8):std::max(0,distance-8);}
+    c.velocity_x=static_cast<std::uint16_t>(vx);
+    int candidate=static_cast<std::int16_t>(c.y)+30;
+    int vy=-16;
+    while(vy!=16 && candidate<static_cast<std::int16_t>(rider.motion.y)) {
+        candidate+=4;++vy;if(vy==0)candidate+=20;
+    }
+    c.velocity_y=static_cast<std::uint16_t>(vy);
+    c.x=static_cast<std::uint16_t>(c.x+vx)&0x3fffU;c.y=static_cast<std::uint16_t>(c.y+vy);
+}
+void update_zoom_visibility(ZoomZooState& state) {
+    auto& c=state.race.camera;const auto& rider=state.movement.riders[0];
+    // $82ACAE-AD7A. The previous frame's visibility feeds speed damping.
+    const int dy=static_cast<std::int16_t>(rider.motion.y-c.y);
+    const auto dx=static_cast<std::int16_t>(rider.motion.x-c.x);
+    const int scaled=static_cast<std::int16_t>(static_cast<std::uint16_t>(dx*4));
+    const bool outside=dy < -41 || dy>=225 || scaled < -196 || scaled>=1024;
+    state.race.provisional_1225=(outside || scaled<0)?1:0;
+    state.race.provisional_1227=0;
+    c.screen_xy=outside?0x7070U:static_cast<std::uint16_t>((static_cast<unsigned>(dy)&255U)*256U+(static_cast<unsigned>(dx)&255U));
+}
+
 void integrate_zoom_axis(std::uint16_t& position,std::uint16_t velocity,std::uint16_t& residue) {
     const auto total=static_cast<std::int16_t>(add_word(velocity,residue));
     position=static_cast<std::uint16_t>(static_cast<int>(position)+total/32);
@@ -1013,6 +1150,7 @@ std::uint16_t next_wrong_direction_counter(std::uint16_t previous,
 }
 
 std::vector<std::uint8_t> serialize_zoom_zoo(const ZoomZooState& state) {
+    if(state.complete_race && !state.sustained)throw std::invalid_argument("race state requires sustained prefix");
     auto bytes=serialize_movement_state(state.movement);
     if(bytes.size()!=333)throw std::invalid_argument("ZOOM ZOO finish state is unsupported");
     const std::array<std::uint8_t,8> magic{'U','R','Z','Z','0','0','0','1'};
@@ -1024,21 +1162,69 @@ std::vector<std::uint8_t> serialize_zoom_zoo(const ZoomZooState& state) {
         for(const auto& r:state.surface)
             for(auto v:{r.mode,r.angle,r.tile_mode,r.leading_support,r.tile_pose,r.animation_delta,r.tile_pose_enabled})put16(bytes,v);
     }
+    if(state.complete_race) {
+        bytes[7]='3';
+        for(const auto& r:state.race.riders) {
+            for(auto v:{r.laps_remaining,r.checkpoint,r.next_checkpoint,r.start_line_latch,r.checkpoint_display_countdown,r.finished})put16(bytes,v);
+            for(auto v:r.time_digits)put16(bytes,v);
+        }
+        for(const auto& times:state.race.lap_times)for(auto v:times)put16(bytes,v);
+        for(auto v:state.race.total_times)put16(bytes,v);
+        for(auto v:{state.race.provisional_1225,state.race.provisional_1227,state.race.finish_delay})put16(bytes,v);
+        const auto& c=state.race.camera;
+        for(auto v:{c.x,c.y,c.velocity_x,c.velocity_y,c.lookahead,c.screen_xy})put16(bytes,v);
+        for(auto v:state.race.checkpoint_seen)put8(bytes,v);
+        for(const auto& p:state.race.finish_pose)for(auto v:{p.selector,p.kind,p.locked,p.active})put16(bytes,v);
+    }
     return bytes;
 }
 ZoomZooState deserialize_zoom_zoo(std::span<const std::uint8_t> bytes) {
     const std::array<std::uint8_t,8> magic{'U','R','Z','Z','0','0','0','1'};
-    const bool sustained=bytes.size()==423 && bytes[7]=='2' && std::equal(magic.begin(),magic.begin()+7,bytes.begin());
+    const bool complete_race=bytes.size()==565 && bytes[7]=='3' && std::equal(magic.begin(),magic.begin()+7,bytes.begin());
+    const bool sustained=complete_race || (bytes.size()==423 && bytes[7]=='2' && std::equal(magic.begin(),magic.begin()+7,bytes.begin()));
     if(!sustained && (bytes.size()!=395 || !std::equal(magic.begin(),magic.end(),bytes.begin())))throw std::invalid_argument("ZOOM ZOO state identity/width differs");
     std::vector<std::uint8_t> prefix(bytes.begin(),bytes.begin()+333);
     std::copy(movement_state_magic.begin(),movement_state_magic.end(),prefix.begin());
-    ZoomZooState state;state.sustained=sustained;state.movement=deserialize_movement_state(prefix);
+    ZoomZooState state;state.complete_race=complete_race;state.sustained=sustained;state.movement=deserialize_movement_state(prefix);
     Reader in{bytes.subspan(333)};
     for(auto& r:state.reflection)read_reflection(in,r);
     state.opponent_horizontal=in.u8();state.opponent_retained_oam_x=in.u8();
     if(state.opponent_horizontal>2)throw std::invalid_argument("ZOOM ZOO horizontal input is invalid");
     if(sustained)for(auto& r:state.surface)
         for(auto* v:{&r.mode,&r.angle,&r.tile_mode,&r.leading_support,&r.tile_pose,&r.animation_delta,&r.tile_pose_enabled})*v=in.u16();
+    if(complete_race) {
+        for(auto& r:state.race.riders) {
+            for(auto* v:{&r.laps_remaining,&r.checkpoint,&r.next_checkpoint,&r.start_line_latch,&r.checkpoint_display_countdown,&r.finished})*v=in.u16();
+            for(auto& v:r.time_digits)v=in.u16();
+            if(r.laps_remaining>4 || r.checkpoint>3 || r.next_checkpoint>3 || r.start_line_latch>1 || r.finished>1 || r.checkpoint_display_countdown>120)
+                throw std::invalid_argument("ZOOM ZOO race checkpoint state is invalid");
+        }
+        for(auto& times:state.race.lap_times)for(auto& v:times)v=in.u16();
+        for(auto& v:state.race.total_times)v=in.u16();
+        state.race.provisional_1225=in.u16();state.race.provisional_1227=in.u16();state.race.finish_delay=in.u16();
+        auto& c=state.race.camera;
+        for(auto* v:{&c.x,&c.y,&c.velocity_x,&c.velocity_y,&c.lookahead,&c.screen_xy})*v=in.u16();
+        for(auto& v:state.race.checkpoint_seen)v=in.u8();
+        for(auto& p:state.race.finish_pose)for(auto* v:{&p.selector,&p.kind,&p.locked,&p.active})*v=in.u16();
+        if(state.race.finish_delay>240 || (state.race.finish_delay && !state.race.riders[0].finished) || state.race.provisional_1225>1 || state.race.provisional_1227>1 ||
+           c.x>0x3fffU || std::abs(static_cast<std::int16_t>(c.velocity_x))>16 ||
+           std::abs(static_cast<std::int16_t>(c.velocity_y))>16)
+            throw std::invalid_argument("ZOOM ZOO finish/camera state invalid");
+        for(auto seen:state.race.checkpoint_seen)if(seen!=0 && seen!=255)
+            throw std::invalid_argument("ZOOM ZOO checkpoint seen flag invalid");
+        for(unsigned index=0;index<2;++index) {
+            const auto& pose=state.race.finish_pose[index];
+            const unsigned limit=pose.kind==1?48U:pose.kind==2?88U:0U;
+            if((pose.active && !state.race.riders[index].finished) || pose.selector>limit || pose.kind>2 || pose.locked>1 || pose.active>1 ||
+               (pose.active ? (!pose.kind || !pose.locked) : (pose.kind || pose.locked || pose.selector)))
+                throw std::invalid_argument("ZOOM ZOO finish pose state invalid");
+        }
+        for(const auto& lap:state.race.riders) {
+            if((static_cast<bool>(lap.finished)!=(lap.laps_remaining==0)) || lap.time_digits[0]>9 || lap.time_digits[1]>5 ||
+               lap.time_digits[2]>9 || lap.time_digits[3]>9 || lap.time_digits[4]>9)
+                throw std::invalid_argument("ZOOM ZOO lap time state invalid");
+        }
+    }
     for(const auto& surface:state.surface) {
         if(surface.mode>1 || surface.tile_mode>1 || surface.leading_support>1 ||
            surface.tile_pose>1 || surface.tile_pose_enabled>1)
@@ -1057,7 +1243,7 @@ ZoomZooState deserialize_zoom_zoo(std::span<const std::uint8_t> bytes) {
 }
 void update_zoom_zoo(ZoomZooState& state,const ControllerButtons& buttons,const ZoomZooContent& content) {
     if(buttons.y || buttons.select || buttons.start || buttons.up || buttons.down ||
-       buttons.left || buttons.a || buttons.x || buttons.left_shoulder || buttons.right_shoulder)
+       (!state.complete_race && buttons.left) || buttons.a || buttons.x || buttons.left_shoulder || buttons.right_shoulder)
         throw std::invalid_argument("ZOOM ZOO trial currently admits Right/neutral and B jump controls only");
     if(state.movement.frame<1649 || state.movement.frame>=(state.sustained?9999U:1849U))
         throw std::invalid_argument("ZOOM ZOO update is outside the declared trial horizon");
@@ -1074,12 +1260,14 @@ void update_zoom_zoo(ZoomZooState& state,const ControllerButtons& buttons,const 
     player_input.brake_input=buttons.y;player_input.jump_input=buttons.b;
     player_input.rotate_negative_input=buttons.left_shoulder;player_input.rotate_positive_input=buttons.right_shoulder;
     update_zoom_ai(next);
+    if(state.complete_race)update_zoom_finish(next,content);
     const unsigned active=whole.progress_phase?0U:1U;
     unsigned reward=0;
     whole.rewards.cooldown=whole.rewards.cooldown>2?static_cast<std::uint16_t>(whole.rewards.cooldown-2U):0;
     for(unsigned index=0;index<2;++index) {
         auto& rider=whole.riders[index];auto& transition=next.reflection[index];
         auto& surface=next.surface[index];
+        if(state.complete_race)update_zoom_checkpoint(next,index,content);
         surface.tile_mode=0;surface.animation_delta=0;surface.tile_pose=0;surface.tile_pose_enabled=0;
         const unsigned horizontal=index==0?whole.player_input.horizontal:next.opponent_horizontal;
         decay_idle_wobble(rider,surface.mode!=0);
@@ -1114,13 +1302,17 @@ void update_zoom_zoo(ZoomZooState& state,const ControllerButtons& buttons,const 
             // $829D7F clears the reflection-turn counter on the landing path,
             // including a landing with no completed rotation reward.
             if(landed) transition.air_turns=0;
-            if(index==0 && event)throw std::invalid_argument("ZOOM ZOO player reward is unrecovered");
-            if(event)reward=event;
+            if(index==0 && event && (!state.complete_race || event!=14))throw std::invalid_argument("ZOOM ZOO player reward is unrecovered");
+            if(event && index==1)reward=event;
         }
         if(index==active) {
             if(negative(transition.direction_latch) && ((negative(rider.motion.velocity_x)&&horizontal==0)||(!negative(rider.motion.velocity_x)&&horizontal==2)))transition.direction_latch=48;
             animation_override=stationary_animation_override(rider,static_cast<std::uint8_t>(horizontal));
-            if(!boost_tile)update_jump(rider,transition.jump_input!=0);
+            // $82A8E0-A8EE rejects leading or inverted contact before
+            // consuming pending/previous input. Common reset clears $0F41.
+            if(!boost_tile && !surface.leading_support &&
+               !(rider.contact.selected_high&0x80U))
+                update_jump(rider,transition.jump_input!=0);
             update_active_low_speed_damping(rider);
             transition.drive_pose_enabled=0;
             if(transition.completed) {
@@ -1138,7 +1330,7 @@ void update_zoom_zoo(ZoomZooState& state,const ControllerButtons& buttons,const 
             transition.wrong_direction_counter=next_wrong_direction_counter(
                 transition.wrong_direction_counter,rider.motion.velocity_x,
                 rider.progress.marker_word,horizontal);
-            advance_track_progress(rider.progress,content.movement.progress_transitions);
+
         }
         update_rolling_mode(rider,surface.mode!=0);
         if(index==1)update_reflection_transition(rider,transition,horizontal,index!=active,content.reflection_pose_table);
@@ -1151,7 +1343,8 @@ void update_zoom_zoo(ZoomZooState& state,const ControllerButtons& buttons,const 
         // byte. Player boost below 16 makes the optional subtraction inert.
         if(index==0 && rider.speed.boost>=16)
             throw std::invalid_argument("ZOOM ZOO player boost requires unrecovered camera state");
-        limit.pose_byte=index==1?next.opponent_retained_oam_x:0;
+        limit.pose_byte=index==1?next.opponent_retained_oam_x:static_cast<std::uint8_t>(next.race.camera.screen_xy);
+        limit.drag=state.complete_race && (index==0?next.race.provisional_1225:next.race.provisional_1227);
         limit.start_override=rider.launch_override!=0;limit.player_progress=whole.riders[0].progress.transition_count;
         limit.opponent_progress=whole.riders[1].progress.transition_count;limit.adjustment_limit=72;
         limit.player_base_cap=next.reflection[0].base_velocity_cap;limit.update_counter=whole.update_counter;
@@ -1166,9 +1359,11 @@ void update_zoom_zoo(ZoomZooState& state,const ControllerButtons& buttons,const 
         surface.animation_delta=static_cast<std::uint16_t>(animation_override);
         update_pose(rider,whole.animation_counter,whole.contact_phase,content.movement,animation_override,throttle_target,surface.mode?static_cast<std::int16_t>(surface.angle):0);
         if(transition.pose_override)rider.pose.pose_index=transition.pose_override;
+        if(index==active)advance_track_progress(rider.progress,content.movement.progress_transitions);
     }
     (void)advance_timer_digits(whole.timer,true);
     update_reward_queue(whole,reward,content.movement);
+    if(state.complete_race)update_zoom_camera(next);
     for(unsigned index=0;index<2;++index) {
         auto& rider=whole.riders[index];
         const auto points=collision_points(content.movement.sampling,rider.pose.pose_index,rider.pose.reflected);
@@ -1181,6 +1376,7 @@ void update_zoom_zoo(ZoomZooState& state,const ControllerButtons& buttons,const 
         next.surface[index].leading_support=summary.leading_support;
         observe_track_markers(rider.progress,samples);
     }
+    if(state.complete_race)update_zoom_visibility(next);
     ++whole.frame;state=next;
 }
 } // namespace unirally

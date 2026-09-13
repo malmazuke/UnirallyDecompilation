@@ -1,0 +1,26 @@
+{
+  "id": "m4-15-review-early-turns",
+  "changes": [
+    { "from": 1650, "to": 1864, "buttons": ["left"] },
+    { "from": 1865, "to": 2505, "buttons": ["right"] },
+    { "from": 2506, "to": 2701, "buttons": ["left"] },
+    { "from": 2702, "to": 2848, "buttons": ["right"] },
+    { "from": 2849, "to": 2922, "buttons": ["left"] },
+    { "from": 2923, "to": 2924, "buttons": ["right"] },
+    { "from": 2925, "to": 3405, "buttons": ["left"] },
+    { "from": 3406, "to": 4092, "buttons": ["right"] },
+    { "from": 4093, "to": 4301, "buttons": ["left"] },
+    { "from": 4302, "to": 4459, "buttons": ["right"] },
+    { "from": 4460, "to": 4537, "buttons": ["left"] },
+    { "from": 4538, "to": 4540, "buttons": ["right"] },
+    { "from": 4541, "to": 5044, "buttons": ["left"] },
+    { "from": 5045, "to": 5727, "buttons": ["right"] },
+    { "from": 5728, "to": 5728, "buttons": ["left"] },
+    { "from": 5729, "to": 5730, "buttons": ["right"] },
+    { "from": 5731, "to": 5937, "buttons": ["left"] },
+    { "from": 5938, "to": 6101, "buttons": ["right"] },
+    { "from": 6102, "to": 6180, "buttons": ["left"] },
+    { "from": 6181, "to": 6183, "buttons": ["right"] },
+    { "from": 6184, "to": 11999, "buttons": ["left"] }
+  ]
+}

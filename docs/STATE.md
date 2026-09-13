@@ -1,10 +1,12 @@
 # Project state
 
-Updated 14 September 2026: M4-14 is accepted at `38c72e8`; private main ref and
-exact-tip macOS/Linux CI `34761303975` were verified during M4-15 preparation.
-M4-15 is ready/unclaimed for the next Astra/medium session: target race completion
-from the existing seed, with original reference feasibility inside the task.
-Start with [NEXT_SESSION](../tasks/NEXT_SESSION.md). No M4-15 gameplay work has started.
+Updated 14 September 2026: M4-15 has independent approval and complete local
+validation for seed-based native ZOOM ZOO race completion. Corrected code
+`6faff68` reproduces 5,075 updates and 565 bytes for both riders through both
+finishes and 240 player post-finish updates. Acceptance remains conditional
+on exact merged checks, private main ref and final-tip macOS/Linux CI; actual
+results are in `artifacts/m4-15-integration/closeout.json`. See
+[NEXT_SESSION](../tasks/NEXT_SESSION.md) for recovery. No M4-16 dispatch.
 
 ## Accepted product and evidence
 
@@ -89,3 +91,26 @@ review practices; M4-15 now has its own exception and preparation; no M4-16 disp
   fixture boundaries; [native source guide](../src/core/README.md): source map.
 - [Project plan](PROJECT_PLAN.md): longer-term M4–M6 scope; M5/M6 have not started.
 - [Workflow](AGENT_WORKFLOW.md): ownership, review and required private-origin sync.
+
+## M4-15 race completion
+
+[R-0034](research/R-0034-zoom-zoo-race-completion.md) and the
+[review](../tasks/M4-15-review.md) describe complete native race simulation
+from authentic end-1649 through 6724, preserving the original opponent.
+Both riders finish (6484/6488); stored times are 9802/9810 centiseconds.
+The primary, three corrected regressions and two fresh withheld variations
+match every 565-byte state and fresh restores. Debug/sanitizer each pass 405
+synthetic checks, and all 28 accepted M4-12–14 differential/restore runs plus
+DRAGSTER/content/replay/presentation gates pass. Denied repository/ROM access
+and negative controls pass. Exact merged validation and remote/CI acceptance
+remain governed by the conditional integration handoff above.
+
+Recovered coupled behavior includes direction control, checkpoint/lap/time
+publication, camera visibility feedback, finish collision poses and continuation.
+Review corrected throttle and jump early returns and malformed restore checks.
+The finite first-finish announcement-queue invariant is authenticated before
+native case evaluation; arbitrary player-queue restores are not covered.
+No native race-start initialization, ZOOM ZOO frontend, rendering/audio,
+subsequent result-screen loading or universal input coverage is claimed.
+Hosted Linux synthetic CI does not establish private Linux differential coverage.
+M4 remains incomplete and no milestone tag is due.

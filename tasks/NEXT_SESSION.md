@@ -1,30 +1,25 @@
-# Next session — M4-15 race completion
+# M4-15 integration handoff
 
-M4-14 is accepted at `38c72e889d59b62270be6e26fca713b3fb3aa153`:
-1,650 exact updates, 423 bytes, both riders; private refs and final-tip CI passed.
-It reproduces repeated visits to the same section, not obstacle escape.
+M4-15 now reproduces a complete native ZOOM ZOO race from authentic end-1649:
+5,075 updates, 565 exact state bytes for both riders, finishes at 6484/6488,
+and 240 player post-finish updates. No fallback was used. Native race-start
+initialization, frontend, rendering/audio and subsequent result-screen loading
+remain outside this capability. M4 itself is not accepted.
 
-[M4-15](M4-15.md) is ready/unclaimed for the next user-started **Astra/medium**
-session. Read its complete task, [STATE](../docs/STATE.md), AGENTS,
-[workflow](../docs/AGENT_WORKFLOW.md) and D-0004/D-0006. Record the actual
-synchronized main dispatch SHA and fresh quota; reproduce the M4-14 baseline.
+Read [M4-15](M4-15.md), its [review](M4-15-review.md),
+[R-0034](../docs/research/R-0034-zoom-zoo-race-completion.md) and
+[STATE](../docs/STATE.md). Corrected code is `6faff68`; the task branch also includes
+review evidence and consolidated handoff. Independent review and local gates
+are complete; acceptance is conditional on exact merged checks, private main
+push/ref verification and exact-tip hosted macOS/Linux CI.
 
-First establish an original-game strategy that escapes and completes the race
-from the existing seed. Freeze repeatable outcome evidence before native tuning.
-Reference feasibility and all coupled mechanics stay inside M4-15. A downstream
-fallback needs documented original-exploration evidence and independent review;
-an easier prefix or difficult native dependency is insufficient justification.
-The current harness is bounded and may need extension.
+Actual integration SHA, commands/results, remote ref, CI URL and final
+clock/quota belong in ignored `artifacts/m4-15-integration/closeout.json`.
+If missing, recover with git history, `git ls-remote origin refs/heads/main`,
+`gh run list --commit <integration-sha>` and `gh run view <id> --json jobs`.
+Do not infer remote acceptance from this conditional tracked handoff.
 
-Automatically launch fresh Sol/medium independent review in an isolated checkout,
-handle corrections and integrate. Preserve the 20% weekly reserve; no reset or
-purchase. Consolidate tracked docs before the final push, then record actual
-remote/CI results in the ignored closeout artifact. No automatic M4-16 dispatch.
-
-Suggested opening prompt:
-
-> Execute M4-15 using tasks/NEXT_SESSION.md and tasks/M4-15.md.
-
-This preparation does not start reference exploration or native implementation.
-[Preparation record](M4-15-preparation.md) describes its review and conditional
-final-tip verification; recover absent closeout evidence from git/GitHub.
+If those checks are pending, finish them without a new user dispatch. Once
+verified, stop: no automatic M4-16 dispatch and no M4 milestone tag. A future
+user-assigned product task must choose its own outcome; this task has not
+accepted a ZOOM ZOO frontend or initialization from race start.

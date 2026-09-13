@@ -174,3 +174,12 @@ with tile-selected mode/angle, leading support and pose intermediates. Vertical
 contact now includes mirrored/inverted vertical and horizontal probes, steep
 coefficients and landing branches. [R-0033](../../docs/research/R-0033-sustained-traversal.md)
 links source addresses, immutable inputs and the finite differential domain.
+
+
+M4-15's `ZoomZooRaceState` extends the research continuation with
+ordered checkpoints/laps, stored race times, camera visibility feedback and
+finish collision-pose selectors. `update_zoom_checkpoint`, `update_zoom_camera`,
+`update_zoom_visibility` and `update_zoom_finish` in `movement.cpp` preserve the
+source order documented by [R-0034](../../docs/research/R-0034-zoom-zoo-race-completion.md).
+This is a seed-based simulation laboratory, not a ZOOM ZOO frontend or native
+race initializer. Existing `URZZ0001` and `URZZ0002` contracts remain supported.

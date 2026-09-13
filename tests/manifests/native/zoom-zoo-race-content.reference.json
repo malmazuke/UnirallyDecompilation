@@ -1,0 +1,20 @@
+{
+  "kind": "m4_15_static_content",
+  "items": {
+    "race-finish-poses.bin": {
+      "file_offset": 772040,
+      "bytes": 1536,
+      "sha256": "c1aa7a9e72591a51bf701979359e199e453b35351634ed87049ff5ba721ec01d"
+    },
+    "race-finish-reward-values.bin": {
+      "file_offset": 50323,
+      "bytes": 144,
+      "sha256": "1bb5d513974b4d12954688caa6e82b14e27410c6c23167b5c3bf49f41cb61e9b"
+    },
+    "race-finish-reward-classes.bin": {
+      "file_offset": 50442,
+      "bytes": 72,
+      "sha256": "f391cc910dfa30b93f2c134c133e11b88d622ee77c31f93bf3ce3143f2f7ec8a"
+    }
+  }
+}

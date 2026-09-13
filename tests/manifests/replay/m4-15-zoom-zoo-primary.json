@@ -1,0 +1,258 @@
+{
+  "schema_version": 1,
+  "scenario_id": "m4-15-zoom-zoo-primary",
+  "description": "Fixed marker-guided direction strategy from original-only exploration; authentic cold-start prefix, original opponent, 240 post-player-finish updates.",
+  "tested_behavior": "M4-15 original race completion reference; independent whole-WRAM authentication required.",
+  "rom": {
+    "manifest": "tests/manifests/rom/unirally-pal.json",
+    "sha256": "a1105819d48c04d680c8292bbfa9abbce05224f1bc231afd66af43b7e0a1fd4e"
+  },
+  "core": {
+    "name": "bsnes",
+    "lock": "tools/locks/emulators.json",
+    "commit": "7d5aa1e656b9171524d01b1b22917197d8121cb4",
+    "patch_sha256": "a719f5ffe2222dad4c1ab04336633319ad85004f74e32fc14893a058be333885",
+    "serialization_method": "Strict",
+    "options": {}
+  },
+  "origin": {
+    "kind": "cold_start"
+  },
+  "run": {
+    "frames": 6725,
+    "sample_every": 1,
+    "trace_entries": 64
+  },
+  "inputs": {
+    "timing_unit": "frame",
+    "injection_point": "Buttons are presented on the libretro input callback before retro_run of the frame numbered `from`..`to` (0-based frames after power-on) and withdrawn before the following frame; the core polls the controllers once per frame (R-0002 finding 6). Sub-frame timing is not available.",
+    "controllers": [
+      {
+        "port": 0,
+        "events": [
+          {
+            "from": 300,
+            "to": 305,
+            "buttons": [
+              "start"
+            ]
+          },
+          {
+            "from": 620,
+            "to": 625,
+            "buttons": [
+              "start"
+            ]
+          },
+          {
+            "from": 750,
+            "to": 755,
+            "buttons": [
+              "start"
+            ]
+          },
+          {
+            "from": 900,
+            "to": 905,
+            "buttons": [
+              "start"
+            ]
+          },
+          {
+            "from": 1000,
+            "to": 1005,
+            "buttons": [
+              "down"
+            ]
+          },
+          {
+            "from": 1050,
+            "to": 1055,
+            "buttons": [
+              "start"
+            ]
+          },
+          {
+            "from": 1200,
+            "to": 1205,
+            "buttons": [
+              "start"
+            ]
+          },
+          {
+            "from": 1650,
+            "to": 1867,
+            "buttons": [
+              "left"
+            ]
+          },
+          {
+            "from": 1868,
+            "to": 2508,
+            "buttons": [
+              "right"
+            ]
+          },
+          {
+            "from": 2509,
+            "to": 2704,
+            "buttons": [
+              "left"
+            ]
+          },
+          {
+            "from": 2705,
+            "to": 2851,
+            "buttons": [
+              "right"
+            ]
+          },
+          {
+            "from": 2852,
+            "to": 2925,
+            "buttons": [
+              "left"
+            ]
+          },
+          {
+            "from": 2926,
+            "to": 2927,
+            "buttons": [
+              "right"
+            ]
+          },
+          {
+            "from": 2928,
+            "to": 3408,
+            "buttons": [
+              "left"
+            ]
+          },
+          {
+            "from": 3409,
+            "to": 4095,
+            "buttons": [
+              "right"
+            ]
+          },
+          {
+            "from": 4096,
+            "to": 4304,
+            "buttons": [
+              "left"
+            ]
+          },
+          {
+            "from": 4305,
+            "to": 4462,
+            "buttons": [
+              "right"
+            ]
+          },
+          {
+            "from": 4463,
+            "to": 4540,
+            "buttons": [
+              "left"
+            ]
+          },
+          {
+            "from": 4541,
+            "to": 4543,
+            "buttons": [
+              "right"
+            ]
+          },
+          {
+            "from": 4544,
+            "to": 5047,
+            "buttons": [
+              "left"
+            ]
+          },
+          {
+            "from": 5048,
+            "to": 5730,
+            "buttons": [
+              "right"
+            ]
+          },
+          {
+            "from": 5731,
+            "to": 5731,
+            "buttons": [
+              "left"
+            ]
+          },
+          {
+            "from": 5732,
+            "to": 5733,
+            "buttons": [
+              "right"
+            ]
+          },
+          {
+            "from": 5734,
+            "to": 5940,
+            "buttons": [
+              "left"
+            ]
+          },
+          {
+            "from": 5941,
+            "to": 6104,
+            "buttons": [
+              "right"
+            ]
+          },
+          {
+            "from": 6105,
+            "to": 6183,
+            "buttons": [
+              "left"
+            ]
+          },
+          {
+            "from": 6184,
+            "to": 6186,
+            "buttons": [
+              "right"
+            ]
+          },
+          {
+            "from": 6187,
+            "to": 6724,
+            "buttons": [
+              "left"
+            ]
+          }
+        ]
+      },
+      {
+        "port": 1,
+        "events": []
+      }
+    ]
+  },
+  "fields": [
+    {
+      "name": "wram_sha256",
+      "kind": "wram_sha256",
+      "description": "SHA-256 of the 131072-byte work RAM ($7E0000-$7FFFFF) at the end of the frame"
+    },
+    {
+      "name": "registers",
+      "kind": "registers",
+      "description": "CPU register block at the end of the frame: pc, a, x, y, s, d, b, p, e, mdr, vcounter, hcounter, field, wai, stp"
+    },
+    {
+      "name": "wram_0000_0200",
+      "kind": "wram_range",
+      "start": 0,
+      "length": 512,
+      "description": "Raw diagnostic range $7E0000-$7E01FF (direct page and the top of the stack area). No gameplay interpretation; M1 defines fields."
+    }
+  ],
+  "regeneration_command": "python3 tools/project.py replay compare --manifest tests/manifests/replay/race-crawler-zoom-zoo-3300.json --runs 2",
+  "expected": {}
+}

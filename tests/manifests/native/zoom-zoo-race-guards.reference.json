@@ -1,0 +1,420 @@
+{
+  "kind": "m4_15_constant_input_inventory",
+  "frames": [
+    1649,
+    6724
+  ],
+  "items": [
+    {
+      "address": 797,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 799,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 801,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 803,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 823,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 825,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 853,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 855,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 857,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 859,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 1067,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 1069,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 1071,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 1073,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 1075,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 1077,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 1351,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 1353,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 2979,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 2981,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 3007,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 3009,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 3015,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 3017,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 3019,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 3021,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 3047,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 3049,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 3181,
+      "width": 2,
+      "value": 1
+    },
+    {
+      "address": 3187,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 3369,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 3371,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 3389,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 3391,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 3407,
+      "width": 2,
+      "value": 16383
+    },
+    {
+      "address": 3409,
+      "width": 2,
+      "value": 255
+    },
+    {
+      "address": 3411,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 3413,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 3415,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 3417,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 3565,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 3571,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 3573,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 3575,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 3577,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 3579,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 3581,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 3583,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 3585,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 3695,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 3697,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 4049,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 4051,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 4063,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 4065,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 4105,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 4107,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 4629,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 4631,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 4635,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 4637,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 4641,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 4643,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 4671,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 4673,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 4683,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 4685,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 4687,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 4689,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 4725,
+      "width": 2,
+      "value": 1
+    },
+    {
+      "address": 4737,
+      "width": 2,
+      "value": 72
+    },
+    {
+      "address": 4739,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 4837,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 4907,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 5387,
+      "width": 1,
+      "value": 101
+    },
+    {
+      "address": 1009,
+      "width": 2,
+      "value": 2
+    },
+    {
+      "address": 1011,
+      "width": 2,
+      "value": 65440
+    },
+    {
+      "address": 1013,
+      "width": 2,
+      "value": 100
+    },
+    {
+      "address": 1061,
+      "width": 2,
+      "value": 65340
+    },
+    {
+      "address": 1063,
+      "width": 2,
+      "value": 1024
+    },
+    {
+      "address": 3553,
+      "width": 2,
+      "value": 0
+    },
+    {
+      "address": 3349,
+      "width": 2,
+      "value": 4
+    }
+  ],
+  "first_finish_pose_queue_guard": "On the first finished-rider animation call ($828959), pending queue count is zero. Verify from the preceding end-state; later calls bypass the queue through the serialized active flag."
+}

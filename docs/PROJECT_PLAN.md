@@ -130,13 +130,12 @@ inside one sustained assignment; no substitute early-jump case or shorter prefix
 This is a larger traversal gate toward full-race support, not a full-game claim.
 Prepare docs before the final push to avoid redundant closeout CI. M4-14 is
 accepted at `38c72e8`, but repeated the same section. The next
-[M4-15](../tasks/M4-15.md) is ready/unclaimed: target native race completion from
-the same seed, first establishing original escape and finish evidence. Keep
-reference exploration and coupled producers inside that assignment. Only an
-evidence-justified substantial downstream fallback may replace completion,
-with explicit partial-progression reporting and independent review. Frontend
-and race-start initialization remain outside this seed-based task. No M4-16
-dispatch or automatic M4 acceptance.
+[M4-15](../tasks/M4-15.md) now demonstrates complete native race simulation
+from that seed: both finishes and 240 player post-finish updates, with independent
+review and local debug/sanitizer gates. No fallback was used. Integration/ref/CI
+acceptance is conditional as recorded in NEXT_SESSION. Frontend and race-start
+initialization remain outside this capability. No M4-16 dispatch or automatic
+M4 acceptance.
 
 ### Next-stage estimate, revised from observed effort
 

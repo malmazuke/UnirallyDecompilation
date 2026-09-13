@@ -31,6 +31,47 @@ int main() {
     input={};state.movement.frame=1849;
     rejects([&]{update_zoom_zoo(state,input,{});});
 
+    // M4-15: malformed newly serialized future state must fail before update.
+    ZoomZooState race{};race.complete_race=race.sustained=true;race.movement.frame=1649;
+    for(auto& lap:race.race.riders)lap.laps_remaining=4;
+    auto race_bytes=serialize_zoom_zoo(race);require(race_bytes.size()==565);
+    require(serialize_zoom_zoo(deserialize_zoom_zoo(race_bytes))==race_bytes);
+    for(unsigned offset:{429U,433U,451U,455U,511U,513U,553U,555U,561U,563U}) {
+        auto corrupt=race_bytes;corrupt[offset]=2;
+        rejects([&]{(void)deserialize_zoom_zoo(corrupt);});
+    }
+    for(unsigned offset:{529U,548U}) {
+        auto corrupt=race_bytes;corrupt[offset]=1;
+        rejects([&]{(void)deserialize_zoom_zoo(corrupt);});
+    }
+    for(unsigned offset:{549U,557U}) {
+        auto corrupt=race_bytes;corrupt[offset]=49;corrupt[offset+2]=1;
+        rejects([&]{(void)deserialize_zoom_zoo(corrupt);});
+    }
+    for(unsigned offset:{551U,553U,555U,559U,561U,563U}) {
+        auto corrupt=race_bytes;corrupt[offset]=1;
+        rejects([&]{(void)deserialize_zoom_zoo(corrupt);});
+    }
+    for(unsigned offset:{423U,445U}) {
+        auto corrupt=race_bytes;corrupt[offset]=0;
+        rejects([&]{(void)deserialize_zoom_zoo(corrupt);});
+    }
+    auto premature_delay=race_bytes;premature_delay[515]=1;
+    rejects([&]{(void)deserialize_zoom_zoo(premature_delay);});
+    for(unsigned offset:{521U,523U}) {
+        auto corrupt=race_bytes;corrupt[offset]=17;
+        rejects([&]{(void)deserialize_zoom_zoo(corrupt);});
+    }
+
+    // A restored descriptor must not index checkpoint flags before validation.
+    race.movement.riders[0].contact.selected_word=0x03f0;
+    std::array<std::uint8_t,20> checkpoint_flags{};
+    ZoomZooContent checkpoint_content{};
+    checkpoint_content.movement.flat_contact.flags=checkpoint_flags;
+    const auto malformed_race=serialize_zoom_zoo(race);
+    rejects([&]{update_zoom_zoo(race,{},checkpoint_content);});
+    require(serialize_zoom_zoo(race)==malformed_race);
+
     // Auxiliary boundary return increments only the low byte and preserves the
     // precorrection position. Ordinary unsupported contact increments a word.
     RiderContactState rider{};rider.unsupported_count=8;rider.unsupported_duration=0x12ff;

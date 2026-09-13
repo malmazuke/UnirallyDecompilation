@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "kind": "zoom_zoo_response_b_reference",
+  "source": {"scenario_id": "race-crawler-zoom-zoo-3300", "replay_manifest": "tests/manifests/replay/race-crawler-zoom-zoo-3300.json", "replay_manifest_sha256": "acd29bfb72aeaad0791923e22e17a791f5c182220f64b6686dd687984411aefd", "access_sha256": "f8488406dc6efb29fa09918c6425416c6d9d8184a9e5ea2c2394d14904b25bcd", "wram_series_sha256": "53c03d228999d3c1fbe5ee22be64a3965a77848e9b8f8adbeaba4374cba3d13d", "rom_sha256": "a1105819d48c04d680c8292bbfa9abbce05224f1bc231afd66af43b7e0a1fd4e"},
+  "frames": {"seed": 1649, "first": 1650, "last": 1700},
+  "calls": 102,
+  "seed": {"frame": 1649, "player_response_b": 0, "opponent_response_b": 254, "wram_series_sha256": "53c03d228999d3c1fbe5ee22be64a3965a77848e9b8f8adbeaba4374cba3d13d"},
+  "rows_sha256": "0a6ba3b5d1fc8bc3c33e0a6f022d47fa0a91965a1b60c1f4f5b176055fc337ba",
+  "writer_counts": {"inactive_preserve": 51, "low_byte_fe_plus_control": 6, "word_clear_low_angle_count": 42, "word_clear_zero_pair": 3},
+  "active_counts": {"player": 25, "opponent": 26},
+  "transition_254_to_0": {"prior_contact_output": 254, "frame": 1662, "rider": 1, "producer": {"branch": "word_clear_zero_pair", "width": 2, "value": 0}, "contact_input": 0},
+  "final_response_b": {"player": 0, "opponent": 0},
+  "pose_comparisons": 102,
+  "composition": {"calls": 102, "points": 1020, "sample_words_sha256": "98e77e32b3540aa98e796edc5d7fb7c0bb2736e44e8e4b3ee1b4cf1827d188dd", "sample_sources_sha256": "f24ccd2738300030debe07020d4140f4f8d0d6e8e711b0f8ea3d2a8cd526fa27", "final": {"player_x": 9824, "opponent_x": 7489, "player_y": 1605, "opponent_y": 1520, "player_x_residue": 12, "opponent_x_residue": -4, "player_y_residue": 10, "opponent_y_residue": 12}},
+  "external_producer_inputs": ["f1b", "f1d", "surface_angle", "unsupported_count", "guard_f49", "guard_f89", "mode_f23", "special_f5d", "indexed_control"],
+  "producer_routine": {"bus": "82:A49F-82:A5F9", "bytes": 347, "sha256": "92c1eda01ff0d0fe27d8e5a6f6744216c86105457f53410e0f133aa148531c96"},
+  "description": "Ten recurrent words: both riders' response B plus the accepted eight position/residue words over all 102 calls",
+  "limits": "Frames 1650-1700 only; velocity, pose and contact fields other than response B remain captured external inputs; no native ZOOM ZOO support"
+}

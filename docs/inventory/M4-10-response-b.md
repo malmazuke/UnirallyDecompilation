@@ -11,7 +11,8 @@ entire accepted M4-09 position/contact watch set. It adds both persistent
 response-B words `$0BB7/$0BB9`, their adjacent response-A words
 `$0BB3/$0BB5`, scratch `$0F55/$0F57`, rider selectors `$0FF9/$0F51`, phase
 words `$0300/$0302`, modulo-32 counter `$04C7`, contact counter words
-`$0DE7/$0DE9`, and the orientation/pose scratch and persistent words reached by
+`$0DE7/$0DE9`, indexed control bytes `$031D/$031F`, side-effect guards
+`$1003/$1005`, and the orientation/pose scratch and persistent words reached by
 the suspected producer and consumer. Address watches record every actual writer
 PC, including writers outside the suspected routine.
 

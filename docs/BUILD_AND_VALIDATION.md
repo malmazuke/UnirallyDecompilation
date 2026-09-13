@@ -15,16 +15,26 @@ what constitutes evidence. Historical frozen expectations and acceptance remain.
 | Final integration candidate | Run complete app-debug and app-sanitize suites, declared private native/replay/content/pack/presentation gates and hosted macOS/Linux CI on the exact source candidate. Required skipped/missing tests are non-passes. |
 | Corrections | Repeat affected checks; rerun the full integration matrix if tested code, build/config, inputs or expectations changed. Documentation-only successors may cite the tested code/input identity with an inspected diff; obtain hosted CI for the final pushed tip. |
 
+For M4-13, send the focused passing candidate for initial review before running
+the broad matrix. Resolve its findings, then run broad validation on the corrected
+candidate alongside focused re-review where useful. Later source changes still
+require revalidation. Existing CI triggers are unchanged: pushes (including docs)
+run CI automatically; avoid optional preliminary task-branch pushes unless the
+task's declared remote review/CI workflow needs them. Final integration CI remains
+required. Synthetic Linux CI does not prove private ROM differential execution
+on Linux; report these domains separately.
+
 The primary owns integration checks; do not ask both worker and coordinator to
 repeat identical broad suites without a changed candidate or a specific concern.
 Independent reference reproduction and withheld cases are not redundant checks.
 Retain proof of clean installation at milestone/schema/content-interface changes;
 a fresh clean build is not required for every unchanged research checkpoint.
 
-For M4-12, existing research modules remain evidence tools, not a native runner.
-The task must implement and document its new native comparison/restore surface
-before claiming that surface works. Freeze exact fields, horizon, source/seed,
-static inputs and validation commands before using them as acceptance gates.
+M4-12 now supplies the bounded native trial runner documented below. Earlier
+research modules remain evidence tools. M4-13 must add and document any needed
+horizon/control/restore extension; existing M4-12 commands do not accept arbitrary
+new scenarios. Freeze exact fields, horizon, source/seed, static inputs and
+validation commands before using them as acceptance gates.
 
 ## Environment and dependencies
 
@@ -33,6 +43,26 @@ Start on the current macOS machine with Linux as the first additional build/test
 Pin compiler/tool versions, emulator commit and patches, Python dependencies and frontend dependencies in tracked manifests. Keep machine-local paths in ignored configuration. Bootstrap must be idempotent, bounded by timeouts, detect unsupported prerequisites, and avoid modifying global settings merely to get a green run. Store fetched dependencies in a dedicated cache and record their origin/checksum.
 
 Use a headless build with no window/audio requirement for core checks. Containerized Linux is useful for repeatability, but a container must not be a prerequisite for the native macOS tools. Cache downloads/builds; do not redownload or rebuild everything for every agent. Verify the clean-setup path in an isolated environment before describing it as reproducible.
+
+### Worktree cache and report layout
+
+M4-12's corrected layout keeps `local/` and `artifacts/` as real directories
+inside each checkout, not top-level symlinks into another checkout. Create them
+with `mkdir -p local artifacts` only after checking existing paths. Do not remove
+or replace another agent's directories. Under `local/`, verified cache/toolchain/
+emulator subdirectories may be linked to existing caches; copy the small ROM
+locator and use explicitly located private fixtures. Treat shared caches as
+read-only during concurrent work; write captures/reports in this checkout.
+Do not share mutable output directories between primary and reviewer.
+
+Use a fresh `artifacts/<task>/<run-id>/` directory for each capture or native
+command requiring fresh output, and place its `--report` inside that same run
+directory. Check the command's help: some commands require the directory not to
+exist yet, so create only its parent. Resolve paths before running; reports must
+not escape the allowed artifacts root or overlap input/capture filenames.
+Prefer documented harness commands over proliferating one-off scripts. Check
+free disk before large captures; never delete unrelated content to make room.
+See [R-0031](research/R-0031-m4-12-retrospective.md) for the observed setup failures.
 
 ### Reference emulator selection spike
 

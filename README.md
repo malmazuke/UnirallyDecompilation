@@ -7,8 +7,9 @@ stable result, using a validated local Classic pack and no original CPU
 execution. M4 original-game coverage has accepted the DRAGSTER loser result and
 a bounded ZOOM ZOO reference chain through position, sampling, contact,
 response-B and vertical-velocity recurrence; this is research evidence, not a
-second native track. M4-12 is prepared for an Astra/medium native capability trial;
-implementation has not started. See
+second playable track. M4-12 has since accepted 200 experimental native updates
+for both riders with zero later captured runtime inputs. M4-13 is prepared for
+player support loss, landing and recovery; implementation has not started. See
 [project state](docs/STATE.md) for the exact accepted boundary and
 [the compact handoff](tasks/NEXT_SESSION.md) for current work. No agent
 scheduler exists.
@@ -40,8 +41,8 @@ Progress belongs in source control and reproducible experiments, so work can mov
 Human-readable native source is an explicit goal from the first routine
 ([D-0003](docs/decisions/D-0003-human-readable-native-code.md)). Agents make
 routine project decisions autonomously. [D-0004](docs/decisions/D-0004-model-and-usage-budget.md)
-sets Sol as the routine OpenAI model and defines the M4-12 Astra/medium trial
-exception, automatic Sol review and usage reserve.
+sets Sol as the routine OpenAI model and defines task-specific M4-12/M4-13 Astra/medium trial
+exceptions, automatic Sol review and usage reserve.
 [D-0006](docs/decisions/D-0006-capability-driven-work.md) defines capability-sized
 tasks and staged validation.
 Tasks stay within their starting provider; platform switches belong to the user.

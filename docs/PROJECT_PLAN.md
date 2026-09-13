@@ -112,7 +112,15 @@ corrected and re-reviewed. Startup-to-approval elapsed about 60 minutes and
 account-wide usage grew 11 percentage points; unrelated work may contribute.
 [R-0030](research/R-0030-zoom-zoo-native-trial.md) records the measured boundary.
 This single trial does not support a causal model-performance claim or a revised
-full-game estimate. The trial ends here; M4-13 remains unclaimed.
+full-game estimate. M4-12 is complete. The user authorized preparation for
+[M4-13](../tasks/M4-13.md) following [R-0031](research/R-0031-m4-12-retrospective.md):
+a native player support-loss, landing and recovery sequence plus at least 100
+subsequent updates, with two independent timing variations and restores around
+landing. Freeze the event/horizon before tuning. Necessary control/camera
+producers stay inside this task; finish/presentation stay excluded. Preserve
+Astra/medium ownership and automatic Sol review, defer broad checks until initial
+review findings are addressed, and reassess before M4-14. M4-13 is unclaimed
+for the next user-started session.
 
 ### Next-stage estimate, revised from observed effort
 

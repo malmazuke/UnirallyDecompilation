@@ -1,8 +1,27 @@
 # D-0006 — Native capability trial
 
-Status: adopted 13 September 2026 for M4-12; assess the result before extending
-this execution policy to other tasks. The user authorized repository preparation;
-implementation begins in the next user-started Astra session.
+Status: adopted 13 September 2026 for M4-12; extended after assessment to M4-13.
+The user authorized M4-13 preparation following the retrospective. Implementation
+begins in the next user-started Astra/medium session; this is not an open-ended
+M4 assignment.
+
+## Assessment and M4-13 extension
+
+[R-0031](../research/R-0031-m4-12-retrospective.md) records useful native integration
+and newly recovered behavior on top of substantial prior research. M4-12 took
+approximately 71 minutes and 12 account-wide usage points through closeout;
+these are observations, not a controlled model benchmark. Automatic review found
+a real defect. Continue the same ownership/model approach for
+[M4-13](../../tasks/M4-13.md): player support loss, landing and recovery, followed
+by at least 100 updates. Recover necessary coupled control/camera dependencies
+inside that capability. Finish and presentation remain outside scope.
+
+Use focused validation before first review; run the broad matrix after initial
+findings are resolved, then rerun affected/broad checks for subsequent changes
+as required. Reuse the documented valid cache/report layout. This is a small
+adjustment to execution, not a new infrastructure project. M4-13 resource policy
+is [D-0004's extension](D-0004-model-and-usage-budget.md#m4-13-trial-extension).
+Assess this second outcome before extending the policy to M4-14.
 
 ## Reason and decision
 
@@ -11,12 +30,13 @@ but each paid a separate planning, worker, review and integration cycle. The
 accepted result is still reference research. This suggests excessive task
 fragmentation; it does not prove a model throughput or cost advantage.
 
-Assign [M4-12](../../tasks/M4-12.md) one native capability: autonomous two-rider
+M4-12 was assigned one native capability: autonomous two-rider
 ZOOM ZOO movement in a declared expanded domain. The primary Astra/medium agent
 owns investigation, native implementation and integration in a sustained context.
 Do not delegate the core problem to a routine worker or spawn a separate Astra
 planning consultation. Sol/medium independently reviews the candidate automatically.
-Model and resource exceptions are defined only in [D-0004](D-0004-model-and-usage-budget.md#m4-12-trial-exception).
+Model and resource exceptions are defined only in [D-0004](D-0004-model-and-usage-budget.md);
+use its M4-13 extension for the next task and its M4-12 section for historical scope.
 
 ## Execution
 
@@ -57,10 +77,12 @@ Report native exact-match interval and field set, relevant branch coverage,
 remaining dynamic captured inputs (zero for acceptance), independently passing
 variations/restores, review findings/fix rounds, measured elapsed time and
 account-wide usage delta with the unrelated-work caveat. Research discoveries
-are useful intermediate results but cannot satisfy M4-12's native outcome.
+are useful intermediate results but cannot satisfy either task's native outcome.
 
 End the trial when its capability is accepted or its resource/access boundary
-prevents further work. Do not automatically claim M4-13 or the rest of M4.
+prevents further work. M4-12 ended at its acceptance; the explicit M4-13
+extension above is the next assignment. Do not automatically claim M4-14 or
+the rest of M4.
 Preserve partial commits and an honest recovery handoff if incomplete. No speed,
 completion date or full-game accuracy promise follows from this policy change.
 

@@ -2,7 +2,7 @@
 
 Updated 13 September 2026: M4-12 native capability trial accepted at integration
 `1889d9cbc56fec4437bc67835cd885677cc29e03`, with a documentation-only closeout.
-The trial ends here; M4-13 is unclaimed. Start with [NEXT_SESSION](../tasks/NEXT_SESSION.md).
+M4-12 is complete; M4-13 is prepared and unclaimed for the next user-started session. Start with [NEXT_SESSION](../tasks/NEXT_SESSION.md).
 
 ## Accepted product and evidence
 
@@ -38,22 +38,24 @@ The trial ends here; M4-13 is unclaimed. Start with [NEXT_SESSION](../tasks/NEXT
 
 ## Next work and policy
 
-No new task is dispatched by completing the trial. Future investment should
-start from the bounded native result, examine the rejected player-landing,
-control and camera-dependent paths, and freeze any larger domain before tuning.
-Full ZOOM ZOO racing/presentation remains future work; do not advertise it in the
-frontend or accept M4 based on this four-second experiment.
+[M4-13](../tasks/M4-13.md) is ready/unclaimed following the user-approved
+[R-0031 retrospective](research/R-0031-m4-12-retrospective.md). Target native
+player support loss, landing and recovery plus at least 100 subsequent updates;
+freeze the sequence/horizon before tuning. Necessary control/camera dependencies
+remain internal experiments. Finish/presentation remain excluded; M4 is incomplete.
 
-D-0006 applied to M4-12: one sustained primary owned coupled recovery/native
-implementation and automatically commissioned independent Sol review. The
-observed result supports capability-sized experiments as useful, but one trial
-cannot establish model speed/cost superiority. D-0004's general defaults remain
-unchanged outside its explicit trial exception. No scheduler or model router was
-implemented, and no reset, purchase or provider switch was used.
+[D-0006](decisions/D-0006-capability-driven-work.md) now extends the sustained
+Astra/medium primary and automatic fresh Sol review approach to M4-13. Focused
+checks precede initial review; broad validation follows resolved findings. Use the
+corrected cache/report layout. The M4-12 result supports continuing this workflow,
+not a causal model-speed claim: approximately 71 minutes/12 shared usage points
+through final closeout versus 60 minutes/11 points at review approval.
 
-Startup allowance was 100%; at review/integration it was 89% (account-wide usage,
-including any unrelated work). The 20% review reserve remained intact. See the
-task's dated checkpoints rather than treating this telemetry as current capacity.
+[D-0004's extension](decisions/D-0004-model-and-usage-budget.md#m4-13-trial-extension)
+waives the task cap but preserves the final 20% review reserve. Preparation
+observed 13% weekly used and no reset credits; sample fresh usage at startup.
+No reset, purchases or provider switch authorized. No gameplay work was started
+by preparation. Do not automatically dispatch M4-14 after M4-13.
 
 ## Where to look
 

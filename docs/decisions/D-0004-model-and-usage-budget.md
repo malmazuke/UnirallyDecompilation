@@ -2,6 +2,33 @@
 
 Status: adopted, 12 September 2026. Reassess from measured accepted work.
 
+## M4-13 trial extension
+
+Following the M4-12 retrospective, the user authorized preparation for one more
+capability trial, [M4-13](../../tasks/M4-13.md). This section overrides conflicting
+general defaults for M4-13 only; the historical M4-12 exception remains below.
+
+- Astra/medium, standard service, directly owns investigation and implementation.
+  No separate planner or routine implementation worker. A recorded unresolved
+  reasoning difficulty permits targeted high escalation under the same bounded
+  consultation mechanism described for M4-12.
+- The primary automatically spawns a fresh Sol/medium reviewer with explicit
+  model/effort, no inherited conversation, and an isolated candidate checkout.
+  At most one active child. Automatically handle fixes, re-review and integration.
+- The 20-percentage-point task cap is waived. Sample usage at start and durable
+  checkpoints; retain the final 20% weekly allowance for review/fixes/integration/
+  recovery. At 80% used, stop scope expansion; incomplete capability stays
+  unaccepted. Track total usage across primary/children and resumed sessions.
+- Preparation observed 13% weekly used and zero available reset credits; neither
+  observation establishes future capacity. Read fresh telemetry at startup.
+  Below the reserve, do recovery only until allowance is restored. Unknown usage
+  is not free capacity; recover visibility before discretionary frontier work.
+- No reset redemption, purchases, paid API fallback or provider switch is
+  authorized. Any future reset requires explicit confirmation for that specific
+  credit. An actual provider block stops new dispatch without retry loops.
+- Start gameplay only in the next user-started M4-13 session. End at acceptance
+  or a genuine resource/access boundary; do not automatically claim M4-14.
+
 ## M4-12 trial exception
 
 The user approved preparing the [D-0006](D-0006-capability-driven-work.md) trial
@@ -121,7 +148,7 @@ model selection and reversible adjustments need no user confirmation.
 
 ## Starting future sessions
 
-Outside the M4-12 exception above, start new OpenAI work sessions with Sol/medium; start Anthropic sessions with
+Outside the M4-12/M4-13 exceptions above, start new OpenAI work sessions with Sol/medium; start Anthropic sessions with
 Opus as the provisional routine coordinator/worker choice. Keep the coordinator
 stable and use compact, same-provider frontier consultations when justified.
 Do not start every task on a frontier model merely to plan it before switching.

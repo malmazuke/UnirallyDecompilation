@@ -92,14 +92,14 @@ therefore satisfies the required material producer/branch variation.
 
 The 395-byte `URZZ0001` state contains the prior 333-byte semantic movement
 state, two explicit 30-byte reflection/control records, opponent horizontal and
-the retained opponent OAM byte. The runner reads one seed, controller rows and
-the 18 authenticated static files. It has no emulator/ROM/reference linkage and
-the comparison copies only those inputs into a fresh native directory. The
-landing matrices are fixed pre-race data extracted at frame 1297, before the
-first race update at 1377; their manifest binds 1,512 bytes and SHA-256. Guard
-capture checks the declared excluded-mode words and retained OAM byte on every
-reference frame. No later dynamic captured state enters a continuous native
-run.
+the retained opponent OAM byte. The comparison authenticates and copies the
+full 18-file static inventory; the runner directly opens 16 of those files (the
+two legacy slope files remain provenance/evidence inputs). It also reads one
+seed and controller rows. It has no emulator/ROM/reference linkage. The landing
+matrices are fixed pre-race data extracted at frame 1297, before the first race
+update at 1377; their manifest binds 1,512 bytes and SHA-256. Guard capture
+checks the declared excluded-mode words and retained OAM byte on every reference
+frame. No later dynamic captured state enters a continuous native run.
 
 The native update explicitly rejects controls outside Right/neutral, states
 outside 1649--1849 and unrecovered branches. The production frontend has no ZOOM
@@ -159,3 +159,44 @@ preclaimed. Two fresh original references, exact native comparison and restores
 at 1700, 1804 and 1823 are required. The previously failed delayed-Right case
 becomes a disclosed regression; the independently passing landing variation is
 retained as the other required case.
+
+## Correction re-review verdict
+
+**Approve `aef2245e9b90ae648356752ca45e7a234910d836`; R1 is resolved
+and no material finding remains.** The correction isolates the counter update in
+`next_wrong_direction_counter` and reproduces the original wrapped 16-bit
+comparisons at `$82:971A--$82:9725`. It clears velocities -16 through +15 and
+admits values outside that band before applying the existing marker/direction
+logic. The helper is invoked before progress mutation, using the current
+pre-throttle velocity at the same point in the native update as the returned
+candidate. Focused tests cover -17, -16, 0, +15, +16, direction, inverted marker
+and the unrecovered reward boundary.
+
+The fresh withheld case is repeatable in two original processes and differs
+materially from the primary from frame 1769 through 1849. At 1769 it clears
+player throttle 432 to zero, changes velocity `(479,-240)` to `(474,-238)`,
+clears `drive_pose_enabled` one to zero and clears the wrong-direction counter
+60 to zero. It overlaps the original opponent reacquisition at 1778; the exact
+native comparison includes both riders and all transition fields there. Native
+matches all 395 bytes for all 201 states and passes fresh-process restores at
+1700, 1804 and 1823.
+
+| Re-review item | Identity / result |
+| --- | --- |
+| Fresh case canonical SHA-256 | `5146be270396406b388dc3c6d2d662bdd302bf38efe3105d2442839d5452b983` |
+| Fresh references | file SHA-256 `47cd95e1be561237717e7aa2531e75f994b208f635ee22e4b26aac7b3a9e1929` each; rows `3f19c09a80e4aa197b8c886b5fde6fa349616b7a4edb32c1c928f80de9acde37` |
+| Corrected runner | `09849c231829c92af233844c7d28d54212311e756fa86dbc736e9c1d6b8a6c0d` |
+| Fresh-case report | `018ac0ac3aa8578351b43771647f5da5b4a394d64e51e6cb162a1570a2ff583b` |
+| Delayed regression | exact through 1849 plus all restores; report `2f89151c6ab0527da25dd72b8bbfc0a3e0e1c49fdb068d7ca5036a111bc9fd03` |
+| Landing variation | exact through 1849 plus all restores; report `4263c73d1fe3b1d136a4930c1a74b55760f97a94481ca943e55971af696317e0` |
+| Primary | exact through 1849 plus all restores; report `6f07c22ec10ed25664cb3764879d6728e8664a4083083eea4733fbbe7f504119` |
+| Review app-debug suite | 400/400 checks: 376 Python, 21 CTests, three-process repeatability; report `9fb3985fb5504d7be575e4f305f91bafeb49e7f75db5809c7cc6454156aeb314` |
+
+The corrected source tree was independently built in the review checkout. It
+differs from the immutable candidate only by this report and the three
+reviewer-owned case manifests. The original failed evidence remains retained;
+no expectation or case was altered after observing a result. Approval covers
+only the stated end-1649 seed, Right/neutral controller-0 inputs, both riders,
+395-byte state and frames through 1849. ZOOM ZOO remains absent from the
+production frontend, and this review makes no claim beyond that bounded native
+capability.

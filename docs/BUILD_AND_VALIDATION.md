@@ -104,6 +104,16 @@ are `extract-content`, `verify` and `compare-inputs`; it has no separate
 independently extracted content and does not provide autonomous movement or
 production ZOOM ZOO support.
 
+`zoom_zoo_position` is the M4-08 stateful research component. Its `capture`
+command freezes end-of-frame 1649 plus every instruction and publication of
+`$82:A627--A6F7` through frame 1700; `extract-routine` authenticates the 209
+original bytes; `verify` propagates four signed residues across all 102 ordered
+calls while position, velocity and contact state remain captured inputs; and
+`compare-inputs` reports the preregistered frame-1662 variation's controller,
+component and branch divergence. It has no stable `tools/project.py` interface
+and does not provide autonomous movement, a wrap-crossing claim or production
+ZOOM ZOO support.
+
 | Module | Implemented contract and limits |
 | --- | --- |
 | `freeze_reference --manifest <replay> --samples <first> <second> --out <new file>` | Administrative reference-only projection of two matching fresh-process captures; refuses overwriting an existing output. Dedicated freeze commit precedes native computation. This utility emits a projection rather than a standard check report; it does not validate a native result |

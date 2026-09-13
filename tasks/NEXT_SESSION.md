@@ -1,4 +1,4 @@
-# Coordinator handover — M4-05 accepted, M4-06 planning next
+# Coordinator handover — M4-05 accepted, M4-06 claimed
 
 Milestone M3 is accepted on 13 September 2026 and tagged `m3`. M4-00 through
 M4-05 are accepted. Read [M4-05](M4-05.md),
@@ -29,11 +29,13 @@ enforced before lossy reduction; correction `dabb3e5` binds all 30 ordered
 tuples and re-review approved. Merge `34d6ea6` passes 321/321 plus all frozen
 gates; hosted run 34733976248 is green on macOS/Linux including sanitizers.
 
-Run a bounded Astra/high planning audit for M4-06 and claim exactly one smallest
-ready task. Challenge whether the next prerequisite is wider contact closure,
-an autonomous producer, or pack/profile work; do not infer native readiness
-from M4-05's captured arguments. Native ZOOM ZOO, finish/result/presentation
-and the Classic pack remain unchanged.
+Continue [M4-06](M4-06.md) in its isolated Sol/medium worktree. Its bounded
+Astra/high audit found the continuous prefix fails earlier than frame 1683:
+frame 1662 hides angle -2 and negative penetrations behind the lossy selected
+summary, frame 1665 enters with negative vertical velocity, and support is lost
+then reacquired before another response guard at 1677. Reconstruct all 66 calls
+on frames 1650--1682, not the direction branch. Native ZOOM ZOO,
+finish/result/presentation and the Classic pack remain unchanged.
 The user authorized an unattended M4 continuation and at most one weekly usage
 reset only if an actual provider limit is reached; no money, paid credits,
 provider switching, publication or deployment is authorized.

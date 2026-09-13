@@ -13,6 +13,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 from unirally_lab.native.zoom_zoo_contact import (  # noqa: E402
     captured_calls,
     classify_calls,
+    compare_preprocessing,
     reduce_neighbourhood,
     resolve_neighbourhood,
     validate_component_manifest,
@@ -99,6 +100,22 @@ class ZoomZooContactTests(unittest.TestCase):
         self.assertEqual((resolved["motion"]["x"], resolved["motion"]["y"]), (9258, 1560))
         self.assertEqual((resolved["motion"]["vx"], resolved["motion"]["vy"]), (287, 0xFFF0))
         self.assertEqual((resolved["state"]["surface_angle"], resolved["state"]["angle_sentinel"]), (0xFFFF, 0))
+
+    def test_preprocessing_tuple_mutation_preserving_summary_fails(self) -> None:
+        source = call(1661, 0, 22, raw=0x20, penetration=2, angle=0xFF)
+        probes = [(0xA0, 0, 0)] * 9 + [(2, 0xFF, 0x20)]
+        comparisons = compare_preprocessing(source, probes)
+        self.assertEqual(len(comparisons), 10)
+        self.assertTrue(all(row["match"] for row in comparisons))
+
+        # The separately captured reducer summary is unchanged. This exact
+        # per-point contradiction was previously hidden by that lossy summary.
+        mutated = copy.deepcopy(source)
+        mutated["observed_penetrations"][9] = 7
+        mutated["observed_angles"][9] = 0
+        mutated["observed_descriptors"][9] = 0x30
+        with self.assertRaisesRegex(ValueError, "computed preprocessing differs.*point 9"):
+            compare_preprocessing(mutated, probes)
 
     def test_state_and_static_coefficient_mutations_change_reconstruction(self) -> None:
         probes = [(0xA0, 0, 0)] * 9 + [(2, 0xFF, 0x20)]

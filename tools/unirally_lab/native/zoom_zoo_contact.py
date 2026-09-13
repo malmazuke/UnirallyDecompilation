@@ -329,6 +329,34 @@ def reduce_neighbourhood(probes: list[tuple[int, int, int]], flags: bytes) -> di
     }
 
 
+def compare_preprocessing(call: dict, probes: list[tuple[int, int, int]]) -> list[dict]:
+    """Require and report every captured preprocessing result in point order."""
+    if len(probes) != 10:
+        raise ValueError("computed preprocessing point count differs")
+    captured = list(zip(
+        call["observed_penetrations"], call["observed_angles"],
+        call["observed_descriptors"], strict=True,
+    ))
+    if len(captured) != 10:
+        raise ValueError("captured preprocessing point count differs")
+    comparisons = []
+    for point, (computed, observed) in enumerate(zip(probes, captured, strict=True)):
+        if computed != observed:
+            raise ValueError(
+                f"computed preprocessing differs at {call['frame']}/{call['rider']} "
+                f"point {point}: computed {computed}, captured {observed}"
+            )
+        values = {
+            "penetration": computed[0], "angle": computed[1],
+            "descriptor": computed[2],
+        }
+        comparisons.append({
+            "point": point, "computed": values,
+            "captured": dict(values), "match": True,
+        })
+    return comparisons
+
+
 def resolve_neighbourhood(call: dict, summary: dict, coefficients: bytes) -> dict:
     if len(coefficients) != 2 or coefficients[0] >= 16:
         raise ValueError("slope coefficient dependency is missing or invalid")
@@ -385,6 +413,7 @@ def verify_neighbourhood(calls: list[dict], content: dict[str, bytes], target_or
         probes = preprocess_neighbourhood(call, content, allow_slope=(call["frame"], call["rider"]) == target_key)
         if (call["frame"], call["rider"]) == target_key and call["observed_axes"][9] != 0:
             raise ValueError("first slope call's vertical axis selector is missing or differs")
+        preprocessing = compare_preprocessing(call, probes)
         summary = reduce_neighbourhood(probes, content["tile-flags"])
         resolved = resolve_neighbourhood(call, summary, content["slope-coefficients"])
         expected_summary = {
@@ -423,7 +452,8 @@ def verify_neighbourhood(calls: list[dict], content: dict[str, bytes], target_or
         for name, (computed, observed) in comparisons.items():
             if computed != observed:
                 raise ValueError(f"computed output differs at {call['frame']}/{call['rider']}: {name}")
-        rows.append({"frame": call["frame"], "rider": call["rider"], "summary": summary,
+        rows.append({"frame": call["frame"], "rider": call["rider"],
+                     "preprocessing": preprocessing, "summary": summary,
                      "changed_outputs": {name: computed for name, (computed, _) in comparisons.items()}})
     if [(row["frame"], row["rider"]) for row in rows] != [
             (call["frame"], call["rider"]) for call in selected_calls]:

@@ -141,13 +141,18 @@ result.
 
 ## Integrity and reproduction
 
-The ROM-free focused tests mutate call loss, duplication, order, rider and
-ordinal; guard/classification inputs; incoming state and static coefficients;
-and incomplete capture fields. Each contradiction fails or changes the
-reconstruction. Command verification additionally exact-binds source ROM/core/
-patch/replay identities, access hash, frame range, call count, guard order,
-classification digest/counts, first branch, neighbourhood and all independent
-content identities.
+The component exact-compares every computed `(penetration, angle, descriptor)`
+against the captured result before reduction. Its report includes computed and
+captured values plus the match result for all ten points, in order, on each of
+the preceding, target and following calls: the full ordered 30-tuple rather
+than only its lossy reducer summary. The ROM-free focused tests mutate call
+loss, duplication, order, rider and ordinal; guard/classification inputs;
+incoming state and static coefficients; incomplete capture fields; and one
+per-point preprocessing tuple while leaving the later summary unchanged. Each
+contradiction fails or changes the reconstruction. Command verification also
+exact-binds source ROM/core/patch/replay identities, access hash, frame range,
+call count, guard order, classification digest/counts, first branch,
+neighbourhood and all independent content identities.
 
 ```sh
 python3 -m tools.unirally_lab.native.zoom_zoo_contact extract-content --contract tests/manifests/content/zoom-zoo-reference-contract.json --rom "$(cat local/rom-location.txt)" --out artifacts/m4-05/content
@@ -161,9 +166,9 @@ The reproduced M4-04 start access record hashes to
 The primary and variation full access records hash to
 `267ecfbf7223a3c2a9e6844d620feda0c41adb98fd9a5280d10320d3682fab67`
 and `0f04150363bdfbf41f53ca192ee091529c36933950bfb74daa6eea8001178dec`.
-The successful component reports hash to
-`6e8a6d5aaedbbc7190b0a336b70913ec815ac4c69ca58b0256b5c2035123fea2`
-and `cbb729e5c7e986c04d55846d910249ddd95e88ed254d5a1c0fb79e26a4824b70`.
+The corrected successful component reports hash to
+`01cc1b5cc27c7c03b20825f4f1daa4eddf86c7514a5c5e3b258548812fadac70`
+and `89f46dd8406453b06eec24258215d61ac43e77b2622485e940f92745d014f0fc`.
 
 ## Limits
 

@@ -93,3 +93,23 @@ observed output values.
 
 Independent variations, native autonomy, restore, full regressions, independent
 Sol review, hosted CI and integration are outstanding.
+
+## Static landing matrix supplement (before transform tuning)
+
+The 1,512 bytes at WRAM `$0572--0B59` are three 63-angle coefficient matrices,
+not a captured motion series. `$81:9A4D--9E12` builds them from ROM coefficient
+words using signed fixed-point products. They first equal the final tables at
+end-1297, before the first race update at 1377, and remain byte-identical at
+**every** captured frame 1297--1849. The initialization capture confirms their
+writers; the expanded movement capture contains no writer into the tables.
+The additive `zoom-zoo-trial-landing-content.reference.json` freezes their
+identity before implementing the landing transform. The main contract remains
+unchanged.
+
+Implementation decision: permit bounded original execution during extraction
+of these pre-race immutable tables, as already permitted for the original seed
+and reference laboratory. Native gameplay must never run that extractor or
+open original state/ROM/core/captures. The extraction stops at 1297 and copies
+only the declared static range; it does not provide post-seed state. A native
+mathematical replacement for the initializer can follow if independently
+verified; guessing fixed-point rounding now would weaken the evidence.

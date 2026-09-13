@@ -40,4 +40,34 @@ The frozen restore boundaries straddle every full player landing: 1739/1740 and
 
 ## Verdict
 
-Pending candidate evaluation.
+Candidate `f1cd99355add5c0ac7ba0fcb290af87953e388d1` is returned with
+acceptance-blocking findings. Correction re-review is pending.
+
+## Correction re-review preregistration
+
+The original early and late cases informed correction of the missing landing
+branches and are retained as disclosed regressions. Before reading, building or
+executing the correction candidate, I selected two fresh cases:
+
+1. `m4-13-rereview-player-jump-1682-1696` delays the complete 15-update
+   Right+B interval by one update. Prediction: it changes launch and landing
+   timing/state while retaining at least 100 updates after its first full player
+   landing.
+2. `m4-13-rereview-neutral-1675-1680-jump-1681-1695` removes Right for six
+   updates immediately before the primary jump, then applies the original
+   Right+B interval. Prediction: lower incoming horizontal velocity changes the
+   launch/contact trajectory and exercises a landing distinct from a pure B
+   timing shift while retaining the recovery horizon.
+
+Both preserve the authentic seed, opponent controls, fixed end-1849 horizon and
+all excluded mode guards. Reference qualification and freezing precede any
+correction evaluation.
+
+Both fresh cases qualified and repeated exactly. Delayed B lands at 1744 and
+1771, leaving 105 updates after its selected landing; its rows SHA-256 is
+`843a43b6be6044f405577ed9f7f3a019249554b67746a88606bfc1924746016a`.
+The neutral-prelaunch case lands at 1745 and 1762, leaving 104 updates; its rows
+SHA-256 is
+`f9f199958b78e34e83c16fc329597cb0ed66ad72597135142c719aef7cecfb7d`.
+Their frozen restore boundaries respectively are 1743/1744/1770/1771 and
+1744/1745/1761/1762.

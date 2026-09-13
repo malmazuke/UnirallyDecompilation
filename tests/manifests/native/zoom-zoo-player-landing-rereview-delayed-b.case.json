@@ -1,0 +1,13 @@
+{
+  "id": "m4-13-rereview-player-jump-1682-1696",
+  "changes": [
+    {
+      "from": 1682,
+      "to": 1696,
+      "buttons": [
+        "right",
+        "b"
+      ]
+    }
+  ]
+}

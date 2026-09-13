@@ -129,7 +129,14 @@ resumed progress after reference-defined recovery. Keep newly reached mechanics
 inside one sustained assignment; no substitute early-jump case or shorter prefix.
 This is a larger traversal gate toward full-race support, not a full-game claim.
 Prepare docs before the final push to avoid redundant closeout CI. M4-14 is
-ready/unclaimed for the next session; do not automatically dispatch M4-15.
+accepted at `38c72e8`, but repeated the same section. The next
+[M4-15](../tasks/M4-15.md) is ready/unclaimed: target native race completion from
+the same seed, first establishing original escape and finish evidence. Keep
+reference exploration and coupled producers inside that assignment. Only an
+evidence-justified substantial downstream fallback may replace completion,
+with explicit partial-progression reporting and independent review. Frontend
+and race-start initialization remain outside this seed-based task. No M4-16
+dispatch or automatic M4 acceptance.
 
 ### Next-stage estimate, revised from observed effort
 

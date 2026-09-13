@@ -2,6 +2,19 @@
 
 Status: adopted, 12 September 2026. Reassess from measured accepted work.
 
+## M4-15 race-completion extension
+
+The user authorized preparation of [M4-15](../../tasks/M4-15.md) after assessing
+M4-14. Inherit its Astra/medium direct ownership, automatic fresh Sol/medium
+review, one active child, targeted high escalation only for recorded reasoning
+difficulty, no 20-point task cap and final 20% weekly review/recovery reserve.
+These exceptions override general defaults for M4-15. Preparation observed 37%
+shared weekly used; implementation must sample fresh usage. No reset, purchase
+or provider switch is authorized. Reference feasibility is inside the same task;
+checkpoints do not end it. Gameplay starts in the next user-started session.
+Prior no-M4-15 dispatch statements describe completed assignments; this new
+assignment supersedes that boundary. Do not automatically dispatch M4-16.
+
 ## M4-14 sustained-traversal extension
 
 After M4-13 and its follow-up, the user selected a more ambitious continuous-riding

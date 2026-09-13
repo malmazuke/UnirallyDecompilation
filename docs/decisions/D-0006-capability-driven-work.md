@@ -1,9 +1,28 @@
 # D-0006 — Native capability trial
 
-Status: adopted 13 September 2026 for M4-12, extended to M4-13 and now M4-14.
-The user selected more ambitious sustained traversal after assessing M4-13.
+Status: adopted 13 September 2026 for M4-12, extended through M4-15.
+The user selected race completion after assessing M4-14.
 Implementation begins in the next user-started Astra/medium session; this is not
 an open-ended M4 assignment.
+
+## M4-15: measure race advancement
+
+M4-14 delivered 1,650 exact updates in about 56 minutes and 11 shared weekly
+usage points, but repeated the same section. These account-wide observations
+support larger outcomes, not a controlled model-cost comparison. The next
+[M4-15](../../tasks/M4-15.md) targets a complete race from the existing seed.
+Explore original strategies and authenticate escape/progress/finish before
+native tuning; reference feasibility is an internal phase. Retain the full
+outcome when new mechanics appear. A downstream fallback requires evidence
+that original exploration could not establish completion, a substantial frozen
+milestone and independent review; it must be labelled partial progression.
+
+Keep direct Astra/medium ownership and automatic Sol/medium review under
+[D-0004](D-0004-model-and-usage-budget.md#m4-15-race-completion-extension).
+Preflight audit timelines/WRAM identity and use a lightweight validation ledger
+as specified in BUILD_AND_VALIDATION. Those safeguards are M4-15 implementation
+work, not tools claimed to exist now. Preserve necessary review/sanitizer/merge
+checks and consolidated closeout. No automatic M4-16 dispatch.
 
 ## M4-14: larger outcome, small implementation steps
 
@@ -61,7 +80,7 @@ owns investigation, native implementation and integration in a sustained context
 Do not delegate the core problem to a routine worker or spawn a separate Astra
 planning consultation. Sol/medium independently reviews the candidate automatically.
 Model and resource exceptions are defined only in [D-0004](D-0004-model-and-usage-budget.md);
-use its M4-14 extension for the next task and earlier sections for historical scope.
+use its M4-15 extension for the next task and earlier sections for historical scope.
 
 ## Execution
 
@@ -105,8 +124,8 @@ account-wide usage delta with the unrelated-work caveat. Research discoveries
 are useful intermediate results but cannot satisfy the assigned task's native outcome.
 
 End the trial when its capability is accepted or its resource/access boundary
-prevents further work. M4-12/M4-13 ended at acceptance; M4-14 above is the next
-assignment. Do not automatically claim M4-15 or the rest of M4.
+prevents further work. M4-12 through M4-14 ended at acceptance; M4-15 above is the next
+assignment. Do not automatically claim M4-16 or the rest of M4.
 Preserve partial commits and an honest recovery handoff if incomplete. No speed,
 completion date or full-game accuracy promise follows from this policy change.
 

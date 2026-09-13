@@ -1,9 +1,10 @@
 # Project state
 
-Updated 13 September 2026: M4-14 sustained traversal is independently approved
-and all local gates pass. Acceptance is conditional on merged checks, private
-remote ref and exact final-tip CI in `artifacts/m4-14-integration/closeout.json`.
-Start with [NEXT_SESSION](../tasks/NEXT_SESSION.md); do not dispatch M4-15.
+Updated 14 September 2026: M4-14 is accepted at `38c72e8`; private main ref and
+exact-tip macOS/Linux CI `34761303975` were verified during M4-15 preparation.
+M4-15 is ready/unclaimed for the next Astra/medium session: target race completion
+from the existing seed, with original reference feasibility inside the task.
+Start with [NEXT_SESSION](../tasks/NEXT_SESSION.md). No M4-15 gameplay work has started.
 
 ## Accepted product and evidence
 
@@ -18,7 +19,7 @@ Start with [NEXT_SESSION](../tasks/NEXT_SESSION.md); do not dispatch M4-15.
 - PAL ROM SHA-256 is
   `a1105819d48c04d680c8292bbfa9abbce05224f1bc231afd66af43b7e0a1fd4e`;
   the private locator is `local/rom-location.txt`.
-- M4-00 through M4-13 are individually accepted; **M4 is not accepted**.
+- M4-00 through M4-14 are individually accepted; **M4 is not accepted**.
   M4-12 added autonomous native ZOOM ZOO continuation for both riders from
   end-1649 through 1849: 200 updates, exact 395-byte state, Right/neutral input,
   one seed and authenticated static content. [R-0030](research/R-0030-zoom-zoo-native-trial.md).
@@ -69,14 +70,15 @@ Primary Astra/medium started 13:09 UTC, shared weekly usage 26%; independent
 approval around 13:54, usage 35%. These are account-wide observations, not a
 controlled model comparison. No reset, purchase or provider switch occurred.
 The [task](../tasks/M4-14.md) records the 45-minute reassessment and integration
-commands. Actual final SHA/time/usage/remote/CI belong in the ignored closeout.
-If absent, recover using git and GitHub as NEXT_SESSION describes. Do not create
+commands. Final accepted integration is `38c72e8`, 55.61 minutes, shared usage 26% to 37%,
+with green exact-tip CI and synchronized private main, recorded in the ignored closeout.
+If absent, inspect `38c72e8` in git and `gh run view 34761303975`. Do not create
 a second documentation-only CI cycle to transcribe that result.
 
 M4-13 remains accepted at `b288396`; its final closeout took 42.81 minutes and
 eight shared usage points (15% to 23%). Historical evidence remains in R-0032
 and its task/review. For any future task, retain D-0004/D-0006 budget and automatic
-review practices; M4-14's exception does not authorize another task now.
+review practices; M4-15 now has its own exception and preparation; no M4-16 dispatch is authorized.
 
 ## Where to look
 

@@ -1,35 +1,30 @@
-# Next session — M4-14 closeout
+# Next session — M4-15 race completion
 
-M4-14 sustained native traversal is independently approved and all local broad
-gates pass. Corrected candidate `e730aaa` was approved by fresh Sol/medium review
-`ec543c52` (integrated as `4abe119`). Read [M4-14](M4-14.md),
-[review](M4-14-review.md), [STATE](../docs/STATE.md) and
-[R-0033](../docs/research/R-0033-sustained-traversal.md) for evidence and limits.
+M4-14 is accepted at `38c72e889d59b62270be6e26fca713b3fb3aa153`:
+1,650 exact updates, 423 bytes, both riders; private refs and final-tip CI passed.
+It reproduces repeated visits to the same section, not obstacle escape.
 
-Acceptance remains conditional on the exact merged checks, private remote ref
-and final-tip macOS/Linux CI. Actual final results, merge SHA, commands, clock
-and usage are in ignored `artifacts/m4-14-integration/closeout.json`. Confirm its
-status and that its SHA equals the intended integration commit. If unavailable,
-recover the integration with `git log`, compare `git rev-parse HEAD origin/main`
-and `git ls-remote origin refs/heads/main`, then inspect
-`gh run list --commit <integration-sha>` and
-`gh run view <run-id> --json headSha,status,conclusion,jobs,url`.
-A conditional document is not evidence that remote checks passed.
+[M4-15](M4-15.md) is ready/unclaimed for the next user-started **Astra/medium**
+session. Read its complete task, [STATE](../docs/STATE.md), AGENTS,
+[workflow](../docs/AGENT_WORKFLOW.md) and D-0004/D-0006. Record the actual
+synchronized main dispatch SHA and fresh quota; reproduce the M4-14 baseline.
 
-If closeout is incomplete, finish only the pending M4-14 integration checks,
-normal private push/ref verification and exact-tip CI. The primary already has
-standing authorization. Do not regenerate expectations, force-push, redeem
-credits or start another task. Do not make a post-success documentation-only
-push just to repeat the closeout results.
+First establish an original-game strategy that escapes and completes the race
+from the existing seed. Freeze repeatable outcome evidence before native tuning.
+Reference feasibility and all coupled mechanics stay inside M4-15. A downstream
+fallback needs documented original-exploration evidence and independent review;
+an easier prefix or difficult native dependency is insufficient justification.
+The current harness is bounded and may need extension.
 
-The capability covers both riders from authentic end-1649 through 3299, all
-1,650 continuous-Right updates / 33 PAL seconds and 423 bytes per state. Local
-recovery at 2185 leaves 1,114 updates, including repeated returns to the same
-section. No full-track/monotonic-progress, ZOOM ZOO frontend, presentation/audio
-or private Linux differential claim follows from this bounded success.
+Automatically launch fresh Sol/medium independent review in an isolated checkout,
+handle corrections and integrate. Preserve the 20% weekly reserve; no reset or
+purchase. Consolidate tracked docs before the final push, then record actual
+remote/CI results in the ignored closeout artifact. No automatic M4-16 dispatch.
 
-After verified acceptance, stop. The user requested no automatic M4-15 dispatch.
-A future explicitly assigned capability should first freeze a reference scenario
-that escapes the repeatedly visited section and inventory its next producer.
-That experiment has not been performed or accepted here. M4 remains incomplete;
-no new milestone tag is due. No access, private input or user decision is pending.
+Suggested opening prompt:
+
+> Execute M4-15 using tasks/NEXT_SESSION.md and tasks/M4-15.md.
+
+This preparation does not start reference exploration or native implementation.
+[Preparation record](M4-15-preparation.md) describes its review and conditional
+final-tip verification; recover absent closeout evidence from git/GitHub.

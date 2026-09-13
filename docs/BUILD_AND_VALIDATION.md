@@ -15,7 +15,7 @@ what constitutes evidence. Historical frozen expectations and acceptance remain.
 | Final integration candidate | Run complete app-debug and app-sanitize suites, declared private native/replay/content/pack/presentation gates and hosted macOS/Linux CI on the exact source candidate. Required skipped/missing tests are non-passes. |
 | Corrections | Repeat affected checks; rerun the full integration matrix if tested code, build/config, inputs or expectations changed. Documentation-only successors may cite the tested code/input identity with an inspected diff; obtain hosted CI for the final pushed tip. |
 
-For M4-13 and M4-14, send the focused passing candidate for initial review before running
+For M4-13 through M4-15, send the focused passing candidate for initial review before running
 the broad matrix. Resolve its findings, then run broad validation on the corrected
 candidate alongside focused re-review where useful. Later source changes still
 require revalidation. Existing CI triggers are unchanged: pushes (including docs)
@@ -40,6 +40,25 @@ research modules remain evidence tools. M4-13 adds bounded B-jump cases; M4-14
 adds the sustained horizon/state/restore laboratory below. Existing M4-12/M4-13 commands do not accept
 arbitrary new horizons or scenarios. Freeze exact fields, horizon, source/seed, static inputs and
 validation commands before using them as acceptance gates.
+
+## M4-15 audit preflight and validation ledger
+
+Required additions for M4-15; not currently claimed as implemented commands.
+Before expensive instruction capture, automatically compare the expanded actual
+controller timeline (both controllers, pre-seed history and complete horizon)
+against the frozen scenario. Fail on differences rather than inheriting legacy
+input pulses. Check supplemental capture whole-WRAM hashes against the matching
+frozen reference at every sampled frame before using its audit as evidence.
+Timeline preflight precedes capture; WRAM authentication follows capture.
+
+Use a small ignored JSON/table ledger recording command, result, source identity,
+binary hash, build configuration/toolchain, ROM/core/static/input/contract hashes,
+coverage and output report identity. Reuse an unchanged result only when the
+relevant identities match and its evidence is available; explain documentation-only
+source differences. Invalidate affected entries after changes. No cache service
+or general orchestration framework is required. This does not eliminate fresh
+independent review/references, withheld replacements, sanitizer runs, required
+exact-merge checks or final-tip CI. Never count missing evidence as a reused pass.
 
 ## Environment and dependencies
 

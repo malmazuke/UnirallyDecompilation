@@ -2,7 +2,7 @@
 
 Updated 13 September 2026: M4-12 native capability trial accepted at integration
 `1889d9cbc56fec4437bc67835cd885677cc29e03`, with a documentation-only closeout.
-M4-12 is complete; M4-13 is prepared and unclaimed for the next user-started session. Start with [NEXT_SESSION](../tasks/NEXT_SESSION.md).
+M4-12 is complete; M4-13 is review approved and awaiting integration CI. Start with [NEXT_SESSION](../tasks/NEXT_SESSION.md).
 
 ## Accepted product and evidence
 
@@ -36,26 +36,16 @@ M4-12 is complete; M4-13 is prepared and unclaimed for the next user-started ses
   pass; hosted candidate run `34754212973` passed macOS and Linux. Integration
   code/build/test sources exactly match that reviewed and tested candidate.
 
-## Next work and policy
+## M4-13 review-approved capability
 
-[M4-13](../tasks/M4-13.md) is ready/unclaimed following the user-approved
-[R-0031 retrospective](research/R-0031-m4-12-retrospective.md). Target native
-player support loss, landing and recovery plus at least 100 subsequent updates;
-freeze the sequence/horizon before tuning. Necessary control/camera dependencies
-remain internal experiments. Finish/presentation remain excluded; M4 is incomplete.
-
-[D-0006](decisions/D-0006-capability-driven-work.md) now extends the sustained
-Astra/medium primary and automatic fresh Sol review approach to M4-13. Focused
-checks precede initial review; broad validation follows resolved findings. Use the
-corrected cache/report layout. The M4-12 result supports continuing this workflow,
-not a causal model-speed claim: approximately 71 minutes/12 shared usage points
-through final closeout versus 60 minutes/11 points at review approval.
-
-[D-0004's extension](decisions/D-0004-model-and-usage-budget.md#m4-13-trial-extension)
-waives the task cap but preserves the final 20% review reserve. Preparation
-observed 13% weekly used and no reset credits; sample fresh usage at startup.
-No reset, purchases or provider switch authorized. No gameplay work was started
-by preparation. Do not automatically dispatch M4-14 after M4-13.
+M4-13's corrected candidate `13f80ff` has independent Sol/medium approval.
+From the same end-1649 seed, Right plus B1681–1695 now covers player support
+loss, landing1745 and104 subsequent updates through1849; both riders match all
+395 bytes. Two fresh cases and two corrected regressions pass all landing
+restores; dynamic captured inputs remain zero. All local debug/sanitizer and
+frozen private gates pass. Integration/private synchronization and hosted CI
+are in progress; see [R-0032](research/R-0032-player-landing-recovery.md) and
+[M4-13](../tasks/M4-13.md). Do not dispatch M4-14.
 
 ## Where to look
 

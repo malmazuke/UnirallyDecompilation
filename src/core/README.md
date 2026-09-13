@@ -163,3 +163,8 @@ The Python `zoom_zoo_trial` laboratory authenticates content and compares
 reference output outside that process, including three fresh-process restores.
 `zoom_zoo_trial_extract` stops original execution before the race to extract
 immutable landing matrices. It is never linked to or called by native gameplay.
+
+M4-13 admits B jump within the experimental ZOOM ZOO interval.
+[R-0032](../../docs/research/R-0032-player-landing-recovery.md) explains the
+player landing impulse, displacement-quadrant ordering, rolling pose correction
+and guarded option boundary. All future state remains in the 395-byte record.

@@ -1,0 +1,125 @@
+{
+  "schema_version": 1,
+  "scenario_id": "m4-13-player-landing",
+  "description": "M4-13 frozen Right plus B 1681-1695 player landing trial.",
+  "tested_behavior": "Reference-only player landing and recovery; native acceptance recorded separately.",
+  "rom": {
+    "manifest": "tests/manifests/rom/unirally-pal.json",
+    "sha256": "a1105819d48c04d680c8292bbfa9abbce05224f1bc231afd66af43b7e0a1fd4e"
+  },
+  "core": {
+    "name": "bsnes",
+    "lock": "tools/locks/emulators.json",
+    "commit": "7d5aa1e656b9171524d01b1b22917197d8121cb4",
+    "patch_sha256": "a719f5ffe2222dad4c1ab04336633319ad85004f74e32fc14893a058be333885",
+    "serialization_method": "Strict",
+    "options": {}
+  },
+  "origin": {
+    "kind": "cold_start"
+  },
+  "run": {
+    "frames": 1850,
+    "sample_every": 1,
+    "trace_entries": 64
+  },
+  "inputs": {
+    "timing_unit": "frame",
+    "injection_point": "Buttons are presented on the libretro input callback before retro_run of the frame numbered `from`..`to` (0-based frames after power-on) and withdrawn before the following frame; the core polls the controllers once per frame (R-0002 finding 6). Sub-frame timing is not available.",
+    "controllers": [
+      {
+        "port": 0,
+        "events": [
+          {
+            "from": 300,
+            "to": 305,
+            "buttons": [
+              "start"
+            ]
+          },
+          {
+            "from": 620,
+            "to": 625,
+            "buttons": [
+              "start"
+            ]
+          },
+          {
+            "from": 750,
+            "to": 755,
+            "buttons": [
+              "start"
+            ]
+          },
+          {
+            "from": 900,
+            "to": 905,
+            "buttons": [
+              "start"
+            ]
+          },
+          {
+            "from": 1000,
+            "to": 1005,
+            "buttons": [
+              "down"
+            ]
+          },
+          {
+            "from": 1050,
+            "to": 1055,
+            "buttons": [
+              "start"
+            ]
+          },
+          {
+            "from": 1200,
+            "to": 1205,
+            "buttons": [
+              "start"
+            ]
+          },
+          {
+            "from": 1650,
+            "to": 1849,
+            "buttons": [
+              "right"
+            ]
+          },
+          {
+            "from": 1681,
+            "to": 1695,
+            "buttons": [
+              "b"
+            ]
+          }
+        ]
+      },
+      {
+        "port": 1,
+        "events": []
+      }
+    ]
+  },
+  "fields": [
+    {
+      "name": "wram_sha256",
+      "kind": "wram_sha256",
+      "description": "SHA-256 of the 131072-byte work RAM ($7E0000-$7FFFFF) at the end of the frame"
+    },
+    {
+      "name": "registers",
+      "kind": "registers",
+      "description": "CPU register block at the end of the frame: pc, a, x, y, s, d, b, p, e, mdr, vcounter, hcounter, field, wai, stp"
+    },
+    {
+      "name": "wram_0000_0200",
+      "kind": "wram_range",
+      "start": 0,
+      "length": 512,
+      "description": "Raw diagnostic range $7E0000-$7E01FF (direct page and the top of the stack area). No gameplay interpretation; M1 defines fields."
+    }
+  ],
+  "regeneration_command": "python3 tools/project.py replay compare --manifest tests/manifests/replay/m4-13-player-landing.json --runs 2",
+  "expected": {}
+}

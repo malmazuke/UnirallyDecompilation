@@ -301,7 +301,8 @@ Consulted 10 September 2026; these establish available building blocks, not feas
 
 This task-scoped module is separate from the accepted DRAGSTER CLI and frontend.
 It admits Right/neutral controller-0 continuation from the authentic end-1649
-seed through 1849; other controls, modes and horizons fail closed. Acceptance
+seed through 1849. M4-13 subsequently adds B jump for its separately frozen
+landing trials; other controls, modes and horizons fail closed. M4-12 acceptance
 evidence, including independent cases and integration, is recorded in R-0030.
 The original 394-byte frozen projection remains an unchanged prefix of the
 395-byte canonical state; the suffix retains original opponent OAM X.
@@ -336,3 +337,14 @@ in `zoom-zoo-trial-primary.reference.json`. The generalization references use
 fresh original processes with whole-WRAM hashes, all declared native fields and
 excluded-mode guards on every frame. Private captures and extracted bytes must
 remain ignored.
+
+## M4-13 player landing laboratory
+
+`tools.unirally_lab.native.zoom_zoo_player_landing` adds `capture`, `freeze` and
+`compare` commands for the fixed 1649–1849 continuation with B jump plus
+Right/neutral controls. See [R-0032](research/R-0032-player-landing-recovery.md)
+for exact commands. `freeze` requires a full player landing and 100 subsequent
+updates before native evaluation; `compare` binds every reference row to that
+freeze and restores before/after every full player landing. The primary freeze
+precedes implementation; its supplemental guard capture preserves every earlier
+state/WRAM digest. M4-12 manifests and commands remain unchanged.

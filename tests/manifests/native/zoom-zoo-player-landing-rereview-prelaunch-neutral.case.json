@@ -1,0 +1,18 @@
+{
+  "id": "m4-13-rereview-neutral-1675-1680-jump-1681-1695",
+  "changes": [
+    {
+      "from": 1675,
+      "to": 1680,
+      "buttons": []
+    },
+    {
+      "from": 1681,
+      "to": 1695,
+      "buttons": [
+        "right",
+        "b"
+      ]
+    }
+  ]
+}

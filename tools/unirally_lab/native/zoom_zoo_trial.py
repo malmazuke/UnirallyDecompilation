@@ -40,7 +40,7 @@ def frame_buttons(case,frame):
 def controller_rows(case,first=1650):
     return ''.join(f"{f} {sum(1<<BUTTONS.index(b) for b in frame_buttons(case,f))} 0\n" for f in range(first,1850))
 
-def capture(case,out,library):
+def capture(case,out,library,extra_guards=None):
     # Called in its own Python process, never by the native executable.
     from ..reference.bsnes import BsnesCore
     from ..reference.worker import inputs_for_frame
@@ -61,6 +61,9 @@ def capture(case,out,library):
                 core.run_frame()
                 if frame<1649:continue
                 wram=core.wram();sram=core.cartridge_ram()
+                for address,value in (extra_guards or {}).items():
+                    if int.from_bytes(wram[address:address+2],"little")!=value:
+                        raise ValueError(f"case changed supplemental guard {address:04x} at {frame}")
                 extra=json.loads((ROOT/'tests/manifests/native/zoom-zoo-trial-mode-guards.reference.json').read_text())['guards']
                 if any(int.from_bytes(wram[int(a,16):int(a,16)+2],'little')!=v for a,v in extra.items()):raise ValueError(f'case changed additive mode guard at {frame}')
                 if wram[0x150b]!=101:raise ValueError('case writes retained opponent OAM byte')
@@ -71,6 +74,7 @@ def capture(case,out,library):
     if sha(bytes.fromhex(rows[0])[:394])!=expected['seed_sha256']:raise ValueError('case seed differs')
     if any(g!=expected['guards'] for g in guard_rows):raise ValueError('case changed excluded mode guard')
     result={'kind':'m4_12_case_reference','case':case,'case_sha256':digest(case),'rom_sha256':ROM_SHA,'core_sha256':CORE_SHA,'rows':rows,'rows_sha256':digest(rows),'wram_sha256':whole,'guards':guard_rows[0]}
+    if extra_guards is not None:result['extra_guards']={f'{a:04x}':v for a,v in extra_guards.items()}
     out.write_text(json.dumps(result,indent=2)+'\n')
     return {'frames':201,'rows_sha256':result['rows_sha256']}
 

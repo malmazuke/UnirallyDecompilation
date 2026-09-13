@@ -1,0 +1,422 @@
+{
+  "schema_version": 1,
+  "scenario_id": "race-crawler-zoom-zoo-3300-release-2500-2599-riding-fields",
+  "description": "Additive M4-04 field-bearing view of the accepted release-2500--2599 ZOOM ZOO case. Controller schedules, ROM/core/options and whole-state expectation are unchanged.",
+  "tested_behavior": "Reference-only perturbation projection: exact through frame 2499, Right input release at 2500, subsequent original motion response, and return at 2600. No native ZOOM ZOO support is claimed.",
+  "rom": {
+    "manifest": "tests/manifests/rom/unirally-pal.json",
+    "sha256": "a1105819d48c04d680c8292bbfa9abbce05224f1bc231afd66af43b7e0a1fd4e"
+  },
+  "core": {
+    "name": "bsnes",
+    "lock": "tools/locks/emulators.json",
+    "commit": "7d5aa1e656b9171524d01b1b22917197d8121cb4",
+    "patch_sha256": "a719f5ffe2222dad4c1ab04336633319ad85004f74e32fc14893a058be333885",
+    "serialization_method": "Strict",
+    "options": {}
+  },
+  "origin": {
+    "kind": "cold_start"
+  },
+  "run": {
+    "frames": 3300,
+    "sample_every": 1,
+    "trace_entries": 64
+  },
+  "inputs": {
+    "timing_unit": "frame",
+    "injection_point": "Buttons are presented on the libretro input callback before retro_run of the frame numbered `from`..`to` (0-based frames after power-on) and withdrawn before the following frame; the core polls the controllers once per frame (R-0002 finding 6). Sub-frame timing is not available.",
+    "controllers": [
+      {
+        "port": 0,
+        "events": [
+          {
+            "from": 300,
+            "to": 305,
+            "buttons": [
+              "start"
+            ]
+          },
+          {
+            "from": 620,
+            "to": 625,
+            "buttons": [
+              "start"
+            ]
+          },
+          {
+            "from": 750,
+            "to": 755,
+            "buttons": [
+              "start"
+            ]
+          },
+          {
+            "from": 900,
+            "to": 905,
+            "buttons": [
+              "start"
+            ]
+          },
+          {
+            "from": 1000,
+            "to": 1005,
+            "buttons": [
+              "down"
+            ]
+          },
+          {
+            "from": 1050,
+            "to": 1055,
+            "buttons": [
+              "start"
+            ]
+          },
+          {
+            "from": 1200,
+            "to": 1205,
+            "buttons": [
+              "start"
+            ]
+          },
+          {
+            "from": 1650,
+            "to": 2499,
+            "buttons": [
+              "right"
+            ]
+          },
+          {
+            "from": 2600,
+            "to": 3299,
+            "buttons": [
+              "right"
+            ]
+          },
+          {
+            "from": 2200,
+            "to": 2259,
+            "buttons": [
+              "up"
+            ]
+          }
+        ]
+      },
+      {
+        "port": 1,
+        "events": []
+      }
+    ]
+  },
+  "fields": [
+    {
+      "name": "wram_sha256",
+      "kind": "wram_sha256",
+      "description": "SHA-256 of the complete 128 KiB work RAM at end of frame; retained accepted whole-state identity."
+    },
+    {
+      "name": "registers",
+      "kind": "registers",
+      "description": "CPU registers at end of frame; retained accepted whole-state identity."
+    },
+    {
+      "name": "phase_counters",
+      "kind": "wram_range",
+      "start": 768,
+      "length": 3,
+      "description": "$0300 contact phase, $0301 padding, $0302 progress phase; u8 values sampled at end of frame."
+    },
+    {
+      "name": "input_images_axes",
+      "kind": "wram_range",
+      "start": 785,
+      "length": 10,
+      "description": "$0311 JOY1L, $0313 JOY1H, $0315 vertical axis, $0319 horizontal axis, including observed intervening bytes; u8 at end of frame."
+    },
+    {
+      "name": "pose_indices",
+      "kind": "wram_range",
+      "start": 1041,
+      "length": 4,
+      "description": "$0411/$0413 player/opponent u16 pose indices published before contact."
+    },
+    {
+      "name": "positions",
+      "kind": "wram_range",
+      "start": 1045,
+      "length": 8,
+      "description": "$0415/$0417 x and $0419/$041B y, player/opponent u16 coordinate words."
+    },
+    {
+      "name": "fractional_residues",
+      "kind": "wram_range",
+      "start": 1025,
+      "length": 8,
+      "description": "$0401/$0403 signed x and $0405/$0407 signed y integration residues, player/opponent s16 bit patterns."
+    },
+    {
+      "name": "velocities",
+      "kind": "wram_range",
+      "start": 1211,
+      "length": 8,
+      "description": "$04BB/$04BD x and $04BF/$04C1 y velocities, player/opponent s16 in 1/32 coordinate units."
+    },
+    {
+      "name": "jump_phase",
+      "kind": "wram_range",
+      "start": 1219,
+      "length": 6,
+      "description": "$04C3/$04C5 held-jump phases and $04C7 animation counter, u16 words."
+    },
+    {
+      "name": "orientations",
+      "kind": "wram_range",
+      "start": 1227,
+      "length": 4,
+      "description": "$04CB/$04CD player/opponent orientation, u16 modulo-64 values."
+    },
+    {
+      "name": "contact_previous_x",
+      "kind": "wram_range",
+      "start": 1239,
+      "length": 4,
+      "description": "$04D7/$04D9 player/opponent previous pre-correction x, u16 coordinates."
+    },
+    {
+      "name": "contact_previous_y",
+      "kind": "wram_range",
+      "start": 1243,
+      "length": 4,
+      "description": "$04DB/$04DD player/opponent previous pre-correction y, u16 coordinates."
+    },
+    {
+      "name": "contact_auxiliary",
+      "kind": "wram_range",
+      "start": 1247,
+      "length": 4,
+      "description": "$04DF/$04E1 player/opponent auxiliary contact words; other branch meanings remain provisional."
+    },
+    {
+      "name": "contact_angle_sentinels",
+      "kind": "wram_range",
+      "start": 1259,
+      "length": 4,
+      "description": "$04EB/$04ED player/opponent angle-sentinel flags, binary u16 in the observed domain."
+    },
+    {
+      "name": "contact_counts",
+      "kind": "wram_range",
+      "start": 1355,
+      "length": 4,
+      "description": "$054B/$054D player/opponent unsupported-contact counters, u16."
+    },
+    {
+      "name": "contact_previous_counts",
+      "kind": "wram_range",
+      "start": 1359,
+      "length": 4,
+      "description": "$054F/$0551 player/opponent snapshots of incoming unsupported-contact count, u16."
+    },
+    {
+      "name": "surface_angles",
+      "kind": "wram_range",
+      "start": 2926,
+      "length": 4,
+      "description": "$0B6E/$0B70 player/opponent contact surface-angle words; signed interpretation remains branch-dependent."
+    },
+    {
+      "name": "contact_selected_high",
+      "kind": "wram_range",
+      "start": 2930,
+      "length": 4,
+      "description": "$0B72/$0B74 player/opponent selected-sample high bytes stored as u16."
+    },
+    {
+      "name": "contact_response_b",
+      "kind": "wram_range",
+      "start": 2995,
+      "length": 8,
+      "description": "$0BB3/$0BB5 response-A and $0BB7/$0BB9 response-B orientation increments, s16 bit patterns."
+    },
+    {
+      "name": "pose_history",
+      "kind": "wram_range",
+      "start": 2906,
+      "length": 36,
+      "description": "$0B5A-$0B7D bounded pose/displacement history region; named members are interpreted by the projection."
+    },
+    {
+      "name": "reflection_flags",
+      "kind": "wram_range",
+      "start": 2983,
+      "length": 4,
+      "description": "$0BA7/$0BA9 player/opponent reflection flags, observed binary u16 values."
+    },
+    {
+      "name": "throttles",
+      "kind": "wram_range",
+      "start": 3051,
+      "length": 4,
+      "description": "$0BEB/$0BED player/opponent signed throttle integrators."
+    },
+    {
+      "name": "jump_state",
+      "kind": "wram_range",
+      "start": 3035,
+      "length": 14,
+      "description": "$0BDB-$0BE8 jump baseline/previous-input and adjacent continuation words; named members are interpreted by the seed inventory."
+    },
+    {
+      "name": "reward_cooldown",
+      "kind": "wram_range",
+      "start": 3239,
+      "length": 2,
+      "description": "$0CA7 opponent reward queue cooldown, u16."
+    },
+    {
+      "name": "reward_queue",
+      "kind": "wram_range",
+      "start": 3307,
+      "length": 32,
+      "description": "$0CEB-$0D0A complete 32-byte opponent reward queue."
+    },
+    {
+      "name": "reward_cursors",
+      "kind": "wram_range",
+      "start": 3345,
+      "length": 4,
+      "description": "$0D11/$0D13 queue read/write cursors captured as bytes plus intervening bytes."
+    },
+    {
+      "name": "opponent_ai",
+      "kind": "wram_range",
+      "start": 3183,
+      "length": 14,
+      "description": "$0C6F-$0C7C opponent impulse countdown, trick selector and small-motion/AI continuation words; member meanings stay limited to R-0011."
+    },
+    {
+      "name": "quarter_state",
+      "kind": "wram_range",
+      "start": 3365,
+      "length": 32,
+      "description": "$0D25-$0D44 bounded quarter-turn, orientation impulse, jump latch and prior-brake state; projection names observed members."
+    },
+    {
+      "name": "track_wrap_mask",
+      "kind": "wram_range",
+      "start": 3407,
+      "length": 2,
+      "description": "$0D4F u16 mask applied to integrated x by $82:A6F3."
+    },
+    {
+      "name": "pose_idle_state",
+      "kind": "wram_range",
+      "start": 3703,
+      "length": 30,
+      "description": "$0E77-$0E94 bounded idle-pose state; semantics beyond named continuation members remain provisional."
+    },
+    {
+      "name": "reflected_orientations",
+      "kind": "wram_range",
+      "start": 3561,
+      "length": 4,
+      "description": "$0DE9/$0DEB player/opponent reflected combined orientation modulo 64."
+    },
+    {
+      "name": "timer",
+      "kind": "wram_range",
+      "start": 3609,
+      "length": 20,
+      "description": "$0E19/$0E1D/$0E21/$0E25/$0E29 timer digits in four-byte slots, u16 values at end of frame."
+    },
+    {
+      "name": "contact_selected_words",
+      "kind": "wram_range",
+      "start": 3743,
+      "length": 4,
+      "description": "$0E9F/$0EA1 player/opponent latest selected contact descriptor words."
+    },
+    {
+      "name": "rolling_flags",
+      "kind": "wram_range",
+      "start": 3747,
+      "length": 4,
+      "description": "$0EA3/$0EA5 player/opponent rolling flags, binary u16."
+    },
+    {
+      "name": "finish_flags",
+      "kind": "wram_range",
+      "start": 3839,
+      "length": 4,
+      "description": "$0EFF/$0F01 player/opponent finish flags, binary u16 when set by the observed finish recorder."
+    },
+    {
+      "name": "finish_delay_counter",
+      "kind": "wram_range",
+      "start": 3855,
+      "length": 2,
+      "description": "$0F0F finish-delay counter observed by the next-frame dispatcher."
+    },
+    {
+      "name": "jump_latches",
+      "kind": "wram_range",
+      "start": 3385,
+      "length": 6,
+      "description": "$0D39/$0D3B pending jump and $0D3D adjacent state, u16 words."
+    },
+    {
+      "name": "progress",
+      "kind": "wram_range",
+      "start": 4033,
+      "length": 16,
+      "description": "$0FC1/$0FC3 unsupported duration, $0FC5/$0FC7 progress marker, $0FC9/$0FCB transition count and $0FCD/$0FCF tag; player/opponent u16."
+    },
+    {
+      "name": "learned_weight",
+      "kind": "wram_range",
+      "start": 8450,
+      "length": 1,
+      "description": "$2102 learned event-1 weight, u8."
+    },
+    {
+      "name": "countdown",
+      "kind": "wram_range",
+      "start": 4549,
+      "length": 2,
+      "description": "$11C5 countdown word used by riding/timer gates."
+    },
+    {
+      "name": "reward_boosts",
+      "kind": "wram_range",
+      "start": 4571,
+      "length": 8,
+      "description": "$11DB/$11DD horizontal and $11DF/$11E1 vertical reward boosts for player/opponent, u16 bit patterns."
+    },
+    {
+      "name": "quarter_counts",
+      "kind": "wram_range",
+      "start": 4611,
+      "length": 16,
+      "description": "$1203-$1212 forward/reverse turn and quarter counters for both riders, u16."
+    },
+    {
+      "name": "global_update_counters",
+      "kind": "wram_range",
+      "start": 4735,
+      "length": 2,
+      "description": "$127F boost-decay/update counter and adjacent byte, u8."
+    },
+    {
+      "name": "quarter_initialized",
+      "kind": "wram_range",
+      "start": 4971,
+      "length": 4,
+      "description": "$136B/$136D player/opponent quarter tracker initialized flags, binary u16."
+    }
+  ],
+  "regeneration_command": "python3 tools/project.py replay compare --manifest tests/manifests/replay/race-crawler-zoom-zoo-3300-release-2500-2599-riding-fields.json --runs 2",
+  "expected": {
+    "sample_digest": "c253de4bce372be26b0457fa870b72c7a1acddb953a3ecf9ee187006ad55d63e",
+    "final_state_sha256": "00bf36ed74988b785f96c9e21116b2920915d85a81896b275255961d0330127d"
+  }
+}

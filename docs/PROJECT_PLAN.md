@@ -132,10 +132,13 @@ Prepare docs before the final push to avoid redundant closeout CI. M4-14 is
 accepted at `38c72e8`, but repeated the same section. The next
 [M4-15](../tasks/M4-15.md) now demonstrates complete native race simulation
 from that seed: both finishes and 240 player post-finish updates, with independent
-review and local debug/sanitizer gates. No fallback was used. Integration/ref/CI
-acceptance is conditional as recorded in NEXT_SESSION. Frontend and race-start
-initialization remain outside this capability. No M4-16 dispatch or automatic
-M4 acceptance.
+review and debug/sanitizer gates. No fallback was used; `8bc2e71` is accepted
+with private sync and final-tip CI. [M4-16](../tasks/M4-16.md) is now ready/unclaimed
+for a playable ZOOM ZOO outcome: native initialization, live controls, readable
+track/riders/HUD, correct result and restart, plus clean extraction and pack-only
+relaunch. Recover all coupled dependencies inside this assignment; no seed-based
+or headless fallback. Audio and broader menus/modes remain outside scope. No
+automatic M4-17 dispatch or M4 milestone acceptance.
 
 ### Next-stage estimate, revised from observed effort
 

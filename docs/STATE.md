@@ -1,12 +1,10 @@
 # Project state
 
-Updated 14 September 2026: M4-15 has independent approval and complete local
-validation for seed-based native ZOOM ZOO race completion. Corrected code
-`6faff68` reproduces 5,075 updates and 565 bytes for both riders through both
-finishes and 240 player post-finish updates. Acceptance remains conditional
-on exact merged checks, private main ref and final-tip macOS/Linux CI; actual
-results are in `artifacts/m4-15-integration/closeout.json`. See
-[NEXT_SESSION](../tasks/NEXT_SESSION.md) for recovery. No M4-16 dispatch.
+Updated 14 September 2026: M4-15 is accepted at `8bc2e71`; private main ref and
+exact-tip macOS/Linux CI `34785933369` verified during M4-16 preparation.
+M4-16 is ready/unclaimed for the next Astra/medium session: playable ZOOM ZOO
+from native initialization through result/restart. No M4-16 gameplay work has
+started. See [NEXT_SESSION](../tasks/NEXT_SESSION.md); no M4-17 dispatch.
 
 ## Accepted product and evidence
 
@@ -21,7 +19,7 @@ results are in `artifacts/m4-15-integration/closeout.json`. See
 - PAL ROM SHA-256 is
   `a1105819d48c04d680c8292bbfa9abbce05224f1bc231afd66af43b7e0a1fd4e`;
   the private locator is `local/rom-location.txt`.
-- M4-00 through M4-14 are individually accepted; **M4 is not accepted**.
+- M4-00 through M4-15 are individually accepted; **M4 is not accepted**.
   M4-12 added autonomous native ZOOM ZOO continuation for both riders from
   end-1649 through 1849: 200 updates, exact 395-byte state, Right/neutral input,
   one seed and authenticated static content. [R-0030](research/R-0030-zoom-zoo-native-trial.md).
@@ -80,7 +78,7 @@ a second documentation-only CI cycle to transcribe that result.
 M4-13 remains accepted at `b288396`; its final closeout took 42.81 minutes and
 eight shared usage points (15% to 23%). Historical evidence remains in R-0032
 and its task/review. For any future task, retain D-0004/D-0006 budget and automatic
-review practices; M4-15 now has its own exception and preparation; no M4-16 dispatch is authorized.
+review practices; M4-16 has its own exception and preparation; no M4-17 dispatch is authorized.
 
 ## Where to look
 
@@ -102,8 +100,10 @@ The primary, three corrected regressions and two fresh withheld variations
 match every 565-byte state and fresh restores. Debug/sanitizer each pass 405
 synthetic checks, and all 28 accepted M4-12–14 differential/restore runs plus
 DRAGSTER/content/replay/presentation gates pass. Denied repository/ROM access
-and negative controls pass. Exact merged validation and remote/CI acceptance
-remain governed by the conditional integration handoff above.
+and negative controls pass. Exact merged validation and remote/CI passed for `8bc2e71`; closeout evidence is
+in ignored `artifacts/m4-15-integration/closeout.json`. Final time was 95.14 minutes,
+shared weekly usage 38% to 55%; no reset or purchase. Recover missing evidence
+with git and `gh run view 34785933369`.
 
 Recovered coupled behavior includes direction control, checkpoint/lap/time
 publication, camera visibility feedback, finish collision poses and continuation.

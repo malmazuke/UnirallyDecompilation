@@ -15,7 +15,7 @@ what constitutes evidence. Historical frozen expectations and acceptance remain.
 | Final integration candidate | Run complete app-debug and app-sanitize suites, declared private native/replay/content/pack/presentation gates and hosted macOS/Linux CI on the exact source candidate. Required skipped/missing tests are non-passes. |
 | Corrections | Repeat affected checks; rerun the full integration matrix if tested code, build/config, inputs or expectations changed. Documentation-only successors may cite the tested code/input identity with an inspected diff; obtain hosted CI for the final pushed tip. |
 
-For M4-13 through M4-15, send the focused passing candidate for initial review before running
+For M4-13 through M4-16, send the focused passing candidate for initial review before running
 the broad matrix. Resolve its findings, then run broad validation on the corrected
 candidate alongside focused re-review where useful. Later source changes still
 require revalidation. Existing CI triggers are unchanged: pushes (including docs)
@@ -44,7 +44,7 @@ validation commands before using them as acceptance gates.
 ## M4-15 audit preflight and validation ledger
 
 Implemented and independently reviewed in M4-15 by `zoom_zoo_race_audit` and
-`zoom_zoo_race`; integration/ref/CI acceptance follows its conditional task handoff.
+`zoom_zoo_race`; accepted at `8bc2e71` with exact-tip CI and private synchronization.
 Before expensive instruction capture, automatically compare the expanded actual
 controller timeline (both controllers, pre-seed history and complete horizon)
 against the frozen scenario. Fail on differences rather than inheriting legacy
@@ -60,6 +60,21 @@ source differences. Invalidate affected entries after changes. No cache service
 or general orchestration framework is required. This does not eliminate fresh
 independent review/references, withheld replacements, sanitizer runs, required
 exact-merge checks or final-tip CI. Never count missing evidence as a reused pass.
+
+## M4-16 product validation requirements
+
+[M4-16](../tasks/M4-16.md) assigns native initialization and live frontend/result
+validation; these new interfaces are not implemented merely by this preparation.
+Extend the accepted race/visual tools deliberately. Keep validation source and
+binary immutable for an entire run and use the identity ledger to reject mixed
+results. Collect initial review findings before broad validation; supersede
+results after relevant changes. Verify task-local fixture paths before launching
+expensive matrices. Preserve independent, sanitizer and exact-merge evidence.
+
+Use M3-04's real-window/clean-pack acceptance practices, adding ZOOM ZOO native
+start, correct winner/loser result and restart. Real input events and visible
+state are required; fixed-controller or replay-only modes cannot prove live
+controls. Synthetic Linux CI remains distinct from private/live desktop evidence.
 
 ## Environment and dependencies
 

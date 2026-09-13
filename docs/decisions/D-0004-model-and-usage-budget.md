@@ -2,6 +2,19 @@
 
 Status: adopted, 12 September 2026. Reassess from measured accepted work.
 
+## M4-16 playable-track extension
+
+The user authorized preparation of [M4-16](../../tasks/M4-16.md) after M4-15.
+Inherit Astra/medium direct ownership, automatic fresh Sol/medium isolated review,
+one active child, targeted high escalation only for recorded reasoning difficulty,
+no 20-point task cap and the final 20% weekly review/recovery reserve. These
+exceptions override general defaults for M4-16. Preparation observed 56% shared
+weekly used; sample fresh at startup and checkpoints. No reset, purchase or
+provider switch is authorized. All coupled product dependencies stay in the task.
+Gameplay starts in the next user-started session; prior no-M4-16 boundaries are
+historical. Stop after acceptance or a real resource/access boundary, not a
+checkpoint. No automatic M4-17 dispatch.
+
 ## M4-15 race-completion extension
 
 The user authorized preparation of [M4-15](../../tasks/M4-15.md) after assessing

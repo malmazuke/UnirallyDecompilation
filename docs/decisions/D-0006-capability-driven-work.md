@@ -1,9 +1,26 @@
 # D-0006 — Native capability trial
 
-Status: adopted 13 September 2026 for M4-12, extended through M4-15.
-The user selected race completion after assessing M4-14.
+Status: adopted 13 September 2026 for M4-12, extended through M4-16.
+The user selected playable ZOOM ZOO after assessing M4-15.
 Implementation begins in the next user-started Astra/medium session; this is not
 an open-ended M4 assignment.
+
+## M4-16: deliver the playable outcome
+
+M4-15 achieved the full race from its seed without fallback in about 95 minutes
+and 17 shared usage points (account-wide, not a model-cost benchmark). Reference
+completion was established in about ten minutes and the full primary native
+match in about 29; review exposed real control and restore defects. Retain large
+outcomes and independent review. [M4-16](../../tasks/M4-16.md) combines native
+initialization, content/frontend presentation, live controls, result and restart.
+A captured seed, headless race or scripted demonstration cannot replace playable
+acceptance. Preserve declared art/audio limits and exact tested-domain claims.
+
+Use [D-0004's M4-16 exception](D-0004-model-and-usage-budget.md#m4-16-playable-track-extension).
+Keep validation candidates immutable and collect initial findings before broad
+checks. Reuse the implemented audit preflight/identity ledger; no new validation
+framework. Prepare final tracked docs before one push/CI cycle. This is one
+product task, not automatic acceptance of all M4. No automatic M4-17 dispatch.
 
 ## M4-15: measure race advancement
 
@@ -80,7 +97,7 @@ owns investigation, native implementation and integration in a sustained context
 Do not delegate the core problem to a routine worker or spawn a separate Astra
 planning consultation. Sol/medium independently reviews the candidate automatically.
 Model and resource exceptions are defined only in [D-0004](D-0004-model-and-usage-budget.md);
-use its M4-15 extension for the next task and earlier sections for historical scope.
+use its M4-16 extension for the next task and earlier sections for historical scope.
 
 ## Execution
 
@@ -124,8 +141,8 @@ account-wide usage delta with the unrelated-work caveat. Research discoveries
 are useful intermediate results but cannot satisfy the assigned task's native outcome.
 
 End the trial when its capability is accepted or its resource/access boundary
-prevents further work. M4-12 through M4-14 ended at acceptance; M4-15 above is the next
-assignment. Do not automatically claim M4-16 or the rest of M4.
+prevents further work. M4-12 through M4-15 ended at acceptance; M4-16 above is the next
+assignment. Do not automatically claim M4-17 or the rest of M4.
 Preserve partial commits and an honest recovery handoff if incomplete. No speed,
 completion date or full-game accuracy promise follows from this policy change.
 

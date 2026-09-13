@@ -1,6 +1,6 @@
 # Project defaults; explicit session/spawn settings may override these.
 # Policy: docs/decisions/D-0004-model-and-usage-budget.md
-# M4-15: explicitly select Astra/medium for the primary in the composer.
+# M4-16: explicitly select Astra/medium for the primary in the composer.
 # Keep Sol/medium children; AGENTS.md requires automatic independent review.
 # This file does not change an already-running session model.
 [models.new_thread]

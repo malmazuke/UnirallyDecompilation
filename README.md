@@ -9,8 +9,9 @@ a bounded ZOOM ZOO reference chain through position, sampling, contact,
 response-B and vertical-velocity recurrence; this is research evidence, not a
 second playable track. M4-12 has since accepted 200 experimental native updates
 for both riders with zero later captured runtime inputs. M4-13 adds player support loss, landing and recovery. M4-14 accepts 1,650 exact updates through frame 3299, but not escape from the
-repeated section. M4-15 is prepared to target race completion from the existing
-seed; its reference exploration and implementation have not started. See
+repeated section. M4-15 accepts a complete race from the existing seed, both finishes and
+post-finish simulation. M4-16 is prepared for native initialization and a playable
+ZOOM ZOO frontend through result/restart; implementation has not started. See
 [project state](docs/STATE.md) for the exact accepted boundary and
 [the compact handoff](tasks/NEXT_SESSION.md) for current work. No agent
 scheduler exists.
@@ -42,7 +43,7 @@ Progress belongs in source control and reproducible experiments, so work can mov
 Human-readable native source is an explicit goal from the first routine
 ([D-0003](docs/decisions/D-0003-human-readable-native-code.md)). Agents make
 routine project decisions autonomously. [D-0004](docs/decisions/D-0004-model-and-usage-budget.md)
-sets Sol as the routine OpenAI model and defines task-specific M4-12 through M4-15 Astra/medium trial
+sets Sol as the routine OpenAI model and defines task-specific M4-12 through M4-16 Astra/medium trial
 exceptions, automatic Sol review and usage reserve.
 [D-0006](docs/decisions/D-0006-capability-driven-work.md) defines capability-sized
 tasks and staged validation.

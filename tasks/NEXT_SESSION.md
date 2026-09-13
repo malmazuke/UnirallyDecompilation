@@ -1,25 +1,26 @@
-# M4-15 integration handoff
+# Next session — M4-16 playable ZOOM ZOO
 
-M4-15 now reproduces a complete native ZOOM ZOO race from authentic end-1649:
-5,075 updates, 565 exact state bytes for both riders, finishes at 6484/6488,
-and 240 player post-finish updates. No fallback was used. Native race-start
-initialization, frontend, rendering/audio and subsequent result-screen loading
-remain outside this capability. M4 itself is not accepted.
+M4-15 is accepted at `8bc2e71997bd9dd0a513326fce21ab92c076140d`:
+5,075 exact native updates from end-1649, both finishes and 240 player
+post-finish updates. Private refs and exact-tip CI `34785933369` passed.
+It does not initialize from race start or provide a ZOOM ZOO frontend/result load.
 
-Read [M4-15](M4-15.md), its [review](M4-15-review.md),
-[R-0034](../docs/research/R-0034-zoom-zoo-race-completion.md) and
-[STATE](../docs/STATE.md). Corrected code is `6faff68`; the task branch also includes
-review evidence and consolidated handoff. Independent review and local gates
-are complete; acceptance is conditional on exact merged checks, private main
-push/ref verification and exact-tip hosted macOS/Linux CI.
+[M4-16](M4-16.md) is ready/unclaimed for the next **Astra/medium** session.
+Read its full task, STATE, AGENTS, workflow and D-0004/D-0006. Record actual
+synchronized dispatch SHA and fresh quota, reproduce M4-15 and DRAGSTER baselines,
+then inventory initialization, presentation and result/restart dependencies.
+Keep those inside the same product assignment. No captured seed, headless-only
+fallback or scripted live demo satisfies the outcome.
 
-Actual integration SHA, commands/results, remote ref, CI URL and final
-clock/quota belong in ignored `artifacts/m4-15-integration/closeout.json`.
-If missing, recover with git history, `git ls-remote origin refs/heads/main`,
-`gh run list --commit <integration-sha>` and `gh run view <id> --json jobs`.
-Do not infer remote acceptance from this conditional tracked handoff.
+The target is clean launch, native initialization, interactive complete racing,
+correct result and restart, with pack-only relaunch. Preserve automatic fresh
+Sol/medium isolated review and the final 20% weekly reserve; no reset/purchase.
+No M4-17 dispatch or automatic M4 milestone acceptance.
 
-If those checks are pending, finish them without a new user dispatch. Once
-verified, stop: no automatic M4-16 dispatch and no M4 milestone tag. A future
-user-assigned product task must choose its own outcome; this task has not
-accepted a ZOOM ZOO frontend or initialization from race start.
+Suggested opening prompt:
+
+> Execute M4-16 using tasks/NEXT_SESSION.md and tasks/M4-16.md.
+
+Preparation only: no new reference capture or gameplay implementation started.
+[Preparation record](M4-16-preparation.md) contains review/verification and the
+ignored closeout location. Recover missing remote/CI evidence with git/GitHub.

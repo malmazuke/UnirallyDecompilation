@@ -120,6 +120,19 @@ rider/order, reseeding, captured substitution, phase/order, missing writer,
 cap signed predicates, jump short-circuits, gravity shift/arithmetic and writer
 width. Any changed capture event also changes the bound access identity.
 
+The preregistration replay intentionally ran while its expected sample and
+final-state digests were still zero. Its four expected-digest checks failed,
+while the two fresh processes agreed on samples, final state and A/V; those
+observations were then frozen in the authored replay. A preliminary variation
+capture made under the same placeholder identity likewise failed only its two
+expected-digest checks, while still writing a complete, nontruncated capture.
+It was not used as either of the two final variation captures. During additive
+tool development, three derive attempts also rejected rather than silently
+continuing: an initially misnamed residue field, the accepted M4-10 exact
+access-identity boundary, and an incorrect long-read/register association were
+fixed in the implementation. No expected result was weakened or regenerated
+to conceal these non-passes.
+
 ```sh
 python3 -m tools.unirally_lab.native.zoom_zoo_vertical_velocity capture --manifest tests/manifests/replay/race-crawler-zoom-zoo-3300.json --out artifacts/m4-11/primary-a
 python3 -m tools.unirally_lab.native.zoom_zoo_vertical_velocity derive --access artifacts/m4-11/primary-a/access.json --content artifacts/m4-11/content --report artifacts/m4-11/primary-derived.json

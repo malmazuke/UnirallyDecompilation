@@ -176,3 +176,16 @@ two-byte `BRA`, so `$81:8C2C: A9 03` begins `LDA #$03`; the final
 `STA $0231,Y` begins at `$81:8C3C` and ends at `$81:8C3E`, before the next
 instruction at `$81:8C3F`. The precise reflected point-x range is therefore
 `$81:8C2C--8C3E`.
+
+Correction implementation `cfa94e41873b21583cbe5afdf2f4c15d44ce1bdd`
+retains exact primary/variation component hashes `aff5212c...b4aed` and
+`6550e369...96c9`; focused tests pass 29/29. Clean debug and sanitizer each
+pass 342 Python checks, all 20 CTest checks and three-process determinism, with
+report hashes `2e9c02e0751beeb1530e1aa6e9aa8adbba89ad084a30fb660ae94020f4e166eb`
+and `60341f9d3ab5227f1022f1f1d50bceab9cea1a8bf4ac183bcf848d627c580eb5`.
+Both bind clean source and contain no failed, missing or skipped checks. The
+M4-03 contract, unchanged 25-entry Classic pack and DRAGSTER finish with four
+restores pass at `3e68de8cf0102c7cf909f59732b380b0168d869a6286bf99473465df4a5a9fba`,
+`a84a5c3e64975b8a583d1e267e61dba0694d78ddcbb6ea093e2348c016c872d6`
+and `fe2fbf258f601589def5a81167a16bc0c2e759cf1c38f3d125aa3ed0918331ca`.
+Status remains review pending fresh focused re-review.

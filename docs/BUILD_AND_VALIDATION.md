@@ -353,3 +353,13 @@ updates before native evaluation; `compare` binds every reference row to that
 freeze and restores before/after every full player landing. The primary freeze
 precedes implementation; its supplemental guard capture preserves every earlier
 state/WRAM digest. M4-12 manifests and commands remain unchanged.
+
+## M4-14 sustained traversal laboratory
+
+`tools.unirally_lab.native.zoom_zoo_sustained` adds `extract-content`, `capture`,
+`freeze` and `compare` for the 423-byte `URZZ0002` continuation. The frozen primary
+is continuous Right through 3299, with recovery at 2185 and 1,114 subsequent
+updates. See [R-0033](research/R-0033-sustained-traversal.md) for commands, source
+boundaries and pending acceptance. Variations must repeat/freeze reference before
+native evaluation; restore comparisons cover both riders' full landings. Horizon
+extensions are laboratory experiments, not general gameplay acceptance.

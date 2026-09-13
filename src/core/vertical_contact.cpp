@@ -30,26 +30,28 @@ std::uint16_t arithmetic_shift(std::uint16_t value, unsigned count) {
     }
     return result;
 }
-struct Probe { std::uint8_t penetration{0xa0}, angle{}; std::uint16_t descriptor{}; };
+struct Probe { std::uint8_t penetration{0xa0}, angle{}; std::uint16_t descriptor{}; std::uint8_t direction{}; };
 Probe preprocess(const FlatContactContent& content, SamplePoint point,
                  std::uint16_t descriptor, std::uint16_t x, std::uint16_t y) {
     if ((descriptor & 0x03ffU) == 0) {
         if((descriptor&0x1c00U)==0x1c00U)return {0x7f,0,descriptor};
         return {};
     }
-    require((descriptor & 0x8001U) == 0, "vertical contact reaches inverted/special geometry");
+    require((descriptor & 1U)==0,"vertical contact reaches special remapped descriptor");
     const auto index=tile(descriptor);
-    require((byte(content.flags,index)&1U)==0, "vertical contact reaches horizontal geometry");
+    const bool horizontal=(byte(content.flags,index)&1U)!=0;
     auto column=(static_cast<unsigned>(point.x)+(x&15U))&15U;
-    const auto local_y=(static_cast<unsigned>(point.y)+(y&15U))&15U;
+    auto local_y=(static_cast<unsigned>(point.y)+(y&15U))&15U;
+    if(!horizontal && (descriptor&0x8000U))local_y=(~local_y)&15U;
     const bool mirrored=(descriptor&0x4000U)!=0;
     if (mirrored) column=(~column)&15U;
+    if(horizontal)std::swap(column,local_y);
     const auto height=byte(content.columns,index*32U+column*2U);
     auto angle=byte(content.columns,index*32U+column*2U+1U);
     if (mirrored) angle=static_cast<std::uint8_t>(0U-angle);
     const auto penetration=height==0xa0U ? std::uint8_t{0xa0} :
         static_cast<std::uint8_t>(local_y-static_cast<std::uint8_t>(height-1U));
-    return {penetration,angle,descriptor};
+    return {penetration,angle,descriptor,static_cast<std::uint8_t>(horizontal?(mirrored?3:4):((descriptor&0x8000U)?1:0))};
 }
 } // namespace
 
@@ -66,7 +68,10 @@ VerticalContactSummary summarize_vertical_contact(const FlatContactContent& cont
     if(probes[0].penetration<0x80U) {
         result.leading_support=true;
         result.any_nonnegative_probe=true;
-        result.penetration=probes[0].penetration;
+        if(probes[0].direction<2) {
+            result.penetration=probes[0].penetration;
+            result.inverted_vertical=probes[0].direction==1;
+        } else {result.horizontal_penetration=probes[0].penetration;result.horizontal_direction=probes[0].direction;}
         angle=probes[0].angle;
         result.selected_word=probes[0].descriptor;
         result.selected_high=static_cast<std::uint8_t>(probes[0].descriptor>>8U);
@@ -85,9 +90,15 @@ VerticalContactSummary summarize_vertical_contact(const FlatContactContent& cont
             angle=probe.angle;
         }
         if(probe.penetration<0x80U)result.any_nonnegative_probe=true;
-        if (probe.penetration<0x80U && nonnegative_difference(probe.penetration,result.penetration)) {
+        if (probe.direction<2 && probe.penetration<0x80U && nonnegative_difference(probe.penetration,result.penetration)) {
             result.penetration=probe.penetration;
+            result.inverted_vertical=(probe.descriptor&0x8000U)!=0;
             result.angle=static_cast<std::int16_t>(probe.angle<128 ? static_cast<int>(probe.angle) : static_cast<int>(probe.angle)-256);
+        }
+    }
+    for(const auto& probe:probes) {
+        if(probe.direction>=2 && probe.penetration<128 && nonnegative_difference(probe.penetration,result.horizontal_penetration)) {
+            result.horizontal_penetration=probe.penetration;result.horizontal_direction=probe.direction;
         }
     }
     result.supported=support<0x80U;
@@ -101,10 +112,10 @@ void resolve_vertical_contact(RiderContactState& rider,ContactMotion& motion,
                               const VerticalContactSummary& summary,const ContactContext& context,
                               std::span<const std::uint8_t> shifts,
                               std::span<const std::uint8_t> multipliers,
-                              std::span<const std::uint8_t> landing_matrices,unsigned horizontal) {
-    require(context.phase<=1 && context.mode==0,"unsupported vertical contact phase/mode");
+                              std::span<const std::uint8_t> landing_matrices,unsigned horizontal, unsigned pose_index,bool reflected) {
+    require(context.phase<=1 && context.mode<=1,"unsupported vertical contact phase/mode");
     require(rider.unsupported_count<=9 && summary.penetration<128,"unsupported vertical contact state");
-    require((summary.selected_high&0x80U)==0,"unsupported vertical response direction");
+
     auto next=rider; auto moved=motion;
     next.previous_unsupported_count=rider.unsupported_count;
     next.selected_word=summary.selected_word;
@@ -125,14 +136,22 @@ void resolve_vertical_contact(RiderContactState& rider,ContactMotion& motion,
         next.auxiliary_flag=0;
     } else {
         const auto magnitude=static_cast<unsigned>(std::abs(static_cast<int>(summary.angle)));
-        require(magnitude<=8,"vertical response angle outside recovered coefficients");
-        require(summary.tile_flags==0 || summary.tile_flags==2 || summary.tile_flags==18 || summary.tile_flags==20,
+        require(magnitude<shifts.size(),"vertical response angle outside recovered coefficients");
+        require(summary.tile_flags==0 || summary.tile_flags==2 || summary.tile_flags==6 || summary.tile_flags==7 || summary.tile_flags==18 || summary.tile_flags==20,
                 "vertical contact reaches a special response tile");
+        // $81:924E–9275 removes motion into the inverted contact face.
+        if(signed_word(moved.velocity_y)<0 && (summary.selected_high&0x80U) &&
+           ((summary.selected_high&0x40U)?signed_word(moved.velocity_x)<0:signed_word(moved.velocity_x)>=0))moved.velocity_x=0;
         next.surface_angle=static_cast<std::uint16_t>(summary.angle);
         next.angle_unspecified=magnitude==31;
         next.unsupported_count=0; next.unsupported_duration=0;
-        if (rider.unsupported_count>=9) {
-            require(!summary.leading_support, "unrecovered leading-probe landing response");
+        if(magnitude>=31) {
+            moved.velocity_x=arithmetic_shift(moved.velocity_x,2);
+            next.unsupported_count=std::min<std::uint16_t>(9,static_cast<std::uint16_t>(rider.unsupported_count+1U));
+            next.unsupported_duration=static_cast<std::uint16_t>(rider.unsupported_duration+1U);
+        } else if (rider.unsupported_count>=9 || (summary.leading_support && rider.unsupported_count>=2)) {
+
+            if(magnitude<28) {
             // R-0025: signed displacement quadrant and coarse-angle sentinel.
             const auto dx=std::abs(signed_word(static_cast<std::uint16_t>(motion.x-rider.previous_uncorrected_x)));
             const auto half_dy=std::abs(signed_word(static_cast<std::uint16_t>(motion.y-rider.previous_uncorrected_y)))/2;
@@ -146,13 +165,10 @@ void resolve_vertical_contact(RiderContactState& rider,ContactMotion& motion,
             // M4-13 authenticates $132B == 0 throughout the domain; player
             // selection alone does not replace the matrix ($81:94A8-94C3).
             next.recontact=true;
-            // The scoped landings have no incoming orientation response;
-            // motion either survives the sentinel or uses a static matrix.
-            require(motion.response_a==0 && motion.response_b==0 && motion.orientation_impulse==0,
-                    "unrecovered nonzero landing orientation response");
-            // $81:935B-9477: compare directions on the original 62-unit
-            // circle. The temporary response is cleared for short airtime,
-            // but its signed displacement-derived impulse survives.
+            // $81:931C–9358 uses the reflected low six pose bits, not the
+            // surface target. All comparisons below are signed original words.
+            int pose_direction=static_cast<int>(pose_index&63U);
+            if(reflected && pose_direction)pose_direction=64-pose_direction;
             const int surface_direction=summary.angle<0 ? 62+summary.angle : summary.angle;
             const bool negative_dx=signed_word(static_cast<std::uint16_t>(motion.x-rider.previous_uncorrected_x))<0;
             const bool negative_dy=signed_word(static_cast<std::uint16_t>(motion.y-rider.previous_uncorrected_y))<0;
@@ -162,19 +178,41 @@ void resolve_vertical_contact(RiderContactState& rider,ContactMotion& motion,
                 std::min(orientation_angle,static_cast<int>(summary.angle));
             const int coarse_direction=orientation_angle<0 ? 62+orientation_angle : orientation_angle;
             const int direction_difference=(coarse_direction-surface_direction+62)%62;
+            bool force_long_airtime_matrix=false;
             if(direction_difference!=0 && direction_difference!=31) {
-                require(motion.previous_x_displacement>=3 && motion.previous_x_displacement<0x8000,
-                        "unrecovered low-displacement landing orientation");
-                require(rider.unsupported_duration<120, "unrecovered long-airtime landing response");
-                const auto impulse=static_cast<std::uint16_t>((motion.previous_x_displacement>>2U)+1U);
-                moved.orientation_impulse=direction_difference>31 ? static_cast<std::uint16_t>(0U-impulse) : impulse;
+                const int displacement=signed_word(motion.previous_x_displacement);
+                int response;
+                if(direction_difference>31) {
+                    response=(displacement<3 && pose_direction<32)?-1:
+                        (displacement<1?1:std::max(-2,-1-static_cast<int>(motion.previous_x_displacement>>4U)));
+                } else {
+                    response=(displacement<3 && pose_direction>32)?1:
+                        (displacement<1?1:std::min(2,static_cast<int>(motion.previous_x_displacement>>4U)+1));
+                }
+                if(summary.selected_high&0x80U)response=0;
+                moved.response_a=static_cast<std::uint16_t>(response);
+                if(!summary.leading_support) {
+                    if(response) {
+                        const auto impulse=static_cast<std::uint16_t>((motion.previous_x_displacement>>2U)+1U);
+                        moved.orientation_impulse=response<0?static_cast<std::uint16_t>(0U-impulse):impulse;
+                    }
+                    if(context.mode==0 && summary.angle<30 && summary.angle>=-30 && rider.unsupported_duration>=120 && pose_direction>=32) {
+                        moved.response_a=static_cast<std::uint16_t>(response<0?1:-1);
+                        force_long_airtime_matrix=true;
+                    } else moved.response_a=0;
+                }
+            } else {
+                auto decay=[](std::uint16_t value) {return static_cast<std::uint16_t>(value+(signed_word(value)<0?1:(value?-1:0)));};
+                moved.response_a=decay(moved.response_a);moved.response_b=decay(moved.response_b);
             }
             const auto angle_difference=std::abs(coarse-static_cast<int>(summary.angle));
-            if(angle_difference>5) {
+            if(angle_difference>5 || summary.leading_support || force_long_airtime_matrix) {
                 require(landing_matrices.size()==1512,"landing coefficient matrices are missing");
-                unsigned matrix=angle_difference<=10?1U:2U;
-                int angle=summary.angle;
-                const auto velocity=signed_word(motion.velocity_x);
+                unsigned bucket=angle_difference?static_cast<unsigned>(std::min(3,(angle_difference-1)/5)):0U;
+                if(summary.leading_support)bucket=bucket>1?bucket-1:1;
+                unsigned matrix=(bucket<=1 && !force_long_airtime_matrix)?1U:2U;
+                int angle=(summary.selected_high&0x80U)?-summary.angle:summary.angle;
+                const auto velocity=signed_word(moved.velocity_x);
                 if((velocity>0 && horizontal==0) || (velocity<0 && horizontal==2)) {
                     angle=std::clamp(angle+(velocity>0?-5:5),-31,31);matrix=2;
                 }
@@ -192,20 +230,39 @@ void resolve_vertical_contact(RiderContactState& rider,ContactMotion& motion,
                     const int upper=product>=0?product/256:-((-product+255)/256);
                     return static_cast<std::uint16_t>(upper*2);
                 };
-                moved.velocity_y=static_cast<std::uint16_t>(multiply(motion.velocity_y,0)+multiply(motion.velocity_x,1));
-                moved.velocity_x=static_cast<std::uint16_t>(multiply(motion.velocity_y,2)+multiply(motion.velocity_x,3));
+                const auto vx=moved.velocity_x,vy=moved.velocity_y;
+                moved.velocity_y=static_cast<std::uint16_t>(multiply(vy,0)+multiply(vx,1));
+                moved.velocity_x=static_cast<std::uint16_t>(multiply(vy,2)+multiply(vx,3));
             }
+            } else next.recontact=true;
         } else {
-            if (context.phase==0) {moved.response_a=0; moved.response_b=0;}
+            if (!summary.leading_support && context.phase==0) {moved.response_a=0; moved.response_b=0;}
             const auto shifted=arithmetic_shift(motion.velocity_x,byte(shifts,magnitude));
             const auto product=static_cast<std::uint16_t>(static_cast<unsigned>(shifted)*byte(multipliers,magnitude));
-            moved.velocity_y=summary.angle<0 ? static_cast<std::uint16_t>(1U-product) : product;
+            if(!summary.leading_support && magnitude<26) {
+                moved.velocity_y=summary.angle<0 ? static_cast<std::uint16_t>(1U-product) : product;
+                if(summary.selected_high&0x80U)moved.velocity_y=static_cast<std::uint16_t>(0U-moved.velocity_y);
+            }
             const int contribution=summary.angle<0 ? -static_cast<int>(magnitude/2U) : static_cast<int>(magnitude/2U);
-            moved.velocity_x=static_cast<std::uint16_t>(static_cast<int>(motion.velocity_x)+contribution);
+            if(!summary.leading_support && magnitude<28 && !(summary.selected_high&0x80U))moved.velocity_x=static_cast<std::uint16_t>(static_cast<int>(motion.velocity_x)+contribution);
+        }
+        if(magnitude==28 && !summary.leading_support) {
+            const auto shifted=arithmetic_shift(moved.velocity_y,byte(shifts,magnitude));
+            auto velocity=static_cast<std::uint16_t>(static_cast<unsigned>(shifted)*byte(multipliers,magnitude));
+            if(summary.angle<0)velocity=static_cast<std::uint16_t>(1U-velocity);
+            const auto reduced=static_cast<std::uint16_t>(velocity+(signed_word(velocity)<0?10:-10));
+            if(signed_word(reduced)>=0)velocity=reduced;
+            moved.velocity_x=(summary.selected_high&0x80U)?static_cast<std::uint16_t>(0U-velocity):velocity;
         }
     }
-    next.previous_uncorrected_x=motion.x; next.previous_uncorrected_y=motion.y;
-    moved.y=static_cast<std::uint16_t>(motion.y-summary.penetration);
+    next.previous_uncorrected_x=motion.x;
+    auto horizontal_penetration=summary.horizontal_penetration;
+    if(summary.penetration>=horizontal_penetration || (summary.tile_flags&0xfeU)==8) {
+        if((summary.tile_flags&0xfeU)!=8)horizontal_penetration=0;
+        next.previous_uncorrected_y=motion.y;
+        moved.y=static_cast<std::uint16_t>(motion.y+(summary.inverted_vertical?summary.penetration:-static_cast<int>(summary.penetration)));
+    }
+    if(summary.horizontal_direction>=3)moved.x=static_cast<std::uint16_t>(motion.x+(summary.horizontal_direction==3?horizontal_penetration:-static_cast<int>(horizontal_penetration)));
     rider=next; motion=moved;
 }
 } // namespace unirally

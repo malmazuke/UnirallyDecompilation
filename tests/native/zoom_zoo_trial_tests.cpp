@@ -90,4 +90,33 @@ int main() {
     require(landing(0,18,0)==0); // zero dx clamps vertical endpoint to 31
     require(landing(0,0,0)==5); // equal zero displacements use horizontal path
 
+    // M4-14: full continuation fields must survive an independent restore.
+    ZoomZooState extended{};extended.sustained=true;extended.movement.frame=2500;
+    extended.surface[0].mode=1;extended.surface[0].angle=0xffe4;
+    extended.surface[1].leading_support=1;extended.surface[1].animation_delta=0xfffe;
+    const auto extended_bytes=serialize_zoom_zoo(extended);
+    require(extended_bytes.size()==423 && deserialize_zoom_zoo(extended_bytes).surface[1].animation_delta==0xfffe);
+    auto corrupt=extended_bytes;corrupt[0]='X';rejects([&]{(void)deserialize_zoom_zoo(corrupt);});
+
+    // Inverted vertical probes complement local Y and correct it upward in
+    // source coordinates. Horizontal probes swap axes and retain direction.
+    samples={};points={};samples[0]=0x8002;points[0].y=10;
+    auto inverted=summarize_vertical_contact({columns,flags},points,samples,0,0);
+    require(inverted.penetration==2 && inverted.inverted_vertical && inverted.leading_support);
+    flags[1]=1;points[0].x=5;points[0].y=0;samples[0]=2;
+    auto side=summarize_vertical_contact({columns,flags},points,samples,0,0);
+    require(side.horizontal_penetration==2 && side.horizontal_direction==4 && side.penetration==0);
+
+    // The 31-unit endpoint preserves airborne timing and uses arithmetic /4,
+    // while a steep 28-unit contact can derive horizontal motion from vertical.
+    std::array<std::uint8_t,32> full_shifts{},full_multipliers{};
+    full_shifts[28]=1;full_multipliers[28]=1;
+    rider={};rider.unsupported_count=1;motion={};motion.velocity_x=0xfff9;
+    summary={};summary.supported=true;summary.any_nonnegative_probe=true;summary.angle=31;
+    resolve_vertical_contact(rider,motion,summary,{0,false,0,0},full_shifts,full_multipliers);
+    require(motion.velocity_x==0xfffe && rider.unsupported_count==2 && rider.unsupported_duration==1);
+    rider={};motion={};motion.velocity_y=40;summary.angle=28;
+    resolve_vertical_contact(rider,motion,summary,{0,false,0,0},full_shifts,full_multipliers);
+    require(motion.velocity_x==10 && motion.velocity_y==40);
+
 }

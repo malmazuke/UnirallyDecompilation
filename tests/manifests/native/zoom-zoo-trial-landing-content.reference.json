@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "kind": "m4_12_static_content_supplement",
+  "rom_sha256": "a1105819d48c04d680c8292bbfa9abbce05224f1bc231afd66af43b7e0a1fd4e",
+  "item": {
+    "name": "landing-response-matrices.bin",
+    "bytes": 1512,
+    "sha256": "229eda89d8f29fd9daf2b2f9247e98e244a7683511d82bfa6abdc6d3ef69782b"
+  },
+  "source": {
+    "initialization_routine": "81:9A4D-81:9E12",
+    "wram_start": 1394,
+    "tables": [
+      1394,
+      1898,
+      2402
+    ],
+    "bytes_per_table": 504,
+    "ready_after_frame": 1297,
+    "first_race_update": 1377,
+    "invariant_checked_frames": [
+      1297,
+      1849
+    ]
+  },
+  "reason": "Angle-indexed immutable coefficient matrices generated before gameplay; required by frame-1823 landing. They are not sampled motion values or a frame-indexed replay. Native runtime receives only these static bytes; original execution is confined to reproducible extraction and reference capture."
+}

@@ -266,3 +266,43 @@ Consulted 10 September 2026; these establish available building blocks, not feas
 - [CMake presets](https://cmake.org/cmake/help/latest/manual/cmake-presets.7.html): shared configure/build/test configuration and separate local presets.
 - [SDL3 documentation](https://wiki.libsdl.org/SDL3/FrontPage): candidate frontend foundation.
 - [GGPO](https://github.com/pond3r/ggpo): rollback implementation to study during the networking spike. No SDK choice or integration is committed by this plan.
+
+## M4-12 experimental native ZOOM ZOO laboratory
+
+This task-scoped module is separate from the accepted DRAGSTER CLI and frontend.
+It admits Right/neutral controller-0 continuation from the authentic end-1649
+seed through 1849; other controls, modes and horizons fail closed. Acceptance
+still requires the independent cases and integration evidence in R-0030.
+The original 394-byte frozen projection remains an unchanged prefix of the
+395-byte canonical state; the suffix retains original opponent OAM X.
+
+Build with `python3 tools/project.py build --preset app-debug`. Set `CORE` to
+the pinned library path in the authenticated reference `samples.json` (a local
+path, not a new emulator identity). Use a 180-second subprocess timeout for each
+capture/extraction; native children enforce 30 seconds internally.
+
+```sh
+python3 -m tools.unirally_lab.native.zoom_zoo_trial_extract --core "$CORE" --out artifacts/m4-12/extracted-content
+python3 -m tools.unirally_lab.native.zoom_zoo_trial capture --core "$CORE" --out artifacts/m4-12/trial-primary-a.json
+python3 -m tools.unirally_lab.native.zoom_zoo_trial capture --core "$CORE" --out artifacts/m4-12/trial-primary-b.json
+python3 -m tools.unirally_lab.native.zoom_zoo_trial compare --reference artifacts/m4-12/trial-primary-a.json --repeat artifacts/m4-12/trial-primary-b.json --binary build/app-debug/src/core/zoom_zoo_runner --content-dir artifacts/m4-12/extracted-content --out artifacts/m4-12/trial-primary-report.json
+```
+
+Outputs must be fresh. For independently preregistered cases, add `--case FILE`
+to each capture and use separate outputs. Case JSON contains `id` and `changes`;
+each change is `{ "from": 1700, "to": 1702, "buttons": [] }`, replacing controller
+0 during those inclusive frames and returning to primary Right afterward. The
+example is protocol documentation, not a withheld acceptance case. Overlapping
+changes and seed/horizon edits are rejected. Comparison includes fresh native
+restores at 1700, 1804 and 1823 and fails on any byte/frame mismatch. The native
+child's temporary directory contains only canonical seed, controller rows and
+authenticated static content; reference state never enters it.
+
+`zoom_zoo_trial_reference.expanded_access_command(out)` reproduces the primary
+full access/watch recipe, extending accepted M4-11 capture to 1849 and adding
+persistent-state watches. It returns the existing `access capture` command
+with a 600-second worker bound. The two original captures' identities are frozen
+in `zoom-zoo-trial-primary.reference.json`. The generalization references use
+fresh original processes with whole-WRAM hashes, all declared native fields and
+excluded-mode guards on every frame. Private captures and extracted bytes must
+remain ignored.

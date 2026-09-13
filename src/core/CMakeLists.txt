@@ -6,7 +6,7 @@ add_library(unirally_input_timer STATIC input_timer.cpp)
 target_include_directories(unirally_input_timer PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(unirally_input_timer PUBLIC lab_options)
 
-add_library(unirally_contact STATIC flat_contact.cpp)
+add_library(unirally_contact STATIC flat_contact.cpp vertical_contact.cpp)
 target_include_directories(unirally_contact PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(unirally_contact PUBLIC unirally_sampling lab_options)
 
@@ -24,3 +24,6 @@ target_include_directories(unirally_presentation PUBLIC ${CMAKE_CURRENT_SOURCE_D
 target_link_libraries(unirally_presentation PUBLIC unirally_movement lab_options)
 add_executable(presentation_runner presentation_runner.cpp)
 target_link_libraries(presentation_runner PRIVATE unirally_presentation)
+
+add_executable(zoom_zoo_runner zoom_zoo_runner.cpp)
+target_link_libraries(zoom_zoo_runner PRIVATE unirally_movement)

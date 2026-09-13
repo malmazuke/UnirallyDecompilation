@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "kind": "zoom_zoo_position_reference",
+  "scenario_id": "race-crawler-zoom-zoo-right-release-1662",
+  "access_sha256": "95cfe9601e44fdea27e327cc2b431383b9ecfe28aeadb039d84b8cf2a005d426",
+  "wram_series_sha256": "a747635dd38af85363c9029915b4319993d437f7af22bbf720674a8dd15dca20",
+  "routine": {"bus": "82:A627-82:A6F7", "bytes": 209, "sha256": "1b6497ea4306faa243c685f0f23b9ac7d22232db57ce3299f4627bbc22291adc"},
+  "frames": {"seed": 1649, "first": 1650, "last": 1700},
+  "calls": 102,
+  "seed": {
+    "values": {"player_x": 9200, "opponent_x": 8248, "player_y": 1561, "opponent_y": 1452, "player_x_residue": -1, "opponent_x_residue": -24, "player_y_residue": 22, "opponent_y_residue": -1},
+    "row_sha256": "064dea0e95ffdf1b11fc20d94fe7084a48ede5027ae6e270fd916d617d2be9f4",
+    "track_mask": 16383
+  },
+  "rows_sha256": "5ace936f8d5126dfa703b97af0a13f267976b21ee291c7a8866d64d8594f3028",
+  "slope_tail_counts": {"surface_zero": 67, "ordinary_positive": 18, "negative_velocity": 13, "unsupported_count_at_least_two": 4},
+  "description": "Stateful four-residue position recurrence with captured position, velocity and contact inputs",
+  "limits": "Frames 1650-1700 only; no autonomous movement, wrap-crossing claim or native ZOOM ZOO support"
+}

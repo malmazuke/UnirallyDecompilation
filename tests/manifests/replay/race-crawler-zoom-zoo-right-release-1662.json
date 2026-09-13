@@ -24,8 +24,8 @@
   "fields": [
     {"name": "wram_sha256", "kind": "wram_sha256", "description": "SHA-256 of the 131072-byte work RAM ($7E0000-$7FFFFF) at the end of the frame"},
     {"name": "registers", "kind": "registers", "description": "CPU register block at the end of the frame: pc, a, x, y, s, d, b, p, e, mdr, vcounter, hcounter, field, wai, stp"},
-    {"name": "wram_0000_0200", "kind": "wram_range", "start": 0, "length": 512, "description": "Raw diagnostic range $7E0000-$7E01FF (direct page and the top of the stack area). No gameplay interpretation."}
+    {"name": "wram_0000_0200", "kind": "wram_range", "start": 0, "length": 512, "description": "Raw diagnostic range $7E0000-$7E01FF (direct page and the top of the stack area). No gameplay interpretation; M1 defines fields."}
   ],
   "regeneration_command": "python3 tools/project.py replay compare --manifest tests/manifests/replay/race-crawler-zoom-zoo-right-release-1662.json --runs 2",
-  "expected": {"sample_digest": "0000000000000000000000000000000000000000000000000000000000000000", "final_state_sha256": "0000000000000000000000000000000000000000000000000000000000000000"}
+  "expected": {"sample_digest": "b56fe4c2c8dc87ed554b1467852a314fd762dbb83da3242c74109de8a8770661", "final_state_sha256": "1b603f9b09199904c9ec358bf73d400eca70e0cf34e6e4c5206cfd0c63e3965d"}
 }

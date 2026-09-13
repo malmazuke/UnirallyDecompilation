@@ -75,7 +75,8 @@ def freeze(a,b,out):
                   finish_pose_words=FINISH_POSE_WORDS,checkpoint_seen_range=[0x114d,20],camera_words=CAMERA_WORDS,cartridge_lap_slots=[0x755,0x7bf],cartridge_totals=[0x769,0x7d3],
                   rows_sha256=digest(left),state_sha256=[sha(bytes.fromhex(r)) for r in left],finish_frames=finish,
                   outcome='player_won' if finish[0]<finish[1] else 'player_lost',
-                  horizon_rationale='Complete three-lap race and entire 240-update post-player-finish display; 236 updates after opponent finish. Result-screen loading/rendering follows this simulation domain.',
+                  horizon_rationale=(f"Complete three-lap race; {reference['frames'][1]-finish[0]} updates after player finish and "
+                                    f"{reference['frames'][1]-finish[1]} after opponent finish. Result-screen loading/rendering follows this simulation domain."),
                   escape_criterion='Advance from authentic seed into distinct downstream sections, cross all ordered lap checkpoints and set both finish flags. Initial Left follows the initial marker direction; this leaves the old repeated Right section without a later seed.')
     out.write_text(json.dumps(result,indent=2)+'\n');return result
 

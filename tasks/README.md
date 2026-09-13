@@ -39,7 +39,7 @@ The coordinator maintains the status registry below. Work orders further below d
 | M4-11 | accepted 13 September 2026 after returned independent review, approved focused re-review and green macOS/Linux CI | [ZOOM ZOO vertical-velocity recurrence](M4-11.md) |
 | M4-12 | accepted; native 200-update trial, independent review | [Autonomous native ZOOM ZOO trial](M4-12.md) under D-0006 |
 | M4-13 | accepted (`b288396`; private sync and hosted CI passed) | [Player landing and recovery trial](M4-13.md) |
-| M4-14 | ready/unclaimed for next Astra/medium session | [Sustained ZOOM ZOO traversal](M4-14.md) |
+| M4-14 | reviewed/local gates passed; acceptance conditional on merged checks, private sync and final-tip CI in closeout | [Sustained ZOOM ZOO traversal](M4-14.md) |
 | M4-15 – M6 | unclaimed; outside this assignment | Do not automatically dispatch |
 
 ## M0 — repeatable laboratory

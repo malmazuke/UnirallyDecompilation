@@ -117,14 +117,28 @@ Right resumes afterward. `--horizon H` can extend the same reference scenario to
 Comparison checks every byte twice, then restores around every full landing of
 both riders, initial/late surface transitions and a later traversal boundary.
 
-## Initial candidate status
+## Validation and acceptance status
 
-Primary all 423 bytes through 3299 and fresh-process restores pass. Focused
-21 CTests and six tooling tests pass after correcting an authored-test variable
-name compilation error. M4-12 and M4-13 primary comparisons/restores pass.
-A prior ceiling experiment also failed compilation on signedness; neither failed
-build was counted as a pass. Independent review, complete source/constant audit,
-autonomy negatives and final broad/integration gates remain required.
+Primary all 423 bytes through 3299 and fresh-process restores pass. Fresh
+Sol/medium review approved corrected candidate `e730aaa` in `ec543c52`, with
+one fresh replacement after the disclosed 2076 failure and the retained passing
+late variation. Both are material, frozen before evaluation and reach 3299.
+The fresh replacement passes 96 restores; review explicitly accepts the frozen
+local recovery criterion without implying monotonic/full-track progress.
+
+App-debug and app-sanitize each pass 403 checks with no skips. Each also passes
+all four M4-12 cases, all five M4-13 cases and sustained primary/retained cases
+with restores. Frozen content/replay, DRAGSTER finish/opponent-first and both
+presentation gates pass. Fresh extraction reproduces all static identities;
+corrected native runs with repository and ROM access denied, with independent
+negative controls and a missing-static-file failure. Exact local commands are
+in `artifacts/m4-14/final-gates` and `regression-matrix`.
+
+Early authored-test/signedness builds and the first malformed exploratory audit
+manifest failed and were corrected; these failures were not counted as passes.
+Acceptance remains conditional on the merged checks and exact private remote/CI
+results in `artifacts/m4-14-integration/closeout.json`, per the consolidated task
+handoff. This avoids a second documentation-only CI push.
 
 M4 remains incomplete. Frontend, presentation, audio, other scenarios and full
 race support are not claimed. Hosted Linux synthetic checks and private Linux

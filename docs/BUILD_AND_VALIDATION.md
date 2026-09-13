@@ -36,8 +36,8 @@ Retain proof of clean installation at milestone/schema/content-interface changes
 a fresh clean build is not required for every unchanged research checkpoint.
 
 M4-12 now supplies the bounded native trial runner documented below. Earlier
-research modules remain evidence tools. M4-13 adds bounded B-jump cases; M4-14 must add and document its required
-horizon/state/restore extensions. Existing M4-12/M4-13 commands do not accept
+research modules remain evidence tools. M4-13 adds bounded B-jump cases; M4-14
+adds the sustained horizon/state/restore laboratory below. Existing M4-12/M4-13 commands do not accept
 arbitrary new horizons or scenarios. Freeze exact fields, horizon, source/seed, static inputs and
 validation commands before using them as acceptance gates.
 
@@ -360,6 +360,6 @@ state/WRAM digest. M4-12 manifests and commands remain unchanged.
 `freeze` and `compare` for the 423-byte `URZZ0002` continuation. The frozen primary
 is continuous Right through 3299, with recovery at 2185 and 1,114 subsequent
 updates. See [R-0033](research/R-0033-sustained-traversal.md) for commands, source
-boundaries and pending acceptance. Variations must repeat/freeze reference before
+boundaries and the conditional integration record. Variations must repeat/freeze reference before
 native evaluation; restore comparisons cover both riders' full landings. Horizon
 extensions are laboratory experiments, not general gameplay acceptance.

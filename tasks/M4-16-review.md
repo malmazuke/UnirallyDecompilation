@@ -150,3 +150,102 @@ two malformed-state classes and the result harness claim before broad suites.
 Re-review the updated result inventory, restart differential and DRAGSTER-style
 rider fallback on an exact frozen candidate. Do not evaluate the preregistered
 controller cases until that candidate is frozen.
+
+## Targeted re-review — candidate 6c1d5ef
+
+Targeted re-review used frozen candidate
+`6c1d5effe3ee3f9a392e29eb1ce40800dbdd889e` in the same detached isolated
+checkout. Shared weekly usage was reported as 67% used; the 20% final reserve
+remains intact. This was a focused correction review while the primary's full
+immutable start/result/restart run continued. No broad suites, preregistered
+case evaluation, child dispatch, reset, purchase, push or integration occurred.
+
+### Correction assessment
+
+- The original impossible fade/countdown mutation now rejects with
+  `inconsistent ZOOM ZOO countdown/fade phase`. The decoder derives the reached
+  fade and countdown from the serialized frame, and it constrains unconsumed
+  start boosts in the early countdown.
+- The completed-lap slot, total-time and new result-publication mutations all
+  reject. In an authentic primary result, original and native publication bytes
+  agree exactly: update105/frame6829 is all zero; update106/frame6830 publishes
+  graph minimum/maximum `0c10/0cd8`; update107/frame6831 additionally publishes
+  totals `264a/2652`; all eight bytes remain unchanged through frame7600.
+- `--restart-from` on the authentic frame7600 state deserializes in a fresh
+  process, calls the shared `restart_zoom_zoo` operation, emits an exact copy of
+  the original native frame1376 state, and accepted a neutral 1377-1379
+  continuation. The comparator now requires the entire second race to equal a
+  clean native start. Early restart is rejected before mutation in the authored
+  core test.
+- Live ZOOM ZOO now uses the same recovered-pair/last-recovered-pair policy as
+  DRAGSTER and resets its cached presentation pair at restart. The renderer also
+  applies the original prior-update fade rule. This resolves the fixed reflected
+  poses in the reviewed candidate at the design level; final visible evidence
+  and fallback metrics remain required.
+
+### Remaining finding
+
+5. **Required correction — result/finish phase can still be transplanted onto
+   the initialization clock.** The new checks relate fade/countdown to frame and
+   result publications to `result_updates`, but only require nonzero result
+   updates to have `finish_delay == 240` (`src/core/movement.cpp:1295-1323`).
+   They do not require a finished/result phase to have completed the countdown
+   and fade.
+
+   Starting with the authentic V6 frame7600 state, the review retained its
+   finished riders, lap archive and `finish_delay=240`, then changed frame to
+   1376, countdown to270, fade to0, start boosts to384/384, result updates to1,
+   and the not-yet-published result words to zero. Every individually checked
+   relation passes. Exact candidate `zoom_zoo_runner --seed` exits zero, emits
+   the impossible result at frame1376, and advances it on the next update. This
+   can never be produced by the native initializer and bypasses racing from the
+   initial frame. Require `finish_delay == 240` or `result_updates > 0` to imply
+   countdown zero and completed fade (plus any stronger reached phase relation
+   supported by the frozen domain). Add the mutation to the URZZ0006 test.
+
+### Result abstraction and restart boundary
+
+URZZ0006 materially improves the result claim. Before result loading, 571 bytes
+remain the exact original race projection. After loading, those bytes are
+explicitly an archived final race whose lap/totals are checked against surviving
+SRAM; eight appended bytes are actual original graph and displayed-total
+publications; the two-byte load counter is explicitly semantic. The report's
+`comparison_domains` now makes this distinction rather than presenting the
+whole post-load row as original state.
+
+For the chosen product flow this abstraction is defensible once the remaining
+phase mutation and producer inventory are closed. The native result renderer
+consumes archived lap slots plus the eight authenticated publications, and the
+only supported next action discards the archive through a complete fresh-scenario
+restart. Original tour selection and its transition to STUNT remain expressly
+excluded. This supports a bounded product-state equivalence claim, not byte-exact
+equivalence to overwritten original result WRAM. Continuing original result
+animation and visual contracts still need their separately declared presentation
+evidence.
+
+### Focused re-review commands
+
+- `git switch --detach 6c1d5ef` and `git rev-parse HEAD`: exact candidate
+  `6c1d5effe3ee3f9a392e29eb1ce40800dbdd889e`.
+- `tools/project.py build --preset app-debug --report
+  artifacts/m4-16-review/rereview-build.json`: passed. Reviewed runner SHA-256
+  was `dc45bd7d...`; presentation runner was `aa24ee75...`.
+- `ctest --test-dir build/app-debug -R
+  'zoom_zoo_trial|frontend_contract' --output-on-failure`: the selected
+  `zoom_zoo_trial_width_state_and_guards` test passed; no test name matched the
+  second expression.
+- Temporary mutations of authentic V6 primary state exercised lap slot467,
+  total507, graph573/575 and published total577. All rejected; the error was
+  either inconsistent completed slots or inconsistent result publication.
+- `zoom_zoo_runner --restart-from` on the authentic frame7600 V6 state emitted
+  exact fresh state and frames1377-1379. The cross-phase mutation in finding 5
+  was accepted by `--seed` and rejected by `--restart-from` only because its
+  result count was below the restart gate.
+
+### Targeted disposition
+
+Do not approve `6c1d5ef` yet. Findings 1, 2 and 4 are corrected, finding 3 now
+has a defensible explicitly bounded abstraction, and the native restart boundary
+is substantially stronger. Correct finding 5, finish the source-backed result
+inventory, and re-run the affected focused gate before final-candidate review.
+The two preregistered controller variations remain untuned and unevaluated.

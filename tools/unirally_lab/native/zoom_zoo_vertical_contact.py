@@ -17,6 +17,7 @@ import sys
 from ..content import rnc
 from ..content.zoom_zoo_contract import _bus, _rom_slice
 from ..content.zoom_zoo_contract import validate as validate_content_contract
+from ..reference.commands import compare_runs
 from .contact_research.preprocess import expand_points
 from .contact_research.summarize import events_for_frame
 from .zoom_zoo_contact import (
@@ -552,13 +553,29 @@ def verify(access_path: Path, content_dir: Path, manifest_path: Path, report_pat
 def compare_inputs(primary_samples: Path, variation_samples: Path, report_path: Path) -> int:
     primary = json.loads(primary_samples.read_text())
     variation = json.loads(variation_samples.read_text())
-    if primary["sample_digest"] != "791a786370913136e21ed34c841e9a3d892852bf6804e2e0aef21e1df6557b68":
-        raise ValueError("accepted primary sample identity differs")
-    if variation["sample_digest"] != "b17677ef0a910d82fb2cd9b8270328f1cc261a6267e6f373cd0af20dfeee5bbb":
-        raise ValueError("Right-1653 sample identity differs")
-    primary_fields = {row["frame"]: row for row in primary["frames"]}
-    variation_fields = {row["frame"]: row for row in variation["frames"]}
-    first = next(frame for frame in sorted(primary_fields) if primary_fields[frame] != variation_fields[frame])
+    if not isinstance(primary, dict) or not isinstance(variation, dict):
+        raise ValueError("comparison inputs must be complete sample documents")
+    expected = (
+        (primary, "791a786370913136e21ed34c841e9a3d892852bf6804e2e0aef21e1df6557b68",
+         "2a843314d19e60d13dab746541d43ffa9ad84adfe6f95b9cc6d3c45bd9a16aeb",
+         "3f51305c6bb71556ac672a03590998d62dba4cc7e51ae940a39caf8b49af5eaa"),
+        (variation, "b17677ef0a910d82fb2cd9b8270328f1cc261a6267e6f373cd0af20dfeee5bbb",
+         "d3fbf5dd2d56c941ac1515c1d84aa3f528c29353f8c4ee8cd6e6237afd569951",
+         "7b7561dc5960416631969ebe667efc95fc07f338f76b58459948cb197625ba28"),
+    )
+    for document, digest, final_state, script in expected:
+        if document.get("schema_version") != 2 or len(document.get("frames", [])) != 3300:
+            raise ValueError("comparison sample shape or frame count differs")
+        if document.get("sample_digest") != digest:
+            raise ValueError("comparison sample identity differs")
+        if document.get("final", {}).get("state_sha256") != final_state:
+            raise ValueError("comparison final-state identity differs")
+        if document.get("script", {}).get("sha256") != script:
+            raise ValueError("comparison script identity differs")
+    comparison = compare_runs(primary, variation)
+    if comparison["only_in_x"] or comparison["only_in_y"]:
+        raise ValueError("comparison frame sets differ")
+    first = comparison["first_differing_frame"]
     if first != 1650:
         raise ValueError("Right-1653 first state divergence differs")
     report = {
@@ -596,7 +613,7 @@ def main() -> int:
             return verify(args.access, args.content, args.manifest, args.report)
         if args.command == "compare-inputs":
             return compare_inputs(args.primary, args.variation, args.report)
-    except (OSError, ValueError, subprocess.TimeoutExpired) as error:
+    except (OSError, ValueError, KeyError, TypeError, subprocess.TimeoutExpired) as error:
         print(error, file=sys.stderr)
         if isinstance(error, subprocess.TimeoutExpired):
             return 4

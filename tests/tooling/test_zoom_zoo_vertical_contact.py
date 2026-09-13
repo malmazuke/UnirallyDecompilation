@@ -5,6 +5,7 @@ import copy
 import json
 from pathlib import Path
 import sys
+import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -13,6 +14,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 from unirally_lab.native.zoom_zoo_vertical_contact import (  # noqa: E402
     COEFFICIENT_IDENTITY,
     _arithmetic_shift_u16,
+    compare_inputs,
     reduce_vertical,
     resolve_response,
     validate_manifest,
@@ -150,6 +152,18 @@ class ZoomZooVerticalContactTests(unittest.TestCase):
     def test_arithmetic_right_shift_is_signed_sixteen_bit(self) -> None:
         self.assertEqual(_arithmetic_shift_u16(0xFE40, 4), 0xFFE4)
         self.assertEqual(_arithmetic_shift_u16(0x0167, 4), 0x0016)
+
+    def test_input_comparison_rejects_non_document_json(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            primary = root / "primary.json"
+            variation = root / "variation.json"
+            report = root / "report.json"
+            primary.write_text("[]")
+            variation.write_text("[]")
+            with self.assertRaisesRegex(ValueError, "complete sample documents"):
+                compare_inputs(primary, variation, report)
+            self.assertFalse(report.exists())
 
 
 if __name__ == "__main__":

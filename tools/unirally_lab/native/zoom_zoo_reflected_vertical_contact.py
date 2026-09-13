@@ -264,6 +264,19 @@ def validate_manifest(manifest: dict) -> None:
     if manifest.get("scenario_id") not in scenarios:
         raise ValueError("reflected vertical scenario differs")
     replay, replay_hash, access_hash = scenarios[manifest["scenario_id"]]
+    expected_semantics = {
+        "race-crawler-zoom-zoo-3300": {
+            "description": "Exact composition of the unchanged 66-call M4-06 prefix and the 36-call reflected-vertical suffix on frames 1683-1700.",
+            "limits": "Captured-argument research only. Only descriptor mask 0x4000 with vertical tile flags is accepted; horizontal, 0x8000, bit-zero and all other geometry reject.",
+        },
+        "race-crawler-zoom-zoo-right-release-1684": {
+            "description": "Exact 102-call captured-argument reconstruction for the preregistered one-frame Right release at frame 1684.",
+            "limits": "Captured-argument research only. The input experiment preclaims only exact state through 1683 and first controller divergence at 1684.",
+        },
+    }[manifest["scenario_id"]]
+    for field, expected in expected_semantics.items():
+        if manifest[field] != expected:
+            raise ValueError(f"reflected vertical {field} differs")
     expected_source = {
         "rom_sha256": ROM_SHA256,
         "core_commit": "7d5aa1e656b9171524d01b1b22917197d8121cb4",

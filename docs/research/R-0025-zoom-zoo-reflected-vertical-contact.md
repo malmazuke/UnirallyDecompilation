@@ -33,8 +33,8 @@ inputs. The composed result is 102 calls/1,020 points.
 
 The instruction-width and branch inventory was completed before implementing
 the equations; its durable checkpoint is [the M4-07 inventory](../inventory/M4-07-reflected-vertical.md).
-At `$81:8BE3/$81:8BE9`, 16-bit masks separate `0x8000` and `0x4000`. The reached
-`0x4000` path then runs with an 8-bit accumulator. `$81:8C2C--8C3C` chooses the
+At `$81:8BE3/$81:8BEB`, 16-bit masks separate `0x8000` and `0x4000`. The reached
+`0x4000` path then runs with an 8-bit accumulator. `$81:8C2C--8C3E` chooses the
 reflected collision-point x and `$81:8C9E--8CA9` applies the same choice to the
 table column:
 
@@ -159,3 +159,20 @@ the M4-04 pair remains exact. The unchanged 25-entry Classic pack report is
 DRAGSTER finish with restore boundaries 1600/3213/3453/3678 passes all 18
 checks at report SHA-256
 `63364922428a1666bfc13f55fc18c544829e79700ef2011ada750f2aa5c5b8c3`.
+
+## Returned-review correction
+
+Review `251b992b8d4085d6b335fce26f0343dc2d88101b` demonstrated that
+the required manifest `description` and `limits` keys were not value-bound.
+Both authored values are now exact-bound per scenario, with focused mutations
+for the former `"contradictory"` and `"autonomous production support"`
+unexpected passes. Reference outputs and authored expected values are
+unchanged.
+
+Independent instruction decoding confirms `$81:8BE9: A5 18` reloads `$18`
+and `$81:8BEB: 29 00 40` is the 16-bit `AND #$4000`. It also corrects the
+review's proposed replacement point-x range: `$81:8C2A: 80 13` is the
+two-byte `BRA`, so `$81:8C2C: A9 03` begins `LDA #$03`; the final
+`STA $0231,Y` begins at `$81:8C3C` and ends at `$81:8C3E`, before the next
+instruction at `$81:8C3F`. The precise reflected point-x range is therefore
+`$81:8C2C--8C3E`.

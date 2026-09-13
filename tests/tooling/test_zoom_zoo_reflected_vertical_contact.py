@@ -55,7 +55,7 @@ class ZoomZooReflectedVerticalTests(unittest.TestCase):
         for path in paths:
             document = json.loads(path.read_text())
             validate_manifest(document)
-            for key in ("access_sha256", "calls", "points", "prefix", "suffix", "static_content"):
+            for key in ("access_sha256", "calls", "points", "prefix", "suffix", "static_content", "description", "limits"):
                 changed = copy.deepcopy(document)
                 if key in ("calls", "points"):
                     changed[key] -= 1
@@ -63,6 +63,10 @@ class ZoomZooReflectedVerticalTests(unittest.TestCase):
                     changed[key] = "0" * 64
                 elif key == "static_content":
                     changed[key]["reached_indices"] = [6, 7]
+                elif key == "description":
+                    changed[key] = "contradictory"
+                elif key == "limits":
+                    changed[key] = "autonomous production support"
                 else:
                     changed[key]["calls"] -= 1
                 with self.subTest(path=path.name, key=key):

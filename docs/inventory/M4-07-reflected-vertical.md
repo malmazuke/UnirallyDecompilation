@@ -14,8 +14,8 @@ The 18 opponent calls remain compatible flat vertical calls. Player winning
 surface angles span 0 through +8 and support remains continuous.
 
 Trace widths and order establish the bounded `0x4000` path. `$81:8BE3` and
-`$81:8BE9` use 16-bit `AND #$8000` / `AND #$4000` before storing the two
-direction words. With an 8-bit accumulator, `$81:8C2C--8C3C` selects axis 3
+`$81:8BEB` use 16-bit `AND #$8000` / `AND #$4000` before storing the two
+direction words. With an 8-bit accumulator, `$81:8C2C--8C3E` selects axis 3
 and computes the reflected collision-point x column as
 `(~(point_x + (x & 15))) & 15`, equivalent modulo 16 to
 `15 - ((point_x + (x & 15)) & 15)`. `$81:8C9E--8CA9` applies the same

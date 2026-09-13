@@ -1206,20 +1206,21 @@ ZoomZooState deserialize_zoom_zoo(std::span<const std::uint8_t> bytes) {
         for(auto* v:{&c.x,&c.y,&c.velocity_x,&c.velocity_y,&c.lookahead,&c.screen_xy})*v=in.u16();
         for(auto& v:state.race.checkpoint_seen)v=in.u8();
         for(auto& p:state.race.finish_pose)for(auto* v:{&p.selector,&p.kind,&p.locked,&p.active})*v=in.u16();
-        if(state.race.finish_delay>240 || state.race.provisional_1225>1 || state.race.provisional_1227>1 ||
+        if(state.race.finish_delay>240 || (state.race.finish_delay && !state.race.riders[0].finished) || state.race.provisional_1225>1 || state.race.provisional_1227>1 ||
            c.x>0x3fffU || std::abs(static_cast<std::int16_t>(c.velocity_x))>16 ||
            std::abs(static_cast<std::int16_t>(c.velocity_y))>16)
             throw std::invalid_argument("ZOOM ZOO finish/camera state invalid");
         for(auto seen:state.race.checkpoint_seen)if(seen!=0 && seen!=255)
             throw std::invalid_argument("ZOOM ZOO checkpoint seen flag invalid");
-        for(const auto& pose:state.race.finish_pose) {
+        for(unsigned index=0;index<2;++index) {
+            const auto& pose=state.race.finish_pose[index];
             const unsigned limit=pose.kind==1?48U:pose.kind==2?88U:0U;
-            if(pose.selector>limit || pose.kind>2 || pose.locked>1 || pose.active>1 ||
+            if((pose.active && !state.race.riders[index].finished) || pose.selector>limit || pose.kind>2 || pose.locked>1 || pose.active>1 ||
                (pose.active ? (!pose.kind || !pose.locked) : (pose.kind || pose.locked || pose.selector)))
                 throw std::invalid_argument("ZOOM ZOO finish pose state invalid");
         }
         for(const auto& lap:state.race.riders) {
-            if((lap.finished && lap.laps_remaining) || lap.time_digits[0]>9 || lap.time_digits[1]>5 ||
+            if((static_cast<bool>(lap.finished)!=(lap.laps_remaining==0)) || lap.time_digits[0]>9 || lap.time_digits[1]>5 ||
                lap.time_digits[2]>9 || lap.time_digits[3]>9 || lap.time_digits[4]>9)
                 throw std::invalid_argument("ZOOM ZOO lap time state invalid");
         }
@@ -1307,7 +1308,11 @@ void update_zoom_zoo(ZoomZooState& state,const ControllerButtons& buttons,const 
         if(index==active) {
             if(negative(transition.direction_latch) && ((negative(rider.motion.velocity_x)&&horizontal==0)||(!negative(rider.motion.velocity_x)&&horizontal==2)))transition.direction_latch=48;
             animation_override=stationary_animation_override(rider,static_cast<std::uint8_t>(horizontal));
-            if(!boost_tile)update_jump(rider,transition.jump_input!=0);
+            // $82A8E0-A8EE rejects leading or inverted contact before
+            // consuming pending/previous input. Common reset clears $0F41.
+            if(!boost_tile && !surface.leading_support &&
+               !(rider.contact.selected_high&0x80U))
+                update_jump(rider,transition.jump_input!=0);
             update_active_low_speed_damping(rider);
             transition.drive_pose_enabled=0;
             if(transition.completed) {

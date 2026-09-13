@@ -33,6 +33,7 @@ int main() {
 
     // M4-15: malformed newly serialized future state must fail before update.
     ZoomZooState race{};race.complete_race=race.sustained=true;race.movement.frame=1649;
+    for(auto& lap:race.race.riders)lap.laps_remaining=4;
     auto race_bytes=serialize_zoom_zoo(race);require(race_bytes.size()==565);
     require(serialize_zoom_zoo(deserialize_zoom_zoo(race_bytes))==race_bytes);
     for(unsigned offset:{429U,433U,451U,455U,511U,513U,553U,555U,561U,563U}) {
@@ -51,6 +52,12 @@ int main() {
         auto corrupt=race_bytes;corrupt[offset]=1;
         rejects([&]{(void)deserialize_zoom_zoo(corrupt);});
     }
+    for(unsigned offset:{423U,445U}) {
+        auto corrupt=race_bytes;corrupt[offset]=0;
+        rejects([&]{(void)deserialize_zoom_zoo(corrupt);});
+    }
+    auto premature_delay=race_bytes;premature_delay[515]=1;
+    rejects([&]{(void)deserialize_zoom_zoo(premature_delay);});
     for(unsigned offset:{521U,523U}) {
         auto corrupt=race_bytes;corrupt[offset]=17;
         rejects([&]{(void)deserialize_zoom_zoo(corrupt);});

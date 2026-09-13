@@ -97,6 +97,12 @@ int main() {
     const auto extended_bytes=serialize_zoom_zoo(extended);
     require(extended_bytes.size()==423 && deserialize_zoom_zoo(extended_bytes).surface[1].animation_delta==0xfffe);
     auto corrupt=extended_bytes;corrupt[0]='X';rejects([&]{(void)deserialize_zoom_zoo(corrupt);});
+    for(unsigned rider_index=0;rider_index<2;++rider_index) {
+        for(unsigned field_offset:{0U,4U,6U,8U,12U}) {
+            corrupt=extended_bytes;corrupt[395+14*rider_index+field_offset]=2;
+            rejects([&]{(void)deserialize_zoom_zoo(corrupt);});
+        }
+    }
 
     // Inverted vertical probes complement local Y and correct it upward in
     // source coordinates. Horizontal probes swap axes and retain direction.
@@ -118,5 +124,13 @@ int main() {
     rider={};motion={};motion.velocity_y=40;summary.angle=28;
     resolve_vertical_contact(rider,motion,summary,{0,false,0,0},full_shifts,full_multipliers);
     require(motion.velocity_x==10 && motion.velocity_y==40);
+
+    // R-0033 review landing: the same steep face after nine unsupported
+    // updates clears airtime and preserves incoming velocity ($81:9309).
+    rider={};rider.unsupported_count=9;rider.unsupported_duration=30;
+    motion={};motion.velocity_x=48;motion.velocity_y=40;
+    resolve_vertical_contact(rider,motion,summary,{0,false,0,0},full_shifts,full_multipliers);
+    require(motion.velocity_x==48 && motion.velocity_y==40 && rider.recontact);
+    require(rider.unsupported_count==0 && rider.unsupported_duration==0);
 
 }

@@ -246,7 +246,9 @@ void resolve_vertical_contact(RiderContactState& rider,ContactMotion& motion,
             const int contribution=summary.angle<0 ? -static_cast<int>(magnitude/2U) : static_cast<int>(magnitude/2U);
             if(!summary.leading_support && magnitude<28 && !(summary.selected_high&0x80U))moved.velocity_x=static_cast<std::uint16_t>(static_cast<int>(motion.velocity_x)+contribution);
         }
-        if(magnitude==28 && !summary.leading_support) {
+        // $81:92FE–9309 sends a full steep landing straight to correction.
+        // The vertical-to-horizontal conversion belongs only to continued contact.
+        if(magnitude==28 && !summary.leading_support && rider.unsupported_count<9) {
             const auto shifted=arithmetic_shift(moved.velocity_y,byte(shifts,magnitude));
             auto velocity=static_cast<std::uint16_t>(static_cast<unsigned>(shifted)*byte(multipliers,magnitude));
             if(summary.angle<0)velocity=static_cast<std::uint16_t>(1U-velocity);

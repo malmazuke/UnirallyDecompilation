@@ -1039,6 +1039,11 @@ ZoomZooState deserialize_zoom_zoo(std::span<const std::uint8_t> bytes) {
     if(state.opponent_horizontal>2)throw std::invalid_argument("ZOOM ZOO horizontal input is invalid");
     if(sustained)for(auto& r:state.surface)
         for(auto* v:{&r.mode,&r.angle,&r.tile_mode,&r.leading_support,&r.tile_pose,&r.animation_delta,&r.tile_pose_enabled})*v=in.u16();
+    for(const auto& surface:state.surface) {
+        if(surface.mode>1 || surface.tile_mode>1 || surface.leading_support>1 ||
+           surface.tile_pose>1 || surface.tile_pose_enabled>1)
+            throw std::invalid_argument("ZOOM ZOO surface flags are invalid");
+    }
     if(state.movement.frame<1649 || state.movement.frame>(sustained?9999U:1849U))
         throw std::invalid_argument("ZOOM ZOO state is outside trial horizon");
     for(const auto& r:state.reflection) {

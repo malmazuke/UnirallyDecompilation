@@ -48,10 +48,50 @@ offset/hash and the constant input guards have tracked manifests.
 Targeted complete instruction/access windows are `entry-access` (1989–1994),
 `steep-access` (1853–1855), `mode-followup-access` (2021–2025),
 `horizontal-access` (2042–2052), `long-airtime-access` (2190–2193) and
-`reward-access` (2706–2709). One lean whole-horizon access audit aggregates
-read/write sites without watched-instruction logs; completeness assessment is
-pending. The full WRAM projection allows additional fields to be frozen before
-any further native tuning if that audit or review identifies an omission.
+`continuous-reward-access` (2706–2709). The original `reward-access` and
+`full-read-audit` followed the legacy manifest's Up pulse at 2200–2259; they are
+not continuous-Right evidence. The corrected `continuous-read-audit` removes
+that pulse while preserving the pre-seed history. Every whole-WRAM sample in
+both corrected captures agrees with the frozen primary, all 1,651 states.
+
+The complete aggregate covers 30,355,912 instructions, maximum 18,777 per frame
+against ring capacity 262,144; no unresolved stores, non-ROM PCs, resolution
+conflicts or dropped resolutions. There are 38,455 unresolved reads across all
+subsystems, but zero in the recovered producer regions (listed in the private
+`dependency-audit.json`). DMA/HDMA is not instruction execution and this is not
+a presentation/audio completeness claim. Access SHA-256:
+`923547855a6a305711c84afcfc107a361d387202949e4ab62e8fc271ba94edf0`.
+
+The newly reached read sites, compared with M4-13, close as follows:
+
+| Reads | State/input disposition |
+| --- | --- |
+| `$8184EE–854D` surface behavior | Existing selected descriptor, surface angle and velocity plus appended surface mode/angle; working `$0Fxx` copies are rebuilt in update order. |
+| `$818C14–8C81`, `$818FF9–9126` probes | Authenticated columns/flags and collision points; local probe scratch is produced inside the update, with leading support persisted in the appended state. |
+| `$819260–99B1` steep/landing paths | Existing position, previous uncorrected position, velocity, airtime, pose and response fields; local angle/matrix scratch is rebuilt. Six newly reached coefficient read sites use the additive four-table ROM extraction. |
+| `$829B17–9BA6` quarter/leading reward | Existing serialized quarter counts, air turns, boost, reward queue and cooldown; additive event-14 value/class tables. |
+| `$82A41C`, `$82A9C9–AA33`, `$83EFCF/F01C` | Existing response, velocity, controller and pose fields, plus appended mode angle. |
+| `$82A74C` reads `$1513` | Camera byte cannot affect the reached branch: player boost is below 16 throughout; native rejects a boost reaching 16. Existing opponent retained `$150B` remains serialized and constant-checked. |
+| `$818233–828E`, `$828907/8912` | Audio/presentation bookkeeping outside the recovered simulation; no new future simulation input is inferred from these output-side reads. |
+
+The constant manifest authenticates omitted branch guards on every captured
+state for primary and review cases. Dynamic producer outputs are serialized or
+rebuilt from the seed/static inputs inside each update; no new untracked dynamic
+input was identified by this audit. The conclusion is bounded to these captures.
+
+## Independent review corrections
+
+The review's neutral 2037–2052 / B 2053–2067 case first diverged at 2076:
+player horizontal velocity expected 48, native 7. An authentic case-specific
+2074–2077 access window (all whole-WRAM samples match the review freeze) shows
+`$8192FE–9309` sends a full 28-unit landing directly to correction. The native
+continued-contact conversion was incorrectly applied afterward. It now applies
+only before full airtime saturation; a focused branch test preserves velocity
+and clears airtime. The failed case remains a disclosed regression and passes
+all states/restores after the correction; it cannot replace fresh review evidence.
+Review also found missing malformed-state validation for appended binary flags.
+Both riders' five binary fields now reject values above one, with corruption
+checks. No reference expectations were changed.
 
 ## Reproduction
 

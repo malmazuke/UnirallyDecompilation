@@ -1,4 +1,4 @@
-# Coordinator handover — M4-07 accepted, M4-08 planning next
+# Coordinator handover — M4-07 accepted, M4-08 claimed
 
 Milestone M3 is accepted on 13 September 2026 and tagged `m3`. M4-00 through
 M4-07 are accepted. Read [M4-07](M4-07.md),
@@ -41,9 +41,12 @@ binding and address citations; correction `cfa94e4` was approved, including a
 correction to the reviewer's own off-by-one point-x range. Integration
 `131df54` and hosted run 34738957270 are green.
 
-Run a bounded Astra/high planning audit for M4-08. Challenge remaining contact
-families against the smallest upstream autonomous-producer dependency. Native
-ZOOM ZOO, finish/result/presentation and the Classic pack remain unchanged.
+Continue [M4-08](M4-08.md) in its isolated Sol/medium worktree. Astra selected
+the reached position integrator `$82:A627--A6F7`: the accepted window exercises
+20 positive/+4 and 14 negative/-1 slope-tail stores that native integration
+omits. Capture and propagate all four residue chains from the end-1649 seed;
+resolve the old `$82:A6E9` direct-page dependency rather than defaulting it.
+Native ZOOM ZOO and its pack remain unchanged.
 The user authorized an unattended M4 continuation and at most one weekly usage
 reset only if an actual provider limit is reached; no money, paid credits,
 provider switching, publication or deployment is authorized.

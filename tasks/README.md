@@ -40,7 +40,7 @@ The coordinator maintains the status registry below. Work orders further below d
 | M4-12 | accepted; native 200-update trial, independent review | [Autonomous native ZOOM ZOO trial](M4-12.md) under D-0006 |
 | M4-13 | accepted (`b288396`; private sync and hosted CI passed) | [Player landing and recovery trial](M4-13.md) |
 | M4-14 | accepted (`38c72e8`; private sync and final-tip CI passed) | [Sustained ZOOM ZOO traversal](M4-14.md) |
-| M4-15 | ready/unclaimed; next Astra/medium session | [ZOOM ZOO race completion](M4-15.md) |
+| M4-15 | in_progress; original strategy exploration | [ZOOM ZOO race completion](M4-15.md) |
 | M4-16 – M6 | unclaimed; outside this assignment | Do not automatically dispatch |
 
 ## M0 — repeatable laboratory

@@ -43,8 +43,8 @@ validation commands before using them as acceptance gates.
 
 ## M4-15 audit preflight and validation ledger
 
-Implemented in the M4-15 candidate by `zoom_zoo_race_audit` and
-`zoom_zoo_race`; acceptance remains subject to its task review and final gates.
+Implemented and independently reviewed in M4-15 by `zoom_zoo_race_audit` and
+`zoom_zoo_race`; integration/ref/CI acceptance follows its conditional task handoff.
 Before expensive instruction capture, automatically compare the expanded actual
 controller timeline (both controllers, pre-seed history and complete horizon)
 against the frozen scenario. Fail on differences rather than inheriting legacy
@@ -393,7 +393,7 @@ converted to a fixed controller timeline and repeated before native evaluation.
 `zoom_zoo_race_reference` freezes matching original processes; the final primary
 contract is `tests/manifests/native/zoom-zoo-race-primary-v4.freeze.json`.
 Older additive freezes remain as inventory-discovery evidence, not interchangeable
-current contracts. The candidate state is 565-byte `URZZ0003`.
+current contracts. The race state is 565-byte `URZZ0003`.
 
 ```sh
 python3 -m tools.unirally_lab.native.zoom_zoo_race_extract --core "$CORE" --out artifacts/m4-15/fresh-content

@@ -176,7 +176,7 @@ coefficients and landing branches. [R-0033](../../docs/research/R-0033-sustained
 links source addresses, immutable inputs and the finite differential domain.
 
 
-M4-15's candidate `ZoomZooRaceState` extends the research continuation with
+M4-15's `ZoomZooRaceState` extends the research continuation with
 ordered checkpoints/laps, stored race times, camera visibility feedback and
 finish collision-pose selectors. `update_zoom_checkpoint`, `update_zoom_camera`,
 `update_zoom_visibility` and `update_zoom_finish` in `movement.cpp` preserve the

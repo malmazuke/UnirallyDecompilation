@@ -1,6 +1,6 @@
 # R-0034 — ZOOM ZOO race completion from the authentic seed
 
-M4-15 candidate; independent review and final gates remain pending.
+M4-15 independently reviewed capability; local gates pass. Exact merged/ref/CI acceptance is conditional in NEXT_SESSION.
 PAL ROM `a1105819d48c04d680c8292bbfa9abbce05224f1bc231afd66af43b7e0a1fd4e`,
 core `e59bf88d4fc922c9fe3b5438e65ff3a6909d24e1628f0f87141c8de17699a91b`.
 
@@ -124,3 +124,5 @@ The queue invariant is a reference-domain admission check, not a reconstructed a
 The independently frozen B4096–4110 case completes original player/opponent6484/6488 but exposed pending-jump consumption at4099. Authenticated full-timeline/whole-WRAM audits (`lap-two-audit`, `lap-two-gate-audit`) show `$82A8D0` reads inhibit0, `$82A8D8` reads `$0F41=0`, `$82A8E0` reads leading0, then `$82A8E8` reads selected-high130 and returns. Adding inverted-contact inhibition reveals the second related gate at4159: `$82A8E0` reads leading1 and returns before pending/input publication (`lap-two-leading-audit`). Both gates now precede native jump processing; the complete frozen lap-two trace matches565 bytes. A hypothesis using prior surface.mode was rejected at4097: common reset `$818687` clears `$0F41` before this call, so persistent prior mode is not its jump input. The failed case remains a regression and another untuned replacement is required.
 
 Restore consistency additionally enforces finished iff laps_remaining is zero, finish_delay only after player finish, and active finish pose only for a finished rider. This prevents a malformed zero-lap unfinished state from underflowing on the next crossing. Authored mutations cover both riders and premature finish delay.
+
+Final review and validation are recorded in [M4-15-review](../../tasks/M4-15-review.md) and [M4-15](../../tasks/M4-15.md). Corrected code `6faff68` preserves all frozen expectations; old primary-specific horizon prose in variation freezes is historical metadata. Their frame bounds and state hashes are authoritative, with exact per-rider continuation lengths in the review report. Future freeze generation computes those lengths.

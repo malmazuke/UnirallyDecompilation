@@ -89,6 +89,13 @@ Use an agreed JSON report schema containing run ID, task ID, source commit, dirt
 These are invoked with `python3 -m tools.unirally_lab.native.<module>`, outside
 the stable CLI. They do not provide `tools/project.py native compare`.
 
+`zoom_zoo_contact` is the M4-05 captured-argument research component. Its
+`capture` command records the bounded original contact inputs, `extract-content`
+derives exact-gated static inputs independently from the supported ROM and
+accepted M4-03 contract, and `verify` checks all 102 ordered calls plus the first
+non-flat branch neighbourhood against a tracked reference manifest. It does not
+implement autonomous movement or production ZOOM ZOO support.
+
 | Module | Implemented contract and limits |
 | --- | --- |
 | `freeze_reference --manifest <replay> --samples <first> <second> --out <new file>` | Administrative reference-only projection of two matching fresh-process captures; refuses overwriting an existing output. Dedicated freeze commit precedes native computation. This utility emits a projection rather than a standard check report; it does not validate a native result |

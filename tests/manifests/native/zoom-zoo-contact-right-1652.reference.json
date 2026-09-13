@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "kind": "zoom_zoo_contact_reference",
+  "scenario_id": "race-crawler-zoom-zoo-right-1652-3300",
+  "description": "Preregistered +2 Right-onset M4-05 contact classification for both riders, frames 1650--1700. This is reference research, not autonomous movement or native ZOOM ZOO support.",
+  "source": {
+    "rom_sha256": "a1105819d48c04d680c8292bbfa9abbce05224f1bc231afd66af43b7e0a1fd4e",
+    "core_commit": "7d5aa1e656b9171524d01b1b22917197d8121cb4",
+    "core_patch_sha256": "a719f5ffe2222dad4c1ab04336633319ad85004f74e32fc14893a058be333885",
+    "replay_manifest": "tests/manifests/replay/race-crawler-zoom-zoo-right-1652-3300.json",
+    "replay_manifest_sha256": "4bfda9be656118c39c64b6e1c0027b15a8a6de3d7736c86a166cf7e0d056df71"
+  },
+  "frames": {"start": 1650, "end": 1700, "count": 51},
+  "calls": 102,
+  "access_sha256": "0f04150363bdfbf41f53ca192ee091529c36933950bfb74daa6eea8001178dec",
+  "classification_sha256": "bb5aa59d1bc6a6e6ac0084b44767a194df37bf91c9af929350a4da8bcaca3c2d",
+  "guard_order": [
+    "marker_empty",
+    "direction_or_special",
+    "horizontal_tile_flag",
+    "non_flat_angle",
+    "negative_penetration"
+  ],
+  "classification_counts": {
+    "compatible": 70,
+    "non_flat_angle": 16,
+    "direction_or_special": 16
+  },
+  "first_incompatible": {
+    "ordinal": 26,
+    "frame": 1663,
+    "rider": 0,
+    "first_incompatible": {"point": 9, "predicate": "non_flat_angle"}
+  },
+  "branch_neighbourhood": [
+    {"frame": 1662, "rider": 1, "role": "preceding_call"},
+    {"frame": 1663, "rider": 0, "role": "first_incompatible_call"},
+    {"frame": 1663, "rider": 1, "role": "following_call"}
+  ],
+  "static_content": {
+    "contract": "tests/manifests/content/zoom-zoo-reference-contract.json",
+    "contract_sha256": "017a4eb941abb0e87ea0e3be4509d9043198466cb461f560517f355938c1d699",
+    "source": "independently extracted from the exact PAL ROM; captured table/result bytes are not component inputs"
+  },
+  "limits": "Only the first -1 vertical slope branch and the state necessary for its preceding and following calls are reconstructed. Later non-flat/directional calls, track sampling, autonomous movement, pack/native support and other systems remain outside this component."
+}

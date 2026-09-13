@@ -1,7 +1,8 @@
 # R-0021 — ZOOM ZOO decoded content and read-boundary contract
 
 - Task: [M4-03](../../tasks/M4-03.md)
-- Status: candidate evidence; not independently reviewed or accepted
+- Status: accepted; integrated as `0856621` after a returned independent review
+  and approved focused re-review
 - Evidence date: 13 September 2026
 - Source base: `9dacdf800325947e9141887934282a494910710d`
 - ROM: supported headerless PAL image, SHA-256

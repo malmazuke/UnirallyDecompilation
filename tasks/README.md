@@ -28,7 +28,7 @@ The coordinator maintains the status registry below. Work orders further below d
 | M4-00 | accepted 13 September 2026 after Astra audit, returned independent review and focused approval | [M4 coverage inventory](M4-00.md) |
 | M4-01 | accepted 13 September 2026 after one returned review finding, approved re-review and green macOS/Linux CI | [DRAGSTER loser-result presentation](M4-01.md) |
 | M4-02 | accepted 13 September 2026 after one returned finding, approved focused re-review and green macOS/Linux CI | [Second-track reference discovery](M4-02.md) |
-| M4-03 | claimed 13 September 2026 after bounded Astra planning checkpoint | [ZOOM ZOO content and physics contract](M4-03.md) |
+| M4-03 | accepted 13 September 2026 after one returned finding, approved focused re-review and green macOS/Linux CI | [ZOOM ZOO content and physics contract](M4-03.md) |
 | M4-04 – M6 | planned | See milestone definitions |
 
 ## M0 — repeatable laboratory

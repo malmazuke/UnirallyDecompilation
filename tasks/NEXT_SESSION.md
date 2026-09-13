@@ -1,9 +1,14 @@
-# Coordinator handover — M4-10 accepted, M4-11 claimed
+# Coordinator handover — M4-11 accepted, paused for reassessment
+
+The repo-level starting point is
+[the reassessment handover](../docs/REASSESSMENT_HANDOVER.md); this file keeps
+the compact execution history.
 
 Milestone M3 is accepted on 13 September 2026 and tagged `m3`. M4-00 through
-M4-10 are accepted and M4-11 is claimed. Read [M4-11](M4-11.md), [M4-10](M4-10.md),
-[R-0028](../docs/research/R-0028-zoom-zoo-response-b.md) and its approved
-[review](M4-10-review.md).
+M4-11 are accepted as individually bounded tasks. The user paused further work
+to reassess the project approach. Read [M4-11](M4-11.md),
+[R-0029](../docs/research/R-0029-zoom-zoo-vertical-velocity.md), its returned
+[review](M4-11-review.md) and approved [re-review](M4-11-rereview.md).
 
 The accepted scope is the identified PAL one-player CRAWLER/DRAGSTER slice:
 supported-ROM extraction creates a validated local Classic pack, later launches
@@ -56,10 +61,15 @@ opponent 254-to-0 gap with an ordered word clear and preserves the accepted
 1,020-sample composition. Worker/reviewer variations both leave response B
 unchanged. Integration `a8d9106` and hosted run 34747306845 are green.
 
-Continue M4-11's Astra-defined vertical-velocity producer/recurrence. Its worker
-preregisters a frame-1672 one-frame Right release; the independent reviewer owns
-frame 1673 or 1674. Horizontal velocity, pose and remaining contact state are
-still external; native ZOOM ZOO/pack remain unchanged.
+M4-11 seeds and computes both vertical-velocity words across all 102 calls. A
+returned semantic-enforcement finding was corrected and independently approved.
+Integration `0a2b9bb` and hosted run 34750113118 are green. Horizontal velocity,
+pose and remaining state are still external; native ZOOM ZOO/pack remain
+unchanged.
+
+No task is claimed. Do not automatically dispatch M4-12: first reassess the
+incremental bounded-research approach with the user, using the accepted M4-00
+through M4-11 evidence and explicit remaining boundaries.
 The user authorized an unattended M4 continuation and at most one weekly usage
 reset only if an actual provider limit is reached; no money, paid credits,
 provider switching, publication or deployment is authorized.

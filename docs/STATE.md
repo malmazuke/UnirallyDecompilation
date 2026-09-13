@@ -1,10 +1,12 @@
 # Project state
 
-Updated: 13 September 2026 (M4-10 accepted; M4-11 claimed; M3 remains the latest
+Updated: 13 September 2026 (M4-11 accepted; further work paused for reassessment;
+M3 remains the latest
 accepted milestone, tag `m3`).
 
 ## Current facts
 
+- ZOOM ZOO vertical-velocity recurrence (M4-11, [R-0029](research/R-0029-zoom-zoo-vertical-velocity.md), [review](../tasks/M4-11-review.md), [re-review](../tasks/M4-11-rereview.md)): both riders' vertical velocity is seeded once at end-1649 and independently propagated through every reached cap/jump/gravity/motion/contact stage across all 102 calls. The bounded window contains 102 gravity writes, 28 boost decrements, no cap or jump velocity writes and final player/opponent velocity 241/0; cap/jump preservation is not generalized beyond the observed domain. Review returned a semantic verifier gap; correction `f7ff0e3` exact-binds pose consumption, all boundary widths/stages and exhaustive `$0FAB` writers, and focused re-review approved. Integration `0a2b9bb` passes focused 60/60, app-debug/app-sanitize 373/373 plus 20 CTests/repeatability and exact/frozen replay/contract/pack/native gates; hosted run 34750113118 passes macOS/Linux including sanitizers. **M4-11 is accepted bounded research; horizontal velocity, pose and other state remain external and native ZOOM ZOO is not established.**
 - ZOOM ZOO inter-contact response-B recurrence (M4-10, [R-0028](research/R-0028-zoom-zoo-response-b.md), [review](../tasks/M4-10-review.md)): both riders' response-B words are seeded once at end-1649 and independently produced for all 102 ordered calls, including 51 inactive preserves, 42 low-angle/count word clears, six reached low-byte `0xFE + control` writes and three zero-pair word clears. The ordered frame-1662 zero-pair clear explains the prior opponent 254-to-0 gap. All 102 pose reads and the accepted 1,020-sample composition remain exact. Worker and reviewer releases independently changed later player composition while leaving response-B values unchanged, an explicit negative relevance result. Review approved without a material finding. Integration `a8d9106` passes focused 51/51, app-debug/app-sanitize 364/364 plus 20 CTests/repeatability and frozen replay/contract/pack/native gates; hosted run 34747306845 passes macOS/Linux including sanitizers. **M4-10 is accepted bounded research; pose, velocity and remaining contact state are external and native ZOOM ZOO is not established.**
 - ZOOM ZOO bounded position/contact composition (M4-09, [R-0027](research/R-0027-zoom-zoo-position-contact.md), [review](../tasks/M4-09-review.md)): recurrent x/y/residues, the reached Y increment, authenticated sampling and accepted contact compose for all 102 calls and 1,020 source-offset-bound words on frames 1650--1700. Velocity, pose and other contact state remain explicit captured inputs; blind response-state recurrence is known false. Worker and reviewer one-frame releases independently preserve the opponent while shifting player composition/sampling timing. Review approved without a material finding. Integration `c93de4d` passes focused 46/46, app-debug 359/359 plus CTest/repeatability and frozen replay/pack/native gates; hosted run 34744126458 passes macOS/Linux including sanitizers. **M4-09 is accepted bounded research, not autonomous native gameplay.**
 - ZOOM ZOO position integration and residue recurrence (M4-08, [R-0026](research/R-0026-zoom-zoo-position.md), [review](../tasks/M4-08-review.md)): `$82:A627--A6F7` is independently evaluated for all 102 calls on frames 1650--1700 from one authenticated end-1649 four-residue seed, including signed `/32`, wrapped sums, X mask and 68 zero/20 +4/14 -1 slope-tail paths. Ordered same-call producer/register evidence resolves the former `$82:A6E9` gap. Worker and reviewer one-frame releases exercise different later branch timing while keeping the opponent exact and remaining stateful from the same seed. Review approved without a material finding. Integration `6de3dd5` passes focused 37/37, app-debug 350/350 plus CTest/repeatability and frozen replay/pack/native gates; hosted run 34741431794 passes macOS/Linux including sanitizers. **M4-08 is accepted as one upstream producer; velocity/contact inputs remain captured boundaries and native ZOOM ZOO is not yet established.**
@@ -92,24 +94,28 @@ First implementation milestone: M0 repeatable laboratory. First gameplay feasibi
 
 ## Next work
 
-For the next Sol coordinator, start with [the compact handover](../tasks/NEXT_SESSION.md).
+For the next Sol coordinator, start with the
+[reassessment handover](REASSESSMENT_HANDOVER.md) and
+[compact session handover](../tasks/NEXT_SESSION.md).
 Accepted M4 evidence and the current claim need no conversation replay.
 
-**M3 and M4-00 through M4-10 are accepted; M4-11 is claimed.** Continue the
-bounded vertical-velocity producer/recurrence task from its record. Preserve
-native and Classic-pack scope until autonomous inputs close.
+**M3 and M4-00 through M4-11 are accepted. No task is claimed.** The user has
+paused implementation to reassess the project approach. Resume from this
+accepted boundary only after that reassessment; preserve native and Classic-pack
+scope unless a new decision explicitly changes it.
 
 Implementation choices should be made through bounded experiments. Original-content handling for Classic is decided by D-0005; remote hosting beyond the private repository, source/replacement-content licensing, legal clearance, online service topology, public accounts/ranking and paid execution budgets remain undecided and do not block M3 implementation. A Linux build of the pinned core (ROM-free) is a natural CI addition when convenient.
 
 ## Milestone status
 
-M0: accepted on 11 September 2026 (M0-00 through M0-06; evidence report [R-0005](research/R-0005-m0-acceptance.md); tag `m0`). M1: M1-01 accepted on 11 September 2026 ([R-0006](research/R-0006-observed-code-map.md)); M1-02 accepted on 11 September 2026 ([R-0007](research/R-0007-player-state.md), [D-0002](decisions/D-0002-data-access-observation.md)); M1-03 accepted on 12 September 2026 ([R-0008](research/R-0008-track-decode.md)); M1-04 accepted and **milestone M1 accepted on 12 September 2026, tagged `m1`** ([R-0009](research/R-0009-m1-acceptance.md)). M2: M2-01A and M2-01 accepted through PR2/PR4; M2-02 accepted through PR5; **milestone M2 accepted on 12 September 2026, tag `m2`** ([R-0011](research/R-0011-m2-acceptance.md)). M3: M3-00 through M3-04 are accepted; **milestone M3 accepted on 13 September 2026, tag `m3`** ([R-0017](research/R-0017-m3-acceptance.md)). M4: M4-00 through M4-10 are accepted; M4-11 is claimed. M5–M6: not started. No calendar/cost promise has been established.
+M0: accepted on 11 September 2026 (M0-00 through M0-06; evidence report [R-0005](research/R-0005-m0-acceptance.md); tag `m0`). M1: M1-01 accepted on 11 September 2026 ([R-0006](research/R-0006-observed-code-map.md)); M1-02 accepted on 11 September 2026 ([R-0007](research/R-0007-player-state.md), [D-0002](decisions/D-0002-data-access-observation.md)); M1-03 accepted on 12 September 2026 ([R-0008](research/R-0008-track-decode.md)); M1-04 accepted and **milestone M1 accepted on 12 September 2026, tagged `m1`** ([R-0009](research/R-0009-m1-acceptance.md)). M2: M2-01A and M2-01 accepted through PR2/PR4; M2-02 accepted through PR5; **milestone M2 accepted on 12 September 2026, tag `m2`** ([R-0011](research/R-0011-m2-acceptance.md)). M3: M3-00 through M3-04 are accepted; **milestone M3 accepted on 13 September 2026, tag `m3`** ([R-0017](research/R-0017-m3-acceptance.md)). M4: M4-00 through M4-11 are accepted as individually bounded tasks; the milestone is not accepted and further work is paused for reassessment. M5–M6: not started. No calendar/cost promise has been established.
 
 ## Handoff
 
-The next agent should read [the compact handoff](../tasks/NEXT_SESSION.md), this
-file, `AGENTS.md`, [M4-11](../tasks/M4-11.md), [M4-10](../tasks/M4-10.md) and
-[R-0028](research/R-0028-zoom-zoo-response-b.md). Continue the claimed
-vertical-velocity producer/recurrence task. Preserve the PAL and frozen
+The next agent should read [the reassessment handover](REASSESSMENT_HANDOVER.md),
+[the compact handoff](../tasks/NEXT_SESSION.md), this file, `AGENTS.md`,
+[M4-11](../tasks/M4-11.md) and
+[R-0029](research/R-0029-zoom-zoo-vertical-velocity.md). No task is claimed;
+reassess scope and approach before creating M4-12. Preserve the PAL and frozen
 replay/pack identities and keep original content, generated packs and captures
 ignored.

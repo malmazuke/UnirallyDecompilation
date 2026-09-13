@@ -5,9 +5,9 @@ tag `m3` identifies the accepted playable-slice state. The native app supports
 the identified PAL one-player CRAWLER/DRAGSTER path from race start through a
 stable result, using a validated local Classic pack and no original CPU
 execution. M4 original-game coverage has accepted the DRAGSTER loser result and
-a bounded ZOOM ZOO reference chain through position, sampling, contact
-composition and inter-contact response-B recurrence; this is research evidence,
-not a second native track. See
+a bounded ZOOM ZOO reference chain through position, sampling, contact,
+response-B and vertical-velocity recurrence; this is research evidence, not a
+second native track. Further work is paused for reassessment. See
 [project state](docs/STATE.md) for the exact accepted boundary and
 [the compact handoff](tasks/NEXT_SESSION.md) for current work. No agent
 scheduler exists.
@@ -28,6 +28,7 @@ Progress belongs in source control and reproducible experiments, so work can mov
 | [Build and validation](docs/BUILD_AND_VALIDATION.md) | Reference emulator, reproducible tooling, test evidence and implemented/proposed command inventory |
 | [Agent workflow](docs/AGENT_WORKFLOW.md) | Task ownership, unattended work, model handoffs, review and integration |
 | [Project state](docs/STATE.md) | Current facts, decisions, blockers and next actions |
+| [Reassessment handover](docs/REASSESSMENT_HANDOVER.md) | Clean stopping boundary after M4-11, remaining unknowns and options before any new task |
 | [Initial backlog](tasks/README.md) | The first implementation tasks and their dependencies |
 | [Track investigation starts here](tasks/M4-02.md) | Bounded second-track discovery; continue with [the content/read contract](tasks/M4-03.md) rather than assuming a universal track format |
 | [Task template](tasks/TEMPLATE.md) | A portable work order and handoff record |

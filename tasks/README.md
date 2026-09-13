@@ -36,8 +36,8 @@ The coordinator maintains the status registry below. Work orders further below d
 | M4-08 | accepted 13 September 2026 after independent approval and green macOS/Linux CI | [ZOOM ZOO position integration and residue recurrence](M4-08.md) |
 | M4-09 | accepted 13 September 2026 after independent approval and green macOS/Linux CI | [ZOOM ZOO bounded position/contact composition](M4-09.md) |
 | M4-10 | accepted 13 September 2026 after independent approval and green macOS/Linux CI | [ZOOM ZOO inter-contact response-B recurrence](M4-10.md) |
-| M4-11 | claimed 13 September 2026 after bounded Astra planning audit | [ZOOM ZOO vertical-velocity recurrence](M4-11.md) |
-| M4-12 – M6 | planned | See milestone definitions |
+| M4-11 | accepted 13 September 2026 after returned independent review, approved focused re-review and green macOS/Linux CI | [ZOOM ZOO vertical-velocity recurrence](M4-11.md) |
+| M4-12 – M6 | unclaimed; paused for user reassessment | See milestone definitions and current state |
 
 ## M0 — repeatable laboratory
 

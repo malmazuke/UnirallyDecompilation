@@ -1,0 +1,26 @@
+{
+  "id": "m4-15-review-one-step-delay",
+  "changes": [
+    { "from": 1650, "to": 1868, "buttons": ["left"] },
+    { "from": 1869, "to": 2509, "buttons": ["right"] },
+    { "from": 2510, "to": 2705, "buttons": ["left"] },
+    { "from": 2706, "to": 2852, "buttons": ["right"] },
+    { "from": 2853, "to": 2926, "buttons": ["left"] },
+    { "from": 2927, "to": 2928, "buttons": ["right"] },
+    { "from": 2929, "to": 3409, "buttons": ["left"] },
+    { "from": 3410, "to": 4096, "buttons": ["right"] },
+    { "from": 4097, "to": 4305, "buttons": ["left"] },
+    { "from": 4306, "to": 4463, "buttons": ["right"] },
+    { "from": 4464, "to": 4541, "buttons": ["left"] },
+    { "from": 4542, "to": 4544, "buttons": ["right"] },
+    { "from": 4545, "to": 5048, "buttons": ["left"] },
+    { "from": 5049, "to": 5731, "buttons": ["right"] },
+    { "from": 5732, "to": 5732, "buttons": ["left"] },
+    { "from": 5733, "to": 5734, "buttons": ["right"] },
+    { "from": 5735, "to": 5941, "buttons": ["left"] },
+    { "from": 5942, "to": 6105, "buttons": ["right"] },
+    { "from": 6106, "to": 6184, "buttons": ["left"] },
+    { "from": 6185, "to": 6187, "buttons": ["right"] },
+    { "from": 6188, "to": 6719, "buttons": ["left"] }
+  ]
+}

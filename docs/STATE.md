@@ -1,6 +1,6 @@
 # Project state
 
-Updated: 13 September 2026 (M4-08 accepted; M4-09 planning next; M3 remains the latest
+Updated: 13 September 2026 (M4-08 accepted; M4-09 claimed; M3 remains the latest
 accepted milestone, tag `m3`).
 
 ## Current facts
@@ -93,21 +93,22 @@ First implementation milestone: M0 repeatable laboratory. First gameplay feasibi
 For the next Sol coordinator, start with [the compact handover](../tasks/NEXT_SESSION.md).
 The M4-00 candidate and bounded Astra audit need no conversation replay.
 
-**M3 and M4-00 through M4-08 are accepted.** Run the bounded Astra/high
-planning checkpoint for M4-09 and choose the smallest next producer/composition
-task. Preserve native and Classic-pack scope until autonomous inputs close.
+**M3 and M4-00 through M4-08 are accepted.** Continue claimed
+[M4-09](../tasks/M4-09.md): compose recurrent position/residues, the reached
+Y increment, authenticated sampling and contact through frame 1700 while
+keeping velocity and other contact inputs explicit.
 
 Implementation choices should be made through bounded experiments. Original-content handling for Classic is decided by D-0005; remote hosting beyond the private repository, source/replacement-content licensing, legal clearance, online service topology, public accounts/ranking and paid execution budgets remain undecided and do not block M3 implementation. A Linux build of the pinned core (ROM-free) is a natural CI addition when convenient.
 
 ## Milestone status
 
-M0: accepted on 11 September 2026 (M0-00 through M0-06; evidence report [R-0005](research/R-0005-m0-acceptance.md); tag `m0`). M1: M1-01 accepted on 11 September 2026 ([R-0006](research/R-0006-observed-code-map.md)); M1-02 accepted on 11 September 2026 ([R-0007](research/R-0007-player-state.md), [D-0002](decisions/D-0002-data-access-observation.md)); M1-03 accepted on 12 September 2026 ([R-0008](research/R-0008-track-decode.md)); M1-04 accepted and **milestone M1 accepted on 12 September 2026, tagged `m1`** ([R-0009](research/R-0009-m1-acceptance.md)). M2: M2-01A and M2-01 accepted through PR2/PR4; M2-02 accepted through PR5; **milestone M2 accepted on 12 September 2026, tag `m2`** ([R-0011](research/R-0011-m2-acceptance.md)). M3: M3-00 through M3-04 are accepted; **milestone M3 accepted on 13 September 2026, tag `m3`** ([R-0017](research/R-0017-m3-acceptance.md)). M4: M4-00 through M4-08 are accepted; M4-09 planning is next. M5–M6: not started. No calendar/cost promise has been established.
+M0: accepted on 11 September 2026 (M0-00 through M0-06; evidence report [R-0005](research/R-0005-m0-acceptance.md); tag `m0`). M1: M1-01 accepted on 11 September 2026 ([R-0006](research/R-0006-observed-code-map.md)); M1-02 accepted on 11 September 2026 ([R-0007](research/R-0007-player-state.md), [D-0002](decisions/D-0002-data-access-observation.md)); M1-03 accepted on 12 September 2026 ([R-0008](research/R-0008-track-decode.md)); M1-04 accepted and **milestone M1 accepted on 12 September 2026, tagged `m1`** ([R-0009](research/R-0009-m1-acceptance.md)). M2: M2-01A and M2-01 accepted through PR2/PR4; M2-02 accepted through PR5; **milestone M2 accepted on 12 September 2026, tag `m2`** ([R-0011](research/R-0011-m2-acceptance.md)). M3: M3-00 through M3-04 are accepted; **milestone M3 accepted on 13 September 2026, tag `m3`** ([R-0017](research/R-0017-m3-acceptance.md)). M4: M4-00 through M4-08 are accepted; M4-09 is claimed. M5–M6: not started. No calendar/cost promise has been established.
 
 ## Handoff
 
 The next agent should read [the compact handoff](../tasks/NEXT_SESSION.md), this
-file, `AGENTS.md`, [M4-08](../tasks/M4-08.md) and
-[R-0026](research/R-0026-zoom-zoo-position.md). Run the bounded Astra/high
-M4-09 planning audit. Preserve the PAL and frozen
+file, `AGENTS.md`, [M4-08](../tasks/M4-08.md),
+[R-0026](research/R-0026-zoom-zoo-position.md) and [M4-09](../tasks/M4-09.md).
+Continue the claimed task. Preserve the PAL and frozen
 replay/pack identities and keep original content, generated packs and captures
 ignored.

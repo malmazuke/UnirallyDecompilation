@@ -1,4 +1,4 @@
-# Coordinator handover — M4-08 accepted, M4-09 planning next
+# Coordinator handover — M4-08 accepted, M4-09 claimed
 
 Milestone M3 is accepted on 13 September 2026 and tagged `m3`. M4-00 through
 M4-08 are accepted. Read [M4-08](M4-08.md),
@@ -46,9 +46,11 @@ end-1649 four-residue seed, including the slope tails and former `$82:A6E9`
 gap. Independent review approved its own frame-1664 variation. Integration
 `6de3dd5` and hosted run 34741431794 are green.
 
-Run a bounded Astra/high planning audit for M4-09 and choose the smallest next
-producer or composition step. Captured velocity/contact inputs remain explicit;
-native ZOOM ZOO and its pack remain unchanged.
+Continue [M4-09](M4-09.md) in its isolated Sol/medium worktree. Astra's
+read-only composition propagated x/y/residues, regenerated all 1,020 source-
+offset-bound samples and matched contact through frame 1700 once the reached
+Y+1 producer was included. Recover its exact predicates/order and keep velocity
+and other contact-state inputs explicit. Native ZOOM ZOO/pack remain unchanged.
 The user authorized an unattended M4 continuation and at most one weekly usage
 reset only if an actual provider limit is reached; no money, paid credits,
 provider switching, publication or deployment is authorized.

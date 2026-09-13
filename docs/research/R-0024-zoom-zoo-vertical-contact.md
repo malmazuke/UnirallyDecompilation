@@ -104,13 +104,16 @@ timing preclaim. The component report hashes to
 
 ```sh
 python3 -m tools.unirally_lab.native.zoom_zoo_vertical_contact extract-content --contract tests/manifests/content/zoom-zoo-reference-contract.json --rom "$(cat local/rom-location.txt)" --out artifacts/m4-06/content
-python3 -m tools.unirally_lab.native.zoom_zoo_vertical_contact capture --manifest tests/manifests/replay/race-crawler-zoom-zoo-3300.json --out artifacts/m4-06/primary-1650-1682-a --from-frame 1650 --to-frame 1682
+python3 -m tools.unirally_lab.native.zoom_zoo_contact capture --manifest tests/manifests/replay/race-crawler-zoom-zoo-3300.json --out artifacts/m4-06/primary-1650-1682-a --from-frame 1650 --to-frame 1682
 python3 -m tools.unirally_lab.native.zoom_zoo_vertical_contact verify --access artifacts/m4-06/primary-1650-1682-a/access.json --content artifacts/m4-06/content --manifest tests/manifests/native/zoom-zoo-vertical-contact-primary.reference.json --report artifacts/m4-06/final-primary-component.json
 python3 -m unittest tests.tooling.test_zoom_zoo_contact tests.tooling.test_zoom_zoo_vertical_contact -v
 ```
 
 The verifier binds the source ROM/core/patch/replay, exact access capture,
 classification, frame/call/point counts, boundary and all static content. The
+capture step deliberately reuses the implemented M4-05 capture surface because
+its complete watch set contains every M4-06 landmark; the M4-06 module consumes
+that access document and does not expose a separate capture subcommand. The
 focused tests alter ordered ties, signed penetrations, authenticated slope
 coefficients, negative incoming velocity, support loss/reacquisition,
 recontact coordinates and live dependencies, manifest identities and malformed

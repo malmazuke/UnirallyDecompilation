@@ -96,6 +96,14 @@ accepted M4-03 contract, and `verify` checks all 102 ordered calls plus the firs
 non-flat branch neighbourhood against a tracked reference manifest. It does not
 implement autonomous movement or production ZOOM ZOO support.
 
+`zoom_zoo_vertical_contact` is the M4-06 consumer of those access documents.
+It intentionally reuses `zoom_zoo_contact capture` because that capture's watch
+set contains the complete vertical-contact landmarks. Its implemented commands
+are `extract-content`, `verify` and `compare-inputs`; it has no separate
+`capture` command. It evaluates captured incoming arguments against
+independently extracted content and does not provide autonomous movement or
+production ZOOM ZOO support.
+
 | Module | Implemented contract and limits |
 | --- | --- |
 | `freeze_reference --manifest <replay> --samples <first> <second> --out <new file>` | Administrative reference-only projection of two matching fresh-process captures; refuses overwriting an existing output. Dedicated freeze commit precedes native computation. This utility emits a projection rather than a standard check report; it does not validate a native result |

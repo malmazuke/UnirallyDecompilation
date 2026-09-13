@@ -4,6 +4,8 @@ from __future__ import annotations
 import copy
 import json
 from pathlib import Path
+import re
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -164,6 +166,36 @@ class ZoomZooVerticalContactTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "complete sample documents"):
                 compare_inputs(primary, variation, report)
             self.assertFalse(report.exists())
+
+    def test_documented_capture_command_exists_and_dispatches(self) -> None:
+        research = (ROOT / "docs/research/R-0024-zoom-zoo-vertical-contact.md").read_text()
+        match = re.search(r"python3 -m ([\w.]+) capture --manifest", research)
+        self.assertIsNotNone(match, "R-0024 must publish a capture command")
+        module = match.group(1)
+
+        help_result = subprocess.run(
+            [sys.executable, "-m", module, "capture", "--help"],
+            cwd=ROOT, capture_output=True, text=True, check=False,
+        )
+        self.assertEqual(help_result.returncode, 0, help_result.stderr)
+        for option in ("--manifest", "--out", "--from-frame", "--to-frame"):
+            self.assertIn(option, help_result.stdout)
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            output = root / "must-not-exist"
+            dispatch = subprocess.run(
+                [
+                    sys.executable, "-m", module, "capture",
+                    "--manifest", str(root / "missing-manifest.json"),
+                    "--out", str(output),
+                    "--from-frame", "1650", "--to-frame", "1682",
+                ],
+                cwd=ROOT, capture_output=True, text=True, check=False,
+            )
+            self.assertEqual(dispatch.returncode, 2, dispatch.stderr)
+            self.assertIn("No such file or directory", dispatch.stderr)
+            self.assertFalse(output.exists())
 
 
 if __name__ == "__main__":

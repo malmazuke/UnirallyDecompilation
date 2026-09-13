@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "kind": "zoom_zoo_vertical_contact_reference",
+  "scenario_id": "race-crawler-zoom-zoo-right-1653-3300",
+  "description": "Preregistered first-Right-at-1653 variation captured twice through frame 1700. Its measured vertical episode contains 72 calls and 720 point paths through frame 1685; the first measured direction/special boundary is frame 1686 player point 8.",
+  "source": {
+    "rom_sha256": "a1105819d48c04d680c8292bbfa9abbce05224f1bc231afd66af43b7e0a1fd4e",
+    "core_commit": "7d5aa1e656b9171524d01b1b22917197d8121cb4",
+    "core_patch_sha256": "a719f5ffe2222dad4c1ab04336633319ad85004f74e32fc14893a058be333885",
+    "replay_manifest": "tests/manifests/replay/race-crawler-zoom-zoo-right-1653-3300.json",
+    "replay_manifest_sha256": "5cfdd52e0a05ebcb9498a3f3da5fc3b1e6a411eb5286550868f4891b11ccf93d"
+  },
+  "capture_frames": {"start": 1650, "end": 1700, "count": 51},
+  "episode_frames": {"start": 1650, "end": 1685, "count": 36},
+  "calls": 72,
+  "points": 720,
+  "access_sha256": "1965151f925d0917c01f400f2cffd2431db5da39fa664a7bae8def2707b4d21e",
+  "classification_sha256": "40db34d7fd2ce13b582f6333b9bcef9087824d9d05ae964fd7aee53bbd24878d",
+  "classification_counts": {"compatible": 70, "non_flat_angle": 17, "direction_or_special": 15},
+  "direction_boundary": {
+    "ordinal": 72,
+    "frame": 1686,
+    "rider": 0,
+    "first_incompatible": {"point": 8, "predicate": "direction_or_special"}
+  },
+  "static_content": {
+    "contract": "tests/manifests/content/zoom-zoo-reference-contract.json",
+    "contract_sha256": "017a4eb941abb0e87ea0e3be4509d9043198466cb461f560517f355938c1d699",
+    "vertical_slope_coefficients_sha256": "33cde9a32f2ba289253c747ffa9119a006ab4887766cec642ebef4b50acd9f86"
+  },
+  "limits": "Captured-argument reference research only. Contact timing was measured after the input variation rather than preregistered. Direction/special geometry at and after frame 1686 is classified but not reconstructed."
+}

@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "scenario_id": "race-crawler-zoom-zoo-right-1653-3300",
+  "description": "Cold start, 3300 PAL frames (66 s), controller 1 only: the accepted 1P, MIKE and CRAWLER prefix; Down 1000-1005 moves the PICK TRACK highlight from DRAGSTER to ZOOM ZOO and is released before Start 1050-1055; Start 1200-1205 selects Race from NOW PLAYING, which displays MIKE vs BRONSEN and OVER 3 LAPS ON ZOOM ZOO. Right is held 1653-3299 after the observed timer start at 1583; Up remains held 2200-2259. Controller 2 is silent. This is the preregistered M4-06 worker variation.",
+  "tested_behavior": "Reference research only: first Right is deliberately delayed to frame 1653 for the M4-06 preregistered variation. Primary and variation are predicted exact through frame 1649 and first differ in controller input at frame 1650; contact timing and the first direction/special boundary are measured rather than preclaimed.",
+  "rom": {
+    "manifest": "tests/manifests/rom/unirally-pal.json",
+    "sha256": "a1105819d48c04d680c8292bbfa9abbce05224f1bc231afd66af43b7e0a1fd4e"
+  },
+  "core": {
+    "name": "bsnes",
+    "lock": "tools/locks/emulators.json",
+    "commit": "7d5aa1e656b9171524d01b1b22917197d8121cb4",
+    "patch_sha256": "a719f5ffe2222dad4c1ab04336633319ad85004f74e32fc14893a058be333885",
+    "serialization_method": "Strict",
+    "options": {}
+  },
+  "origin": {"kind": "cold_start"},
+  "run": {"frames": 3300, "sample_every": 1, "trace_entries": 64},
+  "inputs": {
+    "timing_unit": "frame",
+    "injection_point": "Buttons are presented on the libretro input callback before retro_run of the frame numbered `from`..`to` (0-based frames after power-on) and withdrawn before the following frame; the core polls the controllers once per frame (R-0002 finding 6). Sub-frame timing is not available.",
+    "controllers": [
+      {
+        "port": 0,
+        "events": [
+          {"from": 300, "to": 305, "buttons": ["start"]},
+          {"from": 620, "to": 625, "buttons": ["start"]},
+          {"from": 750, "to": 755, "buttons": ["start"]},
+          {"from": 900, "to": 905, "buttons": ["start"]},
+          {"from": 1000, "to": 1005, "buttons": ["down"]},
+          {"from": 1050, "to": 1055, "buttons": ["start"]},
+          {"from": 1200, "to": 1205, "buttons": ["start"]},
+          {"from": 1653, "to": 3299, "buttons": ["right"]},
+          {"from": 2200, "to": 2259, "buttons": ["up"]}
+        ]
+      },
+      {"port": 1, "events": []}
+    ]
+  },
+  "fields": [
+    {"name": "wram_sha256", "kind": "wram_sha256", "description": "SHA-256 of the 131072-byte work RAM ($7E0000-$7FFFFF) at the end of the frame"},
+    {"name": "registers", "kind": "registers", "description": "CPU register block at the end of the frame: pc, a, x, y, s, d, b, p, e, mdr, vcounter, hcounter, field, wai, stp"},
+    {"name": "wram_0000_0200", "kind": "wram_range", "start": 0, "length": 512, "description": "Raw diagnostic range $7E0000-$7E01FF (direct page and the top of the stack area). No gameplay interpretation; M1 defines fields."}
+  ],
+  "regeneration_command": "python3 tools/project.py replay compare --manifest tests/manifests/replay/race-crawler-zoom-zoo-right-1653-3300.json --runs 2",
+  "expected": {
+    "sample_digest": "b17677ef0a910d82fb2cd9b8270328f1cc261a6267e6f373cd0af20dfeee5bbb",
+    "final_state_sha256": "d3fbf5dd2d56c941ac1515c1d84aa3f528c29353f8c4ee8cd6e6237afd569951"
+  }
+}

@@ -1197,7 +1197,7 @@ std::vector<std::uint8_t> serialize_zoom_zoo(const ZoomZooState& state) {
             for(auto v:{r.mode,r.angle,r.tile_mode,r.leading_support,r.tile_pose,r.animation_delta,r.tile_pose_enabled})put16(bytes,v);
     }
     if(state.complete_race) {
-        bytes[7]=state.native_initialization?'4':'3';
+        bytes[7]=state.native_initialization?'5':'3';
         for(const auto& r:state.race.riders) {
             for(auto v:{r.laps_remaining,r.checkpoint,r.next_checkpoint,r.start_line_latch,r.checkpoint_display_countdown,r.finished})put16(bytes,v);
             for(auto v:r.time_digits)put16(bytes,v);
@@ -1213,12 +1213,13 @@ std::vector<std::uint8_t> serialize_zoom_zoo(const ZoomZooState& state) {
     if(state.native_initialization) {
         put16(bytes,state.fade_level);
         for(auto v:state.start_boost)put16(bytes,v);
+        put16(bytes,state.result_updates);
     }
     return bytes;
 }
 ZoomZooState deserialize_zoom_zoo(std::span<const std::uint8_t> bytes) {
     const std::array<std::uint8_t,8> magic{'U','R','Z','Z','0','0','0','1'};
-    const bool native_initialization=bytes.size()==571 && bytes[7]=='4';
+    const bool native_initialization=bytes.size()==573 && bytes[7]=='5';
     const bool complete_race=((bytes.size()==565 && bytes[7]=='3') || native_initialization) && std::equal(magic.begin(),magic.begin()+7,bytes.begin());
     const bool sustained=complete_race || (bytes.size()==423 && bytes[7]=='2' && std::equal(magic.begin(),magic.begin()+7,bytes.begin()));
     if(!sustained && (bytes.size()!=395 || !std::equal(magic.begin(),magic.end(),bytes.begin())))throw std::invalid_argument("ZOOM ZOO state identity/width differs");
@@ -1267,6 +1268,9 @@ ZoomZooState deserialize_zoom_zoo(std::span<const std::uint8_t> bytes) {
     if(native_initialization) {
         state.fade_level=in.u16();
         for(auto& v:state.start_boost)v=in.u16();
+        state.result_updates=in.u16();
+        if(state.result_updates>115 || (state.result_updates && state.race.finish_delay!=240))throw std::invalid_argument("invalid ZOOM ZOO result phase");
+        for(auto v:state.start_boost)if(v!=0 && v!=384)throw std::invalid_argument("invalid ZOOM ZOO start boost");
         if(state.fade_level>30)throw std::invalid_argument("invalid ZOOM ZOO fade level");
     }
     for(const auto& surface:state.surface) {
@@ -1274,7 +1278,7 @@ ZoomZooState deserialize_zoom_zoo(std::span<const std::uint8_t> bytes) {
            surface.tile_pose>1 || surface.tile_pose_enabled>1)
             throw std::invalid_argument("ZOOM ZOO surface flags are invalid");
     }
-    if(state.movement.frame<(state.native_initialization?1376U:1649U) || state.movement.frame>(sustained?9999U:1849U))
+    if(state.movement.frame<(state.native_initialization?1376U:1649U) || (!state.native_initialization && state.movement.frame>(sustained?9999U:1849U)))
         throw std::invalid_argument("ZOOM ZOO state is outside trial horizon");
     for(const auto& r:state.reflection) {
         if(r.step>16 || (r.end!=0 && r.end!=9 && r.end!=16) || r.completed>1 ||
@@ -1286,10 +1290,18 @@ ZoomZooState deserialize_zoom_zoo(std::span<const std::uint8_t> bytes) {
     return state;
 }
 void update_zoom_zoo(ZoomZooState& state,const ControllerButtons& buttons,const ZoomZooContent& content) {
+    if(state.native_initialization && state.race.finish_delay==240) {
+        // Original graph load begins on the update following finish display240.
+        // The authenticated load is black for108 updates, then seven brightness
+        // steps. Preserve a final-race archive; the original reuses that memory.
+        if(state.result_updates<115)++state.result_updates;
+        ++state.movement.frame;
+        return;
+    }
     if(buttons.y || buttons.select || buttons.start || buttons.up || buttons.down ||
        (!state.complete_race && buttons.left) || buttons.a || buttons.x || buttons.left_shoulder || buttons.right_shoulder)
         throw std::invalid_argument("ZOOM ZOO trial currently admits Right/neutral and B jump controls only");
-    if(state.movement.frame<(state.native_initialization?1376U:1649U) || state.movement.frame>=(state.sustained?9999U:1849U))
+    if(state.movement.frame<(state.native_initialization?1376U:1649U) || (!state.native_initialization && state.movement.frame>=(state.sustained?9999U:1849U)))
         throw std::invalid_argument("ZOOM ZOO update is outside the declared trial horizon");
     auto next=state;auto& whole=next.movement;
     whole.player_input=sample_controller(buttons);

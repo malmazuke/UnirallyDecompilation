@@ -1,4 +1,7 @@
 #include "presentation.hpp"
+#include "zoom_zoo_movement.hpp"
+#include "content_pack.hpp"
+#include <string>
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -892,4 +895,115 @@ RgbFrame render_dragster_headless_with_rider_art(
     const std::array<RiderArtPose, 2> &rider_art) {
   return render_dragster(sample, content, &rider_art);
 }
+namespace {
+// Small authored UI font. Original scene artwork remains pack content.
+std::array<unsigned,7> ui_glyph(char c) {
+    switch(c) {
+    case '0':return {14,17,19,21,25,17,14};case '1':return {4,12,4,4,4,4,14};
+    case '2':return {14,17,1,2,4,8,31};case '3':return {30,1,1,14,1,1,30};
+    case '4':return {2,6,10,18,31,2,2};case '5':return {31,16,16,30,1,1,30};
+    case '6':return {14,16,16,30,17,17,14};case '7':return {31,1,2,4,8,8,8};
+    case '8':return {14,17,17,14,17,17,14};case '9':return {14,17,17,15,1,1,14};
+    case 'A':return {14,17,17,31,17,17,17};case 'B':return {30,17,17,30,17,17,30};
+    case 'C':return {14,17,16,16,16,17,14};case 'D':return {30,17,17,17,17,17,30};
+    case 'E':return {31,16,16,30,16,16,31};case 'F':return {31,16,16,30,16,16,16};
+    case 'G':return {14,17,16,23,17,17,15};case 'H':return {17,17,17,31,17,17,17};
+    case 'I':return {14,4,4,4,4,4,14};case 'J':return {7,2,2,2,18,18,12};
+    case 'K':return {17,18,20,24,20,18,17};case 'L':return {16,16,16,16,16,16,31};
+    case 'M':return {17,27,21,21,17,17,17};case 'N':return {17,25,21,19,17,17,17};
+    case 'O':return {14,17,17,17,17,17,14};case 'P':return {30,17,17,30,16,16,16};
+    case 'Q':return {14,17,17,17,21,18,13};case 'R':return {30,17,17,30,20,18,17};
+    case 'S':return {15,16,16,14,1,1,30};case 'T':return {31,4,4,4,4,4,4};
+    case 'U':return {17,17,17,17,17,17,14};case 'V':return {17,17,17,17,17,10,4};
+    case 'W':return {17,17,17,21,21,21,10};case 'X':return {17,17,10,4,10,17,17};
+    case 'Y':return {17,17,10,4,4,4,4};case 'Z':return {31,1,2,4,8,16,31};
+    case ':':return {0,4,4,0,4,4,0};case '.':return {0,0,0,0,0,4,4};
+    case '/':return {1,1,2,4,8,16,16};case '-':return {0,0,0,31,0,0,0};
+    default:return {};
+    }
+}
+void ui_text(RgbFrame& frame,int x,int y,std::string_view text,std::array<std::uint8_t,3> ink={255,240,220}) {
+    for(char c:text) {const auto glyph=ui_glyph(c);for(int row=0;row<7;++row)for(int col=0;col<5;++col)
+        if(glyph[static_cast<std::size_t>(row)]&(1U<<(4-col)))pixel(frame,x+col,y+row,ink);x+=6;}
+}
+std::string race_time(unsigned value) {
+    const auto digit=[](unsigned v){return static_cast<char>('0'+v%10);};
+    return {digit(value/6000),':',digit(value/1000%6),digit(value/100),'.',digit(value/10),digit(value)};
+}
+}
+RgbFrame render_zoom_zoo(const ZoomZooState& state,const ClassicContentPack& pack) {
+    RgbFrame frame{};
+    if(state.result_updates) {
+        if(state.result_updates<=108)return frame;
+        rect(frame,0,0,256,224,{34,42,48});
+        ui_text(frame,70,12,state.race.total_times[0]<state.race.total_times[1]?"WINNER":"RUNNER UP");
+        ui_text(frame,12,32,"PLAYER       TOTAL    BEST LAP");
+        unsigned minimum=60000,maximum=0;
+        for(unsigned i=0;i<2;++i) {
+            unsigned best=60000;
+            for(auto lap:state.race.lap_times[i])if(lap<60000) {best=std::min(best,unsigned(lap));minimum=std::min(minimum,unsigned(lap));maximum=std::max(maximum,unsigned(lap));}
+            ui_text(frame,12,45+int(i)*13,i?"BRONSEN":"MIKE");
+            ui_text(frame,90,45+int(i)*13,race_time(state.race.total_times[i]));
+            ui_text(frame,156,45+int(i)*13,race_time(best));
+        }
+        // $83:905F-90ED excludes sentinels and enforces a 200cs graph range.
+        if(maximum-minimum<200)minimum=maximum>=200?maximum-200:0;
+        rect(frame,45,83,1,96,{180,180,100});rect(frame,45,178,170,1,{180,180,100});
+        ui_text(frame,3,83,race_time(maximum));ui_text(frame,3,169,race_time(minimum));
+        for(unsigned i=0;i<2;++i)for(unsigned lap=0;lap<3;++lap) {
+            const auto time=state.race.lap_times[i][lap];
+            if(time>=60000)continue;
+            const int y=178-static_cast<int>((time-minimum)*90U/std::max(1U,maximum-minimum));
+            rect(frame,76+int(lap)*55+int(i)*5,y-2,4,4,i?std::array<std::uint8_t,3>{255,190,70}:std::array<std::uint8_t,3>{255,80,90});
+        }
+        ui_text(frame,70,190,"LAPS ON ZOOM ZOO");ui_text(frame,49,208,"ENTER TO RACE AGAIN");
+        const unsigned brightness=std::min(14U,unsigned(state.result_updates-108U)*2U);
+        for(auto& channel:frame.pixels)channel=static_cast<std::uint8_t>(unsigned(channel)*brightness/14U);
+        return frame;
+    }
+    const auto track=pack.entry("zoom.track-data");
+    std::array<std::uint8_t,65536> vram{};
+    const auto tiles=pack.entry("zoom.bg1-tiles");
+    for(std::size_t tile=0;tile<tiles.size()/128;++tile) {
+        const auto destination=0x4000+(tile/8)*1024+(tile%8)*64;
+        std::copy_n(tiles.begin()+static_cast<std::ptrdiff_t>(tile*128),64,vram.begin()+static_cast<std::ptrdiff_t>(destination));
+        std::copy_n(tiles.begin()+static_cast<std::ptrdiff_t>(tile*128+64),64,vram.begin()+static_cast<std::ptrdiff_t>(destination+512));
+    }
+    const auto bg=pack.entry("zoom.bg2-tiles"),map=pack.entry("zoom.bg2-map"),palette=pack.entry("zoom.palette");
+    std::copy(bg.begin(),bg.end(),vram.begin()+0x2000);std::copy(map.begin(),map.end(),vram.begin()+0xe000);
+    auto cgram=build_race_cgram({state.movement,0,0,0,0,0},palette);
+    const int camera_x=state.race.camera.x,camera_y=static_cast<std::int16_t>(state.race.camera.y);
+    const int bg_x=((camera_x-240)&511)/2,bg_y=((camera_y-208)&511)/2;
+    for(int y=0;y<224;++y)for(int x=0;x<256;++x) {
+        const auto background=background_pixel(vram,0xe000,true,true,0x2000,false,static_cast<std::int16_t>(bg_x),static_cast<std::int16_t>(bg_y),x,y);
+        pixel(frame,x,y,colour(cgram,background));
+        const int world_x=camera_x+x,world_y=camera_y+y;
+        if(world_x<0 || world_y<0 || world_x>=16384 || world_y>=4096)continue;
+        const auto selector=word(track,15+static_cast<std::size_t>((world_y/64)*256+world_x/64)*2);
+        const auto descriptor=word(track,0x800f+static_cast<std::size_t>(selector)*32+static_cast<std::size_t>((world_y%64)/16)*8+static_cast<std::size_t>((world_x%64)/16)*2);
+        int px=world_x&15,py=world_y&15;
+        if(descriptor&0x4000)px=15-px;if(descriptor&0x8000)py=15-py;
+        const auto tile=static_cast<std::uint16_t>(((descriptor&1023)+(px/8)+(py/8)*16)&1023);
+        const auto value=tile_pixel(vram,0x4000,tile,px&7,py&7);
+        if(value)pixel(frame,x,y,colour(cgram,static_cast<std::uint8_t>(((descriptor>>10)&7)*16+value)));
+    }
+    auto art=state.movement;art.riders[0].pose.pose_index=0x04f9;art.riders[1].pose.pose_index=0x0263;
+    for(auto& rider:art.riders)rider.pose.reflected=true;
+    std::array<std::uint8_t,65536> rider_vram{};
+    load_rider_tiles(rider_vram,{art,0,0,0,0,0},pack.entry("presentation.rider.mike.race-tiles.v1"));
+    for(unsigned i=0;i<2;++i) {
+        const auto& rider=state.movement.riders[i];
+        render_rider(frame,rider_vram,cgram,static_cast<int>(rider.motion.x)-camera_x,
+                     static_cast<int>(rider.motion.y)-camera_y,i?136:0,i?0x68:0x66);
+    }
+    rect(frame,0,0,256,12,{15,30,30});
+    ui_text(frame,5,3,std::to_string(3U-std::min(3U,unsigned(state.race.riders[0].laps_remaining)))+"/3");
+    const auto& t=state.movement.timer;
+    ui_text(frame,195,3,race_time(t.minutes*6000+t.tens_seconds*1000+t.seconds*100+t.tenths*10+t.subframe*2));
+    if(state.movement.countdown>=70)ui_text(frame,110,35,"READY");
+    if(state.movement.countdown && state.movement.countdown<70)ui_text(frame,122,35,"GO");
+    if(state.race.riders[0].finished)ui_text(frame,99,35,state.race.total_times[0]<state.race.total_times[1]?"WINNER":"FINISHED");
+    return frame;
+}
+
 } // namespace unirally

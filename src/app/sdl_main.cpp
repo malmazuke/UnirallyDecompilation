@@ -1,6 +1,7 @@
 #include "content_pack.hpp"
 #include "frontend.hpp"
 #include "movement.hpp"
+#include "zoom_zoo_pack.hpp"
 #include "presentation.hpp"
 
 #include <SDL3/SDL.h>
@@ -133,6 +134,7 @@ struct Options {
   std::uint32_t maximum_updates{};
   std::optional<std::uint16_t> fixed_controller_mask;
   bool hidden{};
+  bool zoom_zoo{};
 };
 
 std::uint32_t parse_updates(std::string_view value) {
@@ -157,7 +159,7 @@ std::uint16_t parse_controller_mask(std::string_view value) {
 
 void print_help() {
   std::cout
-      << "Usage: unirally --content-pack PATH [--updates N] [--hidden]\n"
+      << "Usage: unirally --content-pack PATH [--track dragster|zoom-zoo] [--updates N] [--hidden]\n"
       << "Runs the Classic CRAWLER / DRAGSTER native slice at PAL 50 Hz.\n"
       << "Keyboard: arrows, Z=B, X=Y, A=A, S=X, Q=L, W=R, Enter=Start.\n"
       << "Two standard gamepads are tracked; this slice consumes port 0 only.\n"
@@ -179,7 +181,10 @@ std::optional<Options> options(int argc, char **argv) {
     if (index + 1 >= argc)
       throw std::invalid_argument(std::string(option) + " requires a value");
     const std::string_view value(argv[++index]);
-    if (option == "--content-pack")
+    if (option == "--track") {
+      if(value!="dragster" && value!="zoom-zoo")throw std::invalid_argument("unknown track");
+      result.zoom_zoo=value=="zoom-zoo";
+    } else if (option == "--content-pack")
       result.pack = value;
     else if (option == "--updates")
       result.maximum_updates = parse_updates(value);
@@ -263,14 +268,19 @@ int main(int argc, char **argv) try {
   RuntimeContent content(parsed->pack); // validate before SDL or gameplay
   auto movement_content = content.movement();
   auto presentation_content = content.presentation();
-  auto state = unirally::classic_crawler_dragster_start();
+  auto dragster_state=unirally::classic_crawler_dragster_start();
+  const auto zoom_content=parsed->zoom_zoo?unirally::zoom_zoo_content(content.pack):unirally::ZoomZooContent{};
+  auto zoom_state=parsed->zoom_zoo?unirally::classic_crawler_zoom_zoo_start(zoom_content):unirally::ZoomZooState{};
+  auto& state=parsed->zoom_zoo?zoom_state.movement:dragster_state;
+  unsigned restarts=0;
+
 
   if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD))
     throw sdl_error("SDL initialization failed");
   SdlQuitter quit;
   const auto flags = SDL_WINDOW_RESIZABLE |
                      (parsed->hidden ? SDL_WINDOW_HIDDEN : 0U);
-  Window window(SDL_CreateWindow("Unirally — Classic CRAWLER / DRAGSTER",
+  Window window(SDL_CreateWindow(parsed->zoom_zoo?"Unirally — Classic CRAWLER / ZOOM ZOO":"Unirally — Classic CRAWLER / DRAGSTER",
                                  768, 672, flags));
   if (!window)
     throw sdl_error("window creation failed");
@@ -330,6 +340,12 @@ int main(int argc, char **argv) try {
       case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED: redraw = true; break;
       case SDL_EVENT_KEY_DOWN:
       case SDL_EVENT_KEY_UP:
+        if(parsed->zoom_zoo && event.type==SDL_EVENT_KEY_DOWN && !event.key.repeat &&
+           event.key.scancode==SDL_SCANCODE_RETURN && zoom_state.result_updates==115) {
+          zoom_state=unirally::classic_crawler_zoom_zoo_start(zoom_content);
+          input.clear();++restarts;redraw=true;
+          break;
+        }
         if (const auto key = keyboard_key(event.key.scancode)) {
           input.keyboard(*key, event.type == SDL_EVENT_KEY_DOWN);
           if (event.type == SDL_EVENT_KEY_DOWN)
@@ -364,7 +380,8 @@ int main(int argc, char **argv) try {
       } else if (observed_nonzero_input) {
         ++neutral_updates_after_input;
       }
-      unirally::update_movement(state,
+      if(parsed->zoom_zoo)unirally::update_zoom_zoo(zoom_state,unirally::app::controller_buttons(ports[0]),zoom_content);
+      else unirally::update_movement(state,
                                 unirally::app::controller_buttons(ports[0]),
                                 movement_content);
       ++updates;
@@ -377,9 +394,9 @@ int main(int argc, char **argv) try {
       }
     }
     if (redraw) {
-      const auto canonical_before = unirally::serialize_movement_state(state);
+      const auto canonical_before = parsed->zoom_zoo?unirally::serialize_zoom_zoo(zoom_state):unirally::serialize_movement_state(state);
       const auto live_frame =
-          live_presentation.render(state, position, presentation_content);
+          parsed->zoom_zoo?unirally::app::LiveFrame{unirally::render_zoom_zoo(zoom_state,content.pack),true}:live_presentation.render(state, position, presentation_content);
       if (live_frame.used_pose_fallback && !reported_held_frame) {
         std::cout << "Presentation note: unsupported intermediate rider poses use the last recovered rider art while the scene stays current.\n";
         reported_held_frame = true;
@@ -406,7 +423,7 @@ int main(int argc, char **argv) try {
       } else {
         current_identical_fallback_race_run = 0;
       }
-      if (unirally::serialize_movement_state(state) != canonical_before)
+      if ((parsed->zoom_zoo?unirally::serialize_zoom_zoo(zoom_state):unirally::serialize_movement_state(state)) != canonical_before)
         throw std::logic_error("presentation mutated canonical gameplay state");
       draw(renderer.get(), texture.get(), live_frame.frame);
       previous_frame = live_frame.frame;
@@ -436,6 +453,8 @@ int main(int argc, char **argv) try {
             << state.riders[0].motion.velocity_x << "; race phase "
             << static_cast<unsigned>(state.finish.phase) << "; outcome "
             << static_cast<unsigned>(state.finish.outcome) << '\n';
+  if(parsed->zoom_zoo)std::cout<<"ZOOM ZOO result updates "<<zoom_state.result_updates<<"; restarts "<<restarts
+      <<"; totals "<<zoom_state.race.total_times[0]<<'/'<<zoom_state.race.total_times[1]<<'\n';
   return 0;
 } catch (const std::exception &error) {
   std::cerr << "Unirally launch failed: " << error.what() << '\n';

@@ -34,6 +34,7 @@ struct ZoomZooRaceState {
 struct ZoomZooState {
     bool native_initialization{};
     std::uint16_t fade_level{};
+    std::uint16_t result_updates{};
     std::array<std::uint16_t,2> start_boost{};
     bool complete_race{};
     ZoomZooRaceState race;

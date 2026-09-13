@@ -15,7 +15,7 @@ from ..reference.bsnes import BsnesCore, BUTTONS, frame_png
 from ..replay.manifest import derive_script
 
 
-def capture(core_path, out, horizon, post_events):
+def capture(core_path, out, horizon, post_events, variation=None):
     if out.exists():
         raise ValueError('fresh output directory required')
     raw = (ROOT/'tests/manifests/replay/race-crawler-zoom-zoo-3300.json').read_bytes()
@@ -26,6 +26,11 @@ def capture(core_path, out, horizon, post_events):
     inputs = timeline(case, horizon, derive_script(json.loads(raw)))
     for f in range(6725, horizon+1):
         inputs[f] = [[], []]
+    for event in (variation or {}).get('changes',[]):
+        first,last,buttons=event['from'],event['to'],event['buttons']
+        if type(first) is not int or type(last) is not int or not 1377<=first<=last<=horizon or any(b not in BUTTONS for b in buttons):
+            raise ValueError('invalid controller variation')
+        for f in range(first,last+1):inputs[f][0]=sorted(buttons)
     seen = set()
     for event in post_events:
         first, last, buttons = event['from'], event['to'], event['buttons']
@@ -61,7 +66,7 @@ def capture(core_path, out, horizon, post_events):
             core.unload()
     report = dict(kind='m4_16_original_boundary_exploration', frames=[1207,horizon],
                   rom_sha256=ROM_SHA, core_sha256=CORE_SHA, manifest_sha256=PRIMARY_SHA,
-                  timeline_sha256=digest(inputs), timeline=inputs, post_events=post_events,
+                  timeline_sha256=digest(inputs), timeline=inputs, post_events=post_events, variation=variation,
                   wram_sha256=hashes, sram_sha256=cartridge_hashes, video=video)
     (out/'reference.json').write_text(json.dumps(report,separators=(',',':'))+'\n')
     print(json.dumps(dict(frames=report['frames'],wram=digest(hashes),sram=digest(cartridge_hashes))))
@@ -73,9 +78,10 @@ def main():
     p.add_argument('--out',type=Path,required=True)
     p.add_argument('--horizon',type=int,default=7600)
     p.add_argument('--post-events',type=Path)
+    p.add_argument('--case',type=Path)
     a=p.parse_args()
     if not 6725 <= a.horizon <= 15000:
         p.error('horizon must be 6725..15000')
-    capture(a.core.resolve(),a.out,a.horizon,json.loads(a.post_events.read_text()) if a.post_events else [])
+    capture(a.core.resolve(),a.out,a.horizon,json.loads(a.post_events.read_text()) if a.post_events else [],json.loads(a.case.read_text()) if a.case else None)
 
 if __name__=='__main__':main()

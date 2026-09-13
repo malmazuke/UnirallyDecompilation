@@ -68,6 +68,9 @@ struct PresentationContent {
   std::span<const std::uint8_t> result_base_vram, result_palette;
   std::span<const std::uint8_t> result_palette_tail;
 };
+struct ZoomZooState;
+class ClassicContentPack;
+RgbFrame render_zoom_zoo(const ZoomZooState&,const ClassicContentPack&);
 RgbFrame render_dragster_headless(const PresentationSample &,
                                   const PresentationContent &);
 // Presentation-only rider atlas override. Gameplay state still controls the

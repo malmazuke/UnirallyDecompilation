@@ -1,0 +1,143 @@
+"""M4-16 original freeze and pack-only native start/result/restore gate.
+
+Original result loading reuses race WRAM. The canonical result retains an
+archived final race and a semantic load phase; it does not interpret overwritten
+rendering bytes as rider state. Race rows remain byte-exact original projections.
+"""
+from __future__ import annotations
+import argparse
+import json
+from pathlib import Path
+import subprocess
+import tempfile
+from .zoom_zoo_trial_reference import ROOT,ROM_SHA,CORE_SHA,PRIMARY_SHA,sha,digest
+from .zoom_zoo_race_reference import project
+from .zoom_zoo_race import restore_frames
+from .zoom_zoo_trial import BUTTONS
+from ..content.pack import load_rules,validate_pack,TWO_TRACK_RULES_PATH
+
+
+def original(directory):
+    document=json.loads((directory/'reference.json').read_text())
+    if (document['rom_sha256'],document['core_sha256'],document['manifest_sha256'])!=(ROM_SHA,CORE_SHA,PRIMARY_SHA):
+        raise ValueError('original identity differs')
+    first,last=document['frames']
+    if first!=1207 or len(document['timeline'])!=last+1 or digest(document['timeline'])!=document['timeline_sha256']:
+        raise ValueError('original timeline identity differs')
+    if len(document['wram_sha256'])!=last-first+1 or len(document['sram_sha256'])!=last-first+1:
+        raise ValueError('original memory inventory incomplete')
+    rows=[];finish=[None,None];loading=None;archive=None;previous=None
+    guards=json.loads((ROOT/"tests/manifests/native/zoom-zoo-race-guards.reference.json").read_text())["items"]
+    with (directory/'memory.wram').open('rb') as ws,(directory/'memory.sram').open('rb') as ss:
+        for frame in range(first,last+1):
+            w,s=ws.read(131072),ss.read(8192)
+            if len(w)!=131072 or len(s)!=8192 or sha(w)!=document['wram_sha256'][frame-first] or sha(s)!=document['sram_sha256'][frame-first]:
+                raise ValueError(f'original memory differs at {frame}')
+            if frame<1376:continue
+            if loading is None:
+                for rider in (0,1):
+                    if finish[rider] is None and int.from_bytes(w[0xeff+rider*2:0xf01+rider*2],'little'):
+                        finish[rider]=frame
+                if archive is not None and int.from_bytes(archive[515:517],'little')==240:
+                    loading=frame
+            if loading is None:
+                if frame>=1649:
+                    for item in guards:
+                        at=item['address']
+                        if int.from_bytes(w[at:at+item['width']],'little')!=item['value']:
+                            raise ValueError(f'new gameplay guard at {frame}: {at:04x}; recover before evaluating native')
+                if previous is not None and frame%3!=0:
+                    word=lambda at:int.from_bytes(previous[at:at+2],'little')
+                    for rider in (0,1):
+                        if word(0xeff+2*rider) and not word(0x30d+2*rider):
+                            read,write=(0xce7,0xce9) if rider==0 else (0xd11,0xd13)
+                            if ((word(write)-word(read)-1)&31)!=0:
+                                raise ValueError(f'nonempty first-finish announcement queue at {frame}: recovery required')
+                row=bytearray(project(w,s,frame)+w[0xff1:0xff3]+w[0x1261:0x1265]+b'\0\0')
+                row[7]=ord('5');archive=bytearray(row)
+            else:
+                row=bytearray(archive);row[8:12]=frame.to_bytes(4,'little')
+                row[-2:]=min(115,frame-loading+1).to_bytes(2,'little')
+                # Future-relevant race result values survive in cartridge RAM.
+                wanted=s[0x755:0x769]+s[0x7bf:0x7d3]+s[0x769:0x76b]+s[0x7d3:0x7d5]
+                if row[467:511]!=wanted:raise ValueError('result lap/total archive differs from original')
+            previous=w
+            rows.append(row.hex())
+        if ws.read(1) or ss.read(1):raise ValueError('extra original memory')
+    if loading is None or any(f is None for f in finish):raise ValueError('case must finish both riders')
+    # Freeze visible readiness from original video, independently of native.
+    black=document['video'][loading+75-first]
+    visible=next((f for f in range(loading+76,last+1) if document['video'][f-first]!=black),None)
+    if visible!=loading+108:raise ValueError(f'new result load timing requires recovery: {visible}, expected {loading+108}')
+    stable=visible+6
+    if last-stable<200:raise ValueError('200 stable result updates required')
+    return document,rows,dict(finish_frames=finish,loading_frame=loading,first_visible=visible,stable_result=stable,
+                            outcome='player_won' if finish[0]<finish[1] else 'player_lost')
+
+
+def freeze(a,b,out):
+    if out.exists():raise ValueError('fresh freeze required')
+    left,rows,events=original(a);right,other,repeated=original(b)
+    if left!=right or rows!=other or events!=repeated:raise ValueError('two original runs differ')
+    result=dict(kind='m4_16_playable_freeze',frames=[1376,left['frames'][1]],state_bytes=573,
+                original_sha256=digest(left),rows_sha256=digest(rows),events=events,
+                timeline_sha256=left['timeline_sha256'],rom_sha256=ROM_SHA,core_sha256=CORE_SHA,
+                result_inventory='Archived race plus semantic loading count; surviving SRAM lap/total slots checked every update. Tour progression excluded; Race Again selects the authenticated fresh scenario.')
+    out.write_text(json.dumps(result,indent=2)+'\n');return result
+
+
+def compare(a,b,contract,binary,pack,out):
+    if out.exists():raise ValueError('fresh report required')
+    binary=binary.resolve();pack=pack.resolve()
+    head=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT);diff=sha(subprocess.check_output(['git','diff','HEAD'],cwd=ROOT));binary_sha=sha(binary.read_bytes());pack_sha=sha(pack.read_bytes())
+    reference,rows,events=original(a);repeat,other,other_events=original(b);frozen=json.loads(contract.read_text())
+    if reference!=repeat or rows!=other or events!=other_events:raise ValueError('original repeats differ')
+    if digest(reference)!=frozen['original_sha256'] or digest(rows)!=frozen['rows_sha256'] or events!=frozen['events']:
+        raise ValueError('frozen original inventory differs')
+    rules,rules_sha=load_rules(ROOT/TWO_TRACK_RULES_PATH);validate_pack(pack.read_bytes(),rules,rules_sha)
+    last=reference['frames'][1]
+    boundaries={1376,1377,1380,1381,1550,1551,1582,1583,1649,events['loading_frame']-1,events['loading_frame'],events['first_visible'],events['stable_result'],last-1}
+    boundaries.update(restore_frames(rows[1649-1376:events['loading_frame']-1376]))
+    boundaries=sorted(f for f in boundaries if 1376<=f<last)
+    with tempfile.TemporaryDirectory(prefix='zoom-playable-native-') as directory:
+        root=Path(directory);local_pack=root/'classic.pack';local_pack.write_bytes(pack.read_bytes());inputs=root/'inputs.txt';seed=root/'restore.bin'
+        def execute(first,restore=None):
+            inputs.write_text(''.join(f'{f} {sum(1<<BUTTONS.index(b) for b in reference["timeline"][f][0])} 0\n' for f in range(first+1,last+1)))
+            start=['--start','classic.crawler.zoom-zoo']
+            if restore is not None:seed.write_bytes(bytes.fromhex(restore));start=['--seed',str(seed)]
+            run=subprocess.run([str(binary),*start,'--content-pack',str(local_pack),'--inputs',str(inputs)],cwd=root,capture_output=True,text=True,timeout=30)
+            if run.returncode:raise ValueError(f'native failed: {run.stderr}')
+            output=[]
+            for f,line in enumerate(run.stdout.splitlines(),first):
+                label,row=line.split();data=bytes.fromhex(row)
+                if int(label)!=f or len(data)!=573 or data[:8]!=b'URZZ0005' or int.from_bytes(data[8:12],'little')!=f:raise ValueError('native protocol differs')
+                output.append(row)
+            return output
+        actual=execute(1376)
+        if actual!=rows:
+            for i,(x,y) in enumerate(zip(actual,rows)):
+                if x!=y:raise ValueError(f'first mismatch {1376+i}: {[n for n,(v,w) in enumerate(zip(bytes.fromhex(x),bytes.fromhex(y))) if v!=w]}')
+            raise ValueError('native frame count differs')
+        if execute(1376)!=actual:raise ValueError('fresh native initialization differs')
+        for frame in boundaries:
+            if execute(frame,actual[frame-1376])!=actual[frame-1376:]:raise ValueError(f'restore differs at {frame}')
+    if (subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT)!=head or
+        sha(subprocess.check_output(['git','diff','HEAD'],cwd=ROOT))!=diff or sha(binary.read_bytes())!=binary_sha or sha(pack.read_bytes())!=pack_sha):
+        raise ValueError('source/binary/pack changed during validation')
+    result=dict(status='passed',source_commit=head.decode().strip(),source_diff_sha256=diff,binary_sha256=binary_sha,
+                pack_sha256=pack_sha,contract_sha256=sha(contract.read_bytes()),frames=[1376,last],state_bytes=573,
+                rows_sha256=digest(rows),restore_frames=boundaries,events=events,
+                native_inputs='validated static pack and live-compatible controller stream; no original dynamic initialization')
+    out.parent.mkdir(parents=True,exist_ok=True);out.write_text(json.dumps(result,indent=2)+'\n')
+    with (out.parent/'validation-ledger.jsonl').open('a') as stream:stream.write(json.dumps(dict(result,report=str(out),report_sha256=sha(out.read_bytes())))+'\n')
+    return result
+
+
+def main():
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('command',choices=['freeze','compare'])
+    for flag in ['reference','repeat','out']:p.add_argument('--'+flag,type=Path,required=True)
+    for flag in ['contract','binary','pack']:p.add_argument('--'+flag,type=Path)
+    a=p.parse_args()
+    r=freeze(a.reference,a.repeat,a.out) if a.command=='freeze' else compare(a.reference,a.repeat,a.contract,a.binary,a.pack,a.out)
+    print(json.dumps({k:v for k,v in r.items() if k!='restore_frames'},indent=2));print('restores',len(r.get('restore_frames',[])))
+if __name__=='__main__':main()

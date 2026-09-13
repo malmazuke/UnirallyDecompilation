@@ -123,6 +123,31 @@ const std::array<RequiredEntry, 25> required{
      {"presentation.result.classic.palette-tail.v1", 128,
       "cd7b9fac3c3ec53d74450dcb28da0f53a09c927826ca3753ff047851c2b20641"}}};
 
+const std::array<RequiredEntry, 21> zoom_required{{
+    {"zoom.track-data", 50665, "db6770152e399f9d16fc6937b5d56588a8f67e825ae70d6578b77d36053fdd28"},
+    {"zoom.collision-poses", 32768, "9d1754d38c20cb2900239557550211ab6fc23d9b0237e17b78fb29f3bf272c32"},
+    {"zoom.collision-templates", 17249, "2f03a8cb985899436603ef36b233b28f7b4213e4ba106fca328a6b02cdb081c7"},
+    {"zoom.tile-tables", 6496, "649b96ff43ef467fe57bac16eb876f96a1ebc6f0307a5270f97a7ce1f63a84c7"},
+    {"zoom.tile-flags", 203, "11aa211a148bced17e6c1b63a19e6e9c71ff1f8fed83954613f2ea62b15069c4"},
+    {"zoom.progress-transitions", 80, "8a90513f349bc7836513d3495a9bbb90563b9eb7a716fd4aff5b9a4c74fc83df"},
+    {"zoom.pose-slopes", 128, "f6b1ea6a34c78336ca25449c8ddbd23e2417ef829ec09765e695f957cd714584"},
+    {"zoom.displacement-table", 512, "27894923de2aaeb58ca24dedbddadcf0d4d154fbc61ea484e7c248d066e24e1b"},
+    {"zoom.idle-pose-table", 64, "05d2af9f8c0d1d8d8dd1915086f4f4c58456510f3daf357dbd7fdd66e4a8031e"},
+    {"zoom.race-finish-reward-values", 144, "1bb5d513974b4d12954688caa6e82b14e27410c6c23167b5c3bf49f41cb61e9b"},
+    {"zoom.race-finish-reward-classes", 72, "f391cc910dfa30b93f2c134c133e11b88d622ee77c31f93bf3ce3143f2f7ec8a"},
+    {"zoom.speed-masks", 9, "0ca19a78da56137e0926c4ba602d8041648a422b9cf5d0a7c3de4a30998cf58b"},
+    {"zoom.speed-decrements", 18, "c1fab1d9aa1e691d34c1a78e8658cfd52b8334cc5bdec8efb23bedc672988068"},
+    {"zoom.sustained-slope-coefficients", 128, "63f15f5116409177c4d41afb8f66fa1927f48989937af982891d8249040b2b67"},
+    {"zoom.reflection-pose-table", 128, "2a20e85f9ec32303b9c77caaa20110f5dcdf03cd172fa90cd741b88b2acaccbb"},
+    {"zoom.landing-response-matrices", 1512, "229eda89d8f29fd9daf2b2f9247e98e244a7683511d82bfa6abdc6d3ef69782b"},
+    {"zoom.race-finish-poses", 1536, "c1aa7a9e72591a51bf701979359e199e453b35351634ed87049ff5ba721ec01d"},
+    {"zoom.bg1-tiles", 25984, "e7be1f6ab6b4d1a10e4c4a730c030dd6234328b07c31514da9e9a6152fe49117"},
+    {"zoom.bg2-tiles", 672, "ebb6921ca08d48bd76c02879a92647521524eb87d4ab4d4209fd7add1f37d949"},
+    {"zoom.bg2-map", 8192, "a47ec4ddf2128d1126c299a8dea5fde497c326b01d6bd0ccc97483bf0fb904a6"},
+    {"zoom.palette", 352, "874033ba4d54a86a3706e7ba92a17019d6df2ea1a9a3178de2b675ed8f6a7de6"},
+}};
+constexpr std::string_view two_track_rules_sha="991dcde376b1c0b0a5694410d30650d1f92c3318adfb173bd7f7a7062605c742";
+
 std::array<std::uint8_t, 32> hex_digest(std::string_view text) {
   if (text.size() != 64)
     throw std::logic_error("invalid compiled Classic SHA-256");
@@ -242,15 +267,18 @@ ClassicContentPack::ClassicContentPack(const std::filesystem::path &path) {
           "a1105819d48c04d680c8292bbfa9abbce05224f1bc231afd66af43b7e0a1fd4e"))
     throw std::invalid_argument(
         "Classic pack source ROM identity is unsupported");
-  if (rules_identity !=
-      hex_digest(
-          "70712c470db436ad95b02d3a6d51f737be7bb5b27689ca0d99a8297bac31d768"))
-    throw std::invalid_argument(
-        "Classic pack extraction-rules identity is unsupported");
-  if (in.text() != "classic.pal.crawler.dragster.v1")
+  const auto profile=in.text();
+  const auto start=in.text();
+  const bool two_tracks=profile=="classic.pal.crawler.two-tracks.v2";
+  if (profile != (two_tracks ? "classic.pal.crawler.two-tracks.v2" : "classic.pal.crawler.dragster.v1"))
     throw std::invalid_argument("Classic pack profile is unsupported");
-  if (in.text() != "classic.crawler.dragster.race-start.v1")
+  if (start != (two_tracks ? "classic.crawler.race-start.v2" : "classic.crawler.dragster.race-start.v1"))
     throw std::invalid_argument("Classic pack start state is unsupported");
+  if (rules_identity != hex_digest(two_tracks ? two_track_rules_sha :
+      "70712c470db436ad95b02d3a6d51f737be7bb5b27689ca0d99a8297bac31d768"))
+    throw std::invalid_argument("Classic pack extraction-rules identity is unsupported");
+  std::vector<RequiredEntry> selected_required(required.begin(),required.end());
+  if(two_tracks)selected_required.insert(selected_required.end(),zoom_required.begin(),zoom_required.end());
   const auto count = in.u16();
   struct Row {
     std::string id;
@@ -271,9 +299,9 @@ ClassicContentPack::ClassicContentPack(const std::filesystem::path &path) {
     rows.push_back({std::move(id), offset, size, digest});
   }
   std::uint64_t cursor = in.offset();
-  if (entries_.size() != required.size())
+  if (entries_.size() != selected_required.size())
     throw std::invalid_argument("Classic pack inventory is incomplete");
-  for (const auto &expected : required) {
+  for (const auto &expected : selected_required) {
     const auto found = entries_.find(std::string(expected.id));
     if (found == entries_.end())
       throw std::invalid_argument(

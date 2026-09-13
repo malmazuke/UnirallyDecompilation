@@ -1,8 +1,8 @@
 # R-0024 — ZOOM ZOO bounded vertical-contact episode
 
 - Task: [M4-06](../../tasks/M4-06.md)
-- Status: candidate captured-argument reference research; production native
-  behavior is unchanged
+- Status: accepted bounded reference research after one returned finding and
+  approved focused re-review; production native behavior remains unchanged
 - Implementation: `0f33993b12f88fea556f542570cc1e1e45c9fc1a` plus comparison
   hardening `908cde857aa7a67cd2a14e4b8a8c5a5351e05373`
 - Source: PAL ROM SHA-256

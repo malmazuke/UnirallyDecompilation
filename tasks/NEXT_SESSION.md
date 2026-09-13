@@ -1,9 +1,9 @@
-# Coordinator handover — M4-05 accepted, M4-06 claimed
+# Coordinator handover — M4-06 accepted, M4-07 planning next
 
 Milestone M3 is accepted on 13 September 2026 and tagged `m3`. M4-00 through
-M4-05 are accepted. Read [M4-05](M4-05.md),
-[R-0023](../docs/research/R-0023-zoom-zoo-contact.md), its returned
-[review](M4-05-review.md) and approved [re-review](M4-05-rereview.md).
+M4-06 are accepted. Read [M4-06](M4-06.md),
+[R-0024](../docs/research/R-0024-zoom-zoo-vertical-contact.md), its returned
+[review](M4-06-review.md) and approved [re-review](M4-06-rereview.md).
 
 The accepted scope is the identified PAL one-player CRAWLER/DRAGSTER slice:
 supported-ROM extraction creates a validated local Classic pack, later launches
@@ -29,13 +29,16 @@ enforced before lossy reduction; correction `dabb3e5` binds all 30 ordered
 tuples and re-review approved. Merge `34d6ea6` passes 321/321 plus all frozen
 gates; hosted run 34733976248 is green on macOS/Linux including sanitizers.
 
-Continue [M4-06](M4-06.md) in its isolated Sol/medium worktree. Its bounded
-Astra/high audit found the continuous prefix fails earlier than frame 1683:
-frame 1662 hides angle -2 and negative penetrations behind the lossy selected
-summary, frame 1665 enters with negative vertical velocity, and support is lost
-then reacquired before another response guard at 1677. Reconstruct all 66 calls
-on frames 1650--1682, not the direction branch. Native ZOOM ZOO,
-finish/result/presentation and the Classic pack remain unchanged.
+M4-06 closes the complete 66-call/660-point vertical-contact episode through
+frame 1682; its worker and reviewer onset cases close 72/720 and 74/740 before
+their observed direction boundaries. Review returned the capture recipe, not
+the equations; correction `814f787` and a doc-derived CLI test were approved.
+Integration `3694406` and hosted run 34736840760 are green.
+
+Run a bounded Astra/high planning audit for M4-07. Challenge the next actual
+dependency among direction geometry, other contact families and upstream
+autonomous producers. Native ZOOM ZOO, finish/result/presentation and the
+Classic pack remain unchanged until their prerequisites are demonstrated.
 The user authorized an unattended M4 continuation and at most one weekly usage
 reset only if an actual provider limit is reached; no money, paid credits,
 provider switching, publication or deployment is authorized.

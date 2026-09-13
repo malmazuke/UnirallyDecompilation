@@ -1,9 +1,9 @@
-# Coordinator handover — M4-03 accepted, M4-04 claimed
+# Coordinator handover — M4-04 accepted, M4-05 planning next
 
 Milestone M3 is accepted on 13 September 2026 and tagged `m3`. M4-00 through
-M4-03 are accepted. Read [M4-03](M4-03.md),
-[R-0021](../docs/research/R-0021-zoom-zoo-content-contract.md), its returned
-[review](M4-03-review.md) and approved [re-review](M4-03-rereview.md).
+M4-04 are accepted. Read [M4-04](M4-04.md),
+[R-0022](../docs/research/R-0022-zoom-zoo-riding-reference.md), its returned
+[review](M4-04-review.md) and approved [re-review](M4-04-rereview.md).
 
 The accepted scope is the identified PAL one-player CRAWLER/DRAGSTER slice:
 supported-ROM extraction creates a validated local Classic pack, later launches
@@ -22,12 +22,12 @@ metadata; correction `029d0df` was approved. Merge `0856621` passes local
 contract/replay/coverage/content/native gates and 325/325; hosted run
 34727349602 passes macOS/Linux including Linux SDL sanitizers.
 
-Continue [M4-04](M4-04.md) in its isolated Sol/medium worktree. Its bounded
-Astra/high checkpoint rejected premature native and pack expansion: freeze the
-field-bearing primary/release riding reference from end-frame 1649, map the
-actual SRAM-dependent state and identify the first exercised native blocker.
-Native ZOOM ZOO, finish/result/presentation and the Classic pack remain
-unchanged. Preserve all frozen M3/M4 identities. The user authorized an
-unattended M4 continuation and at most one weekly usage reset only if an actual
-provider limit is reached; no money, paid credits, provider switching,
-publication or deployment is authorized.
+Use a bounded Astra/high planning consultation to define M4-05 from the
+accepted blocker: width/stride 256/512, wrap mask `0x3FFF` and point-0
+directional descriptor `0x5800`. Decide whether the next smallest task is the
+directional-contact reference prerequisite or a separated profile/content
+decision; do not conflate pack availability with native correctness. Native
+ZOOM ZOO, finish/result/presentation and the Classic pack remain unchanged.
+The user authorized an unattended M4 continuation and at most one weekly usage
+reset only if an actual provider limit is reached; no money, paid credits,
+provider switching, publication or deployment is authorized.

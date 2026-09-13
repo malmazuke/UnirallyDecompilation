@@ -1,7 +1,8 @@
 # R-0022 — ZOOM ZOO riding reference and continuation boundary
 
 - Task: [M4-04](../../tasks/M4-04.md)
-- Status: candidate reference freeze; independent review pending
+- Status: accepted reference freeze; integrated as `4f7b248` after one returned
+  integrity finding and approved focused re-review
 - Source identity: PAL ROM SHA-256
   `a1105819d48c04d680c8292bbfa9abbce05224f1bc231afd66af43b7e0a1fd4e`
 - Reference: bsnes `7d5aa1e656b9171524d01b1b22917197d8121cb4`,

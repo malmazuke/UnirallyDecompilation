@@ -13,7 +13,9 @@
   No local native suites needed for this docs-only preparation.
 - Local checks: 130 Markdown link targets and nine anchors resolve, TOML parses,
   and `git diff --check` passes. No native/gameplay tests run for this scope.
-- Final delivery conditional on those checks. Actual SHA/review/CI/time/usage
+- Fresh Sol/medium approved candidate `f5a4f34` without material findings;
+  review commit `816b199`, [report](M4-16-preparation-review.md).
+- Final delivery conditional on private sync and final-tip CI. Actual SHA/review/CI/time/usage
   belong in ignored `artifacts/m4-16-preparation/closeout.json`; recover missing
   results from git refs, `git ls-remote origin refs/heads/main` and
   `gh run list --commit <sha>` / `gh run view <id>`.

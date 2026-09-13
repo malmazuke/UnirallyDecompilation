@@ -13,7 +13,10 @@
   Native local suites are unnecessary for this documentation-only change.
 - Local validation: 124 local Markdown link targets resolve; TOML parses and
   actual model defaults are unchanged. `git diff --check` passed.
-- Final delivery is conditional on review/local checks, private sync and final-tip
+- Fresh isolated Sol/medium approved candidate `b3f3b56` without material findings;
+  review commit `768d721`, [report](M4-15-preparation-review.md). Eight fragment
+  anchors also resolve. No gameplay source or frozen evidence changed.
+- Final delivery is conditional on private sync and final-tip
   CI. Record final identities/results/time/usage in ignored
   `artifacts/m4-15-preparation/closeout.json`; if unavailable, recover main history,
   `git ls-remote origin refs/heads/main` and `gh run list --commit <sha>` /

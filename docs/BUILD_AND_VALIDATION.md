@@ -216,6 +216,18 @@ byte/word width and high-byte semantics. It remains a bounded reference-analysis
 surface: velocity, pose and other contact fields are captured external inputs,
 and it does not add native ZOOM ZOO gameplay.
 
+The additive M4-11 research command
+`python3 -m tools.unirally_lab.native.zoom_zoo_vertical_velocity` implements
+`capture`, `derive`, `verify` and `compare-inputs`. It seeds both riders'
+vertical-velocity words once at end-1649, executes every reached jump, gravity,
+vertical-cap and contact publication through frame 1700, and supplies computed
+velocity plus computed response B to the accepted position/contact composition.
+Its exact-bound manifests and ROM-free mutations cover writer order, signed
+wrapping, shifts, widths, short circuits and feedback integrity. It remains a
+bounded reference-analysis surface: horizontal velocity, pose/reflection,
+jump/control and remaining contact state are external inputs, and it does not
+add native ZOOM ZOO gameplay.
+
 If no remote or CI host exists, use the same scripts locally and record their results. Do not describe hosted CI as running until it exists. Integration reruns affected checks on the actual merge candidate; milestones require the broader declared suite. Use sanitizers where supported to expose memory/undefined-behavior defects, alongside replay checks in the release configuration.
 
 Before an unattended run is considered reliable, demonstrate restart after interruption, a failed check reported accurately, and a task resumed from its persisted record. Build success is necessary but cannot substitute for reference comparison.

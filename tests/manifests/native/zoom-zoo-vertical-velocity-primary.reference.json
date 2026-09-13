@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "kind": "zoom_zoo_vertical_velocity_reference",
+  "source": {"scenario_id": "race-crawler-zoom-zoo-3300", "replay_manifest": "tests/manifests/replay/race-crawler-zoom-zoo-3300.json", "replay_manifest_sha256": "acd29bfb72aeaad0791923e22e17a791f5c182220f64b6686dd687984411aefd", "access_sha256": "0bf7d3fbae726c20585a281f628ba42c72d9cff4405ee7c2d3fcd518df68467c", "wram_series_sha256": "53c03d228999d3c1fbe5ee22be64a3965a77848e9b8f8adbeaba4374cba3d13d", "rom_sha256": "a1105819d48c04d680c8292bbfa9abbce05224f1bc231afd66af43b7e0a1fd4e"},
+  "frames": {"seed": 1649, "first": 1650, "last": 1700},
+  "calls": 102,
+  "seed": {"frame": 1649, "player_velocity_y": 0, "opponent_velocity_y": 65458, "wram_series_sha256": "53c03d228999d3c1fbe5ee22be64a3965a77848e9b8f8adbeaba4374cba3d13d"},
+  "rows_sha256": "a158706a1003744fca35510b55dacd5185e45cb7c11e8615450c32198cbf79b2",
+  "writer_counts": {"contact_load": 102, "contact_response_velocity": 77, "contact_velocity_publication": 102, "gravity_velocity": 102, "jump_state": 51, "jump_velocity": 0, "motion_load": 102, "motion_publication": 102, "vertical_boost": 28, "vertical_cap_velocity": 0},
+  "jump_branches": {"inactive_preserve": 51, "neutral_no_arm": 46, "previous_input_preserve": 5},
+  "gravity_branches": {"increment_negative": 23, "increment_nonnegative": 79},
+  "cap_branches": {"ordinary_preserve": 102},
+  "final_velocity_y": {"player": 241, "opponent": 0},
+  "composition": {"calls": 102, "points": 1020, "sample_words_sha256": "98e77e32b3540aa98e796edc5d7fb7c0bb2736e44e8e4b3ee1b4cf1827d188dd", "sample_sources_sha256": "f24ccd2738300030debe07020d4140f4f8d0d6e8e711b0f8ea3d2a8cd526fa27", "response_b_rows_sha256": "a40099baffbc778a0715de02100bf886e55c4c901bd259b80cf418175a86ac9e", "final_response_b": {"player": 0, "opponent": 0}, "final_position": {"player_x": 9824, "opponent_x": 7489, "player_y": 1605, "opponent_y": 1520, "player_x_residue": 12, "opponent_x_residue": -4, "player_y_residue": 10, "opponent_y_residue": 12}},
+  "external_inputs": ["horizontal_velocity", "pose", "reflection", "jump_and_control_state", "vertical_cap_extra_and_boost", "non_velocity_contact_state"],
+  "routines": {"vertical_cap": {"bus": "82:A81A-82:A872", "bytes": 89, "sha256": "abfe21846d6e3d2f91bc649e510db6d5616fb5d7ea879192ec1aa5b8e72aac31"}, "jump": {"bus": "82:A8C9-82:A96E", "bytes": 166, "sha256": "2a21e360ddac360508870de522d2a779c6e75bfdb21f46645690728302077078"}, "gravity": {"bus": "82:A96F-82:A9B2", "bytes": 68, "sha256": "5f3d24df4c743df33e24d2febc24522cd2abe68fe5597ee2abf3ebfac413653c"}},
+  "phase_order": ["persistent_load", "active_jump_or_inactive_preserve", "gravity", "vertical_cap", "position_integration", "motion_publication", "contact", "contact_publication"],
+  "description": "Twelve recurrent words: both riders' vertical velocity and response B plus the accepted eight position/residue words over all 102 calls",
+  "limits": "Frames 1650-1700 only; horizontal velocity, pose/reflection, jump/control and remaining contact state stay captured external inputs; no native ZOOM ZOO support"
+}

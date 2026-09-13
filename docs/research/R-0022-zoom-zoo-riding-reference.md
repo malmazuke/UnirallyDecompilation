@@ -162,14 +162,18 @@ that word occurs in the window. Current native `update_movement` instead calls
 than the track mask. The Classic profile also has no ZOOM ZOO static content.
 These are readiness guards, not authorization to alter native or pack code.
 
-Even if a later task supplies correct content and width, the first original
-player sample set on frame 1650 exposes the next contact prerequisite. The ten
-`$81:8B6A` reads occur point 9 down to point 0; reordered by collision-point
-index they are nine `0x5800` descriptors followed by `0x1AE6`. Point 0 is thus
-`0x5800`, whose `0x4000` direction bit violates the current native
-`(descriptor & 0xC001) == 0` flat-contact guard before response. This is a
-precise observed branch; the meaning or response formula for that bit remains
-unrecovered.
+Even if a later task supplies correct content and width, frame 1650 does not
+yet expose the next contact prerequisite. The ten `$81:8B6A` reads occur point
+9 down to point 0; reordered by collision-point index they are nine `0x5800`
+descriptors followed by `0x1AE6`. Point 0 is thus `0x5800`, but the original
+and native contact paths first test `(descriptor & 0x03FF) == 0` and classify
+it as marker-only. The same is true of every opponent `0x7800` descriptor.
+Player point 9 is `0x1AE6`, for which `(descriptor & 0xC001) == 0`. Therefore
+no frame-1650 sample exercises the direction/special guard. The width 256,
+stride 512, observed `0x3FFF` mask and absent ZOOM ZOO pack content remain
+separate integration prerequisites; the mask's presence does not establish
+that wrapping is exercised. The first genuinely exercised unsupported contact
+branch is left for M4-05's complete ordered 1650--1700 capture to identify.
 
 The existing 1700/2220 checks reinforce, but do not move, that first blocker.
 At end 1700 player/opponent x,y are 9824/1605 and 7489/1520; velocities are
@@ -208,8 +212,9 @@ All original captures, ROM bytes and direct memory dumps remain ignored.
 
 This task freezes a reproducible reference boundary; it does not prove native
 continuation readiness. The smallest next prerequisite is a separate reviewed
-ZOOM ZOO profile/content decision followed by recovery of the frame-1650
-directional contact preprocessing/response branch. That task must pass width
-256 and wrap-mask `0x3FFF` as state/content rather than track-name conditionals,
-and must derive behavior from new original traces. AI, finish, camera, audio,
-result presentation and general track formats remain outside this evidence.
+ZOOM ZOO profile/content decision followed by a complete ordered contact audit
+that locates the first actually exercised unsupported preprocessing or response
+branch. That task must pass width 256 and wrap-mask `0x3FFF` as state/content
+rather than track-name conditionals, and must derive behavior from new original
+traces. AI, finish, camera, audio, result presentation and general track formats
+remain outside this evidence.

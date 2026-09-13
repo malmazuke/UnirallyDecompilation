@@ -8,7 +8,7 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
-from .zoom_zoo_trial_reference import sha,digest
+from .zoom_zoo_trial_reference import sha,digest,ROOT,ROM_SHA,CORE_SHA,PRIMARY_SHA
 from .zoom_zoo_sustained import sustained_project
 
 RIDER_WORDS=[('laps_remaining',0xefb),('checkpoint',0x119f),('next_checkpoint',0x11a3),
@@ -36,11 +36,31 @@ def project(wram,sram,frame):
 
 def rows(path):
     reference=json.loads(path.read_text());result=[]
+    if (reference['rom_sha256'],reference['core_sha256'],reference['manifest_sha256'])!=(ROM_SHA,CORE_SHA,PRIMARY_SHA):raise ValueError('reference identity differs')
+    guards=json.loads((ROOT/'tests/manifests/native/zoom-zoo-race-guards.reference.json').read_text())['items']
+    if reference['frames'][0]!=1649 or not 3299<=reference['frames'][1]<=9999:raise ValueError('race reference horizon invalid')
+    if len(reference['wram_sha256'])!=reference['frames'][1]-1648:raise ValueError('reference frame inventory incomplete')
+    previous=None
     with path.with_suffix('.wram').open('rb') as ws,path.with_suffix('.sram').open('rb') as ss:
         for i,f in enumerate(range(reference['frames'][0],reference['frames'][1]+1)):
             w,s=ws.read(0x20000),ss.read(0x2000)
-            if sha(w)!=reference['wram_sha256'][i]:raise ValueError('raw WRAM differs')
-            result.append(project(w,s,f).hex())
+            if len(w)!=0x20000 or len(s)!=0x2000 or sha(w)!=reference['wram_sha256'][i]:raise ValueError('raw WRAM differs')
+            for item in guards:
+                a=item['address']
+                if int.from_bytes(w[a:a+item['width']],'little')!=item['value']:raise ValueError(f'new constant transition at {f}, {a:04x}')
+            if previous is not None and f%3!=0:
+                for rider in (0,1):
+                    word=lambda a:int.from_bytes(previous[a:a+2],'little')
+                    if word(0xeff+2*rider) and not word(0x30d+2*rider):
+                        read,write=(0xce7,0xce9) if rider==0 else (0xd11,0xd13)
+                        if ((word(write)-word(read)-1)&31)!=0:raise ValueError(f'finish animation queue dependency reached at {f}, rider {rider}')
+            previous=w
+            row=project(w,s,f)
+            if f==1649:
+                from .zoom_zoo_trial import contract
+                seed=bytearray(row[:394]);seed[7]=ord('1')
+                if sha(seed)!=contract()['seed_sha256']:raise ValueError('authentic seed differs')
+            result.append(row.hex())
         if ws.read(1) or ss.read(1):raise ValueError('extra raw memory')
     return reference,result
 

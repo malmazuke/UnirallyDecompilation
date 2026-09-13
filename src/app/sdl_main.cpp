@@ -342,8 +342,8 @@ int main(int argc, char **argv) try {
       case SDL_EVENT_KEY_UP:
         if(parsed->zoom_zoo && event.type==SDL_EVENT_KEY_DOWN && !event.key.repeat &&
            event.key.scancode==SDL_SCANCODE_RETURN && zoom_state.result_updates==115) {
-          zoom_state=unirally::classic_crawler_zoom_zoo_start(zoom_content);
-          input.clear();++restarts;redraw=true;
+          unirally::restart_zoom_zoo(zoom_state,zoom_content);
+          input.clear();live_presentation=unirally::app::LivePresentation{};++restarts;redraw=true;
           break;
         }
         if (const auto key = keyboard_key(event.key.scancode)) {
@@ -396,7 +396,7 @@ int main(int argc, char **argv) try {
     if (redraw) {
       const auto canonical_before = parsed->zoom_zoo?unirally::serialize_zoom_zoo(zoom_state):unirally::serialize_movement_state(state);
       const auto live_frame =
-          parsed->zoom_zoo?unirally::app::LiveFrame{unirally::render_zoom_zoo(zoom_state,content.pack),true}:live_presentation.render(state, position, presentation_content);
+          parsed->zoom_zoo?live_presentation.render_zoom(zoom_state,content.pack):live_presentation.render(state, position, presentation_content);
       if (live_frame.used_pose_fallback && !reported_held_frame) {
         std::cout << "Presentation note: unsupported intermediate rider poses use the last recovered rider art while the scene stays current.\n";
         reported_held_frame = true;

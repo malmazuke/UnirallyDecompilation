@@ -54,7 +54,7 @@ def original(directory):
                             if ((word(write)-word(read)-1)&31)!=0:
                                 raise ValueError(f'nonempty first-finish announcement queue at {frame}: recovery required')
                 row=bytearray(project(w,s,frame)+w[0xff1:0xff3]+w[0x1261:0x1265]+b'\0\0')
-                row[7]=ord('5');archive=bytearray(row)
+                row[7]=ord('6');archive=bytearray(row)
             else:
                 row=bytearray(archive);row[8:12]=frame.to_bytes(4,'little')
                 row[-2:]=min(115,frame-loading+1).to_bytes(2,'little')
@@ -62,6 +62,7 @@ def original(directory):
                 wanted=s[0x755:0x769]+s[0x7bf:0x7d3]+s[0x769:0x76b]+s[0x7d3:0x7d5]
                 if row[467:511]!=wanted:raise ValueError('result lap/total archive differs from original')
             previous=w
+            row+=s[0x106f:0x1073]+s[0x618:0x61c]
             rows.append(row.hex())
         if ws.read(1) or ss.read(1):raise ValueError('extra original memory')
     if loading is None or any(f is None for f in finish):raise ValueError('case must finish both riders')
@@ -79,10 +80,10 @@ def freeze(a,b,out):
     if out.exists():raise ValueError('fresh freeze required')
     left,rows,events=original(a);right,other,repeated=original(b)
     if left!=right or rows!=other or events!=repeated:raise ValueError('two original runs differ')
-    result=dict(kind='m4_16_playable_freeze',frames=[1376,left['frames'][1]],state_bytes=573,
+    result=dict(kind='m4_16_playable_freeze',frames=[1376,left['frames'][1]],state_bytes=581,
                 original_sha256=digest(left),rows_sha256=digest(rows),events=events,
                 timeline_sha256=left['timeline_sha256'],rom_sha256=ROM_SHA,core_sha256=CORE_SHA,
-                result_inventory='Archived race plus semantic loading count; surviving SRAM lap/total slots checked every update. Tour progression excluded; Race Again selects the authenticated fresh scenario.')
+                result_inventory='Race bytes are original projections until loading; thereafter frozen archive is checked against surviving SRAM lap/totals. Graph extrema at SRAM106f/1071 and published totals618/61a are independently projected every frame. Load count is a semantic clock. Tour records excluded by fresh-scenario restart.')
     out.write_text(json.dumps(result,indent=2)+'\n');return result
 
 
@@ -101,16 +102,16 @@ def compare(a,b,contract,binary,pack,out):
     boundaries=sorted(f for f in boundaries if 1376<=f<last)
     with tempfile.TemporaryDirectory(prefix='zoom-playable-native-') as directory:
         root=Path(directory);local_pack=root/'classic.pack';local_pack.write_bytes(pack.read_bytes());inputs=root/'inputs.txt';seed=root/'restore.bin'
-        def execute(first,restore=None):
+        def execute(first,restore=None,restart=False):
             inputs.write_text(''.join(f'{f} {sum(1<<BUTTONS.index(b) for b in reference["timeline"][f][0])} 0\n' for f in range(first+1,last+1)))
             start=['--start','classic.crawler.zoom-zoo']
-            if restore is not None:seed.write_bytes(bytes.fromhex(restore));start=['--seed',str(seed)]
+            if restore is not None:seed.write_bytes(bytes.fromhex(restore));start=['--restart-from' if restart else '--seed',str(seed)]
             run=subprocess.run([str(binary),*start,'--content-pack',str(local_pack),'--inputs',str(inputs)],cwd=root,capture_output=True,text=True,timeout=30)
             if run.returncode:raise ValueError(f'native failed: {run.stderr}')
             output=[]
             for f,line in enumerate(run.stdout.splitlines(),first):
                 label,row=line.split();data=bytes.fromhex(row)
-                if int(label)!=f or len(data)!=573 or data[:8]!=b'URZZ0005' or int.from_bytes(data[8:12],'little')!=f:raise ValueError('native protocol differs')
+                if int(label)!=f or len(data)!=581 or data[:8]!=b'URZZ0006' or int.from_bytes(data[8:12],'little')!=f:raise ValueError('native protocol differs')
                 output.append(row)
             return output
         actual=execute(1376)
@@ -119,14 +120,18 @@ def compare(a,b,contract,binary,pack,out):
                 if x!=y:raise ValueError(f'first mismatch {1376+i}: {[n for n,(v,w) in enumerate(zip(bytes.fromhex(x),bytes.fromhex(y))) if v!=w]}')
             raise ValueError('native frame count differs')
         if execute(1376)!=actual:raise ValueError('fresh native initialization differs')
+        if execute(1376,actual[-1],True)!=actual:raise ValueError('restart retains stale race/result state')
         for frame in boundaries:
             if execute(frame,actual[frame-1376])!=actual[frame-1376:]:raise ValueError(f'restore differs at {frame}')
     if (subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT)!=head or
         sha(subprocess.check_output(['git','diff','HEAD'],cwd=ROOT))!=diff or sha(binary.read_bytes())!=binary_sha or sha(pack.read_bytes())!=pack_sha):
         raise ValueError('source/binary/pack changed during validation')
     result=dict(status='passed',source_commit=head.decode().strip(),source_diff_sha256=diff,binary_sha256=binary_sha,
-                pack_sha256=pack_sha,contract_sha256=sha(contract.read_bytes()),frames=[1376,last],state_bytes=573,
+                pack_sha256=pack_sha,contract_sha256=sha(contract.read_bytes()),frames=[1376,last],state_bytes=581,
                 rows_sha256=digest(rows),restore_frames=boundaries,events=events,
+                comparison_domains=dict(race=[1376,events['loading_frame']-1],race_projected_bytes=571,
+                    result_archived_race_bytes=571,result_original_publication_bytes=8,semantic_loading_clock_bytes=2,
+                    restart='fresh-process result restore then shared native restart; entire new race compared'),
                 native_inputs='validated static pack and live-compatible controller stream; no original dynamic initialization')
     out.parent.mkdir(parents=True,exist_ok=True);out.write_text(json.dumps(result,indent=2)+'\n')
     with (out.parent/'validation-ledger.jsonl').open('a') as stream:stream.write(json.dumps(dict(result,report=str(out),report_sha256=sha(out.read_bytes())))+'\n')

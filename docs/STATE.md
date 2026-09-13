@@ -2,9 +2,9 @@
 
 Updated 14 September 2026: M4-15 is accepted at `8bc2e71`; private main ref and
 exact-tip macOS/Linux CI `34785933369` verified during M4-16 preparation.
-M4-16 is ready/unclaimed for the next Astra/medium session: playable ZOOM ZOO
-from native initialization through result/restart. No M4-16 gameplay work has
-started. See [NEXT_SESSION](../tasks/NEXT_SESSION.md); no M4-17 dispatch.
+M4-16 is in progress in its isolated task checkout: native initialization,
+pack/frontend and result recovery are provisional. Initial Sol review found
+restore and result-inventory defects; acceptance remains outstanding. See [NEXT_SESSION](../tasks/NEXT_SESSION.md); no M4-17 dispatch.
 
 ## Accepted product and evidence
 

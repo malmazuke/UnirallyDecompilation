@@ -63,6 +63,40 @@ int main() {
         rejects([&]{(void)deserialize_zoom_zoo(corrupt);});
     }
 
+    // M4-16 review: phase and result mutations must be rejected, rather
+    // than accepted with changed future countdown or winner/graph semantics.
+    std::array<std::uint8_t,11> header{};header[3]=header[7]=64;header[5]=header[9]=33;
+    ZoomZooContent initial_content{};initial_content.movement.sampling.track=header;
+    auto initial=classic_crawler_zoom_zoo_start(initial_content);
+    const auto initial_bytes=serialize_zoom_zoo(initial);
+    require(initial_bytes.size()==581);
+    require(serialize_zoom_zoo(deserialize_zoom_zoo(initial_bytes))==initial_bytes);
+    for(unsigned offset:{565U,567U,569U}) {
+        auto corrupt=initial_bytes;corrupt[offset]^=1;
+        rejects([&]{(void)deserialize_zoom_zoo(corrupt);});
+    }
+    auto result=initial;result.movement.frame=7000;result.movement.countdown=0;
+    result.fade_level=30;result.start_boost.fill(0);result.result_updates=115;
+    result.race.finish_delay=240;
+    for(unsigned i=0;i<2;++i) {
+        result.race.riders[i].laps_remaining=0;result.race.riders[i].finished=1;
+        for(unsigned lap=0;lap<3;++lap)result.race.lap_times[i][lap]=3000;
+        result.race.total_times[i]=9000;
+    }
+    result.result.graph_minimum=2800;result.result.graph_maximum=3000;result.result.published_totals.fill(9000);
+    auto result_bytes=serialize_zoom_zoo(result);
+    require(serialize_zoom_zoo(deserialize_zoom_zoo(result_bytes))==result_bytes);
+    for(unsigned offset:{467U,487U,507U,509U,573U,575U,577U,579U}) {
+        auto corrupt=result_bytes;corrupt[offset]=0x60;corrupt[offset+1]=0xea;
+        rejects([&]{(void)deserialize_zoom_zoo(corrupt);});
+    }
+
+    const auto before_early_restart=serialize_zoom_zoo(initial);
+    rejects([&]{restart_zoom_zoo(initial,initial_content);});
+    require(serialize_zoom_zoo(initial)==before_early_restart);
+    restart_zoom_zoo(result,initial_content);
+    require(serialize_zoom_zoo(result)==initial_bytes);
+
     // A restored descriptor must not index checkpoint flags before validation.
     race.movement.riders[0].contact.selected_word=0x03f0;
     std::array<std::uint8_t,20> checkpoint_flags{};

@@ -38,11 +38,12 @@ void emit(const unirally::ZoomZooState& state) {
 int main(int argc,char** argv) try {
     if(argc!=7)throw std::invalid_argument("usage: zoom_zoo_runner --seed FILE --content-dir DIR --inputs FILE");
     std::filesystem::path seed,content,inputs;
-    bool native_start=false;
+    bool native_start=false,restart=false;
     std::filesystem::path pack_path;
     for(int i=1;i<argc;i+=2) {
         const std::string option=argv[i];
         if(option=="--seed")seed=argv[i+1];
+        else if(option=="--restart-from") {seed=argv[i+1];restart=true;}
         else if(option=="--start") {
             if(std::string(argv[i+1])!="classic.crawler.zoom-zoo")throw std::invalid_argument("unknown scenario");
             native_start=true;
@@ -82,6 +83,7 @@ int main(int argc,char** argv) try {
     const auto finish_poses=state.complete_race?load("race-finish-poses.bin"):std::vector<std::uint8_t>{};
     const unirally::ZoomZooContent data{movement,coefficients,reflection,landing,finish_poses};
     if(native_start)state=unirally::classic_crawler_zoom_zoo_start(data);
+    if(restart)unirally::restart_zoom_zoo(state,data);
     std::ifstream stream(inputs);
     if(!stream)throw std::runtime_error("cannot open ZOOM ZOO controller stream");
     emit(state);

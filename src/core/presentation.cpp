@@ -931,23 +931,24 @@ std::string race_time(unsigned value) {
     return {digit(value/6000),':',digit(value/1000%6),digit(value/100),'.',digit(value/10),digit(value)};
 }
 }
-RgbFrame render_zoom_zoo(const ZoomZooState& state,const ClassicContentPack& pack) {
+RgbFrame render_zoom_zoo(const ZoomZooState& state,const ClassicContentPack& pack,
+                         const std::array<RiderArtPose,2>* rider_art) {
     RgbFrame frame{};
     if(state.result_updates) {
         if(state.result_updates<=108)return frame;
         rect(frame,0,0,256,224,{34,42,48});
         ui_text(frame,70,12,state.race.total_times[0]<state.race.total_times[1]?"WINNER":"RUNNER UP");
         ui_text(frame,12,32,"PLAYER       TOTAL    BEST LAP");
-        unsigned minimum=60000,maximum=0;
+        const unsigned minimum=state.result.graph_minimum,maximum=state.result.graph_maximum;
         for(unsigned i=0;i<2;++i) {
             unsigned best=60000;
-            for(auto lap:state.race.lap_times[i])if(lap<60000) {best=std::min(best,unsigned(lap));minimum=std::min(minimum,unsigned(lap));maximum=std::max(maximum,unsigned(lap));}
+            for(auto lap:state.race.lap_times[i])if(lap<60000) {best=std::min(best,unsigned(lap));}
             ui_text(frame,12,45+int(i)*13,i?"BRONSEN":"MIKE");
-            ui_text(frame,90,45+int(i)*13,race_time(state.race.total_times[i]));
+            ui_text(frame,90,45+int(i)*13,race_time(state.result.published_totals[i]));
             ui_text(frame,156,45+int(i)*13,race_time(best));
         }
         // $83:905F-90ED excludes sentinels and enforces a 200cs graph range.
-        if(maximum-minimum<200)minimum=maximum>=200?maximum-200:0;
+
         rect(frame,45,83,1,96,{180,180,100});rect(frame,45,178,170,1,{180,180,100});
         ui_text(frame,3,83,race_time(maximum));ui_text(frame,3,169,race_time(minimum));
         for(unsigned i=0;i<2;++i)for(unsigned lap=0;lap<3;++lap) {
@@ -988,7 +989,13 @@ RgbFrame render_zoom_zoo(const ZoomZooState& state,const ClassicContentPack& pac
         if(value)pixel(frame,x,y,colour(cgram,static_cast<std::uint8_t>(((descriptor>>10)&7)*16+value)));
     }
     auto art=state.movement;art.riders[0].pose.pose_index=0x04f9;art.riders[1].pose.pose_index=0x0263;
-    for(auto& rider:art.riders)rider.pose.reflected=true;
+    for(unsigned i=0;i<2;++i) {
+        art.riders[i].pose.reflected=true;
+        if(rider_art) {
+            art.riders[i].pose.pose_index=(*rider_art)[i].pose_index;
+            art.riders[i].pose.reflected=(*rider_art)[i].reflected;
+        }
+    }
     std::array<std::uint8_t,65536> rider_vram{};
     load_rider_tiles(rider_vram,{art,0,0,0,0,0},pack.entry("presentation.rider.mike.race-tiles.v1"));
     for(unsigned i=0;i<2;++i) {
@@ -1003,6 +1010,11 @@ RgbFrame render_zoom_zoo(const ZoomZooState& state,const ClassicContentPack& pac
     if(state.movement.countdown>=70)ui_text(frame,110,35,"READY");
     if(state.movement.countdown && state.movement.countdown<70)ui_text(frame,122,35,"GO");
     if(state.race.riders[0].finished)ui_text(frame,99,35,state.race.total_times[0]<state.race.total_times[1]?"WINNER":"FINISHED");
+    // NMI $80883F-8849 uses the preceding update's $0FF1 and clamps
+    // (fade-15) at zero. $83CCC1-CCC9 increments once per race update.
+    const auto prior_fade=state.movement.frame<=1376U?0U:std::min(30U,state.movement.frame-1377U);
+    const auto brightness=prior_fade>15U?prior_fade-15U:0U;
+    for(auto& channel:frame.pixels)channel=static_cast<std::uint8_t>(unsigned(channel)*brightness/15U);
     return frame;
 }
 

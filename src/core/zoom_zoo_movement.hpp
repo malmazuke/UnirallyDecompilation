@@ -31,8 +31,14 @@ struct ZoomZooRaceState {
     std::array<std::uint16_t,2> total_times{};
     std::uint16_t provisional_1225{}, provisional_1227{}, finish_delay{};
 };
+struct ZoomZooResult {
+    std::uint16_t graph_minimum{}, graph_maximum{};
+    std::array<std::uint16_t,2> published_totals{};
+    bool operator==(const ZoomZooResult&) const = default;
+};
 struct ZoomZooState {
     bool native_initialization{};
+    ZoomZooResult result;
     std::uint16_t fade_level{};
     std::uint16_t result_updates{};
     std::array<std::uint16_t,2> start_boost{};
@@ -60,7 +66,9 @@ std::vector<std::uint8_t> serialize_zoom_zoo(const ZoomZooState& state);
 ZoomZooState deserialize_zoom_zoo(std::span<const std::uint8_t> bytes);
 // $82:D7C6-DBD6, authenticated track header and one-player three-lap scenario.
 ZoomZooState classic_crawler_zoom_zoo_start(const ZoomZooContent& content);
-// Experimental M4-12 continuation; no production frontend dispatch uses this.
+// Race Again selects the same clean scenario after the stable result.
+void restart_zoom_zoo(ZoomZooState& state,const ZoomZooContent& content);
+// Historical continuation and native scenario share this update path.
 void update_zoom_zoo(ZoomZooState& state,const ControllerButtons& buttons,
                      const ZoomZooContent& content);
 } // namespace unirally

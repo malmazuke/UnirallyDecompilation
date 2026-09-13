@@ -26,11 +26,14 @@ def capture(core_path, out, horizon, post_events, variation=None):
     inputs = timeline(case, horizon, derive_script(json.loads(raw)))
     for f in range(6725, horizon+1):
         inputs[f] = [[], []]
+    varied=set()
     for event in (variation or {}).get('changes',[]):
         first,last,buttons=event['from'],event['to'],event['buttons']
         if type(first) is not int or type(last) is not int or not 1377<=first<=last<=horizon or any(b not in BUTTONS for b in buttons):
             raise ValueError('invalid controller variation')
-        for f in range(first,last+1):inputs[f][0]=sorted(buttons)
+        for f in range(first,last+1):
+            if f in varied:raise ValueError('overlapping controller variation')
+            varied.add(f);inputs[f][0]=sorted(buttons)
     seen = set()
     for event in post_events:
         first, last, buttons = event['from'], event['to'], event['buttons']

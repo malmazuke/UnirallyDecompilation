@@ -1,4 +1,5 @@
 #include "frontend.hpp"
+#include "zoom_zoo_movement.hpp"
 
 #include <algorithm>
 #include <limits>
@@ -147,6 +148,20 @@ LiveFrame LivePresentation::render(const MovementState &state,
                    recovered_pair_.reflected[1]}};
   return {render_dragster_headless_with_rider_art(sample, content, rider_art),
           true};
+}
+
+LiveFrame LivePresentation::render_zoom(const ZoomZooState& state,const ClassicContentPack& pack) {
+  const bool fallback=!is_recovered_pose_pair(state.movement);
+  if(!fallback) {
+    for(unsigned i=0;i<2;++i) {
+      recovered_pair_.pose_indices[i]=state.movement.riders[i].pose.pose_index;
+      recovered_pair_.reflected[i]=state.movement.riders[i].pose.reflected;
+    }
+  }
+  const std::array<RiderArtPose,2> art{{
+    {recovered_pair_.pose_indices[0],recovered_pair_.reflected[0]},
+    {recovered_pair_.pose_indices[1],recovered_pair_.reflected[1]}}};
+  return {render_zoom_zoo(state,pack,&art),fallback && !state.result_updates};
 }
 
 } // namespace unirally::app

@@ -1,5 +1,8 @@
 # R-0027 — bounded ZOOM ZOO position/contact composition
 
+- Status: accepted bounded reference research after independent approval;
+  production native behavior remains unchanged
+
 ## Scope and identity
 
 This record composes the accepted M4-08 position integrator and M4-05--M4-07

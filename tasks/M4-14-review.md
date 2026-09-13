@@ -46,13 +46,14 @@ the implementation failure in the first case.
 
 ## Verdict
 
-**Return candidate `de521766e9c7a3c22890fec0e959e1060b640306` for
-correction.** One qualifying withheld case exposes an exact player-velocity
-divergence on a full landing. The candidate primary and one material late
-variation pass, but they do not cover that branch. State-completeness evidence
-also needs to be consolidated from the corrected continuous-Right access audit,
-and the new serialized binary fields lack the validation used by the existing
-state schema.
+**Approve corrected candidate
+`e730aaa52f176ed4e7dd564c985b8d9d64c9d5b8`; no material finding remains.**
+Initial candidate `de521766e9c7a3c22890fec0e959e1060b640306` was returned because
+one qualifying withheld case exposed an exact player-velocity divergence on a
+full landing. The correction fixes that ordering defect, validates the new
+serialized binary fields and closes the state audit from the authentic
+continuous-Right capture. The corrected candidate passes the disclosed
+regression, the retained material case and a fresh post-fix replacement.
 
 ## Initial findings
 
@@ -130,7 +131,7 @@ The late replacement repeats with rows SHA-256
 It changes the later player landings from primary's 2729/2810/2836 sequence to
 2728/2815/2843 and changes the subsequent landing and mode series through 3299.
 It qualifies recovery at 2185 with 1,114 later updates and matches all 423 bytes,
-two native processes and all 88 declared restore boundaries. Report SHA-256 is
+two native processes and all 94 declared restore boundaries. Report SHA-256 is
 `aba37dfbaf52a85d126762adbf9d653d14186f6fcbe3446607993faffb1705`.
 
 The review binary SHA-256 is
@@ -158,3 +159,92 @@ inspection found no ROM, repository, reference or emulator fallback path.
 Broad debug/sanitizer and integration gates remain intentionally deferred to the
 primary until the initial findings are corrected. M4-14 is not approved at this
 candidate.
+
+## Correction re-review preregistration
+
+Corrected candidate `e730aaa52f176ed4e7dd564c985b8d9d64c9d5b8` was supplied after
+the initial review. Before inspecting, building or executing its implementation,
+I selected one fresh replacement for the failed initial case:
+`m4-14-rereview-neutral-2288-2304-b-2305-2319`. It removes Right through
+the primary's later 2304 full landing, then applies Right+B across the 2305 mode
+entry. Prediction before capture: the changed approach and launch will produce a
+different full-landing/mode sequence, exercise the corrected later-contact code
+away from the disclosed 2076 regression, and retain a qualifying recovery plus
+at least 200 subsequent updates through 3299. Two fresh original captures and a
+new freeze must qualify before any corrected native evaluation.
+
+## Correction assessment
+
+R1 is correctly fixed by limiting the magnitude-28 vertical-to-horizontal
+conversion to continued contact where the prior unsupported count is below
+nine. The source path `$81:92FE–9309` sends the nine-update full landing directly
+to correction. The disclosed regression now matches all 423 bytes over 1,650
+updates, repeats in a second native process and restores at all 69 frozen
+boundaries, including 2075/2076. A focused authored case independently preserves
+velocity across a magnitude-28 full landing and verifies that airtime clears.
+
+R2 is fixed for both riders. Deserialization now rejects values above one in all
+five binary surface fields, with a corruption check for every rider/field pair.
+The check executes before restored state can affect an update.
+
+R3 is closed in [R-0033](../docs/research/R-0033-sustained-traversal.md). I
+independently checked the private `continuous-read-audit` against the primary:
+all 1,651 whole-WRAM hashes match, 30,355,912 instructions completed below the
+ring bound, and the aggregate has no unresolved stores, non-ROM PCs, resolution
+conflicts or dropped resolutions. The producer-region audit reports zero
+unresolved accesses. The documentation maps newly reached gameplay reads to
+serialized fields, rebuilt scratch or authenticated static/constant inputs and
+explicitly discards the old Right+Up audit. Its output-side audio/presentation
+limit is appropriately outside this simulation claim.
+
+The frozen recovery interpretation meets the task wording. It was declared
+before native tuning and uses authenticated state and writers: after mode entry
+at 1992 and exit at 1993, the primary progress transition count rises from -35
+to -32, then a full player landing occurs at 2185 with nonzero horizontal
+velocity (-214). The run retains another 1,114 updates through 3299, including
+later mode entries, exits and full landings. Repeated returns make this local
+resumed progress rather than monotonic obstacle clearance or track completion,
+which the contract and research record state explicitly. The criterion does not
+shorten the required continuous-Right horizon or substitute an earlier case.
+
+The fresh post-fix case qualified before corrected native evaluation. Original
+rows SHA-256 is
+`a6b5d32a7756cf7715e9f7d73793c541509cb35d1308f5495e646ded0b613c93`;
+its reference files are byte-identical at SHA-256
+`55df365eeb7968ed913e23c622f11852731707fc47d0a4d94b6dfc0f97c93b66`.
+It changes the primary 2304 landing to 2305 at angle -18 and replaces the later
+landing/mode sequence through frame 3299. It qualifies recovery at 2185 with
+1,114 subsequent updates and matches all 423 bytes in two native processes plus
+all 96 restore boundaries. Corrected report SHA-256 is
+`d69ad8e7f3998df6428760d3312dda81f0a162b92421e2ef3ca91ff47faa2b1b`.
+
+Corrected report SHA-256 values are
+`685aa0f7647e877969892cb8d84efc50278407a4fddb29b8da1ee30ed23cb2f9`
+for primary,
+`d84a11517a882ed492be0996eb3e48d2ab1633b3610f3e45bbe8534fb30f7824`
+for the disclosed 2076 regression, and
+`a946195519f41d7c64c9a3a8f617a381edbb0d9c8879a625bf027e96cdd3b713`
+for the retained late material case. The inert negative also remains exact. The
+corrected review binary SHA-256 is
+`5f6e73c258f18e98b795709eb5a3d103fd55af84e9371cfa296377c65364388d`.
+
+On the corrected candidate, `ctest --test-dir build/app-debug
+--output-on-failure` passes 21/21 and the sustained/trial tooling command passes
+6/6. ROM inspection passes all ten identity fields and the PAL internal checksum.
+Primary's corrected denied-reference run executes all 1,651 states while the
+same sandbox denies both repository reference and ROM reads; removing one
+required static content file fails. Source, linkage and binary-string inspection
+also show no emulator, ROM or reference fallback path.
+
+Primary reports the broad matrix passing after correction: app-debug and
+app-sanitize each pass 403 checks with no skip, missing fixture or failure; all
+11 broad commands pass; and 24 debug/sanitize differential and restore commands
+cover M4-12 primary plus three cases, M4-13 primary plus four cases, and M4-14
+primary plus the disclosed and retained review cases. Integration, private-origin
+synchronization and hosted CI remain pending at this review commit.
+
+Approval is limited to the authentic end-1649 seed, the continuous-Right primary
+and reviewed Right/neutral/B variations through 3299, both riders, the 423-byte
+state and authenticated static content. It does not establish full-track support,
+monotonic progress, frontend/presentation/audio behavior or private Linux
+differential execution.

@@ -145,3 +145,21 @@ serializes to the same 333-byte `URMV0001` identity accepted in M2/M3-01. The
 runner accepts either this start ID plus `--content-pack`, or the prior
 `--seed`/`--content-dir` research boundary. Pack mode still accepts a canonical
 saved state for fresh-process continuation.
+
+## Experimental ZOOM ZOO trial (M4-12)
+
+`zoom_zoo_movement.hpp` declares the task-scoped 395-byte `URZZ0001` continuation.
+The implementation at the end of `movement.cpp` reuses the accepted semantic
+helpers without changing DRAGSTER dispatch. `update_zoom_zoo` orders controller
+and AI production, phase-selected rider functions, reflection/throttle/gravity,
+speed limits, position and pose, timer/rewards, then both contact calls. It
+admits the frozen 1650–1849 Right/neutral trial only; the app has no new track
+selection or presentation support. `vertical_contact.cpp` implements the direct
+and mirrored vertical-column reducer and bounded landing response. Unsupported
+branches reject transactionally. See R-0030 for source addresses and limits.
+
+`zoom_zoo_runner` opens only canonical seed, static content and controller rows.
+The Python `zoom_zoo_trial` laboratory authenticates content and compares
+reference output outside that process, including three fresh-process restores.
+`zoom_zoo_trial_extract` stops original execution before the race to extract
+immutable landing matrices. It is never linked to or called by native gameplay.

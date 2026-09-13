@@ -47,3 +47,10 @@ add_test(NAME classic_content_pack_identity_rejection COMMAND content_pack_tests
 add_executable(presentation_tests presentation_tests.cpp)
 target_link_libraries(presentation_tests PRIVATE unirally_presentation)
 add_test(NAME presentation_gather_mapping_and_determinism COMMAND presentation_tests)
+
+add_executable(vertical_contact_probe vertical_contact_probe.cpp)
+target_link_libraries(vertical_contact_probe PRIVATE unirally_contact)
+
+add_executable(zoom_zoo_trial_tests zoom_zoo_trial_tests.cpp)
+target_link_libraries(zoom_zoo_trial_tests PRIVATE unirally_movement)
+add_test(NAME zoom_zoo_trial_width_state_and_guards COMMAND zoom_zoo_trial_tests)

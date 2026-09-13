@@ -49,6 +49,7 @@ def project(wram:bytes,sram:bytes,frame:int)->bytes:
     for rider in (0,1):
         for _name,address in RIDER_EXTRA:result+=wram[address+2*rider:address+2*rider+2]
     result+=wram[0x31b:0x31c]
+    result+=wram[0x150b:0x150c]
     return bytes(result)
 def guards(wram:bytes,sram:bytes)->dict:
     result={f'rider_{r}_{a:04x}':int.from_bytes(wram[a+2*r:a+2*r+2],'little') for r in (0,1) for a in RIDER_GUARDS}
@@ -86,6 +87,16 @@ def capture(access_dir:Path,out:Path)->dict:
                       'rider_extra':RIDER_EXTRA,'transition_rejection_addresses':[0xfd1,0xfd3],'opponent_horizontal_address':0x31b},
             'guards':observed_guards[0],'changed_guards':changed,'rows_sha256':digest(rows),'rows':rows}
     out.write_text(json.dumps(result,indent=2)+'\n');return result
+
+def expanded_access_command(out:Path)->list[str]:
+    from .zoom_zoo_vertical_velocity import capture_command
+    command=capture_command(ROOT/'tests/manifests/replay/race-crawler-zoom-zoo-3300.json',out)
+    command[command.index('--to-frame')+1]='1849'
+    command[command.index('--timeout')+1]='600'
+    existing={int(command[i+1],0) for i,v in enumerate(command[:-1]) if v=='--watch-address'}
+    for address in list(range(0x300,0x1370,2))+list(range(0x211e,0x212a,2)):
+        if address not in existing:command+=['--watch-address',hex(address)]
+    return command
 
 def main():
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('--access-dir',type=Path,required=True);p.add_argument('--out',type=Path,required=True);a=p.parse_args()

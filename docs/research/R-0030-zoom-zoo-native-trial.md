@@ -113,3 +113,51 @@ open original state/ROM/core/captures. The extraction stops at 1297 and copies
 only the declared static range; it does not provide post-seed state. A native
 mathematical replacement for the initializer can follow if independently
 verified; guessing fixed-point rounding now would weaken the evidence.
+
+## Native review candidate: exact primary and dependency inventory
+
+The primary now reproduces 200 consecutive updates (1650–1849) for both riders,
+all 395 canonical bytes, from one end-1649 seed. Two new fresh original captures
+have identical projected-row digest
+`a0f39c3b22f9e5c5ca62331281126a2a4df6b8d712881ad910e4329015ab1947`.
+The original 394-byte contract remains frozen; additive manifests bind immutable
+landing content, the retained OAM seed byte, and excluded-mode guards. This is
+candidate evidence, not task acceptance or a full-track claim.
+
+| Future-affecting input | Native producer / authenticated source |
+| --- | --- |
+| Both motion/contact records, four residues, pose/history and idle oscillator | Original seed projection in `prepare.rider_seed`; native `integrate_zoom_axis`, `update_pose`, `update_idle_pose`, vertical contact. No per-frame import. |
+| Throttle, jump, rolling, quarter turns, speed modifiers, progress | Reused semantic helpers plus `update_zoom_throttle`; caller order follows `$82:8Axx–92xx`. Phase-selected progress precedes limits/integration. |
+| Reflection step/end/base/override/completion/hold/drive flag/air turns | Explicit extra words from the seed; `update_reflection_transition` (`$82:A35B–A49E`) and active pose control (`$82:A237–A287`). Air-turn clear follows `$82:9D7F`. Reflection's ordinary gate uses the inactive phase; player call precedes active functions, opponent follows rolling. |
+| Controller axes and synthesized brake/rotation/jump words | `sample_controller` and `update_zoom_ai` (`$83:E082–E253`). Current native input domain is Right/neutral; no invented brake/trick mapping is exposed. |
+| AI counters/selector, learned-feature value, queue/timer | Seeded canonical records; native AI, quarter-turn/reward and timer functions. Combined rotation/reward, nonzero landing orientation response and multi-axis AI tricks reject. |
+| Base cap, direction latch, wrong-direction counter | Explicit per-rider seed fields and native active recurrence. Unrecovered wrong-direction reward rejects at its trigger. |
+| Speed-decay screen predicate | Opponent `$150B` has no overlapping writer in complete primary accesses: retained seed byte 101 is serialized. Player boost is zero in the reference; native requires boost below 16, for which either optional 16-unit subtraction leaves it unchanged. No provisional screen value remains. Cases must retain the OAM invariant. |
+| Geometry, collision poses, angle coefficients, landing matrices, reflection poses, animation/reward/decay tables | Identity-bound static inventory and reproducible extractor. Landing matrices are pre-race constants, not captured velocities. |
+| Excluded mode/control guards, track masks, AI strength/adjustment, SRAM options | Original seed plus unchanged per-frame primary/reference guard checks; main and additive guard manifests. Native constants implement only those authenticated modes. A changed reference guard rejects the case. |
+| Caller scratch, contact probes, multiply temporaries, phase-selected rider selector | Derived locally each update; no scratch dump is a native input. `$1003/1005` gate only audio commands after response-B publication and do not affect this gameplay projection. |
+
+The audit distinguishes scratch from persistent words. For example `$11D7` is
+the current rider's boost scratch; persistent rider boosts are `$11D9/$11DB`.
+Reads of `$0359/$035B`, extra trick counters `$042F–0435`, AI mode `$0C6D`,
+AI control `$0C73`, boost bonus `$0DED`, AI strength `$1275`, adjustment `$1281`
+and `$1283` are guarded by the additive inventory. Source copy-in/copy-out paths
+and the field map in `prepare.py` bind persistent state to semantic records.
+No later captured dynamic input is passed to the native runner. Independent
+review must scrutinize the bounded guard assumptions and the inventory itself.
+
+The expanded interval adds opponent support/reacquisition at 1778, auxiliary
+boundary contact at 1804, and the matrix landing at 1823 followed by boost tile
+at 1824. The landing changes velocity `(-302,+286)` to `(-90,-182)`; the transform
+uses the signed middle product before doubling (negative products round down).
+The next boost update resets vertical velocity and adds 128 to horizontal
+velocity before active damping/throttle. The auxiliary boundary path increments
+only the low duration byte and retains both previous uncorrected coordinates.
+ROM-free tests cover that width distinction, negative slope rounding, malformed
+state/input, transactional rejection and altered static content.
+
+`zoom_zoo_trial compare` passes the primary and fresh-process restores at 1700,
+1804 and 1823 with extracted content. It copies only seed, static files and
+controllers into a new native working directory. Native code neither links an
+emulator nor reads the ROM/reference. Full acceptance still needs reviewer-owned
+relevant variations, Sol approval and the final regression/CI/private-push matrix.

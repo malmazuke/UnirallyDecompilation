@@ -17,7 +17,7 @@ RIDER_WORDS=[('laps_remaining',0xefb),('checkpoint',0x119f),('next_checkpoint',0
              ('time_tenths',0xe4f),('time_hundredths',0xe3f)]
 GLOBAL_WORDS=[('provisional_1225',0x1225),('provisional_1227',0x1227),('finish_delay',0xf0f)]
 CAMERA_WORDS=[('x',0x41d),('y',0x421),('velocity_x',0x4f9),('velocity_y',0x4fd),('lookahead',0x553),('screen_xy',0x1513)]
-STATE_BYTES=529
+STATE_BYTES=549
 
 def project(wram,sram,frame):
     result=bytearray(sustained_project(wram,sram,frame));result[7]=ord('3')
@@ -27,6 +27,7 @@ def project(wram,sram,frame):
     for a in (0x769,0x7d3):result+=sram[a:a+2]
     for _,a in GLOBAL_WORDS:result+=wram[a:a+2]
     for _,a in CAMERA_WORDS:result+=wram[a:a+2]
+    result+=wram[0x114d:0x1161]
     assert len(result)==STATE_BYTES
     return bytes(result)
 
@@ -48,7 +49,7 @@ def freeze(a,b,out):
     if any(f is None for f in finish) or reference['frames'][1]-max(finish)<200:raise ValueError('both finishes and 200 subsequent updates required')
     result={k:reference[k] for k in ['case','frames','rom_sha256','core_sha256','manifest_sha256','timeline_sha256','seed_wram_sha256','wram_sha256']}
     result.update(kind='m4_15_race_freeze',state_bytes=STATE_BYTES,rider_words=RIDER_WORDS,global_words=GLOBAL_WORDS,
-                  camera_words=CAMERA_WORDS,cartridge_lap_slots=[0x755,0x7bf],cartridge_totals=[0x769,0x7d3],
+                  checkpoint_seen_range=[0x114d,20],camera_words=CAMERA_WORDS,cartridge_lap_slots=[0x755,0x7bf],cartridge_totals=[0x769,0x7d3],
                   rows_sha256=digest(left),state_sha256=[sha(bytes.fromhex(r)) for r in left],finish_frames=finish,
                   outcome='player_won' if finish[0]<finish[1] else 'player_lost',
                   horizon_rationale='Complete three-lap race and entire 240-update post-player-finish display; 236 updates after opponent finish. Result-screen loading/rendering follows this simulation domain.',

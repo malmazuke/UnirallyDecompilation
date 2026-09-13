@@ -95,3 +95,31 @@ tests pass. Primary comparison passes 200 exact updates and fresh native restore
 1744/1745/1761/1762. Accepted M4-12 primary and its three restores also pass.
 Independent cases/review, full corrected-source gates, denied-reference runtime
 experiment and final private main synchronization/CI remain pending.
+
+## Initial independent findings and corrections
+
+Candidate `f1cd993` was returned with two independently discovered domain gaps.
+The early B1678–1692 case reached a zero-half-dy landing at 1760; the late
+B1684–1698 case reached nonnegative first-probe support at 1746. Both cases
+were preregistered and captured twice before native evaluation. They become
+corrected regressions; neither may be counted as fresh withheld acceptance.
+
+The original coarse-angle helper uses bounded subtraction, not division.
+Zero half-dy terminates at angle four; zero dx in the vertical branch terminates
+at 32 then clamps to 31. Both-zero takes the horizontal branch. The correction
+preserves these endpoints and tests them without game data. First-probe support
+is initialized at `$81:8FEF–902D` before the ordered remaining-probe reduction;
+a later winning or tied probe can clear `$0F5D`. The late case takes this path,
+so the separate final-leading-support rejection remains explicit. Authored
+checks exercise positive first-probe support and later tie replacement.
+
+Corrected early case matches all 200 updates, landings1740/1760, 109 updates
+after selected landing, restores1739/1740/1759/1760. Corrected late case matches
+all 200 updates, landings1746/1762, 103 subsequent updates, restores
+1745/1746/1761/1762. Fresh untuned replacement cases and re-review remain required.
+
+A source-access comparison with M4-12 finds 38 newly reached gameplay read sites
+and zero new ROM-read sites. The new reads are existing jump fields, landing
+scratch/orientation/history/input, rolling level, and `$132B`. The latter is the
+only added constant guard; it is zero every frame. The first denied-reference
+experiment passes on candidate `f1cd993`; rerun it on the corrected candidate.

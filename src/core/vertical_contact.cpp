@@ -59,9 +59,18 @@ VerticalContactSummary summarize_vertical_contact(const FlatContactContent& cont
                                               std::uint16_t x,std::uint16_t y) {
     std::array<Probe,10> probes{};
     for (std::size_t i=0;i<probes.size();++i) probes[i]=preprocess(content,points[i],samples[i],x,y);
-    require(probes[0].penetration>=0x80U,"vertical contact reaches nonnegative first-probe support");
     VerticalContactSummary result{};
     std::uint8_t support=probes[0].penetration==0xa0U ? 0xff : probes[0].penetration, angle=0xe0;
+    // $81:8FEF-902D initializes an ordinary vertical first probe before
+    // the remaining ordered reduction. A later winner can clear $0F5D.
+    if(probes[0].penetration<0x80U) {
+        result.leading_support=true;
+        result.any_nonnegative_probe=true;
+        result.penetration=probes[0].penetration;
+        angle=probes[0].angle;
+        result.selected_word=probes[0].descriptor;
+        result.selected_high=static_cast<std::uint8_t>(probes[0].descriptor>>8U);
+    }
     for (std::size_t i=1;i<probes.size();++i) {
         const auto& probe=probes[i];
         if (probe.penetration==0xa0U) {
@@ -127,9 +136,11 @@ void resolve_vertical_contact(RiderContactState& rider,ContactMotion& motion,
             // R-0025: signed displacement quadrant and coarse-angle sentinel.
             const auto dx=std::abs(signed_word(static_cast<std::uint16_t>(motion.x-rider.previous_uncorrected_x)));
             const auto half_dy=std::abs(signed_word(static_cast<std::uint16_t>(motion.y-rider.previous_uncorrected_y)))/2;
-            require(half_dy!=0 && dx!=0,"unrecovered zero-divisor landing angle");
-            const int magnitude_angle=dx>=half_dy ? std::max(4,16-4*(dx/half_dy)) :
-                std::min(31,16+4*(half_dy/dx));
+            // $81:984D-98A8 uses bounded subtraction, not division. A zero
+            // subtrahend still terminates at the angle endpoint (4 or 31).
+            const int magnitude_angle=dx>=half_dy ?
+                (half_dy==0 ? 4 : std::max(4,16-4*(dx/half_dy))) :
+                (dx==0 ? 31 : std::min(31,16+4*(half_dy/dx)));
             const int coarse=signed_word(static_cast<std::uint16_t>(motion.x-rider.previous_uncorrected_x))<0 ? -magnitude_angle : magnitude_angle;
             require((context.cartridge_options&8U)==0, "unrecovered landing option");
             // M4-13 authenticates $132B == 0 throughout the domain; player

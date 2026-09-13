@@ -3,7 +3,7 @@
 Updated 13 September 2026: M4-13 player landing/recovery accepted at integration
 `b288396ba3a81f35699648cff4ef92ddbd1c1c59`, synchronized to private origin with
 macOS/Linux CI passed. Start with [NEXT_SESSION](../tasks/NEXT_SESSION.md).
-Do not automatically dispatch M4-14.
+M4-14 is now prepared/unclaimed for the next user-started Astra/medium session.
 
 ## Accepted product and evidence
 
@@ -47,10 +47,24 @@ at the 12:29 integration checkpoint. These observations are not a controlled
 model comparison or full-game estimate. Final closeout time/usage/ref/CI are in
 `artifacts/m4-13-integration/closeout.json`. No reset or purchase occurred.
 
-[D-0004](decisions/D-0004-model-and-usage-budget.md) and
-[D-0006](decisions/D-0006-capability-driven-work.md) remain the trial policies.
-No further capability has been dispatched. Reassess before M4-14 when authorized;
-full-track ZOOM ZOO, frontend/presentation, finish and audio remain future work.
+M4-13 final closeout was 42.81 minutes and eight shared usage points (15% to
+23%); this is not a controlled cost comparison. Its follow-up found a second
+post-success documentation push added an avoidable CI cycle.
+
+The user selected [M4-14](../tasks/M4-14.md): continuous native Right traversal
+through at least 3299 (1,650 updates), extending for 200 updates of resumed
+progress after reference-defined recovery. Later landing/mode observations near
+1991 remain exploratory, not a demonstrated native divergence: the current
+runner rejects after 1849. Recover reached coupled mechanics within one task;
+do not substitute an early jump or a short passing prefix.
+
+[D-0006](decisions/D-0006-capability-driven-work.md) and
+[D-0004's M4-14 extension](decisions/D-0004-model-and-usage-budget.md#m4-14-sustained-traversal-extension)
+retain Astra/medium ownership, automatic fresh Sol review, waived task cap and
+20% review reserve. Preparation observed 24% used, zero reset credits; read
+fresh usage. No reset, spending or provider switch authorized. Consolidate docs
+before final push; post-push CI/ref/time/usage belongs in ignored closeout evidence.
+No gameplay has started for M4-14; do not automatically dispatch M4-15.
 
 ## Where to look
 

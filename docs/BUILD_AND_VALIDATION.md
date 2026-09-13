@@ -15,7 +15,7 @@ what constitutes evidence. Historical frozen expectations and acceptance remain.
 | Final integration candidate | Run complete app-debug and app-sanitize suites, declared private native/replay/content/pack/presentation gates and hosted macOS/Linux CI on the exact source candidate. Required skipped/missing tests are non-passes. |
 | Corrections | Repeat affected checks; rerun the full integration matrix if tested code, build/config, inputs or expectations changed. Documentation-only successors may cite the tested code/input identity with an inspected diff; obtain hosted CI for the final pushed tip. |
 
-For M4-13, send the focused passing candidate for initial review before running
+For M4-13 and M4-14, send the focused passing candidate for initial review before running
 the broad matrix. Resolve its findings, then run broad validation on the corrected
 candidate alongside focused re-review where useful. Later source changes still
 require revalidation. Existing CI triggers are unchanged: pushes (including docs)
@@ -24,6 +24,11 @@ task's declared remote review/CI workflow needs them. Final integration CI remai
 required. Synthetic Linux CI does not prove private ROM differential execution
 on Linux; report these domains separately.
 
+Use [consolidated closeout](AGENT_WORKFLOW.md#consolidated-closeout): prepare the
+handoff before the final main push, then record final remote/CI evidence in the
+ignored closeout report. One final-tip CI is the target, not permission to skip
+checks after a substantive correction. Docs-only pushes still trigger CI.
+
 The primary owns integration checks; do not ask both worker and coordinator to
 repeat identical broad suites without a changed candidate or a specific concern.
 Independent reference reproduction and withheld cases are not redundant checks.
@@ -31,9 +36,9 @@ Retain proof of clean installation at milestone/schema/content-interface changes
 a fresh clean build is not required for every unchanged research checkpoint.
 
 M4-12 now supplies the bounded native trial runner documented below. Earlier
-research modules remain evidence tools. M4-13 must add and document any needed
-horizon/control/restore extension; existing M4-12 commands do not accept arbitrary
-new scenarios. Freeze exact fields, horizon, source/seed, static inputs and
+research modules remain evidence tools. M4-13 adds bounded B-jump cases; M4-14 must add and document its required
+horizon/state/restore extensions. Existing M4-12/M4-13 commands do not accept
+arbitrary new horizons or scenarios. Freeze exact fields, horizon, source/seed, static inputs and
 validation commands before using them as acceptance gates.
 
 ## Environment and dependencies

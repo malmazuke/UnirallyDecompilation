@@ -2,6 +2,23 @@
 
 Status: adopted, 12 September 2026. Reassess from measured accepted work.
 
+## M4-14 sustained-traversal extension
+
+After M4-13 and its follow-up, the user selected a more ambitious continuous-riding
+assignment: [M4-14](../../tasks/M4-14.md). It inherits M4-13's operational rules
+below: Astra/medium direct implementation, targeted high escalation only for a
+recorded reasoning difficulty, automatic fresh Sol/medium review, one active
+child, no 20-point task cap and a final 20% weekly review/recovery reserve.
+These exceptions override general defaults for M4-14 too; earlier task stop
+instructions are historical and do not cancel this newly selected assignment.
+
+Read fresh usage at startup (preparation observed 24% used, zero reset credits).
+No reset, purchase or provider switch is authorized. Internal mechanics and
+routine checkpoints must not become new user-facing task boundaries. Work until
+the sustained capability is accepted or a genuine resource/access boundary is
+reached; do not dispatch M4-15 automatically. This session prepares the handoff;
+gameplay starts in the next user-started Astra/medium implementation session.
+
 ## M4-13 trial extension
 
 Following the M4-12 retrospective, the user authorized preparation for one more
@@ -148,7 +165,7 @@ model selection and reversible adjustments need no user confirmation.
 
 ## Starting future sessions
 
-Outside the M4-12/M4-13 exceptions above, start new OpenAI work sessions with Sol/medium; start Anthropic sessions with
+Outside the M4-12/M4-13/M4-14 exceptions above, start new OpenAI work sessions with Sol/medium; start Anthropic sessions with
 Opus as the provisional routine coordinator/worker choice. Keep the coordinator
 stable and use compact, same-provider frontier consultations when justified.
 Do not start every task on a frontier model merely to plan it before switching.

@@ -1,9 +1,34 @@
 # D-0006 — Native capability trial
 
-Status: adopted 13 September 2026 for M4-12; extended after assessment to M4-13.
-The user authorized M4-13 preparation following the retrospective. Implementation
-begins in the next user-started Astra/medium session; this is not an open-ended
-M4 assignment.
+Status: adopted 13 September 2026 for M4-12, extended to M4-13 and now M4-14.
+The user selected more ambitious sustained traversal after assessing M4-13.
+Implementation begins in the next user-started Astra/medium session; this is not
+an open-ended M4 assignment.
+
+## M4-14: larger outcome, small implementation steps
+
+M4-13 closed player landing but remained inside the same 200-update window.
+Its final closeout was 42.81 minutes and eight shared usage points, with two
+review findings fixed in one round. The user wants the next task to resist
+selection of another convenient short case. [M4-14](../../tasks/M4-14.md) therefore
+requires continuous Right through at least frame 3299 (1,650 updates), plus a
+reference-defined 200-update recovery interval if that needs a later endpoint.
+Freeze this domain before tuning and retain it when a new mechanic is reached.
+
+Recover mode entry/exit, steeper contact, landing, control/pose and any necessary
+geometry, boost/camera, opponent/progress dependencies inside one assignment.
+Small functions, experiments and commits remain desirable; a routine or branch
+closure is a checkpoint, not another accepted task. A partial prefix is not a
+substitute outcome. No narrowing to an earlier jump or shorter horizon to pass.
+
+Use Astra/medium and automatic fresh Sol/medium review under
+[D-0004](D-0004-model-and-usage-budget.md#m4-14-sustained-traversal-extension).
+Consolidate acceptance documentation before the final main push and record
+post-push ref/CI/time/usage in an ignored closeout report. Do not create a second
+full CI cycle just to transcribe its first result into Markdown. Never claim
+acceptance until the actual required checks and private synchronization pass.
+See [closeout procedure](../AGENT_WORKFLOW.md#consolidated-closeout).
+Assess sustained coverage, remaining failures and usage before M4-15.
 
 ## Assessment and M4-13 extension
 
@@ -21,7 +46,7 @@ findings are resolved, then rerun affected/broad checks for subsequent changes
 as required. Reuse the documented valid cache/report layout. This is a small
 adjustment to execution, not a new infrastructure project. M4-13 resource policy
 is [D-0004's extension](D-0004-model-and-usage-budget.md#m4-13-trial-extension).
-Assess this second outcome before extending the policy to M4-14.
+That second outcome was assessed; the M4-14 extension above is now current.
 
 ## Reason and decision
 
@@ -36,7 +61,7 @@ owns investigation, native implementation and integration in a sustained context
 Do not delegate the core problem to a routine worker or spawn a separate Astra
 planning consultation. Sol/medium independently reviews the candidate automatically.
 Model and resource exceptions are defined only in [D-0004](D-0004-model-and-usage-budget.md);
-use its M4-13 extension for the next task and its M4-12 section for historical scope.
+use its M4-14 extension for the next task and earlier sections for historical scope.
 
 ## Execution
 
@@ -77,12 +102,11 @@ Report native exact-match interval and field set, relevant branch coverage,
 remaining dynamic captured inputs (zero for acceptance), independently passing
 variations/restores, review findings/fix rounds, measured elapsed time and
 account-wide usage delta with the unrelated-work caveat. Research discoveries
-are useful intermediate results but cannot satisfy either task's native outcome.
+are useful intermediate results but cannot satisfy the assigned task's native outcome.
 
 End the trial when its capability is accepted or its resource/access boundary
-prevents further work. M4-12 ended at its acceptance; the explicit M4-13
-extension above is the next assignment. Do not automatically claim M4-14 or
-the rest of M4.
+prevents further work. M4-12/M4-13 ended at acceptance; M4-14 above is the next
+assignment. Do not automatically claim M4-15 or the rest of M4.
 Preserve partial commits and an honest recovery handoff if incomplete. No speed,
 completion date or full-game accuracy promise follows from this policy change.
 

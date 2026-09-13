@@ -11,7 +11,7 @@ This protocol is intended for humans and agents using different models or runtim
 | Implementation worker | Implement a defined contract and its checks | Assigned code/test paths on its own branch |
 | Reviewer | Reproduce the claim, inspect evidence, exercise independent cases and identify regressions | Review report; no silent edits to the implementation being reviewed |
 
-Roles do not require four simultaneous agents. For the D-0006 M4-12/M4-13 trials, the primary is both investigator/implementer and coordinator; it works on a task branch and automatically dispatches fresh Sol/medium independent review before integration. The applicable trial exception in D-0004 takes precedence over the general defaults here. For OpenAI tasks, default to a Sol coordinator and one Sol worker, with explicit model/effort settings. Review uses a fresh sequential session. A second child requires the independent-scope and quota justification in D-0004. A model switch does not change the task's acceptance criteria.
+Roles do not require four simultaneous agents. For the D-0006 M4-12 through M4-14 trials, the primary is both investigator/implementer and coordinator; it works on a task branch and automatically dispatches fresh Sol/medium independent review before integration. The applicable trial exception in D-0004 takes precedence over the general defaults here. For OpenAI tasks, default to a Sol coordinator and one Sol worker, with explicit model/effort settings. Review uses a fresh sequential session. A second child requires the independent-scope and quota justification in D-0004. A model switch does not change the task's acceptance criteria.
 
 For example, after M0, one worker could investigate track encoding while another identifies rider-state writes. Two workers should not independently rewrite the state schema. The coordinator establishes a small shared interface first and serializes changes to it.
 
@@ -124,6 +124,29 @@ At implementation start, initialize a local Git repository if none exists. Recor
   change remote configuration/visibility under this standing authority.
 
 A remote repository is optional for early work. If one is established, use the same task record in the PR description, require checks/review on `main`, and use CI as specified in [build and validation](BUILD_AND_VALIDATION.md). A local integration report provides the equivalent review trail before hosting is configured. Pushing ordinary commits and tags to this project's already-configured private remote is source-control synchronization; creating a public release, changing visibility or deploying remains separately authorized work.
+
+### Consolidated closeout
+
+For M4-14 and subsequent explicitly assigned capability work, finish the reviewed
+source, reviewed corrections and acceptance/handoff documentation before the
+final main push. Include actual local/review results, the tested code identity
+and the path/command for verifying pending remote CI. Mark remote acceptance
+conditional until those checks actually succeed; never preclaim a future pass.
+
+Run affected merge checks on the exact candidate, push once, verify the private
+remote ref and wait for that tip's CI. Write the actual final SHA, run URL/result,
+finish time and fresh usage in ignored `artifacts/<task>-integration/closeout.json`
+and the user completion report. The tracked handoff must point to that artifact
+and explain how to recover status from git/GitHub if it is absent. Registry may
+say "reviewed/local gates passed; acceptance conditional on final-tip CI and
+remote verification"; those recorded conditions plus verified closeout establish
+acceptance without another documentation commit. On future unrelated updates,
+roll that historical status forward normally.
+
+Do not create a post-success documentation-only commit merely to repeat the CI
+result or insert its own hash. If a real source/evidence/documentation correction
+is needed, commit it and run the relevant checks, including new final-tip CI;
+consolidation does not excuse stale or false evidence. CI triggers are unchanged.
 
 ## Handoff and model switching
 

@@ -122,8 +122,14 @@ Astra/medium ownership and automatic Sol review, defer broad checks until initia
 review findings are addressed, and reassess before M4-14. M4-13 is now accepted: player landing at 1745 plus 104 subsequent updates,
 395 exact bytes for both riders, two fresh independent cases and all landing
 restores. Two review boundary findings were corrected; all frozen gates pass.
-See [R-0032](research/R-0032-player-landing-recovery.md). Do not automatically
-dispatch M4-14; reassess this second trial before extending the workflow.
+See [R-0032](research/R-0032-player-landing-recovery.md). The user subsequently
+selected [M4-14](../tasks/M4-14.md): continuous Right from end-1649 through at
+least 3299 (1,650 updates / 33 seconds), extending if needed for 200 updates of
+resumed progress after reference-defined recovery. Keep newly reached mechanics
+inside one sustained assignment; no substitute early-jump case or shorter prefix.
+This is a larger traversal gate toward full-race support, not a full-game claim.
+Prepare docs before the final push to avoid redundant closeout CI. M4-14 is
+ready/unclaimed for the next session; do not automatically dispatch M4-15.
 
 ### Next-stage estimate, revised from observed effort
 

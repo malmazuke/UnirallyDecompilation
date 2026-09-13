@@ -37,15 +37,21 @@ void emit(const unirally::ZoomZooState& state) {
 int main(int argc,char** argv) try {
     if(argc!=7)throw std::invalid_argument("usage: zoom_zoo_runner --seed FILE --content-dir DIR --inputs FILE");
     std::filesystem::path seed,content,inputs;
+    bool native_start=false;
     for(int i=1;i<argc;i+=2) {
         const std::string option=argv[i];
         if(option=="--seed")seed=argv[i+1];
+        else if(option=="--start") {
+            if(std::string(argv[i+1])!="classic.crawler.zoom-zoo")throw std::invalid_argument("unknown scenario");
+            native_start=true;
+        }
         else if(option=="--content-dir")content=argv[i+1];
         else if(option=="--inputs")inputs=argv[i+1];
         else throw std::invalid_argument("unknown ZOOM ZOO runner option");
     }
-    if(seed.empty()||content.empty()||inputs.empty())throw std::invalid_argument("missing ZOOM ZOO runner option");
-    auto state=unirally::deserialize_zoom_zoo(read_bytes(seed));
+    if((seed.empty()&&!native_start)||content.empty()||inputs.empty())throw std::invalid_argument("missing ZOOM ZOO runner option");
+    auto state=native_start?unirally::ZoomZooState{}:unirally::deserialize_zoom_zoo(read_bytes(seed));
+    if(native_start)state.complete_race=state.sustained=true;
     const auto track=read_bytes(content/"track-data.bin");
     const auto poses=read_bytes(content/"collision-poses.bin");
     const auto templates=read_bytes(content/"collision-templates.bin");
@@ -65,6 +71,7 @@ int main(int argc,char** argv) try {
     const auto landing=read_bytes(content/"landing-response-matrices.bin");
     const auto finish_poses=state.complete_race?read_bytes(content/"race-finish-poses.bin"):std::vector<std::uint8_t>{};
     const unirally::ZoomZooContent data{movement,coefficients,reflection,landing,finish_poses};
+    if(native_start)state=unirally::classic_crawler_zoom_zoo_start(data);
     std::ifstream stream(inputs);
     if(!stream)throw std::runtime_error("cannot open ZOOM ZOO controller stream");
     emit(state);

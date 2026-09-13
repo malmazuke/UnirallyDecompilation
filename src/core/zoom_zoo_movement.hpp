@@ -32,6 +32,9 @@ struct ZoomZooRaceState {
     std::uint16_t provisional_1225{}, provisional_1227{}, finish_delay{};
 };
 struct ZoomZooState {
+    bool native_initialization{};
+    std::uint16_t fade_level{};
+    std::array<std::uint16_t,2> start_boost{};
     bool complete_race{};
     ZoomZooRaceState race;
     bool sustained{};
@@ -54,6 +57,8 @@ std::uint16_t next_wrong_direction_counter(std::uint16_t previous,
     std::uint16_t velocity_x,std::uint16_t marker,unsigned horizontal);
 std::vector<std::uint8_t> serialize_zoom_zoo(const ZoomZooState& state);
 ZoomZooState deserialize_zoom_zoo(std::span<const std::uint8_t> bytes);
+// $82:D7C6-DBD6, authenticated track header and one-player three-lap scenario.
+ZoomZooState classic_crawler_zoom_zoo_start(const ZoomZooContent& content);
 // Experimental M4-12 continuation; no production frontend dispatch uses this.
 void update_zoom_zoo(ZoomZooState& state,const ControllerButtons& buttons,
                      const ZoomZooContent& content);

@@ -3,6 +3,7 @@ import copy
 import hashlib
 import json
 from pathlib import Path
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -119,6 +120,41 @@ class ZoomZooFreezeTests(unittest.TestCase):
         self.assertEqual(verify_pair(primary,release,False)["first_divergence"],2500)
         release["rows"][index-1][1]+=1;release["rows_sha256"]=sha(json.dumps(release["rows"],separators=(",",":")).encode())
         with self.assertRaisesRegex(ValueError,"frame 2500"):verify_pair(primary,release,False)
+
+    def test_command_rejects_synchronized_seed_value_hash_and_provenance_mutations(self):
+        source = ROOT / "tests/manifests/native"
+        primary = json.loads((source / "zoom-zoo-primary.reference.json").read_text())
+        release = json.loads((source / "zoom-zoo-release-2500-2599.reference.json").read_text())
+        mutations = {
+            "seed value": lambda seed: seed["values"].update(player_x=65535),
+            "queue hash": lambda seed: seed.update(queue_sha256="0" * 64),
+            "provenance": lambda seed: seed.update(manifest_identity="0" * 64),
+        }
+        with tempfile.TemporaryDirectory() as td:
+            directory = Path(td)
+            for name, mutate in mutations.items():
+                with self.subTest(mutation=name):
+                    changed_primary = copy.deepcopy(primary)
+                    changed_release = copy.deepcopy(release)
+                    mutate(changed_primary["seed"])
+                    mutate(changed_release["seed"])
+                    primary_path = directory / "primary.json"
+                    release_path = directory / "release.json"
+                    primary_path.write_text(json.dumps(changed_primary))
+                    release_path.write_text(json.dumps(changed_release))
+                    standalone = subprocess.run([
+                        sys.executable, "-m", "tools.unirally_lab.native.freeze_zoom_zoo",
+                        "verify", "--projection", str(primary_path),
+                    ], cwd=ROOT, capture_output=True, text=True)
+                    pair = subprocess.run([
+                        sys.executable, "-m", "tools.unirally_lab.native.freeze_zoom_zoo",
+                        "verify-pair", "--primary", str(primary_path),
+                        "--release", str(release_path),
+                    ], cwd=ROOT, capture_output=True, text=True)
+                    self.assertNotEqual(standalone.returncode, 0, standalone.stdout)
+                    self.assertNotEqual(pair.returncode, 0, pair.stdout)
+                    self.assertIn("complete frozen seed object differs", standalone.stderr)
+                    self.assertIn("complete frozen seed object differs", pair.stderr)
 
 
 if __name__ == "__main__": unittest.main()

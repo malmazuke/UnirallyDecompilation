@@ -25,6 +25,7 @@ ROM_SHA256 = "a1105819d48c04d680c8292bbfa9abbce05224f1bc231afd66af43b7e0a1fd4e"
 CORE_COMMIT = "7d5aa1e656b9171524d01b1b22917197d8121cb4"
 CORE_PATCH_SHA256 = "a719f5ffe2222dad4c1ab04336633319ad85004f74e32fc14893a058be333885"
 CORE_LIBRARY_SHA256 = "1cdb99db7ac58ee8c0b9d53128ad01320154fd46dc3a00d294a4fbd2be3e889b"
+FROZEN_SEED_SHA256 = "d16d7576d556ac09adf842a890d68498db858c3f1c771fcfa499d181a398bc45"
 INITIAL_FRAME = 1649
 FIRST_UPDATE_FRAME = 1650
 LAST_FRAME = 3299
@@ -114,6 +115,10 @@ PROJECTION = [
 
 def sha(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
+
+
+def _canonical_json_sha256(value: Any) -> str:
+    return sha(json.dumps(value, sort_keys=True, separators=(",", ":")).encode())
 
 
 def _script_sha(manifest: dict[str, Any]) -> str:
@@ -361,6 +366,8 @@ def verify_projection(document: dict[str, Any], require_frozen: bool = False) ->
             raise ValueError("projection frozen identity metadata differs")
         if seed.get("wram")!={"size":0x20000,"sha256":"9c80a52a47706929c2a4a08a012799eb1163c3a6ccfd985e9be3cacae78d805e"} or seed.get("cartridge_ram")!={"size":0x2000,"sha256":"cdd747a31846cfa03de238c622ea3154b396ef9d9d4541e2d6854b15866b7867"}:
             raise ValueError("projection frozen seed identity differs")
+        if _canonical_json_sha256(seed) != FROZEN_SEED_SHA256:
+            raise ValueError("projection complete frozen seed object differs")
 
 
 def verify_pair(primary: dict[str, Any], release: dict[str, Any], require_frozen: bool = True) -> dict[str, Any]:

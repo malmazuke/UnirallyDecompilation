@@ -35,6 +35,14 @@ both original executions retain zero player/opponent finish flags and a zero
 finish-delay counter throughout the projection; no finish or result transition
 occurs in this bounded interval.
 
+Following independent review, the public verifier also exact-binds the entire
+canonical seed object at SHA-256
+`d16d7576d556ac09adf842a890d68498db858c3f1c771fcfa499d181a398bc45`.
+This covers every recorded value, memory/address/width/signedness inventory
+entry, queue digest and source-provenance identity in addition to the WRAM and
+cartridge-RAM dump hashes. Synchronously changing both projection copies can
+therefore no longer make a contradictory candidate seed pass pair verification.
+
 ## Repeated continuation candidate
 
 The boundary was declared before capture as end-of-frame 1649. Two separate

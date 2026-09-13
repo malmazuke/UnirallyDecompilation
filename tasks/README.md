@@ -32,7 +32,7 @@ The coordinator maintains the status registry below. Work orders further below d
 | M4-04 | accepted 13 September 2026 after one returned finding, approved focused re-review and green macOS/Linux CI | [ZOOM ZOO riding reference freeze](M4-04.md) |
 | M4-05 | accepted 13 September 2026 after one returned finding, approved focused re-review and green macOS/Linux CI | [ZOOM ZOO contact-path audit](M4-05.md) |
 | M4-06 | accepted 13 September 2026 after one returned finding, approved focused re-review and green macOS/Linux CI | [ZOOM ZOO first vertical-contact episode closure](M4-06.md) |
-| M4-07 | planning next after bounded Astra audit | See milestone definition and M4-06 limits |
+| M4-07 | claimed 13 September 2026 after bounded Astra planning | [ZOOM ZOO `0x4000` vertical-contact family](M4-07.md) |
 | M4-08 – M6 | planned | See milestone definitions |
 
 ## M0 — repeatable laboratory

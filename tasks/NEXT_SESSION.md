@@ -1,4 +1,4 @@
-# Coordinator handover — M4-06 accepted, M4-07 planning next
+# Coordinator handover — M4-06 accepted, M4-07 claimed
 
 Milestone M3 is accepted on 13 September 2026 and tagged `m3`. M4-00 through
 M4-06 are accepted. Read [M4-06](M4-06.md),
@@ -35,10 +35,12 @@ their observed direction boundaries. Review returned the capture recipe, not
 the equations; correction `814f787` and a doc-derived CLI test were approved.
 Integration `3694406` and hosted run 34736840760 are green.
 
-Run a bounded Astra/high planning audit for M4-07. Challenge the next actual
-dependency among direction geometry, other contact families and upstream
-autonomous producers. Native ZOOM ZOO, finish/result/presentation and the
-Classic pack remain unchanged until their prerequisites are demonstrated.
+Continue [M4-07](M4-07.md) in its isolated Sol/medium worktree. Its bounded
+Astra/high audit split the broad direction/special class: frames 1683--1700 use
+only descriptor bit `0x4000`, mirrored-column sampling and positive slopes up
+to +8; no horizontal, `0x8000` or bit-zero special path is observed. Close that
+36-call suffix and compose it with M4-06's 66-call prefix. Native ZOOM ZOO,
+finish/result/presentation and the Classic pack remain unchanged.
 The user authorized an unattended M4 continuation and at most one weekly usage
 reset only if an actual provider limit is reached; no money, paid credits,
 provider switching, publication or deployment is authorized.

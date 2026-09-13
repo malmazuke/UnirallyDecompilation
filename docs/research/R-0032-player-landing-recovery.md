@@ -14,8 +14,8 @@ hash sequences; their additive freeze does not replace the earlier expectation.
 Player support count `$054B` reaches two at 1684 and saturates at nine at 1691.
 At 1745 it resets from nine to zero, previous count `$054F` is nine and recontact
 `$127B` is one. This is player contact, not the opponent event. The landing
-changes velocity `(483,453)` to `(168,-276)` and leaves orientation impulse four.
-A second landing at 1762 changes `(216,47)` to `(62,-94)` and leaves impulse six.
+changes velocity `(483, 453)` to `(168,-276)` and leaves orientation impulse four.
+A second landing at 1762 changes `(216, 47)` to `(62,-94)` and leaves impulse six.
 The horizon includes **104 updates after the selected 1745 landing**. It includes
 all of 1650–1849; it does not claim 100 updates after the secondary landing.
 
@@ -99,8 +99,8 @@ experiment and final private main synchronization/CI remain pending.
 ## Initial independent findings and corrections
 
 Candidate `f1cd993` was returned with two independently discovered domain gaps.
-The early B1678–1692 case reached a zero-half-dy landing at 1760; the late
-B1684–1698 case reached nonnegative first-probe support at 1746. Both cases
+The early B 1678–1692 case reached a zero-half-dy landing at 1760; the late
+B 1684–1698 case reached nonnegative first-probe support at 1746. Both cases
 were preregistered and captured twice before native evaluation. They become
 corrected regressions; neither may be counted as fresh withheld acceptance.
 
@@ -113,9 +113,9 @@ a later winning or tied probe can clear `$0F5D`. The late case takes this path,
 so the separate final-leading-support rejection remains explicit. Authored
 checks exercise positive first-probe support and later tie replacement.
 
-Corrected early case matches all 200 updates, landings1740/1760, 109 updates
-after selected landing, restores1739/1740/1759/1760. Corrected late case matches
-all 200 updates, landings1746/1762, 103 subsequent updates, restores
+Corrected early case matches all 200 updates, landings 1740/1760, 109 updates
+after selected landing, restores 1739/1740/1759/1760. Corrected late case matches
+all 200 updates, landings 1746/1762, 103 subsequent updates, restores
 1745/1746/1761/1762. Fresh untuned replacement cases and re-review remain required.
 
 A source-access comparison with M4-12 finds 38 newly reached gameplay read sites
@@ -128,14 +128,14 @@ experiment passes on candidate `f1cd993`; rerun it on the corrected candidate.
 
 Fresh Sol/medium approves `13f80ff` in reviewer commit `83765c3`; full report is
 [tasks/M4-13-review.md](../../tasks/M4-13-review.md). Two findings were corrected
-in one round; both failed withheld cases remain regressions. Fresh B1682–1696
-lands1744/1771 (105 updates after first landing); neutral1675–1680 before the
-primary jump lands1745/1762 (104 updates). Both retain different state from the
-primary, match all395 bytes and restore before/after both landings. Primary
+in one round; both failed withheld cases remain regressions. Fresh B 1682–1696
+lands 1744/1771 (105 updates after first landing); neutral 1675–1680 before the
+primary jump lands 1745/1762 (104 updates). Both retain different state from the
+primary, match all 395 bytes and restore before/after both landings. Primary
 repeats both fresh cases with debug and sanitizer binaries. All five M4-13 cases
 and all four frozen M4-12 cases pass their complete horizons and restores.
 
-Complete app-debug and app-sanitize each pass400 checks on clean13f80ff, with
+Complete app-debug and app-sanitize each pass 400 checks on clean 13f80ff, with
 zero skipped/missing/failed checks and no source mutation during either run.
 Their report SHA-256 values are respectively
 `e05fbc7c5dd57718609f5e4f2c56b8de089e4d2a2f1c9e8291bccc7c43ad8844` and
@@ -149,7 +149,25 @@ Private complete report hashes and exact invocations are inventoried in
 `artifacts/m4-13/validation-inventory.json` in the task checkout, including
 `final-gates/commands.json`, `final-gates/corrected-command-results.json`,
 `regressions/commands.json`, `run-differentials.py`, and `autonomy.py`. Native
-autonomy on corrected13f80ff is also verified by OS-denied ROM/reference reads
+autonomy on corrected 13f80ff is also verified by OS-denied ROM/reference reads
 and successful native execution, with negative controls. Integration preserves
 identical reviewed/tested code and immutable accepted expectations. Private main
 synchronization and final-tip hosted CI are the remaining completion gates.
+
+## Acceptance and source-control closeout
+
+M4-13 is accepted at integration `b288396ba3a81f35699648cff4ef92ddbd1c1c59`.
+The merged main checkout rebuilt and passed primary, both fresh variations,
+M4-12 primary and their restores. Code/build/tooling/native-test sources match
+reviewed `13f80ff` exactly. Review approval is preserved on main at `67c5ad6`
+(the review-only copy of `83765c3`). Private origin resolves to the integration;
+[hosted run 34757217687](https://github.com/malmazuke/UnirallyDecompilation/actions/runs/34757217687)
+passed macOS and Linux. Linux private differential execution is not claimed.
+
+Startup at 12:01 UTC to independent approval at 12:27 was approximately 26
+minutes; integration CI completed about 12:35. Weekly usage was 15% at startup
+and 22% at 12:29, with unrelated account work potentially contributing. No reset
+or purchase occurred. The final documentation tip's CI, exact remote ref, finish
+time and final sampled usage are recorded during closeout in the main checkout's
+`artifacts/m4-13-integration/closeout.json`. The task and next-session records
+mark the capability complete and prohibit automatic M4-14 dispatch.

@@ -119,8 +119,11 @@ subsequent updates, with two independent timing variations and restores around
 landing. Freeze the event/horizon before tuning. Necessary control/camera
 producers stay inside this task; finish/presentation stay excluded. Preserve
 Astra/medium ownership and automatic Sol review, defer broad checks until initial
-review findings are addressed, and reassess before M4-14. M4-13 is unclaimed
-for the next user-started session.
+review findings are addressed, and reassess before M4-14. M4-13 is now accepted: player landing at 1745 plus 104 subsequent updates,
+395 exact bytes for both riders, two fresh independent cases and all landing
+restores. Two review boundary findings were corrected; all frozen gates pass.
+See [R-0032](research/R-0032-player-landing-recovery.md). Do not automatically
+dispatch M4-14; reassess this second trial before extending the workflow.
 
 ### Next-stage estimate, revised from observed effort
 

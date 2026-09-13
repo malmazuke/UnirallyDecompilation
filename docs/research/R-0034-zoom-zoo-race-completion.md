@@ -112,3 +112,5 @@ the authenticated original final frame displays WINNER.
 ## Independent review corrections
 
 Review of e038a5b froze two original-completing material variations before native evaluation: every turn delayed three updates (player finish6485), and B during1681–1695 (finish6483). Both exposed player throttle at canonical136: first divergence2513 and2853 respectively. The drive source `$82A9CC/$82AA29` returns on inverted tile plus zero velocity before accumulating throttle. Native now preserves that early return; both entire565-byte traces pass diagnostic comparison. Full restores and fresh withheld replacements remain required. Finish-pose deserialization also now restricts kind1 selector to48 and kind2 to88, rejecting impossible kinds.
+
+A further review finding exposed unchecked checkpoint flags access before the existing later tile check. A malformed selected descriptor0x03F0 produces tile252 against20 flags. The checkpoint now validates its own access before reading; an authored malformed-state test confirms rejection and unchanged input state. Broad results interrupted by this source correction are superseded and rerun on the corrected candidate.

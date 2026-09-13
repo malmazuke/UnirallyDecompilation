@@ -52,6 +52,15 @@ int main() {
         rejects([&]{(void)deserialize_zoom_zoo(corrupt);});
     }
 
+    // A restored descriptor must not index checkpoint flags before validation.
+    race.movement.riders[0].contact.selected_word=0x03f0;
+    std::array<std::uint8_t,20> checkpoint_flags{};
+    ZoomZooContent checkpoint_content{};
+    checkpoint_content.movement.flat_contact.flags=checkpoint_flags;
+    const auto malformed_race=serialize_zoom_zoo(race);
+    rejects([&]{update_zoom_zoo(race,{},checkpoint_content);});
+    require(serialize_zoom_zoo(race)==malformed_race);
+
     // Auxiliary boundary return increments only the low byte and preserves the
     // precorrection position. Ordinary unsupported contact increments a word.
     RiderContactState rider{};rider.unsupported_count=8;rider.unsupported_duration=0x12ff;

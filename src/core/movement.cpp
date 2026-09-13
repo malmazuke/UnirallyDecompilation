@@ -1057,6 +1057,8 @@ void update_zoom_checkpoint(ZoomZooState& state,unsigned index,const ZoomZooCont
     if(lap.checkpoint_display_countdown)--lap.checkpoint_display_countdown;
     const auto descriptor=rider.contact.selected_word;
     const auto tile=((descriptor&0x3f0U)>>2U)+((descriptor&15U)>>1U);
+    if(tile>=content.movement.flat_contact.flags.size())
+        throw std::invalid_argument("ZOOM ZOO checkpoint tile flag is missing");
     if(rider.contact.auxiliary_flag || (content.movement.flat_contact.flags[tile]&0xfeU)!=20 || lap.finished)return;
     const unsigned tag=(descriptor&0x1c00U)>>10U;
     const unsigned checkpoint=tag<=5?tag:0;

@@ -1215,7 +1215,7 @@ ZoomZooState deserialize_zoom_zoo(std::span<const std::uint8_t> bytes) {
         for(const auto& pose:state.race.finish_pose) {
             const unsigned limit=pose.kind==1?48U:pose.kind==2?88U:0U;
             if(pose.selector>limit || pose.kind>2 || pose.locked>1 || pose.active>1 ||
-               (pose.active && (!pose.kind || !pose.locked)))
+               (pose.active ? (!pose.kind || !pose.locked) : (pose.kind || pose.locked || pose.selector)))
                 throw std::invalid_argument("ZOOM ZOO finish pose state invalid");
         }
         for(const auto& lap:state.race.riders) {

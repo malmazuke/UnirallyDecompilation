@@ -47,6 +47,10 @@ int main() {
         auto corrupt=race_bytes;corrupt[offset]=49;corrupt[offset+2]=1;
         rejects([&]{(void)deserialize_zoom_zoo(corrupt);});
     }
+    for(unsigned offset:{551U,553U,555U,559U,561U,563U}) {
+        auto corrupt=race_bytes;corrupt[offset]=1;
+        rejects([&]{(void)deserialize_zoom_zoo(corrupt);});
+    }
     for(unsigned offset:{521U,523U}) {
         auto corrupt=race_bytes;corrupt[offset]=17;
         rejects([&]{(void)deserialize_zoom_zoo(corrupt);});

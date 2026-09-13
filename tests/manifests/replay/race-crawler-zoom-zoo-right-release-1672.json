@@ -27,5 +27,5 @@
     {"name": "wram_0000_0200", "kind": "wram_range", "start": 0, "length": 512, "description": "Raw diagnostic range $7E0000-$7E01FF (direct page and the top of the stack area). No gameplay interpretation; M1 defines fields."}
   ],
   "regeneration_command": "python3 tools/project.py replay compare --manifest tests/manifests/replay/race-crawler-zoom-zoo-right-release-1672.json --runs 2",
-  "expected": {"sample_digest": "0000000000000000000000000000000000000000000000000000000000000000", "final_state_sha256": "0000000000000000000000000000000000000000000000000000000000000000"}
+  "expected": {"sample_digest": "66c45999667bda235318f90ca883ba56046a86dc8f999100fd0d287b2f410fe2", "final_state_sha256": "037fee6dd7e6003ebca34ab45a16d7b70c95ac554d4d48b68658877df697eb00"}
 }

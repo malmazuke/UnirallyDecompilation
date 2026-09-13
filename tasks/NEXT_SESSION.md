@@ -1,9 +1,9 @@
-# Coordinator handover — M4-09 accepted, M4-10 claimed
+# Coordinator handover — M4-10 accepted, M4-11 planning next
 
 Milestone M3 is accepted on 13 September 2026 and tagged `m3`. M4-00 through
-M4-09 are accepted and M4-10 is claimed. Read [M4-10](M4-10.md), [M4-09](M4-09.md),
-[R-0027](../docs/research/R-0027-zoom-zoo-position-contact.md) and its approved
-[review](M4-09-review.md).
+M4-10 are accepted. Read [M4-10](M4-10.md),
+[R-0028](../docs/research/R-0028-zoom-zoo-response-b.md) and its approved
+[review](M4-10-review.md).
 
 The accepted scope is the identified PAL one-player CRAWLER/DRAGSTER slice:
 supported-ROM extraction creates a validated local Classic pack, later launches
@@ -51,10 +51,14 @@ sampling and contact for all 102 calls/1,020 words through frame 1700. Review
 approved its independent frame-1667 variation. Integration `c93de4d` and hosted
 run 34744126458 are green.
 
-Continue M4-10's Astra-defined inter-contact response-B producer and recurrence.
-Its worker preregisters a frame-1668 one-frame Right release; the independent
-reviewer owns frame 1669 or 1670. Velocity, pose and remaining contact state are
-still external; native ZOOM ZOO/pack remain unchanged.
+M4-10 seeds and computes both response-B words across all 102 calls, closes the
+opponent 254-to-0 gap with an ordered word clear and preserves the accepted
+1,020-sample composition. Worker/reviewer variations both leave response B
+unchanged. Integration `a8d9106` and hosted run 34747306845 are green.
+
+Run a bounded Astra/high planning audit for M4-11 and choose the smallest next
+producer. Velocity, pose and remaining contact state are still external; native
+ZOOM ZOO/pack remain unchanged.
 The user authorized an unattended M4 continuation and at most one weekly usage
 reset only if an actual provider limit is reached; no money, paid credits,
 provider switching, publication or deployment is authorized.

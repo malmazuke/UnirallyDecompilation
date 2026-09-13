@@ -5,8 +5,9 @@ tag `m3` identifies the accepted playable-slice state. The native app supports
 the identified PAL one-player CRAWLER/DRAGSTER path from race start through a
 stable result, using a validated local Classic pack and no original CPU
 execution. M4 original-game coverage has accepted the DRAGSTER loser result and
-a bounded ZOOM ZOO reference chain through position, sampling and contact
-composition; this is research evidence, not a second native track. See
+a bounded ZOOM ZOO reference chain through position, sampling, contact
+composition and inter-contact response-B recurrence; this is research evidence,
+not a second native track. See
 [project state](docs/STATE.md) for the exact accepted boundary and
 [the compact handoff](tasks/NEXT_SESSION.md) for current work. No agent
 scheduler exists.

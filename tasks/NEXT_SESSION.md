@@ -1,75 +1,56 @@
-# Coordinator handover — M4-11 accepted, paused for reassessment
+# Next session — M4-12 Astra/medium native capability trial
 
-The repo-level starting point is
-[the reassessment handover](../docs/REASSESSMENT_HANDOVER.md); this file keeps
-the compact execution history.
+M4-00 through M4-11 are accepted. M4 itself is not. The user authorized the
+process-change preparation; [M4-12](M4-12.md) is ready and unclaimed for the next
+user-started implementation session. Do not continue the old Sol coordinator /
+one-producer-per-task sequence.
 
-Milestone M3 is accepted on 13 September 2026 and tagged `m3`. M4-00 through
-M4-11 are accepted as individually bounded tasks. The user paused further work
-to reassess the project approach. Read [M4-11](M4-11.md),
-[R-0029](../docs/research/R-0029-zoom-zoo-vertical-velocity.md), its returned
-[review](M4-11-review.md) and approved [re-review](M4-11-rereview.md).
+## Start
 
-The accepted scope is the identified PAL one-player CRAWLER/DRAGSTER slice:
-supported-ROM extraction creates a validated local Classic pack, later launches
-work with the ROM absent, native gameplay reaches stable result without original
-CPU execution, and live macOS controls/presentation plus exact macOS/Linux gates
-pass. Audio, unrecovered intermediate rider artwork, other tracks/riders/modes,
-menus/progression, local multiplayer and public packaging remain omissions.
+Select **Astra / Medium**, standard service mode, for the primary. The project
+config intentionally retains Sol/medium as its general default and child default;
+selecting Astra must be explicit. No separate Sol implementation worker or Astra
+planning child is required. Primary owns implementation and automatically spawns
+fresh Sol/medium independent review, handles corrections and integrates.
 
-M4-03 turns the accepted 50,665-byte ZOOM ZOO decode into a strict
-reference-only contract: 24 tile ids plus terminator, 203 tiles, 406 ordered
-transfers, 98 independently reconstructed rolling-gather bytes and 40 bounded
-collision words across both riders. It directly observes width/stride 256/512,
-rejecting blind reuse of DRAGSTER's 1024/2048. Independent review added a
-matching frame-2000 collision sample and returned unenforced gather/capture
-metadata; correction `029d0df` was approved. Merge `0856621` passes local
-contract/replay/coverage/content/native gates and 325/325; hosted run
-34727349602 passes macOS/Linux including Linux SDL sanitizers.
+Read this file, [STATE](../docs/STATE.md), [M4-12](M4-12.md), AGENTS.md,
+[D-0004's trial exception](../docs/decisions/D-0004-model-and-usage-budget.md#m4-12-trial-exception),
+[D-0006](../docs/decisions/D-0006-capability-driven-work.md) and
+[AGENT_WORKFLOW](../docs/AGENT_WORKFLOW.md). Relevant evidence is linked from
+M4-12; do not reload every historical task before the first experiment.
 
-M4-05 classifies all 102 calls in frames 1650--1700 and reconstructs only the
-first unsupported call, frame 1661 player point 9, as bounded captured-argument
-research. Independent review found that per-point preprocessing was not
-enforced before lossy reduction; correction `dabb3e5` binds all 30 ordered
-tuples and re-review approved. Merge `34d6ea6` passes 321/321 plus all frozen
-gates; hosted run 34733976248 is green on macOS/Linux including sanitizers.
+1. Verify clean synchronized main and its ancestry from accepted M4-11
+   `15237954fe636ecf83cf105186570207593c900b`; record the exact current dispatch
+   commit containing these instructions and create the task's isolated branch/checkout.
+2. Read fresh account usage. Preparation observed 98% weekly used and one reset
+   available. This is stale telemetry, not startup capacity or redemption authority.
+   No reset was consumed or authorized for this trial. If allowance is below the
+   20% review reserve, do startup/recovery only until a user-performed reset,
+   natural renewal or explicit confirmation to redeem one reset restores it.
+   An explicit reset confirmation is required by the redemption tool; do not infer
+   it from permission to edit repository policy. No purchases or provider fallback.
+3. Record the resource baseline and reproduce the exact focused foundation/ROM
+   identity commands in M4-12; resolve local cache/fixture setup autonomously.
+4. Claim M4-12 and perform its native implementation when resource-ready. The
+   20-point task cap is waived; preserve the last 20% for review/recovery.
 
-M4-06 closes the complete 66-call/660-point vertical-contact episode through
-frame 1682; its worker and reviewer onset cases close 72/720 and 74/740 before
-their observed direction boundaries. Review returned the capture recipe, not
-the equations; correction `814f787` and a doc-derived CLI test were approved.
-Integration `3694406` and hosted run 34736840760 are green.
+## Capability and exit
 
-M4-07 closes the observed 36-call `0x4000` reflected/positive-slope suffix and
-composes all 102 calls/1,020 points through frame 1700. Review returned semantic
-binding and address citations; correction `cfa94e4` was approved, including a
-correction to the reviewer's own off-by-one point-x range. Integration
-`131df54` and hosted run 34738957270 are green.
+Both riders must run natively from one seed, static content and controllers,
+without later captured gameplay state. Frames 1650--1700 are a checkpoint;
+acceptance requires the expanded interval in M4-12, relevant independent
+variations, restores, exact regressions, Sol approval and verified private push.
+The agent chooses experiments and handles internal dependencies within this task.
+End after accepted M4-12 or a genuine resource/access boundary; do not start M4-13.
 
-M4-08 closes the reached position integrator for all 102 calls from one
-end-1649 four-residue seed, including the slope tails and former `$82:A6E9`
-gap. Independent review approved its own frame-1664 variation. Integration
-`6de3dd5` and hosted run 34741431794 are green.
+The playable product is still the PAL CRAWLER/DRAGSTER slice. ZOOM ZOO remains
+reference research until this task's gates actually pass. See the historical
+[reassessment handover](../docs/REASSESSMENT_HANDOVER.md) for the accepted M4-11
+boundary and remaining coupled dependencies.
 
-M4-09 composes recurrent positions/residues, the reached Y helper, authenticated
-sampling and contact for all 102 calls/1,020 words through frame 1700. Review
-approved its independent frame-1667 variation. Integration `c93de4d` and hosted
-run 34744126458 are green.
+Suggested opening instruction after selecting Astra/Medium:
 
-M4-10 seeds and computes both response-B words across all 102 calls, closes the
-opponent 254-to-0 gap with an ordered word clear and preserves the accepted
-1,020-sample composition. Worker/reviewer variations both leave response B
-unchanged. Integration `a8d9106` and hosted run 34747306845 are green.
-
-M4-11 seeds and computes both vertical-velocity words across all 102 calls. A
-returned semantic-enforcement finding was corrected and independently approved.
-Integration `0a2b9bb` and hosted run 34750113118 are green. Horizontal velocity,
-pose and remaining state are still external; native ZOOM ZOO/pack remain
-unchanged.
-
-No task is claimed. Do not automatically dispatch M4-12: first reassess the
-incremental bounded-research approach with the user, using the accepted M4-00
-through M4-11 evidence and explicit remaining boundaries.
-The user authorized an unattended M4 continuation and at most one weekly usage
-reset only if an actual provider limit is reached; no money, paid credits,
-provider switching, publication or deployment is authorized.
+> Execute the M4-12 trial in tasks/NEXT_SESSION.md and tasks/M4-12.md. Own the
+> investigation and native implementation directly. Automatically spawn the
+> specified fresh Sol reviewer, address findings and integrate accepted work.
+> Observe the trial resource policy and record any reset authorization separately.

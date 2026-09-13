@@ -2,6 +2,49 @@
 
 Status: adopted, 12 September 2026. Reassess from measured accepted work.
 
+## M4-12 trial exception
+
+The user approved preparing the [D-0006](D-0006-capability-driven-work.md) trial
+on 13 September 2026. For M4-12 only, this section overrides conflicting defaults
+below and earlier handoffs:
+
+- Start the implementation session explicitly on `gpt-6-astra`/medium, standard
+  service mode. Astra performs planning, recovery and native implementation
+  itself. No mandatory consultation or ten-minute frontier-role limit applies
+  to this assigned primary. High is a targeted escalation for a recorded
+  unresolved reasoning difficulty, not the initial setting. If the runtime
+  cannot change the primary effort, use at most one bounded Astra/high child
+  for that specific question; do not claim an effort change that did not occur.
+- The primary automatically launches independent review as `gpt-5.6-sol`/medium
+  with `fork_turns: "none"`, an explicit candidate and isolated checkout. One
+  active child maximum for this trial. No frontier swarm or additional planner.
+  Routine Sol defaults remain appropriate outside this trial.
+- Waive the 20-percentage-point discretionary task cap for M4-12. Preserve
+  usage sampling and the final 20% weekly review/recovery reserve. At 80% used,
+  stop expanding implementation scope; use remaining capacity for independent
+  review of a viable candidate, corrections, integration and durable recovery.
+  If the capability is incomplete, preserve it as unaccepted. Checkpoints and
+  child/session changes never reset cumulative trial accounting.
+- Freshly sample usage at start; the preparation-time observation was 98% used
+  with one reset available, not a baseline for future work. Below 20% remaining,
+  do startup/recovery only until allowance is restored. Do not begin the
+  substantive trial by treating the current 2% as sufficient capacity.
+- Reset availability is not authorization to redeem it. No reset was consumed
+  by this preparation. The earlier permission for an actual-block reset belonged
+  to the wrapped M4 run; do not assume it transfers. A user-performed reset or
+  explicit confirmation to redeem one specific reset is required. The trial may
+  use at most one explicitly authorized reset, never buy credits or use a paid
+  API fallback. Record the reset outcome and fresh usage baseline if it occurs;
+  do not repeat an uncertain redemption with a new attempt identifier.
+- Unknown telemetry is unknown capacity: checkpoint and restore visibility
+  before new discretionary frontier work. An actual provider block stops new
+  dispatch; preserve progress without retry loops. Do not switch providers.
+
+The current request prepares this policy and the next-session handoff; it does
+not launch M4-12 or redeem a reset. Its concise documentation review is recovery/
+preparation work within the remaining allowance. General model/budget defaults
+below continue to apply outside M4-12.
+
 ## Context
 
 The user reports exhausting a weekly Codex allowance in about one hour with
@@ -78,12 +121,12 @@ model selection and reversible adjustments need no user confirmation.
 
 ## Starting future sessions
 
-Start new OpenAI work sessions with Sol/medium; start Anthropic sessions with
+Outside the M4-12 exception above, start new OpenAI work sessions with Sol/medium; start Anthropic sessions with
 Opus as the provisional routine coordinator/worker choice. Keep the coordinator
 stable and use compact, same-provider frontier consultations when justified.
 Do not start every task on a frontier model merely to plan it before switching.
 
-User adjustment: the completed OpenAI run kept Astra as coordinator. At its
+Historical adjustment (superseded for the M4-12 start above): the completed OpenAI run kept Astra as coordinator. At its
 clean checkpoint, the user requested preparation for a cheaper coordinator; the
 next continuation starts on Sol using tasks/NEXT_SESSION.md.
 The new-session default does not require a mid-task coordinator switch. Bounded

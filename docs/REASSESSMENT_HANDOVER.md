@@ -1,7 +1,10 @@
 # Reassessment handover — M4 paused after M4-11
 
-Updated 13 September 2026. This is the starting point for reassessing the
-project approach. No implementation task is claimed.
+Historical checkpoint, 13 September 2026. The reassessment below is resolved by
+[D-0006](decisions/D-0006-capability-driven-work.md); start with
+[the new handoff](../tasks/NEXT_SESSION.md) and [M4-12](../tasks/M4-12.md).
+No implementation task was claimed at this checkpoint. The remaining text
+records the prior state and options, not current dispatch instructions.
 
 ## Accepted boundary
 

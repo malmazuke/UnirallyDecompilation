@@ -11,7 +11,7 @@ This protocol is intended for humans and agents using different models or runtim
 | Implementation worker | Implement a defined contract and its checks | Assigned code/test paths on its own branch |
 | Reviewer | Reproduce the claim, inspect evidence, exercise independent cases and identify regressions | Review report; no silent edits to the implementation being reviewed |
 
-Roles do not require four simultaneous agents. For OpenAI tasks, default to a Sol coordinator and one Sol worker, with explicit model/effort settings. Review uses a fresh sequential session. A second child requires the independent-scope and quota justification in D-0004. A model switch does not change the task's acceptance criteria.
+Roles do not require four simultaneous agents. For the D-0006 M4-12 trial, the primary is both investigator/implementer and coordinator; it works on a task branch and automatically dispatches fresh Sol/medium independent review before integration. The M4-12 exception in D-0004 takes precedence over the general defaults here. For OpenAI tasks, default to a Sol coordinator and one Sol worker, with explicit model/effort settings. Review uses a fresh sequential session. A second child requires the independent-scope and quota justification in D-0004. A model switch does not change the task's acceptance criteria.
 
 For example, after M0, one worker could investigate track encoding while another identifies rider-state writes. Two workers should not independently rewrite the state schema. The coordinator establishes a small shared interface first and serializes changes to it.
 
@@ -51,6 +51,26 @@ On a single workstation, one coordinator can serialize assignments through task 
 
 A stale heartbeat is a reason to inspect the process, not immediately reassign its files. Confirm the former worker is stopped or isolated before issuing a new attempt. Keep attempt history, recovered commits and failure reasons.
 
+## Capability tasks and automatic review
+
+For [D-0006](decisions/D-0006-capability-driven-work.md), task boundaries follow
+native outcomes. The primary reproduces a baseline, investigates the first
+divergence, implements recovered behavior in native code, compares, and expands
+the frozen domain. Coupled routines are internal experiments with small commits.
+Keep one sustained primary context; do not require a new worker or review gate
+for each checkpoint. Partial research cannot be accepted as a native capability.
+
+Before acceptance, the primary MUST launch one independent review subagent,
+explicitly `gpt-5.6-sol`/medium, with no inherited conversation (`fork_turns:
+"none"` when using collaboration tools). Create its separate checkout at the
+exact candidate before spawning; subagent tools do not isolate files themselves.
+Give the reviewer task/evidence paths, owned review output, required independent
+cases and the immutable candidate hash. Automatically collect findings, fix on
+the implementation branch, request re-review and integrate after approval.
+Never make the user start, monitor or relay review. No self-approval fallback.
+The primary can do integration preparation while review runs, but must not change
+the reviewer's candidate. Use [validation by stage](BUILD_AND_VALIDATION.md#validation-by-stage).
+
 ## Worker loop
 
 1. Read project state, the task, relevant decisions and evidence. Inspect the actual branch and working tree; do not assume they match the handoff.
@@ -67,7 +87,7 @@ Do not spend the entire session producing source code before running an experime
 Operating defaults, adjustable from measured runs under D-0004 (enforced by agents; no scheduler exists):
 
 - One active child by default; a second independent child needs the recorded D-0004 justification.
-- A 45-minute task session, checkpoint at least every 10 minutes and before an expensive experiment. Larger tasks become several sessions with durable progress.
+- A 45-minute reassessment interval within the active task (no mandatory session restart), checkpoint at least every 10 minutes and before an expensive experiment. Larger tasks become several sessions with durable progress.
 - After three attempts at the same hypothesis without new evidence, stop that approach. Narrow the experiment, ask for review, or reassign; do not blindly regenerate implementations.
 - Apply explicit process timeouts to builds and tests. Separate timeout, crash, unavailable prerequisite and behavioral mismatch in reports.
 - On usage exhaustion, provider error or interruption, persist progress when possible; the coordinator can recover the isolated worktree even if the agent could not write a final message.
@@ -81,7 +101,7 @@ Routine integration can proceed automatically only when the task is in scope, a 
 
 ### Internal prerequisites and continuity
 
-When a worker reaches an internal dependency, it checkpoints the evidence and informs the coordinator. The coordinator amends scope or creates and dispatches the smallest prerequisite, then resumes the dependent task after review. A ready prerequisite is work to do, not a reason to end the user request. The 45-minute sessions above are checkpoint/reassessment intervals; they do not create a user-imposed total budget. Do not invent additional stopping budgets. The usage-conservation defaults adopted in D-0004 respond to the user's explicit budget-management request and take precedence over earlier unlimited-session allocations. Preserve actual spending restrictions and runtime limits, and escalate only dependencies that require the user's access, input or authority.
+When a worker reaches an internal dependency, it checkpoints the evidence and informs the coordinator. The coordinator normally adds coupled dependencies to the current task experiment list under D-0006. Create a separate prerequisite only for independent ownership, a different outcome or justified review size/risk, then resume the dependent work. Do not impose a separate acceptance cycle per recovered producer. A ready prerequisite is work to do, not a reason to end the user request. The 45-minute sessions above are checkpoint/reassessment intervals; they do not create a user-imposed total budget. Do not invent additional stopping budgets. The usage-conservation defaults adopted in D-0004 respond to the user's explicit budget-management request and take precedence over earlier unlimited-session allocations. Preserve actual spending restrictions and runtime limits, and escalate only dependencies that require the user's access, input or authority.
 
 ## Source control and integration
 

@@ -7,7 +7,8 @@ stable result, using a validated local Classic pack and no original CPU
 execution. M4 original-game coverage has accepted the DRAGSTER loser result and
 a bounded ZOOM ZOO reference chain through position, sampling, contact,
 response-B and vertical-velocity recurrence; this is research evidence, not a
-second native track. Further work is paused for reassessment. See
+second native track. M4-12 is prepared for an Astra/medium native capability trial;
+implementation has not started. See
 [project state](docs/STATE.md) for the exact accepted boundary and
 [the compact handoff](tasks/NEXT_SESSION.md) for current work. No agent
 scheduler exists.
@@ -28,7 +29,8 @@ Progress belongs in source control and reproducible experiments, so work can mov
 | [Build and validation](docs/BUILD_AND_VALIDATION.md) | Reference emulator, reproducible tooling, test evidence and implemented/proposed command inventory |
 | [Agent workflow](docs/AGENT_WORKFLOW.md) | Task ownership, unattended work, model handoffs, review and integration |
 | [Project state](docs/STATE.md) | Current facts, decisions, blockers and next actions |
-| [Reassessment handover](docs/REASSESSMENT_HANDOVER.md) | Clean stopping boundary after M4-11, remaining unknowns and options before any new task |
+| [Next session](tasks/NEXT_SESSION.md) | Astra/medium trial startup, scope and automatic review |
+| [Reassessment handover](docs/REASSESSMENT_HANDOVER.md) | Historical stopping boundary after M4-11 and remaining unknowns |
 | [Initial backlog](tasks/README.md) | The first implementation tasks and their dependencies |
 | [Track investigation starts here](tasks/M4-02.md) | Bounded second-track discovery; continue with [the content/read contract](tasks/M4-03.md) rather than assuming a universal track format |
 | [Task template](tasks/TEMPLATE.md) | A portable work order and handoff record |
@@ -38,7 +40,10 @@ Progress belongs in source control and reproducible experiments, so work can mov
 Human-readable native source is an explicit goal from the first routine
 ([D-0003](docs/decisions/D-0003-human-readable-native-code.md)). Agents make
 routine project decisions autonomously. [D-0004](docs/decisions/D-0004-model-and-usage-budget.md)
-sets Sol as the routine OpenAI model, bounded frontier review and usage guardrails.
+sets Sol as the routine OpenAI model and defines the M4-12 Astra/medium trial
+exception, automatic Sol review and usage reserve.
+[D-0006](docs/decisions/D-0006-capability-driven-work.md) defines capability-sized
+tasks and staged validation.
 Tasks stay within their starting provider; platform switches belong to the user.
 
 ## Current playable boundary

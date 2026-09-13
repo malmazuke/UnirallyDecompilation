@@ -9,7 +9,7 @@
 - Worker/session/runtime/model:
 - Actual model/reasoning effort, routing rationale and frontier escalation question (if any):
 - Provider quota window/baseline timestamp, used/remaining or unknown, reserve and session allowance (D-0004):
-- Reviewer:
+- Reviewer (primary automatically spawns fresh model/effort, isolated checkout; no user trigger):
 - Dependencies and evidence of acceptance:
 - Base commit:
 - Branch and isolated worktree:
@@ -19,7 +19,7 @@
 
 ## Outcome and boundaries
 
-Describe a concrete deliverable. Name the behavior/domain covered and the work deliberately outside this task. Link relevant decisions. A research task may deliver a validated finding without production code.
+Describe a concrete deliverable. Name the behavior/domain covered and the work deliberately outside this task. Link relevant decisions. A task explicitly assigned as research may deliver a validated finding without production code. A D-0006 capability task must deliver native behavior; partial research is a checkpoint, not acceptance. Keep coupled dependencies as internal experiments unless a split has a recorded ownership/outcome/review-risk reason.
 
 ## Inputs and prerequisites
 
@@ -32,6 +32,15 @@ List ROM/tool/fixture hashes, schema versions, local-only artifact locations and
 | <criterion> | <reproducible invocation> | <predefined expectation> | <report/manifest/hash> |
 
 For a task creating a tool, state the intended interface and how that tool will itself be verified. Don't claim a not-yet-implemented command can currently run.
+
+## Capability and coverage checkpoint
+
+- Native capability delivered / still missing:
+- Frozen exact-match interval, field set and reference/seed identity:
+- Dynamic captured inputs still consumed (must be zero for autonomy):
+- Relevant branches/transitions exercised, including independent variations:
+- First divergence and cheapest next discriminating experiment:
+- Trial-wide usage baseline/current, reserve, reset authorization/outcome or none:
 
 ## Evidence and attempts
 

@@ -2,6 +2,30 @@
 
 This is the M0 implementation specification. Commands marked implemented in the stable-command table exist in `tools/project.py`; the separately listed research modules use `python3 -m`. Other commands remain proposals until a task record shows them running.
 
+## Validation by stage
+
+[D-0006](decisions/D-0006-capability-driven-work.md) changes when checks run, not
+what constitutes evidence. Historical frozen expectations and acceptance remain.
+
+| Stage | Required work |
+| --- | --- |
+| Startup | Verify source/input identities and reproduce the focused accepted foundation. Bootstrap missing local prerequisites; reuse verified downloads/build caches. |
+| Experiment/edit | Run affected unit/component tests and native differential comparisons. Use targeted sanitizers for risky native changes. Record first divergence, reached branches and captured inputs removed. No broad matrix per checkpoint. |
+| Review candidate | Freeze a coherent commit; run focused checks, declared native primary/variation/restores and affected regressions. A fresh reviewer independently reproduces the behavior and chooses withheld cases targeting relevant branches; whole-document hashes alone do not validate semantics. |
+| Final integration candidate | Run complete app-debug and app-sanitize suites, declared private native/replay/content/pack/presentation gates and hosted macOS/Linux CI on the exact source candidate. Required skipped/missing tests are non-passes. |
+| Corrections | Repeat affected checks; rerun the full integration matrix if tested code, build/config, inputs or expectations changed. Documentation-only successors may cite the tested code/input identity with an inspected diff; obtain hosted CI for the final pushed tip. |
+
+The primary owns integration checks; do not ask both worker and coordinator to
+repeat identical broad suites without a changed candidate or a specific concern.
+Independent reference reproduction and withheld cases are not redundant checks.
+Retain proof of clean installation at milestone/schema/content-interface changes;
+a fresh clean build is not required for every unchanged research checkpoint.
+
+For M4-12, existing research modules remain evidence tools, not a native runner.
+The task must implement and document its new native comparison/restore surface
+before claiming that surface works. Freeze exact fields, horizon, source/seed,
+static inputs and validation commands before using them as acceptance gates.
+
 ## Environment and dependencies
 
 Start on the current macOS machine with Linux as the first additional build/test target. Windows is a later release target, unless the user prioritizes it earlier. Test natively on the relevant architecture; cross-compilation alone is not evidence of runtime determinism.

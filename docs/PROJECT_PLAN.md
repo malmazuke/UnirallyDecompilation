@@ -90,6 +90,21 @@ M0–M3 form the first investment decision. Measure progress before estimating M
 
 For M4, inventory actual game features from evidence; the table does not assert that every named system has already been confirmed in this ROM. For M3, maintain a scoped inventory so a polished demo cannot be mistaken for the full game.
 
+### M4-12 investment gate (13 September 2026)
+
+[D-0006](decisions/D-0006-capability-driven-work.md) and
+[M4-12](../tasks/M4-12.md) replace one-producer-at-a-time task acceptance with an
+Astra/medium trial delivering autonomous native ZOOM ZOO movement. First close
+the accepted short window, then an expanded predeclared interval with relevant
+independent variations and restore checks. Early native integration is in scope;
+remaining gameplay dependencies are internal experiments. Full-track finish,
+second-track presentation and the rest of M4 remain later outcomes.
+
+Measure exact native interval/fields and branch coverage, dynamic captured inputs
+remaining, review findings and allowance consumed. Accepted research-task counts
+are not a proxy for playable coverage. No revised calendar or cost estimate is
+supported yet. Historical estimates below remain historical observations.
+
 ### Next-stage estimate, revised from observed effort
 
 M2-01 checkpoint note (12 September 2026): the original small-riding-update estimate did not account for the demonstrated opponent-jump/contact dependency of player speed. Sampling and progress components are implemented, but the full task remains blocked on [M2-01A](../tasks/M2-01A.md). Re-estimate autonomous movement after that contract is recovered; do not treat the earlier 1–5 h range as a promise for the expanded work.

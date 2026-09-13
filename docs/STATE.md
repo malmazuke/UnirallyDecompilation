@@ -92,7 +92,7 @@ First implementation milestone: M0 repeatable laboratory. First gameplay feasibi
 ## Next work
 
 For the next Sol coordinator, start with [the compact handover](../tasks/NEXT_SESSION.md).
-The M4-00 candidate and bounded Astra audit need no conversation replay.
+Accepted M4 evidence and the current claim need no conversation replay.
 
 **M3 and M4-00 through M4-09 are accepted; M4-10 is claimed.** Continue the
 bounded inter-contact response-B producer/recurrence task from its record.

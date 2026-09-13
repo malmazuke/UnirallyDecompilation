@@ -4,9 +4,12 @@ Status: milestones M0 through M3 are accepted as of 13 September 2026; annotated
 tag `m3` identifies the accepted playable-slice state. The native app supports
 the identified PAL one-player CRAWLER/DRAGSTER path from race start through a
 stable result, using a validated local Classic pack and no original CPU
-execution. M4 original-game coverage is beginning with an evidence-backed
-[feature inventory](tasks/M4-00.md). See [project state](docs/STATE.md) for the
-exact evidence and limitations. No agent scheduler exists.
+execution. M4 original-game coverage has accepted the DRAGSTER loser result and
+a bounded ZOOM ZOO reference chain through position, sampling and contact
+composition; this is research evidence, not a second native track. See
+[project state](docs/STATE.md) for the exact accepted boundary and
+[the compact handoff](tasks/NEXT_SESSION.md) for current work. No agent
+scheduler exists.
 
 The long-term goal is an editable, portable Unirally with online multiplayer,
 custom tracks, a track editor and high-resolution asset replacements. The first
@@ -21,10 +24,11 @@ Progress belongs in source control and reproducible experiments, so work can mov
 | Document | Purpose |
 | --- | --- |
 | [Project plan](docs/PROJECT_PLAN.md) | Scope, architecture, milestones and criteria for advancing |
-| [Build and validation](docs/BUILD_AND_VALIDATION.md) | Reference emulator, reproducible tooling, test evidence and proposed command interface |
+| [Build and validation](docs/BUILD_AND_VALIDATION.md) | Reference emulator, reproducible tooling, test evidence and implemented/proposed command inventory |
 | [Agent workflow](docs/AGENT_WORKFLOW.md) | Task ownership, unattended work, model handoffs, review and integration |
 | [Project state](docs/STATE.md) | Current facts, decisions, blockers and next actions |
 | [Initial backlog](tasks/README.md) | The first implementation tasks and their dependencies |
+| [Track investigation starts here](tasks/M4-02.md) | Bounded second-track discovery; continue with [the content/read contract](tasks/M4-03.md) rather than assuming a universal track format |
 | [Task template](tasks/TEMPLATE.md) | A portable work order and handoff record |
 | [Evidence template](docs/templates/EVIDENCE.md) | How to record a reverse-engineering finding |
 | [Decision template](docs/templates/DECISION.md) | How to preserve an architectural decision |
@@ -45,14 +49,12 @@ Audio is not implemented. Other tracks, riders/opponents, modes, local
 multiplayer, menus/progression and public packaging are not accepted native
 features; menu labels seen in reference captures are not implementation claims.
 
-## Immediate next step
+## Current work
 
-Complete [M4-00](tasks/M4-00.md), then close the already evidenced
-[DRAGSTER loser-result presentation gap](tasks/M4-01.md). The following
-[second-track discovery](tasks/M4-02.md) attempts to hold PAL, one player, MIKE
-and CRAWLER fixed, but must first observe whether opponent or event rules change
-with the track. This sequencing closes a narrow native failure before widening
-the reference domain.
+Fast-moving status and next-work guidance live in
+[project state](docs/STATE.md) and [the compact handoff](tasks/NEXT_SESSION.md).
+Completed task records remain the durable evidence trail; do not infer native
+support from a reference-research task.
 
 C++20, CMake, Python and checksum-pinned SDL3 tooling are established. Commands
 marked implemented in [build and validation](docs/BUILD_AND_VALIDATION.md)

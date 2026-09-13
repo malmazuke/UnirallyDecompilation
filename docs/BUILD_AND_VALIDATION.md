@@ -40,18 +40,21 @@ Select one primary adapter based on this spike. A second emulator is useful to i
 
 Directories are added when there is an implementation to put in them. Present after M0-02: `tools/`, `tests/tooling/` (Python checks for the tooling itself), `tests/synthetic/`, `tests/manifests/rom/`, `docs/research/`, `src/lab/` (a synthetic determinism probe used to validate the toolchain and reports; it is not game code), `.github/workflows/` (ROM-free CI) and `tools/locks/` (pinned tool artifacts). Added by M0-03: `tools/unirally_lab/reference/` and `tests/manifests/reference/` (reference scripts). Added by M0-04: `tools/unirally_lab/replay/`, `tools/unirally_lab/compare/` and `tests/manifests/replay/` (replay manifests); local-only states and their restore-check reports live under ignored `local/states/`. Added by M1-01: `tools/unirally_lab/coverage/` (trace drain, 65816 opcode table, LoROM mapping, map derivation) and `docs/map/` (tracked observed code maps and summaries per scenario). Added by M1-02: `tools/unirally_lab/access/` (65816 effective-address decoder, streaming access derivation, capture and query commands), `tests/manifests/fields/` (validated field declarations) and `docs/state/` (the player-state schema).
 
-M2-01's blocked component checkpoint adds `src/core/` (collision-point
+M2-01's accepted component foundation added `src/core/` (collision-point
 expansion, spatial sampling and progress recurrence), `tests/native/` (four
 ROM-free authored C++ checks plus two ROM-dependent probe executables),
 `tools/unirally_lab/native/` (reference-freeze utility and isolated component
 probes), and `tests/manifests/native/` (frozen reference projections and static
-content provenance). These components do not implement a rider update or a
-complete simulation. See [R-0010](research/R-0010-native-movement.md) and the
-[source guide](../src/core/README.md) for exact units and supported bounds.
+content provenance). Those initial components did not by themselves implement
+a rider update or a complete simulation; the accepted movement and later
+milestones build on them. See [R-0010](research/R-0010-native-movement.md) and
+the [source guide](../src/core/README.md) for exact units and supported bounds.
 
 ## Stable command contract
 
-Implement a thin repository CLI, tentatively `python3 tools/project.py`, so any model/runtime uses the same entry points. The wrapper should invoke standard tools instead of reimplementing a build system.
+The repository CLI is `python3 tools/project.py`, so each model/runtime can use
+the same implemented entry points. The wrapper invokes standard tools instead
+of reimplementing a build system; rows still marked proposed are unavailable.
 
 | Subcommand | Status | Contract |
 | --- | --- | --- |
@@ -69,14 +72,14 @@ Implement a thin repository CLI, tentatively `python3 tools/project.py`, so any 
 | `content provenance --access <dir>/access.json --out <dir> [--from-frame N] [--to-frame N]` | implemented (M1-03) | From an access record: every MDMAEN store expanded per enabled channel (frame, sequence, pc, direction, transfer mode, B-bus register, A-bus bank/address and region, size, ROM file offset) paired with the VRAM/CGRAM/OAM address in effect when the record watched `$2115`-`$2117`, `$2121`, `$2102`/`$2103`; every block move through `$00:0199` from its watched register log (grouped by the count register: source/destination offsets, length, destination bank, source banks or the ROM range); the VRAM and CGRAM bytes written through the data ports when `$2118`/`$2119`/`$2122` were watched; `provenance.json` (schema 1); checks that the MDMAEN count equals the record's `dma_triggers` and (optional) that every pairable transfer was paired |
 | `content decode --manifest <manifest> --out <dir> [--rom P] [--wram-dump P]` | implemented (M1-03) | Decode every item of a content manifest (schema 1: `raw` pieces by file offset and length, or `rnc` by source bank/address through the port of the ROM's `$81:B8E2` decompressor) from the ROM, write the bytes to the ignored output directory, and check length and SHA-256 against the manifest; with a work RAM dump, compare items that carry `runtime.work_ram_offset` byte for byte, tolerating only the listed `known_runtime_writes`; exit 1 on a mismatch, 2 without ROM/manifest/dump, 3 for an invalid manifest |
 | `content compare --manifest <manifest> --access <access.json> [--access <more>] --frame N --frame-image <png> --oam-dump <wram.bin> --scroll-dump <wram.bin> --out <dir> [--rect X Y W H] [--upload-frame N] [--bg1-scroll H V] [--bg2-scroll H V] [--colour-order bgr|rgb] [--max-mismatch-fraction F]` | implemented (M1-03) | Rebuild VRAM, CGRAM and OAM as the original had them at frame N (decoded items at their VRAM/CGRAM positions; ROM-to-VRAM DMAs and the tilemap staging DMAs of the record replayed with the previous frame's work RAM series; CGRAM/OAM port writes from the watch logs; scroll from the HDMA tables in the dump), render BG1, BG2 and sprites with the core's colour conversion, and compare pixel for pixel with the frame image over the rectangle; writes the render, the diff and a side-by-side PNG; reports the mismatch count and the omitted PPU features; fails only when `--max-mismatch-fraction` is exceeded |
-| `content pack --rom <path> --out <ignored-pack>` | implemented (M3-02A candidate) | Verify the exact supported PAL ROM before extraction, reproducibly decode the thirteen scoped Classic gameplay entries, and atomically create a schema-1 local pack with logical IDs, entry hashes and source/extraction-rules/profile/start identities; refuses overwrite and removes an interrupted temporary output |
-| `content pack-inspect --pack <path>` | implemented (M3-02A candidate) | Validate pack magic/schema, source/rules/profile/start identities, canonical layout and every required logical entry size/SHA-256 without opening a ROM; corruption, missing/duplicate entries and incompatible identities are invalid input |
+| `content pack --rom <path> --out <ignored-pack>` | implemented (M3-02A/M3-02 accepted) | Verify the exact supported PAL ROM before extraction, reproducibly create the current 25-entry Classic pack (13 gameplay and 12 presentation entries), and atomically write a schema-1 local pack with logical IDs, entry hashes and source/extraction-rules/profile/start identities; refuses overwrite and removes an interrupted temporary output |
+| `content pack-inspect --pack <path>` | implemented (M3-02 accepted) | Validate pack magic/schema, source/rules/profile/start identities, canonical layout and every required logical entry size/SHA-256 without opening a ROM; corruption, missing/duplicate entries and incompatible identities are invalid input |
 | `native compare --manifest <native case> [--from-frame N] [--to-frame N]` | implemented (M2-01 accepted) | Build `movement_runner`, run it twice in fresh processes from the identity-bound semantic seed using only static content and replay controller masks, verify unchanged inputs and canonical-state determinism, and compare all 13 required projections with the frozen reference; primary and two withheld cases pass through frame 2999 |
 | `native restore-check --manifest <native case> --save-frame N [--save-frame N ...]` | implemented (M2-02 accepted) | Run one reference-checked uninterrupted native process, then for each interior boundary reproduce its prefix, persist the exact333-byte canonical state and resume its suffix in another fresh process; require every projection and canonical state to equal the uninterrupted series, with all inputs rehashed between processes |
 | `native finish-check --manifest <full-race case> [--save-frame N ...]` | implemented (M3-01 accepted) | Run the full-race native producer twice, require the canonical `URMV0001` to `URMV0002` transition and exact frozen gameplay/finish/result state through the first stable result frame, and optionally require restored suffixes to equal uninterrupted execution |
-| `native opponent-first-check --manifest <case> --content-pack <pack> [--save-frame N ...]` | implemented (M3-04 candidate) | Run the neutral-after-1533 native producer twice using only the validated pack, compare the identity-bound full opponent x/y/velocity/pose plus player/timer/finish projection through frame 3999, and optionally require restored suffixes to equal uninterrupted execution |
-| `native presentation-check --manifest <presentation contract> --fixtures <ignored fixture directory> --content-pack <pack>` | implemented (M3-02 candidate) | Build the pack-only headless renderer, identity-check each private canonical state/reference PNG named by the tracked contract, render each case in a fresh process, and fail/report its exact regional pixel mismatch against the frozen threshold; fixtures must remain below ignored `local/` or `artifacts/` |
-| `frontend run [--pack <ignored pack>] [--rom <supported ROM>]` | implemented (M3-03 candidate) | Validate an existing Classic pack and launch the SDL3 app without opening a ROM; when the pack is absent, exact-gate the explicit ROM, atomically create and revalidate the pack, then launch. Existing corruption, cancelled/missing/wrong ROM, absent executable and failed/timed-out app launches are non-success outcomes. Audio is explicitly omitted. |
+| `native opponent-first-check --manifest <case> --content-pack <pack> [--save-frame N ...]` | implemented (M3-04 accepted) | Run the neutral-after-1533 native producer twice using only the validated pack, compare the identity-bound full opponent x/y/velocity/pose plus player/timer/finish projection through frame 3999, and optionally require restored suffixes to equal uninterrupted execution |
+| `native presentation-check --manifest <presentation contract> --fixtures <ignored fixture directory> --content-pack <pack>` | implemented (M3-02 accepted) | Build the pack-only headless renderer, identity-check each private canonical state/reference PNG named by the tracked contract, render each case in a fresh process, and fail/report its exact regional pixel mismatch against the frozen threshold; fixtures must remain below ignored `local/` or `artifacts/` |
+| `frontend run [--pack <ignored pack>] [--rom <supported ROM>]` | implemented (M3-03 accepted) | Validate an existing Classic pack and launch the SDL3 app without opening a ROM; when the pack is absent, exact-gate the explicit ROM, atomically create and revalidate the pack, then launch. Existing corruption, cancelled/missing/wrong ROM, absent executable and failed/timed-out app launches are non-success outcomes. Audio is explicitly omitted. |
 | `verify --task <id>` | proposed | Run that task's declared checks, validate required artifacts and report eligibility for review |
 | `package --preset <name>` | proposed | Later: assemble a runnable build with dependency notices and no unintended local inputs |
 
@@ -84,7 +87,7 @@ All commands must have bounded execution, useful help, noninteractive operation 
 
 Use an agreed JSON report schema containing run ID, task ID, source commit, dirty-diff digest if applicable, tool versions, input hashes, command, elapsed time, check outcomes and artifact hashes/locations. A check result applies only to the exact recorded source/input state. The schema is implemented in `tools/unirally_lab/report.py` (schema version 1): each check has an outcome of `passed`, `failed`, `skipped`, `missing` or `timeout` and a `required` flag; a run's `status` is `passed` only when every required check passed.
 
-## Isolated native research modules (M2-01 component checkpoint)
+## Isolated native research modules
 
 These are invoked with `python3 -m tools.unirally_lab.native.<module>`, outside
 the stable CLI. They do not provide `tools/project.py native compare`.
@@ -127,16 +130,19 @@ and original captures stay ignored; missing content is a prerequisite failure.
 The existing `build --preset lab-debug` and `test --suite synthetic` commands
 include the authored tests in `tests/native/` and Python tooling checks without
 a ROM. `build --preset lab-sanitize` builds the same C++ component tests with
-sanitizers. The latest clean-source local suite passed 211 checks; the sampler
-checkpoint passed both CI platforms, while the final component candidate's CI
-and independent review are recorded by the coordinator. Full gameplay gates
-remain unrun, and component output hashes are not full movement-state hashes.
+sanitizers. Historical task records preserve the exact clean-source test counts,
+CI runs and independent reviews for each component checkpoint. Component output
+hashes are not full movement-state hashes; only later accepted whole-simulation
+gates make gameplay claims.
 
 ## ROM and replay identity
 
 The selected region is PAL Unirally. Choose its exact ROM revision before baseline capture. Record SHA-256 and file size, region, mapping and any header handling; retain original and normalized hashes separately if normalization is necessary. Do not infer region solely from the filename or hard-code NTSC timing. Persistent data, configuration and emulator version are part of the experiment.
 
-Each replay manifest records (implemented as `tests/manifests/replay/*.json`, schema 1, validated by `tools/unirally_lab/replay/manifest.py`; complete native replay execution remains proposed; M2-01 has reference projections and component-content manifests only):
+Each replay manifest records (implemented as `tests/manifests/replay/*.json`,
+schema 1, validated by `tools/unirally_lab/replay/manifest.py`; accepted native
+comparison/finish/restore paths use their task-scoped manifests, while broader
+replay support remains bounded to the listed implemented commands):
 
 - Scenario ID and tested behavior; ROM/emulator identity and adapter schema.
 - Initial reset procedure or snapshot hash, SRAM/configuration hashes and RNG state if known.

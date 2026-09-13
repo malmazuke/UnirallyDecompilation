@@ -123,3 +123,33 @@ and zero new ROM-read sites. The new reads are existing jump fields, landing
 scratch/orientation/history/input, rolling level, and `$132B`. The latter is the
 only added constant guard; it is zero every frame. The first denied-reference
 experiment passes on candidate `f1cd993`; rerun it on the corrected candidate.
+
+## Independent approval and final local gates
+
+Fresh Sol/medium approves `13f80ff` in reviewer commit `83765c3`; full report is
+[tasks/M4-13-review.md](../../tasks/M4-13-review.md). Two findings were corrected
+in one round; both failed withheld cases remain regressions. Fresh B1682–1696
+lands1744/1771 (105 updates after first landing); neutral1675–1680 before the
+primary jump lands1745/1762 (104 updates). Both retain different state from the
+primary, match all395 bytes and restore before/after both landings. Primary
+repeats both fresh cases with debug and sanitizer binaries. All five M4-13 cases
+and all four frozen M4-12 cases pass their complete horizons and restores.
+
+Complete app-debug and app-sanitize each pass400 checks on clean13f80ff, with
+zero skipped/missing/failed checks and no source mutation during either run.
+Their report SHA-256 values are respectively
+`e05fbc7c5dd57718609f5e4f2c56b8de089e4d2a2f1c9e8291bccc7c43ad8844` and
+`4633922cf05f3c60e328f19dbbbaf738fbbeab811cf12a0ad22b687244d10dd7`.
+Frozen content contract/pack (3 checks each), full DRAGSTER race/restores(18),
+opponent-first/restores(12), winner/loser presentation(8/2) and original ZOOM ZOO
+3300 replay(24) all pass. The initial finish-check command rejected app-debug
+before execution; its corrected documented lab-debug invocation passed.
+
+Private complete report hashes and exact invocations are inventoried in
+`artifacts/m4-13/validation-inventory.json` in the task checkout, including
+`final-gates/commands.json`, `final-gates/corrected-command-results.json`,
+`regressions/commands.json`, `run-differentials.py`, and `autonomy.py`. Native
+autonomy on corrected13f80ff is also verified by OS-denied ROM/reference reads
+and successful native execution, with negative controls. Integration preserves
+identical reviewed/tested code and immutable accepted expectations. Private main
+synchronization and final-tip hosted CI are the remaining completion gates.

@@ -20,6 +20,10 @@ struct ZoomZooContent {
     std::span<const std::uint8_t> reflection_pose_table;
     std::span<const std::uint8_t> landing_matrices;
 };
+// $82:9715–979D: count active updates opposing the track direction, with
+// original wrapped word comparisons at velocities -16 and +16 (1/32 units).
+std::uint16_t next_wrong_direction_counter(std::uint16_t previous,
+    std::uint16_t velocity_x,std::uint16_t marker,unsigned horizontal);
 std::vector<std::uint8_t> serialize_zoom_zoo(const ZoomZooState& state);
 ZoomZooState deserialize_zoom_zoo(std::span<const std::uint8_t> bytes);
 // Experimental M4-12 continuation; no production frontend dispatch uses this.

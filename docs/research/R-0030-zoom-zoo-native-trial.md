@@ -161,3 +161,52 @@ state/input, transactional rejection and altered static content.
 controllers into a new native working directory. Native code neither links an
 emulator nor reads the ROM/reference. Full acceptance still needs reviewer-owned
 relevant variations, Sol approval and the final regression/CI/private-push matrix.
+
+## Candidate regression evidence (`43198c6`)
+
+Clean source reports bind commit `43198c6242ae2d55d025704522f947f88d2ed84e`;
+no tracked source changed during either full suite. Each app preset passed 376
+Python tests, 21 CTests and native fresh-process repeatability (400 checks total).
+The experimental native primary and three restores also pass under ASan/UBSan.
+
+| Gate | Result | Report SHA-256 |
+| --- | --- | --- |
+| `app-debug-clean-report.json` | 400 checks, passed | `84b5973312daea9b82a410d9fc5ab9ae03fb76fc7946469afea94c75cd90b64a` |
+| `app-sanitize-report.json` | 400 checks, passed | `0defa9e28a8fd801eb1c9131d78b1401837331c314a4a9b648127f651eb22659` |
+| `trial-primary-final-report.json` | 200 updates + 3 restores, passed | `80460e13b5b1dd5a888cdcdc6c57d7aeeea75b6a6619c1c7efdabd0862a3fcea` |
+| `trial-primary-sanitize-report.json` | 200 updates + 3 restores, passed | `ac6298731b0f908c97cd0afac0dd99ba82ce4797aab33352fe4c5af8bf3a9dc0` |
+| `regressions/zoom-contract.json` | 3 checks, passed | `b053a0077869ee41d96f866a76286abdef8af4c9e428849d7bfc110260207b67` |
+| `regressions/pack.json` | 3 checks, passed | `ce1ab2663f0b2f1a154c1b51b70e36cfd40e0fb8303c8818a7bce6957cd42dff` |
+| `regressions/finish/report.json` | 18 checks, passed | `9bb3f11e62ac8726ac6b2c1f1e28d0c2743d84c0587abdaa9c5c1b4b84fe94ae` |
+| `regressions/opponent/report.json` | 12 checks, passed | `5154900681737f0f7acbaa2134277bd97d567328988ba4308ab3ff3b38949520` |
+| `regressions/winner-visual/report.json` | 8 checks, passed | `3408d8df0e998a43568c593766f824a9c565a55e67211a7855f438b7a156fc12` |
+| `regressions/loser-visual/report.json` | 2 checks, passed | `fe99892e49111df041680940943ba8493b4308d55a27a398c6e9e5af84601a5b` |
+| `regressions/zoom-replay.json` | 24 checks, passed | `bc81584ad9dfcfb8eae4db09092d3a6c51f1ce7b9868bae5e7a07b8bb3e007e4` |
+
+Exact regression argument arrays are preserved in
+`artifacts/m4-12/regressions/commands-final.json`; each invokes
+`python3 tools/project.py`. The full-race restore frames are 1600/3213/3453/3678;
+opponent-first restores are 3213/3800. Frozen winner and loser presentation
+contracts use their accepted fixture directories. Report inventory, source
+identities and command arrays are in `artifacts/m4-12/validation-inventory.json`.
+
+A first broad run failed 12 Python cases because top-level private-cache
+symlinks resolved outside the checkout; CTests passed. Replacing only the
+agent-created links with real directories and reusing caches beneath them
+resolved the path-containment failures. No tests or expected values changed.
+An initial native-regression invocation also rejected a report path outside its
+fresh artifact directory; corrected commands keep each report inside that
+directory. Neither preliminary attempt counts as a pass.
+
+## Independent finding and correction
+
+Reviewer preregistration `6c4a3b4` fixed two cases before native evaluation.
+Neutral 1650–1660 then Right failed candidate `43198c6` first at 1661, with only
+the player's wrong-direction counter one too high. `$82:971A–9725` clears the
+counter when velocity is in `[-16,16)` before testing marker/input direction;
+that guard was omitted. `next_wrong_direction_counter` now preserves the exact
+wrapped comparisons, and ROM-free tests distinguish -17/-16/+15/+16. The
+corrected candidate passes primary, that now-tuned regression and the original
+passing neutral-1818–1826 case, each for 200 updates plus three restores. The
+failed case is no longer counted as withheld; a fresh reviewer-owned case is
+required before approval. Independent review and final CI are still pending.

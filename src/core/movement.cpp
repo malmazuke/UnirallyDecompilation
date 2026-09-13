@@ -980,6 +980,16 @@ void integrate_zoom_axis(std::uint16_t& position,std::uint16_t velocity,std::uin
 }
 } // namespace
 
+std::uint16_t next_wrong_direction_counter(std::uint16_t previous,
+    std::uint16_t velocity_x,std::uint16_t marker,unsigned horizontal) {
+    const bool moving=!negative(static_cast<std::uint16_t>(velocity_x-16U)) ||
+        negative(static_cast<std::uint16_t>(velocity_x-0xfff0U));
+    if(!moving || (marker&0x8000U) || !((marker&0x4000U)?horizontal==2:horizontal==0))return 0;
+    const auto next=add_word(previous,1);
+    if(next==180)throw std::invalid_argument("ZOOM ZOO wrong-direction reward is unrecovered");
+    return next;
+}
+
 std::vector<std::uint8_t> serialize_zoom_zoo(const ZoomZooState& state) {
     auto bytes=serialize_movement_state(state.movement);
     if(bytes.size()!=333)throw std::invalid_argument("ZOOM ZOO finish state is unsupported");
@@ -1071,11 +1081,9 @@ void update_zoom_zoo(ZoomZooState& state,const ControllerButtons& buttons,const 
                 (!transition.rotate_negative_input && !transition.rotate_positive_input);
             if(clear)rider.motion.response_b=0;
             else rider.motion.response_b=static_cast<std::uint16_t>((rider.motion.response_b&0xff00U)|(transition.rotate_negative_input?254U:2U));
-            const auto marker=rider.progress.marker_word;
-            if(!(marker&0x8000U) && ((marker&0x4000U)?horizontal==2:horizontal==0)) {
-                transition.wrong_direction_counter=add_word(transition.wrong_direction_counter,1);
-                if(transition.wrong_direction_counter==180)throw std::invalid_argument("ZOOM ZOO wrong-direction reward is unrecovered");
-            } else transition.wrong_direction_counter=0;
+            transition.wrong_direction_counter=next_wrong_direction_counter(
+                transition.wrong_direction_counter,rider.motion.velocity_x,
+                rider.progress.marker_word,horizontal);
             advance_track_progress(rider.progress,content.movement.progress_transitions);
         }
         update_rolling_mode(rider);

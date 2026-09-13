@@ -9,6 +9,16 @@ template<class F> static void rejects(F action) {
 }
 int main() {
     using namespace unirally;
+    // Review case delayed Right exposed the omitted low-speed clear. The
+    // original interval is asymmetric: -16 clears, +16 increments.
+    for(int speed:{-16,-1,0,15})
+        require(next_wrong_direction_counter(7,static_cast<std::uint16_t>(speed),0x4000,2)==0);
+    for(int speed:{-17,16})
+        require(next_wrong_direction_counter(7,static_cast<std::uint16_t>(speed),0x4000,2)==8);
+    require(next_wrong_direction_counter(7,100,0x4000,1)==0);
+    require(next_wrong_direction_counter(7,100,0xc000,2)==0);
+    require(next_wrong_direction_counter(7,100,0,0)==8);
+    rejects([]{(void)next_wrong_direction_counter(179,100,0x4000,2);});
     ZoomZooState state{};state.movement.frame=1649;state.opponent_retained_oam_x=101;
     state.reflection[1].step=4;state.reflection[1].end=9;state.reflection[1].air_turns=3;
     auto encoded=serialize_zoom_zoo(state);require(encoded.size()==395);

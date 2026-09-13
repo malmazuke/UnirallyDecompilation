@@ -8,7 +8,12 @@ struct ReflectionTransition {
     std::uint16_t brake_input{}, rotate_negative_input{}, rotate_positive_input{}, jump_input{};
     std::uint16_t wrong_direction_counter{};
 };
+struct SurfaceTransition {
+    std::uint16_t mode{}, angle{}, tile_mode{}, leading_support{}, tile_pose{}, animation_delta{}, tile_pose_enabled{};
+};
 struct ZoomZooState {
+    bool sustained{};
+    std::array<SurfaceTransition,2> surface;
     MovementState movement;
     std::array<ReflectionTransition,2> reflection;
     std::uint8_t opponent_horizontal{};

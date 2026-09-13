@@ -55,11 +55,11 @@ int main(int argc,char** argv) try {
     const auto slopes=read_bytes(content/"pose-slopes.bin");
     const auto displacement=read_bytes(content/"displacement-table.bin");
     const auto idle=read_bytes(content/"idle-pose-table.bin");
-    const auto reward=read_bytes(content/"rotation-reward.bin");
-    const auto reward_class=read_bytes(content/"rotation-class.bin");
+    const auto reward=read_bytes(content/(state.sustained?"sustained-reward-values.bin":"rotation-reward.bin"));
+    const auto reward_class=read_bytes(content/(state.sustained?"sustained-reward-classes.bin":"rotation-class.bin"));
     const auto masks=read_bytes(content/"speed-masks.bin");
     const auto decrements=read_bytes(content/"speed-decrements.bin");
-    const auto coefficients=read_bytes(content/"reflected-vertical-slope-coefficients.bin");
+    const auto coefficients=read_bytes(content/(state.sustained?"sustained-slope-coefficients.bin":"reflected-vertical-slope-coefficients.bin"));
     const auto reflection=read_bytes(content/"reflection-pose-table.bin");
     const unirally::MovementContent movement{{track,poses,templates},{columns,flags},progress,slopes,displacement,idle,reward,reward_class,{masks,decrements}};
     const auto landing=read_bytes(content/"landing-response-matrices.bin");

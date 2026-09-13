@@ -168,3 +168,9 @@ M4-13 admits B jump within the experimental ZOOM ZOO interval.
 [R-0032](../../docs/research/R-0032-player-landing-recovery.md) explains the
 player landing impulse, displacement-quadrant ordering, rolling pose correction
 and guarded option boundary. All future state remains in the 395-byte record.
+
+M4-14's `SurfaceTransition` and `URZZ0002` extend the experimental ZOOM ZOO runner
+with tile-selected mode/angle, leading support and pose intermediates. Vertical
+contact now includes mirrored/inverted vertical and horizontal probes, steep
+coefficients and landing branches. [R-0033](../../docs/research/R-0033-sustained-traversal.md)
+links source addresses, immutable inputs and the finite differential domain.

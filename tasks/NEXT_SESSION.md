@@ -1,43 +1,35 @@
-# Next session — M4-14 sustained native traversal
+# Next session — M4-14 closeout
 
-M4-13 is complete at `01cb7b62ff6ef6de513b842f72f37212853be36f`.
-The user selected a larger continuous-riding task after its follow-up.
-[M4-14](M4-14.md) is ready/unclaimed for the next user-started implementation
-session. Select **Astra / Medium**, standard service, explicitly; project general
-defaults remain Sol/medium. Primary owns native implementation and automatically
-launches fresh Sol/medium review, fixes findings and integrates.
+M4-14 sustained native traversal is independently approved and all local broad
+gates pass. Corrected candidate `e730aaa` was approved by fresh Sol/medium review
+`ec543c52` (integrated as `4abe119`). Read [M4-14](M4-14.md),
+[review](M4-14-review.md), [STATE](../docs/STATE.md) and
+[R-0033](../docs/research/R-0033-sustained-traversal.md) for evidence and limits.
 
-Read STATE, AGENTS, AGENT_WORKFLOW, M4-14 and the current
-[D-0004 extension](../docs/decisions/D-0004-model-and-usage-budget.md#m4-14-sustained-traversal-extension)
-and [D-0006](../docs/decisions/D-0006-capability-driven-work.md). Evidence and
-actual reproduction commands are linked in the task.
+Acceptance remains conditional on the exact merged checks, private remote ref
+and final-tip macOS/Linux CI. Actual final results, merge SHA, commands, clock
+and usage are in ignored `artifacts/m4-14-integration/closeout.json`. Confirm its
+status and that its SHA equals the intended integration commit. If unavailable,
+recover the integration with `git log`, compare `git rev-parse HEAD origin/main`
+and `git ls-remote origin refs/heads/main`, then inspect
+`gh run list --commit <integration-sha>` and
+`gh run view <run-id> --json headSha,status,conclusion,jobs,url`.
+A conditional document is not evidence that remote checks passed.
 
-1. Verify clean synchronized main and ancestry from accepted M4-13; record the
-   current dispatch hash containing this preparation and create an isolated
-   task branch/checkout. Preserve other worktrees and private artifacts.
-2. Read fresh usage (preparation: 24% weekly used, no reset credits). No 20-point
-   task cap; preserve final 20% for review/recovery. No reset or spending authorized.
-3. Reproduce the accepted native baseline using real local/artifacts roots and
-   verified cache links beneath local. Existing runners stop at 1849; extending
-   the harness and complete state inventory is part of this task.
-4. Freeze continuous Right from end-1649 through at least 3299: 1,650 updates /
-   33 seconds, extending for 200 updates of reference-defined resumed progress
-   after recovery. Authenticate exploratory landing/mode changes near 1991.
-5. Recover reached coupled mechanics inside one task, compare first divergences,
-   and retain the full target. No substitute earlier jump or shorter passing prefix.
-6. Automatically obtain independent Sol review and fresh extended variations/
-   restores. Run focused checks first, broad gates after initial fixes. Consolidate
-   docs before final main push; record actual remote/CI results in ignored closeout.
+If closeout is incomplete, finish only the pending M4-14 integration checks,
+normal private push/ref verification and exact-tip CI. The primary already has
+standing authorization. Do not regenerate expectations, force-push, redeem
+credits or start another task. Do not make a post-success documentation-only
+push just to repeat the closeout results.
 
-M4 remains incomplete. Frontend/presentation/audio and full-game support are not
-claimed. Private Linux differential execution remains unverified. No gameplay
-implementation was started by preparation. Stop after accepted M4-14 or a real
-resource/access boundary; do not dispatch M4-15 automatically.
+The capability covers both riders from authentic end-1649 through 3299, all
+1,650 continuous-Right updates / 33 PAL seconds and 423 bytes per state. Local
+recovery at 2185 leaves 1,114 updates, including repeated returns to the same
+section. No full-track/monotonic-progress, ZOOM ZOO frontend, presentation/audio
+or private Linux differential claim follows from this bounded success.
 
-Opening instruction:
-
-> Execute M4-14 using tasks/NEXT_SESSION.md and tasks/M4-14.md. Own the full
-> sustained-traversal target in one task, resolve coupled mechanics internally,
-> and automatically commission fresh Sol review. Do not narrow the horizon or
-> substitute an easier scenario. Preserve the review reserve and consolidate
-> documentation before the final push. Stop after this capability.
+After verified acceptance, stop. The user requested no automatic M4-15 dispatch.
+A future explicitly assigned capability should first freeze a reference scenario
+that escapes the repeatedly visited section and inventory its next producer.
+That experiment has not been performed or accepted here. M4 remains incomplete;
+no new milestone tag is due. No access, private input or user decision is pending.

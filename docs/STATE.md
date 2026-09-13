@@ -1,9 +1,9 @@
 # Project state
 
-Updated 13 September 2026: M4-13 player landing/recovery accepted at integration
-`b288396ba3a81f35699648cff4ef92ddbd1c1c59`, synchronized to private origin with
-macOS/Linux CI passed. Start with [NEXT_SESSION](../tasks/NEXT_SESSION.md).
-M4-14 is now prepared/unclaimed for the next user-started Astra/medium session.
+Updated 13 September 2026: M4-14 sustained traversal is independently approved
+and all local gates pass. Acceptance is conditional on merged checks, private
+remote ref and exact final-tip CI in `artifacts/m4-14-integration/closeout.json`.
+Start with [NEXT_SESSION](../tasks/NEXT_SESSION.md); do not dispatch M4-15.
 
 ## Accepted product and evidence
 
@@ -35,41 +35,53 @@ M4-14 is now prepared/unclaimed for the next user-started Astra/medium session.
   cases/restores. Hosted integration CI `34757217687` passed both platforms.
   Hosted Linux is synthetic coverage, not private Linux differential execution.
 
-## Trial assessment and next work
+## M4-14 capability and integration
 
-[R-0032](research/R-0032-player-landing-recovery.md) records reused versus newly
-recovered behavior, exact identities, negative evidence, restores and limits.
-The sustained Astra/medium primary plus fresh automatic Sol review delivered
-the second capability; review found real zero-displacement and first-probe
-boundary gaps, both corrected with fresh untuned evidence. About 26 minutes
-elapsed from startup to approval; shared usage grew from 15% at startup to 22%
-at the 12:29 integration checkpoint. These observations are not a controlled
-model comparison or full-game estimate. Final closeout time/usage/ref/CI are in
-`artifacts/m4-13-integration/closeout.json`. No reset or purchase occurred.
+[R-0033](research/R-0033-sustained-traversal.md) records native continuous Right
+from authentic end-1649 through 3299: 1,650 updates / 33 PAL seconds, both riders,
+423-byte state (`URZZ0002`), no captured dynamic inputs or original CPU fallback.
+Recovery at 2185 leaves 1,114 updates. This is local resumed progress followed
+by continued traversal; the rider revisits the same section. It does not prove
+monotonic advance, obstacle clearance or full-race completion.
 
-M4-13 final closeout was 42.81 minutes and eight shared usage points (15% to
-23%); this is not a controlled cost comparison. Its follow-up found a second
-post-success documentation push added an avoidable CI cycle.
+Recovered behavior includes inverted/horizontal probes, steep contact and
+landing, tile-selected mode/angle lifecycle, pose/control consumers, and leading
+landing reward bookkeeping. The seven additive words per rider preserve old
+395-byte `URZZ0001` expectations. Full reference hashes, static inputs and guard
+identities are frozen; corrected continuous instruction audit authenticates
+30,355,912 instructions and closes the reached future-state inventory.
 
-The user selected [M4-14](../tasks/M4-14.md): continuous native Right traversal
-through at least 3299 (1,650 updates), extending for 200 updates of resumed
-progress after reference-defined recovery. Later landing/mode observations near
-1991 remain exploratory, not a demonstrated native divergence: the current
-runner rejects after 1849. Recover reached coupled mechanics within one task;
-do not substitute an early jump or a short passing prefix.
+Fresh Sol/medium [review](../tasks/M4-14-review.md) approved corrected candidate
+`e730aaa`. Review found an extra conversion on a full 28-unit landing, missing
+binary restore validation and an unclosed audit record. All are resolved; the
+failed case remains a regression and a fresh untuned replacement passes 96
+restores. A separate material late variation also passes. Primary and cases
+retain the complete horizon and frozen recovery requirement.
 
-[D-0006](decisions/D-0006-capability-driven-work.md) and
-[D-0004's M4-14 extension](decisions/D-0004-model-and-usage-budget.md#m4-14-sustained-traversal-extension)
-retain Astra/medium ownership, automatic fresh Sol review, waived task cap and
-20% review reserve. Preparation observed 24% used, zero reset credits; read
-fresh usage. No reset, spending or provider switch authorized. Consolidate docs
-before final push; post-push CI/ref/time/usage belongs in ignored closeout evidence.
-No gameplay has started for M4-14; do not automatically dispatch M4-15.
+App-debug and app-sanitize each passed 403 checks, no skips; all accepted
+M4-12/M4-13 differential cases/restores and DRAGSTER/content/replay/presentation
+gates pass. Denied-ROM/repository execution and negative controls establish the
+bounded native runtime's autonomy. M4 remains incomplete; ZOOM ZOO frontend,
+presentation/audio, full-track support and private Linux differential execution
+are not claimed.
+
+Primary Astra/medium started 13:09 UTC, shared weekly usage 26%; independent
+approval around 13:54, usage 35%. These are account-wide observations, not a
+controlled model comparison. No reset, purchase or provider switch occurred.
+The [task](../tasks/M4-14.md) records the 45-minute reassessment and integration
+commands. Actual final SHA/time/usage/remote/CI belong in the ignored closeout.
+If absent, recover using git and GitHub as NEXT_SESSION describes. Do not create
+a second documentation-only CI cycle to transcribe that result.
+
+M4-13 remains accepted at `b288396`; its final closeout took 42.81 minutes and
+eight shared usage points (15% to 23%). Historical evidence remains in R-0032
+and its task/review. For any future task, retain D-0004/D-0006 budget and automatic
+review practices; M4-14's exception does not authorize another task now.
 
 ## Where to look
 
-- [Task registry](../tasks/README.md), [M4-13](../tasks/M4-13.md) and
-  [R-0032](research/R-0032-player-landing-recovery.md): actual commits, commands,
+- [Task registry](../tasks/README.md), [M4-14](../tasks/M4-14.md) and
+  [R-0033](research/R-0033-sustained-traversal.md): actual commits, commands,
   resources, review and next reference experiment.
 - [Build and validation](BUILD_AND_VALIDATION.md): implemented CLI and private
   fixture boundaries; [native source guide](../src/core/README.md): source map.

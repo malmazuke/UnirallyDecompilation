@@ -1,0 +1,18 @@
+{
+  "id": "m4-14-review-neutral-2698-2713-b-2714-2728",
+  "changes": [
+    {
+      "from": 2698,
+      "to": 2713,
+      "buttons": []
+    },
+    {
+      "from": 2714,
+      "to": 2728,
+      "buttons": [
+        "right",
+        "b"
+      ]
+    }
+  ]
+}

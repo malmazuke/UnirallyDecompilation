@@ -141,3 +141,21 @@ production native ZOOM ZOO. Frame 1700 is an observation cap. Horizontal,
 AI, camera, presentation, audio and Classic-pack expansion remain outside the
 claim. ROM bytes, extracted content, access records and reports remain ignored.
 Independent review is required before acceptance.
+
+## Clean candidate validation
+
+Implementation commit `28cafed5768d8970308de92f22f03ade708b4013` passes
+the focused M4-05/M4-06/M4-07 suite 29/29. Clean debug and sanitizer runs each
+pass 342 Python tests represented by 342 checks, all 20 CTest checks and three
+fresh determinism processes at `0be347c529fadda9`. Their reports contain no
+failed, missing or skipped required check and hash to
+`84c84a33108e31cb7bb936c3c5fa7cc77ada16a0d9f4f1f8a1f1cfab2e571801`
+and `7a394aff1ff86ca548f3b9e63d1d4c8a4af311ef4185cac0077f8aa0b633d004`.
+
+The clean M4-03 contract report hashes to
+`81a2e00f3597616e361ec9e8959669e2be048eca7e56c5092dd5e6f9f15d52bc`;
+the M4-04 pair remains exact. The unchanged 25-entry Classic pack report is
+`bfb75ef90cfff187240233790d90b7aa2d18367baa9ecc0681be08d6f426d8cd`.
+DRAGSTER finish with restore boundaries 1600/3213/3453/3678 passes all 18
+checks at report SHA-256
+`63364922428a1666bfc13f55fc18c544829e79700ef2011ada750f2aa5c5b8c3`.

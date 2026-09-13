@@ -985,15 +985,19 @@ void update_zoom_throttle(RiderMovementState& rider,ReflectionTransition& transi
         if(transition.brake_input && rider.motion.velocity_x!=0)throw std::invalid_argument("ZOOM ZOO moving brake is unrecovered");
         // $82:A9C1–A9E0 / AA1E–AA3D: on inverted tiles the drive
         // increment follows the existing velocity sign, including zero hold.
-        if(rider.contact.selected_word&0x8000U) {
-            if(rider.motion.velocity_x)rider.motion.velocity_x=add_word(rider.motion.velocity_x,
-                negative(rider.motion.velocity_x)?static_cast<std::uint16_t>(-24):24);
-        } else rider.motion.velocity_x=add_word(rider.motion.velocity_x,horizontal==2?24:static_cast<std::uint16_t>(-24));
-        const auto cap=static_cast<std::uint16_t>(transition.base_velocity_cap+
-            std::max(0,static_cast<int>(static_cast<std::int16_t>(rider.speed.boost)))+rider.launch_override);
-        const auto next=add_word(rider.throttle,horizontal==2?16:static_cast<std::uint16_t>(-16));
-        if(horizontal==2 ? negative(static_cast<std::uint16_t>(next-cap)) :
-                           !negative(static_cast<std::uint16_t>(next-static_cast<std::uint16_t>(-cap))))rider.throttle=next;
+        // Both drive routines return before throttle accumulation when an
+        // inverted tile has zero incoming velocity ($82A9CC / $82AA29).
+        if(!(rider.contact.selected_word&0x8000U) || rider.motion.velocity_x!=0) {
+            if(rider.contact.selected_word&0x8000U) {
+                if(rider.motion.velocity_x)rider.motion.velocity_x=add_word(rider.motion.velocity_x,
+                    negative(rider.motion.velocity_x)?static_cast<std::uint16_t>(-24):24);
+            } else rider.motion.velocity_x=add_word(rider.motion.velocity_x,horizontal==2?24:static_cast<std::uint16_t>(-24));
+            const auto cap=static_cast<std::uint16_t>(transition.base_velocity_cap+
+                std::max(0,static_cast<int>(static_cast<std::int16_t>(rider.speed.boost)))+rider.launch_override);
+            const auto next=add_word(rider.throttle,horizontal==2?16:static_cast<std::uint16_t>(-16));
+            if(horizontal==2 ? negative(static_cast<std::uint16_t>(next-cap)) :
+                               !negative(static_cast<std::uint16_t>(next-static_cast<std::uint16_t>(-cap))))rider.throttle=next;
+        }
         if(static_cast<std::int16_t>(rider.motion.previous_x_displacement)<4) {
             if(rider.small_motion_counter!=4)rider.small_motion_counter=add_word(rider.small_motion_counter,1);
             animation_override=static_cast<std::int16_t>(rider.small_motion_counter);throttle_target=true;
@@ -1207,7 +1211,8 @@ ZoomZooState deserialize_zoom_zoo(std::span<const std::uint8_t> bytes) {
         for(auto seen:state.race.checkpoint_seen)if(seen!=0 && seen!=255)
             throw std::invalid_argument("ZOOM ZOO checkpoint seen flag invalid");
         for(const auto& pose:state.race.finish_pose) {
-            if(pose.selector>160 || pose.kind>6 || pose.locked>1 || pose.active>1 ||
+            const unsigned limit=pose.kind==1?48U:pose.kind==2?88U:0U;
+            if(pose.selector>limit || pose.kind>2 || pose.locked>1 || pose.active>1 ||
                (pose.active && (!pose.kind || !pose.locked)))
                 throw std::invalid_argument("ZOOM ZOO finish pose state invalid");
         }

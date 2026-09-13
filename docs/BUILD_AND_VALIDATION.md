@@ -43,7 +43,8 @@ validation commands before using them as acceptance gates.
 
 ## M4-15 audit preflight and validation ledger
 
-Required additions for M4-15; not currently claimed as implemented commands.
+Implemented in the M4-15 candidate by `zoom_zoo_race_audit` and
+`zoom_zoo_race`; acceptance remains subject to its task review and final gates.
 Before expensive instruction capture, automatically compare the expanded actual
 controller timeline (both controllers, pre-seed history and complete horizon)
 against the frozen scenario. Fail on differences rather than inheriting legacy
@@ -382,3 +383,48 @@ updates. See [R-0033](research/R-0033-sustained-traversal.md) for commands, sour
 boundaries and the conditional integration record. Variations must repeat/freeze reference before
 native evaluation; restore comparisons cover both riders' full landings. Horizon
 extensions are laboratory experiments, not general gameplay acceptance.
+
+## M4-15 race-completion laboratory
+
+The task-scoped `zoom_zoo_race_explore` module captures original-only fixed
+controller cases, optionally retaining private WRAM/SRAM with `--keep-wram`.
+Its marker-guided policy is exploratory only: successful policy output is
+converted to a fixed controller timeline and repeated before native evaluation.
+`zoom_zoo_race_reference` freezes matching original processes; the final primary
+contract is `tests/manifests/native/zoom-zoo-race-primary-v4.freeze.json`.
+Older additive freezes remain as inventory-discovery evidence, not interchangeable
+current contracts. The candidate state is 565-byte `URZZ0003`.
+
+```sh
+python3 -m tools.unirally_lab.native.zoom_zoo_race_extract --core "$CORE" --out artifacts/m4-15/fresh-content
+python3 -m tools.unirally_lab.native.zoom_zoo_race_explore --core "$CORE" --case tests/manifests/native/zoom-zoo-race-primary.case.json --horizon 6724 --keep-wram --out artifacts/m4-15/fresh-a.json
+python3 -m tools.unirally_lab.native.zoom_zoo_race_explore --core "$CORE" --case tests/manifests/native/zoom-zoo-race-primary.case.json --horizon 6724 --keep-wram --out artifacts/m4-15/fresh-b.json
+python3 -m tools.unirally_lab.native.zoom_zoo_race --reference artifacts/m4-15/fresh-a.json --repeat artifacts/m4-15/fresh-b.json --contract tests/manifests/native/zoom-zoo-race-primary-v4.freeze.json --binary build/app-debug/src/core/zoom_zoo_runner --content-dir artifacts/m4-15/fresh-content --out artifacts/m4-15/fresh-report.json
+```
+
+Use a 180-second subprocess bound per capture/extraction and a 900-second bound
+for the complete comparison/restore driver (each native child enforces 30 seconds).
+Outputs must be fresh. Comparison authenticates every original WRAM hash,
+constant mode/camera guards, state row, expanded controller timeline and static
+content item before launching native execution. It also checks the empty queue
+branch invariant at the first finish-animation call; a new dependency is a
+failure requiring recovery. Native children receive only their static directory,
+canonical seed/restore state and controller stream. No original process runs
+inside the comparison module.
+
+`zoom_zoo_race_audit --manifest REPLAY --reference REFERENCE --out DIR
+--from-frame FIRST --to-frame LAST` fails before instruction capture if either
+controller's expanded timeline differs, then fails after capture if any whole-WRAM
+sample differs. Optional watches/frame images use the existing access engine.
+`authentication.json` binds the successful audit. The comparison writes a small
+ignored `validation-ledger.jsonl` beside its report, including source/diff,
+binary, build/toolchain, ROM/core, static/controller/contract and report identities.
+Source or binary changes during validation invalidate the run. Historical ledger
+entries are not automatic cached passes; reuse needs matching identities and
+available evidence, with source-only documentation differences explained.
+
+The primary covers a complete three-lap race and 240 player post-finish updates
+from authentic end-1649. This does not add ZOOM ZOO frontend dispatch, native
+race-start initialization, subsequent result-screen loading, rendering or audio.
+Reviewers freeze their own successful race timelines before native evaluation
+and extend each horizon to include its own post-finish continuation.

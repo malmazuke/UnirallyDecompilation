@@ -44,7 +44,7 @@ int main() {
         rejects([&]{(void)deserialize_zoom_zoo(corrupt);});
     }
     for(unsigned offset:{549U,557U}) {
-        auto corrupt=race_bytes;corrupt[offset]=161;
+        auto corrupt=race_bytes;corrupt[offset]=49;corrupt[offset+2]=1;
         rejects([&]{(void)deserialize_zoom_zoo(corrupt);});
     }
     for(unsigned offset:{521U,523U}) {

@@ -272,7 +272,7 @@ Consulted 10 September 2026; these establish available building blocks, not feas
 This task-scoped module is separate from the accepted DRAGSTER CLI and frontend.
 It admits Right/neutral controller-0 continuation from the authentic end-1649
 seed through 1849; other controls, modes and horizons fail closed. Acceptance
-still requires the independent cases and integration evidence in R-0030.
+evidence, including independent cases and integration, is recorded in R-0030.
 The original 394-byte frozen projection remains an unchanged prefix of the
 395-byte canonical state; the suffix retains original opponent OAM X.
 

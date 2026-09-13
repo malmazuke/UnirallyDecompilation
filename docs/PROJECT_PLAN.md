@@ -105,6 +105,15 @@ remaining, review findings and allowance consumed. Accepted research-task counts
 are not a proxy for playable coverage. No revised calendar or cost estimate is
 supported yet. Historical estimates below remain historical observations.
 
+Trial outcome: M4-12 accepted 200 exact native updates for both riders from one
+seed, with 395-byte state, two untuned independent variations, three restore
+boundaries and zero later captured runtime inputs. One independent finding was
+corrected and re-reviewed. Startup-to-approval elapsed about 60 minutes and
+account-wide usage grew 11 percentage points; unrelated work may contribute.
+[R-0030](research/R-0030-zoom-zoo-native-trial.md) records the measured boundary.
+This single trial does not support a causal model-performance claim or a revised
+full-game estimate. The trial ends here; M4-13 remains unclaimed.
+
 ### Next-stage estimate, revised from observed effort
 
 M2-01 checkpoint note (12 September 2026): the original small-riding-update estimate did not account for the demonstrated opponent-jump/contact dependency of player speed. Sampling and progress components are implemented, but the full task remains blocked on [M2-01A](../tasks/M2-01A.md). Re-estimate autonomous movement after that contract is recovered; do not treat the earlier 1–5 h range as a promise for the expanded work.

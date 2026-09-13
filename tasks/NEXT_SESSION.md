@@ -1,56 +1,33 @@
-# Next session — M4-12 Astra/medium native capability trial
+# Next session — M4-12 trial completed
 
-M4-00 through M4-11 are accepted. M4 itself is not. The user authorized the
-process-change preparation; [M4-12](M4-12.md) is ready and unclaimed for the next
-user-started implementation session. Do not continue the old Sol coordinator /
-one-producer-per-task sequence.
+M4-12's requested trial has ended. Do not restart it or automatically dispatch
+M4-13. Read [STATE](../docs/STATE.md), [M4-12](M4-12.md), its
+[independent review](M4-12-review.md) and [R-0030](../docs/research/R-0030-zoom-zoo-native-trial.md)
+for the exact accepted boundary.
 
-## Start
+## Result and recovery
 
-Select **Astra / Medium**, standard service mode, for the primary. The project
-config intentionally retains Sol/medium as its general default and child default;
-selecting Astra must be explicit. No separate Sol implementation worker or Astra
-planning child is required. Primary owns implementation and automatically spawns
-fresh Sol/medium independent review, handles corrections and integrates.
+- Reviewed code: `aef2245e9b90ae648356752ca45e7a234910d836`.
+- Independent approval: `9455a462b5d0e6ba6f8516148f5aa47213051ce4`, incorporated
+  on the task branch as `c220418`; integration is
+  `1889d9cbc56fec4437bc67835cd885677cc29e03` plus documentation-only closeout.
+- Native ZOOM ZOO: one authentic end-1649 seed, static content and Right/neutral
+  controls; both riders and all 395 canonical bytes exact for 1650–1849.
+  Primary, two untuned independent variations and one corrected review
+  regression pass, including fresh-process restores at 1700/1804/1823.
+- No later captured state enters native gameplay. Original execution is confined
+  to reference/seed capture and extraction of immutable pre-race tables.
+- Reproduction commands are in BUILD_AND_VALIDATION's M4-12 section. Final local
+  artifacts are in `.worktrees/m4-12-native-zoom-zoo/artifacts/m4-12`; reviewer
+  captures are in `.worktrees/m4-12-review/artifacts/m4-12-review`. These are
+  private caches, not tracked assets. Fresh captures require new output paths.
 
-Read this file, [STATE](../docs/STATE.md), [M4-12](M4-12.md), AGENTS.md,
-[D-0004's trial exception](../docs/decisions/D-0004-model-and-usage-budget.md#m4-12-trial-exception),
-[D-0006](../docs/decisions/D-0006-capability-driven-work.md) and
-[AGENT_WORKFLOW](../docs/AGENT_WORKFLOW.md). Relevant evidence is linked from
-M4-12; do not reload every historical task before the first experiment.
+The product remains PAL CRAWLER/DRAGSTER. Full-track ZOOM ZOO, broader controls,
+player landing responses, camera-dependent boost behavior and second-track
+presentation are not accepted. M4 is still incomplete; no new milestone tag.
 
-1. Verify clean synchronized main and its ancestry from accepted M4-11
-   `15237954fe636ecf83cf105186570207593c900b`; record the exact current dispatch
-   commit containing these instructions and create the task's isolated branch/checkout.
-2. Read fresh account usage. Preparation observed 98% weekly used and one reset
-   available. This is stale telemetry, not startup capacity or redemption authority.
-   No reset was consumed or authorized for this trial. If allowance is below the
-   20% review reserve, do startup/recovery only until a user-performed reset,
-   natural renewal or explicit confirmation to redeem one reset restores it.
-   An explicit reset confirmation is required by the redemption tool; do not infer
-   it from permission to edit repository policy. No purchases or provider fallback.
-3. Record the resource baseline and reproduce the exact focused foundation/ROM
-   identity commands in M4-12; resolve local cache/fixture setup autonomously.
-4. Claim M4-12 and perform its native implementation when resource-ready. The
-   20-point task cap is waived; preserve the last 20% for review/recovery.
-
-## Capability and exit
-
-Both riders must run natively from one seed, static content and controllers,
-without later captured gameplay state. Frames 1650--1700 are a checkpoint;
-acceptance requires the expanded interval in M4-12, relevant independent
-variations, restores, exact regressions, Sol approval and verified private push.
-The agent chooses experiments and handles internal dependencies within this task.
-End after accepted M4-12 or a genuine resource/access boundary; do not start M4-13.
-
-The playable product is still the PAL CRAWLER/DRAGSTER slice. ZOOM ZOO remains
-reference research until this task's gates actually pass. See the historical
-[reassessment handover](../docs/REASSESSMENT_HANDOVER.md) for the accepted M4-11
-boundary and remaining coupled dependencies.
-
-Suggested opening instruction after selecting Astra/Medium:
-
-> Execute the M4-12 trial in tasks/NEXT_SESSION.md and tasks/M4-12.md. Own the
-> investigation and native implementation directly. Automatically spawn the
-> specified fresh Sol reviewer, address findings and integrate accepted work.
-> Observe the trial resource policy and record any reset authorization separately.
+For a later authorized task, choose the next capability and freeze its reference
+before tuning. Use the trial's rejected-branch inventory to select discriminating
+experiments. Preserve D-0004's provider/review rules and check fresh account usage;
+the last recorded 89% remaining is historical, not authorization to spend or
+redeem a reset. This trial consumed no reset and made no purchase.

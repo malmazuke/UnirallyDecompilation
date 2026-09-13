@@ -1,6 +1,9 @@
-# R-0030 — M4-12 native capability trial (in progress)
+# R-0030 — Accepted M4-12 native capability trial
 
-No autonomous capability is accepted. The playable product remains DRAGSTER.
+Accepted bounded native continuation: both riders, 200 updates through frame
+1849, 395 canonical bytes, initial seed/static content/controllers only. The
+playable product remains DRAGSTER. The sections below preserve the chronological
+reference freeze, intermediate non-passes, correction and final acceptance.
 
 ## Reference contract before whole-update tuning
 
@@ -210,3 +213,53 @@ corrected candidate passes primary, that now-tuned regression and the original
 passing neutral-1818–1826 case, each for 200 updates plus three restores. The
 failed case is no longer counted as withheld; a fresh reviewer-owned case is
 required before approval. Independent review and final CI are still pending.
+
+## Final acceptance and trial assessment
+
+Fresh Sol/medium review approved corrected code `aef2245` in reviewer commit
+`9455a462b5d0e6ba6f8516148f5aa47213051ce4`; see `tasks/M4-12-review.md`.
+The accepted untuned cases are neutral 1818–1826 and neutral 1769–1781. The
+original delayed-Right case is a corrected regression, not withheld evidence.
+All four cases (including primary) match every canonical byte/update through
+1849 and restore exactly at 1700/1804/1823; the primary also ran all four with
+the sanitizer binary. Dynamic captured native inputs remaining: zero.
+
+Full corrected-source app-debug and app-sanitize suites each pass 400 checks.
+The repeated frozen private gates also pass. Hosted candidate CI
+[34754212973](https://github.com/malmazuke/UnirallyDecompilation/actions/runs/34754212973)
+passed macOS 15 and Ubuntu 24.04. Integration `1889d9c` has identical
+code/build/tooling/test sources to the reviewed candidate; only review-owned
+case manifests/report and documentation are added. Main synchronization and
+final-tip hosted CI are checked during closeout, with the final immutable ref
+and result available from git and the main workflow. No milestone tag is added.
+
+Corrected reports supersede the earlier candidate reports, not their frozen
+expectations. All paths below are relative to the primary worktree's
+`artifacts/m4-12/`. The full inventory is `corrected-validation-inventory.json`;
+regression command arrays are `correction-regressions/commands.json`.
+
+| Corrected report | SHA-256 |
+| --- | --- |
+| `correction-validation/app-debug.json` | `e7a8f472007009acd395d544cf81c41c1ea6198d336dbe2b81ef74edbb3a86d6` |
+| `correction-validation/app-sanitize.json` | `90da555016564ec1de9c834b581517762c94106cac9cb20e2d9b8989b58ee1e9` |
+| `correction-validation/primary-sanitize.json` | `405f4086d9fc4883d77764f53c2bc7926e809498acc4543b7ecebeeb7223b36c` |
+| `correction-validation/delayed-sanitize.json` | `4bb129a46364743cfe56e544590f0b3d9bb1df7f1abc6afb25cf5147f46647e3` |
+| `correction-validation/landing-sanitize.json` | `b797ded1c3493319cfa3069f82fb4f8831797faeb3ef22c8012c6c9f77651d0f` |
+| `correction-validation/reacquisition-sanitize.json` | `9badbee1eb0706a903857838dccef63cdea4e777b176dff909a4ed42fde02b62` |
+| `correction-regressions/zoom-contract.json` | `12f43f4cc7faf02232729e6aa405184b5a4b78827b87ed39b19b2338bd609906` |
+| `correction-regressions/pack.json` | `e7d55294b9f414ccefeeb5e74e41ea8a24b4c2998999bd4306af8cabeb0ec631` |
+| `correction-regressions/finish/report.json` | `1c9879e9b86a1622efacca9c15dbf6868b40b54c3f718d6420f8ee7ae42f5787` |
+| `correction-regressions/opponent/report.json` | `6c075919e13acb0c706f61288b145c080eeb00828b8f9e18430fbd7111dfb6cf` |
+| `correction-regressions/winner-visual/report.json` | `e20c55144731ed0b8c156855a7434715f300f0ef7317b5d400379b422b39c7c7` |
+| `correction-regressions/loser-visual/report.json` | `5dd498275a1e6d37aa3d9df589d72b3b3bf6d8d4f1ea2697c631a3ea524fc6ec` |
+| `correction-regressions/zoom-replay.json` | `52d5c6873a93b24461defaa83ed485f4d4bd629dc4cc382611210ef1f43805a8` |
+
+The task moved from captured-argument dependencies to a native capability in
+one sustained primary session, with internal experiments and one active fresh
+reviewer. Startup at 10:24 UTC to independent approval at 11:24 took about
+60 minutes; integration/CI closeout follows. Weekly account-wide usage increased
+from 0% to 11% by approval, leaving 89%; unrelated work may contribute. No reset,
+purchase or provider fallback occurred. One review finding led to a source fix
+and a newly preregistered case. That is evidence for retaining independent review
+and capability-sized tasks, not a controlled model-performance comparison or a
+full-game schedule. M4-13 is not started; M4 remains incomplete.

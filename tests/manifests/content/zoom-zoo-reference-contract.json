@@ -1,0 +1,183 @@
+{
+  "schema_version": 1,
+  "kind": "zoom_zoo_reference_contract",
+  "id": "zoom-zoo-reference-v1",
+  "description": "Reference-only M4-03 contract for the tested PAL 1P MIKE/CRAWLER/ZOOM ZOO path. It is not a general track format or native-content declaration.",
+  "identity": {
+    "rom_sha256": "a1105819d48c04d680c8292bbfa9abbce05224f1bc231afd66af43b7e0a1fd4e",
+    "core_commit": "7d5aa1e656b9171524d01b1b22917197d8121cb4",
+    "core_patch_sha256": "a719f5ffe2222dad4c1ab04336633319ad85004f74e32fc14893a058be333885",
+    "replay_manifest": "tests/manifests/replay/race-crawler-zoom-zoo-3300.json",
+    "replay_manifest_sha256": "acd29bfb72aeaad0791923e22e17a791f5c182220f64b6686dd687984411aefd",
+    "sample_digest": "791a786370913136e21ed34c841e9a3d892852bf6804e2e0aef21e1df6557b68",
+    "final_state_sha256": "2a843314d19e60d13dab746541d43ffa9ad84adfe6f95b9cc6d3c45bd9a16aeb",
+    "captures": {
+      "load_1286_1291": "bc733d1c39bda5076f4548897510aa1b9f09bce4baa139e0ad9f0435b94cd56c",
+      "gather_1376_1384": "36aeac919fa7f48bccf31fba35d064a0c550096829a96e203bd9244a03fe4b78",
+      "sample_1700": "02f497194d481e370ce07935e825edd3a664dc6463ae691567437cc178628285",
+      "sample_2220": "fa3e5e2d4352e79391461a09b9219127b133d5c592d6c24f0ff22f82ad794b3a",
+      "next_builder_2220": "ecb45a173dafca37d56258162082ec2c3216fad81c79051d243cd4d6c47e71d9"
+    }
+  },
+  "source": {
+    "asset": "$82:B332 entry 0xC3",
+    "bus": "0x188183",
+    "file_offset": 786819,
+    "packed_length": 6599,
+    "consumed_source_end": "0x189B4A",
+    "rnc_header": {
+      "magic": "RNC",
+      "method": 1,
+      "unpacked_length": 50665,
+      "packed_length": 6581,
+      "unpacked_crc": 26754,
+      "packed_crc": 3995,
+      "leeway": 2,
+      "chunks": 5
+    },
+    "decoded_length": 50665,
+    "decoded_sha256": "db6770152e399f9d16fc6937b5d56588a8f67e825ae70d6578b77d36053fdd28",
+    "runtime_base": "0x7F0000",
+    "cursor_word_offset": 11,
+    "cursor_runtime_final": 50664
+  },
+  "decoded_regions": [
+    {
+      "id": "header",
+      "start": 0,
+      "length": 15,
+      "sha256": "751000f1becd23f7b8d4c05ee712b63f57cd2472f1d10bddbe297cdea03d968a",
+      "consumer": "$82:E1A1 cursor word and $81:8A2A-$81:8AC4 width/stride setup; byte 11 alone advances 0xCF to 0xE8 by frame 1291"
+    },
+    {
+      "id": "coarse-grid-words",
+      "start": 15,
+      "length": 32768,
+      "sha256": "ae19151909104ee2fd994b1685d6c63ae1f7242ffbebdacc29d4130feb4bb032",
+      "consumer": "$81:8AA1/$81:8AC0 four-neighbour word reads with observed width 256 and byte stride 512"
+    },
+    {
+      "id": "bounded-consumer-data",
+      "start": 32783,
+      "length": 17856,
+      "sha256": "e1b8b6a90c9e966a202472561e0e585af753f8cef88aa37065b7542d43484a6a",
+      "consumer": "$81:8B66 ten collision words per rider and $81:B3CF rolling BG1 gathers in the declared samples"
+    },
+    {
+      "id": "ordered-tile-list",
+      "start": 50639,
+      "length": 25,
+      "sha256": "4e6dd9088b4bbd85141b9eca151f74bd1094d61408b697d4759e23c14c2c43d4",
+      "consumer": "$82:E1AD loads 24 selected ids followed by the consumed 0xFF terminator"
+    }
+  ],
+  "load_contract": {
+    "cursor_iterations": 25,
+    "selected_ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 18, 30, 13, 15, 14, 16, 22, 24, 20, 13, 36, 29, 17],
+    "terminator": 255,
+    "entries": [
+      {"id": 1, "tile_source_bus": "0x168080", "tile_bytes": 128, "tile_count": 1, "table_source_bus": "0x17A0A4", "table_bytes": 32, "flags_source_bus": "0x17C4E4", "flags_bytes": 1},
+      {"id": 2, "tile_source_bus": "0x168100", "tile_bytes": 128, "tile_count": 1, "table_source_bus": "0x17A0C4", "table_bytes": 32, "flags_source_bus": "0x17C4E5", "flags_bytes": 1},
+      {"id": 3, "tile_source_bus": "0x168180", "tile_bytes": 1536, "tile_count": 12, "table_source_bus": "0x17A0E4", "table_bytes": 384, "flags_source_bus": "0x17C4E6", "flags_bytes": 12},
+      {"id": 4, "tile_source_bus": "0x168780", "tile_bytes": 1536, "tile_count": 12, "table_source_bus": "0x17A264", "table_bytes": 384, "flags_source_bus": "0x17C4F2", "flags_bytes": 12},
+      {"id": 5, "tile_source_bus": "0x168D80", "tile_bytes": 768, "tile_count": 6, "table_source_bus": "0x17A3E4", "table_bytes": 192, "flags_source_bus": "0x17C4FE", "flags_bytes": 6},
+      {"id": 6, "tile_source_bus": "0x169080", "tile_bytes": 1152, "tile_count": 9, "table_source_bus": "0x17A4A4", "table_bytes": 288, "flags_source_bus": "0x17C504", "flags_bytes": 9},
+      {"id": 7, "tile_source_bus": "0x169500", "tile_bytes": 1792, "tile_count": 14, "table_source_bus": "0x17A5C4", "table_bytes": 448, "flags_source_bus": "0x17C50D", "flags_bytes": 14},
+      {"id": 8, "tile_source_bus": "0x169C00", "tile_bytes": 640, "tile_count": 5, "table_source_bus": "0x17A784", "table_bytes": 160, "flags_source_bus": "0x17C51B", "flags_bytes": 5},
+      {"id": 9, "tile_source_bus": "0x169E80", "tile_bytes": 3200, "tile_count": 25, "table_source_bus": "0x17A824", "table_bytes": 800, "flags_source_bus": "0x17C520", "flags_bytes": 25},
+      {"id": 10, "tile_source_bus": "0x16AB00", "tile_bytes": 3200, "tile_count": 25, "table_source_bus": "0x17AB44", "table_bytes": 800, "flags_source_bus": "0x17C539", "flags_bytes": 25},
+      {"id": 11, "tile_source_bus": "0x16B780", "tile_bytes": 640, "tile_count": 5, "table_source_bus": "0x17AE64", "table_bytes": 160, "flags_source_bus": "0x17C552", "flags_bytes": 5},
+      {"id": 18, "tile_source_bus": "0x16C200", "tile_bytes": 5760, "tile_count": 45, "table_source_bus": "0x17B104", "table_bytes": 1440, "flags_source_bus": "0x17C567", "flags_bytes": 45},
+      {"id": 30, "tile_source_bus": "0x16F200", "tile_bytes": 1024, "tile_count": 8, "table_source_bus": "0x17BD04", "table_bytes": 256, "flags_source_bus": "0x17C5C7", "flags_bytes": 8},
+      {"id": 13, "tile_source_bus": "0x16BA80", "tile_bytes": 128, "tile_count": 1, "table_source_bus": "0x17AF24", "table_bytes": 32, "flags_source_bus": "0x17C558", "flags_bytes": 1},
+      {"id": 15, "tile_source_bus": "0x16BD00", "tile_bytes": 384, "tile_count": 3, "table_source_bus": "0x17AFC4", "table_bytes": 96, "flags_source_bus": "0x17C55D", "flags_bytes": 3},
+      {"id": 14, "tile_source_bus": "0x16BB00", "tile_bytes": 512, "tile_count": 4, "table_source_bus": "0x17AF44", "table_bytes": 128, "flags_source_bus": "0x17C559", "flags_bytes": 4},
+      {"id": 16, "tile_source_bus": "0x16BE80", "tile_bytes": 768, "tile_count": 6, "table_source_bus": "0x17B024", "table_bytes": 192, "flags_source_bus": "0x17C560", "flags_bytes": 6},
+      {"id": 22, "tile_source_bus": "0x16DD00", "tile_bytes": 512, "tile_count": 4, "table_source_bus": "0x17B7C4", "table_bytes": 128, "flags_source_bus": "0x17C59D", "flags_bytes": 4},
+      {"id": 24, "tile_source_bus": "0x16E100", "tile_bytes": 128, "tile_count": 1, "table_source_bus": "0x17B8C4", "table_bytes": 32, "flags_source_bus": "0x17C5A5", "flags_bytes": 1},
+      {"id": 20, "tile_source_bus": "0x16D900", "tile_bytes": 512, "tile_count": 4, "table_source_bus": "0x17B6C4", "table_bytes": 128, "flags_source_bus": "0x17C595", "flags_bytes": 4},
+      {"id": 13, "tile_source_bus": "0x16BA80", "tile_bytes": 128, "tile_count": 1, "table_source_bus": "0x17AF24", "table_bytes": 32, "flags_source_bus": "0x17C558", "flags_bytes": 1},
+      {"id": 36, "tile_source_bus": "0x16FF80", "tile_bytes": 1152, "tile_count": 9, "table_source_bus": "0x17C384", "table_bytes": 288, "flags_source_bus": "0x17C5FB", "flags_bytes": 9},
+      {"id": 29, "tile_source_bus": "0x16F180", "tile_bytes": 128, "tile_count": 1, "table_source_bus": "0x17BCE4", "table_bytes": 32, "flags_source_bus": "0x17C5C6", "flags_bytes": 1},
+      {"id": 17, "tile_source_bus": "0x16C180", "tile_bytes": 128, "tile_count": 1, "table_source_bus": "0x17B0E4", "table_bytes": 32, "flags_source_bus": "0x17C566", "flags_bytes": 1}
+    ],
+    "tile_payload": {"length": 25984, "sha256": "cb9e05e0d2dde0939d63c995c7875ea9f0dd7569d3b0634552b961d7641e7953"},
+    "table_payload": {"length": 6496, "sha256": "649b96ff43ef467fe57bac16eb876f96a1ebc6f0307a5270f97a7ce1f63a84c7"},
+    "flags_payload": {"length": 203, "sha256": "11aa211a148bced17e6c1b63a19e6e9c71ff1f8fed83954613f2ea62b15069c4"},
+    "transfer_count": 406,
+    "transfer_bytes": 25984,
+    "transfer_sha256": "6d28534ed765be8532d1181f560c877f519c14bd2d6b1305798e1b249662cc0e",
+    "transfer_row_format": "lowercase source-bus:destination-vram-word:decimal-size newline; ordered top then bottom halves; LoROM bank wrap preserved"
+  },
+  "gather_samples": [
+    {
+      "frame": 1700,
+      "input": "Right",
+      "builder_frame": 1700,
+      "destination": "0x0437-0x0478",
+      "runs": [
+        {"source_x": 37204, "step": 2, "words": 2},
+        {"source_x": 37232, "step": 2, "words": 4},
+        {"source_x": 37264, "step": 2, "words": 4},
+        {"source_x": 37296, "step": 2, "words": 4},
+        {"source_x": 37328, "step": 2, "words": 3},
+        {"source_x": 32964, "step": 8, "words": 4},
+        {"source_x": 32964, "step": 8, "words": 4},
+        {"source_x": 32964, "step": 8, "words": 4},
+        {"source_x": 37316, "step": 8, "words": 4}
+      ],
+      "expected_sha256": "aa95348d6c11d42159a2faffe8e10e6b2d41f9c34a2cbcbba73ff2129202a21d"
+    },
+    {
+      "frame": 2220,
+      "input": "Right+Up",
+      "builder_frame": 2224,
+      "destination": "0x0437-0x0456",
+      "runs": [
+        {"source_x": 32948, "step": 8, "words": 2},
+        {"source_x": 37604, "step": 8, "words": 4},
+        {"source_x": 36804, "step": 8, "words": 4},
+        {"source_x": 38500, "step": 8, "words": 4},
+        {"source_x": 33156, "step": 8, "words": 2}
+      ],
+      "expected_sha256": "6094b3066c8bf444581bce0090fc22cd80b9195805baed972cb6a874e3f8f52b"
+    }
+  ],
+  "collision_content": {
+    "poses_file_offset": 1081344,
+    "poses_length": 32768,
+    "poses_sha256": "9d1754d38c20cb2900239557550211ab6fc23d9b0237e17b78fb29f3bf272c32",
+    "templates_file_offset": 1064095,
+    "templates_length": 17249,
+    "templates_sha256": "2f03a8cb985899436603ef36b233b28f7b4213e4ba106fca328a6b02cdb081c7",
+    "coarse_width": 256,
+    "coarse_stride": 512
+  },
+  "collision_samples": [
+    {
+      "frame": 1700, "input": "Right", "rider": "player", "position_x": 9824, "position_y": 1609, "pose_index": 2192, "reflected": true,
+      "points": [[53,18],[41,13],[24,13],[17,14],[28,15],[14,18],[30,20],[16,23],[28,25],[21,26]],
+      "decoded_offsets": [36505,36503,36477,36477,36477,36475,36477,36485,36485,36485],
+      "values": [20480,20480,19662,19662,19662,19680,19662,19682,19682,19682]
+    },
+    {
+      "frame": 1700, "input": "Right", "rider": "opponent", "position_x": 7489, "position_y": 1522, "pose_index": 2133, "reflected": false,
+      "points": [[14,9],[29,11],[42,18],[35,19],[47,21],[32,23],[49,27],[34,28],[39,31],[44,31]],
+      "decoded_offsets": [32903,32905,34963,34963,34965,34963,34965,34963,34971,34971],
+      "values": [22528,22528,22528,22528,22528,22528,22528,22528,2050,2050]
+    },
+    {
+      "frame": 2220, "input": "Right+Up", "rider": "player", "position_x": 13577, "position_y": 1752, "pose_index": 459, "reflected": true,
+      "points": [[31,10],[16,10],[41,17],[46,20],[36,20],[49,25],[33,25],[46,30],[36,30],[41,33]],
+      "decoded_offsets": [38435,38433,38437,38437,38435,38445,38443,38445,38443,38445],
+      "values": [21504,21504,2254,2254,21504,2274,224,2274,224,2274]
+    },
+    {
+      "frame": 2220, "input": "Right+Up", "rider": "opponent", "position_x": 11530, "position_y": 3486, "pose_index": 2192, "reflected": true,
+      "points": [[53,18],[41,13],[24,13],[17,14],[28,15],[14,18],[30,20],[16,23],[28,25],[21,26]],
+      "decoded_offsets": [49645,49637,49635,49633,49635,49641,49643,49641,49643,49641],
+      "values": [16590,5120,5120,16590,5120,16610,17632,16610,17632,16610]
+    }
+  ],
+  "limits": "Only the four collision calls and two rolling gathers above are classified. The final decoded byte at 0xC5E8, unsampled branches, meanings of returned words, other tracks/riders/events and native support remain opaque or out of scope."
+}

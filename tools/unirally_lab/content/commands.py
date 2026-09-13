@@ -22,7 +22,7 @@ from ..access import commands as accesscmd
 from ..access import derive as accderive
 from ..reference import commands as refcmd
 from . import pack as packmod
-from . import ppu, provenance, rnc
+from . import ppu, provenance, rnc, zoom_zoo_contract
 
 ROOT = reportmod.repo_root()
 MANIFEST_SCHEMA_VERSION = 1
@@ -225,6 +225,38 @@ def cmd_decode(args: argparse.Namespace) -> int:
     rep.add_artifact("decode", res_path)
     rep.data["decode"] = {"items": len(results), "all_match": all(r["matches_expected"] for r in results)}
     return _finish(rep, args, _status(rep))
+
+
+def cmd_zoom_zoo_contract(args: argparse.Namespace) -> int:
+    """Validate the bounded reference contract directly from the supported ROM."""
+    rep = reportmod.Report(sys.argv, task_id=args.task)
+    path = Path(args.contract)
+    if not path.is_file():
+        rep.add_check("contract_available", "missing", detail=f"{path} not found")
+        return _finish(rep, args, EXIT_MISSING_PREREQUISITE)
+    try:
+        contract = json.loads(path.read_text(encoding="utf-8"))
+        zoom_zoo_contract.validate_manifest(contract)
+    except (OSError, json.JSONDecodeError, ValueError) as exc:
+        rep.add_check("contract_available", "failed", detail=f"{path}: {exc}")
+        return _finish(rep, args, EXIT_INVALID_INPUT)
+    rep.add_input("contract", path, refcmd.sha256_file(path), id=contract["id"])
+    rep.add_check("contract_available", "passed", detail=f"{path} ({contract['id']})")
+    rom = _load_rom(rep, args, {"rom": {"sha256": contract["identity"]["rom_sha256"]}})
+    if rom is None:
+        missing = _rom_path(args) is None or not _rom_path(args).is_file()
+        return _finish(rep, args, EXIT_MISSING_PREREQUISITE if missing else EXIT_FAILURE)
+    try:
+        result = zoom_zoo_contract.validate(contract, rom)
+    except zoom_zoo_contract.ContractError as exc:
+        rep.add_check("reference_contract", "failed", detail=str(exc))
+        return _finish(rep, args, EXIT_FAILURE)
+    rep.add_check("reference_contract", "passed",
+                  detail=(f"{result['decoded_bytes']} decoded bytes; {result['selected_entries']} ordered entries, "
+                          f"{result['transfers']} transfers; {result['gather_bytes']} gather bytes and "
+                          f"{result['collision_words']} collision words reconstructed"))
+    rep.data["zoom_zoo_contract"] = result
+    return _finish(rep, args, EXIT_OK)
 
 
 # --------------------------------------------------------------- Classic pack
@@ -542,6 +574,13 @@ def register(sub: argparse._SubParsersAction) -> None:
     dec.add_argument("--report", help="write the JSON run report here")
     dec.add_argument("--task", help="task ID to record in the report")
     dec.set_defaults(func=cmd_decode)
+
+    zz = csub.add_parser("zoom-zoo-contract", help="validate the bounded M4-03 reference-only ZOOM ZOO contract")
+    zz.add_argument("--contract", required=True, help="tracked ZOOM ZOO reference contract JSON")
+    zz.add_argument("--rom", help="ROM file; defaults to local/rom-location.txt")
+    zz.add_argument("--report", help="write the JSON run report here")
+    zz.add_argument("--task", default="M4-03")
+    zz.set_defaults(func=cmd_zoom_zoo_contract)
 
     pack = csub.add_parser("pack", help="extract the exact PAL ROM into an atomic Classic content pack")
     pack.add_argument("--rom", help="ROM file; defaults to local/rom-location.txt")

@@ -1,9 +1,9 @@
-# Coordinator handover — M4-07 accepted, M4-08 claimed
+# Coordinator handover — M4-08 accepted, M4-09 planning next
 
 Milestone M3 is accepted on 13 September 2026 and tagged `m3`. M4-00 through
-M4-07 are accepted. Read [M4-07](M4-07.md),
-[R-0025](../docs/research/R-0025-zoom-zoo-reflected-vertical-contact.md), its
-returned [review](M4-07-review.md) and approved [re-review](M4-07-rereview.md).
+M4-08 are accepted. Read [M4-08](M4-08.md),
+[R-0026](../docs/research/R-0026-zoom-zoo-position.md) and its approved
+[review](M4-08-review.md).
 
 The accepted scope is the identified PAL one-player CRAWLER/DRAGSTER slice:
 supported-ROM extraction creates a validated local Classic pack, later launches
@@ -41,12 +41,14 @@ binding and address citations; correction `cfa94e4` was approved, including a
 correction to the reviewer's own off-by-one point-x range. Integration
 `131df54` and hosted run 34738957270 are green.
 
-Continue [M4-08](M4-08.md) in its isolated Sol/medium worktree. Astra selected
-the reached position integrator `$82:A627--A6F7`: the accepted window exercises
-20 positive/+4 and 14 negative/-1 slope-tail stores that native integration
-omits. Capture and propagate all four residue chains from the end-1649 seed;
-resolve the old `$82:A6E9` direct-page dependency rather than defaulting it.
-Native ZOOM ZOO and its pack remain unchanged.
+M4-08 closes the reached position integrator for all 102 calls from one
+end-1649 four-residue seed, including the slope tails and former `$82:A6E9`
+gap. Independent review approved its own frame-1664 variation. Integration
+`6de3dd5` and hosted run 34741431794 are green.
+
+Run a bounded Astra/high planning audit for M4-09 and choose the smallest next
+producer or composition step. Captured velocity/contact inputs remain explicit;
+native ZOOM ZOO and its pack remain unchanged.
 The user authorized an unattended M4 continuation and at most one weekly usage
 reset only if an actual provider limit is reached; no money, paid credits,
 provider switching, publication or deployment is authorized.

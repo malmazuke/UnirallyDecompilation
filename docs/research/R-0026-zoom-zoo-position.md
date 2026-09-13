@@ -1,7 +1,8 @@
 # R-0026 — ZOOM ZOO position integration and residue recurrence
 
 - Task: [M4-08](../../tasks/M4-08.md)
-- Status: review candidate; production native behavior is unchanged
+- Status: accepted bounded reference research after independent approval;
+  production native behavior remains unchanged
 - Source: PAL ROM SHA-256
   `a1105819d48c04d680c8292bbfa9abbce05224f1bc231afd66af43b7e0a1fd4e`;
   bsnes `7d5aa1e656b9171524d01b1b22917197d8121cb4`; patch

@@ -43,3 +43,12 @@ review result and CI outcome belong in ignored
 Acceptance remains conditional on independent approval, verified synchronization
 and passing final-tip CI. No milestone tag is due. Resume gameplay only under
 its existing task and provider instructions in `tasks/NEXT_SESSION.md`.
+
+## Public screenshot
+
+The user supplied `/Users/markfeaver/Desktop/Unirally.png` and requested considering
+it for the README. Included unchanged at `docs/images/unirally.png`, with descriptive
+alt text and a maintainer-supplied gameplay caption. Capture provenance is not
+verified, so it makes no claim to show an accepted native build or particular
+track. This explicitly requested presentation image is separate from private
+reference captures, ROMs, extracted asset packs and acceptance evidence.

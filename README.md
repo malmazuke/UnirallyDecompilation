@@ -12,6 +12,10 @@ Development is also an experiment in agent-driven engineering: agents recover
 behavior, implement it, and independently review changes, with the evidence and
 handoffs kept in this repository.
 
+![Unirally gameplay with a red unicycle above a striped track](docs/images/unirally.png)
+
+*Gameplay screenshot supplied by the maintainer. See below for the project's accepted capabilities and current limitations.*
+
 ## What works today
 
 - **DRAGSTER:** the accepted one-player CRAWLER/DRAGSTER path runs from race

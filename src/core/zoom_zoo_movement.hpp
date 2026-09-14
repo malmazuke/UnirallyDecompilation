@@ -39,6 +39,7 @@ struct ZoomZooResult {
 struct ZoomZooState {
     bool native_initialization{};
     ZoomZooResult result;
+    std::array<std::uint16_t,2> charge_announced{}; // $0D53/$0D55, audio latch only.
     std::uint16_t fade_level{};
     std::uint16_t result_updates{};
     std::array<std::uint16_t,2> start_boost{};

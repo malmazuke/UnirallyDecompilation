@@ -974,11 +974,19 @@ RgbFrame render_zoom_zoo(const ZoomZooState& state,const ClassicContentPack& pac
     std::copy(bg.begin(),bg.end(),vram.begin()+0x2000);std::copy(map.begin(),map.end(),vram.begin()+0xe000);
     auto cgram=build_race_cgram({state.movement,0,0,0,0,0},palette);
     const int camera_x=state.race.camera.x,camera_y=static_cast<std::int16_t>(state.race.camera.y);
-    const int bg_x=((camera_x-240)&511)/2,bg_y=((camera_y-208)&511)/2;
+    // HDMA tables are published before the current camera update. Original
+    // end1382..6724 tables equal previous camera minus the initial origin;
+    // BG2 uses a logical word shift, including negative wrapped scrolls.
+    const int background_x=(camera_x-static_cast<std::int16_t>(state.race.camera.velocity_x))&0x3fff;
+    const int background_y=static_cast<std::int16_t>(static_cast<std::uint16_t>(camera_y-static_cast<std::int16_t>(state.race.camera.velocity_y)));
+    const auto origin_x=static_cast<std::uint16_t>(((unsigned(word(track,3))<<4)-256U)&0xfff0U);
+    const auto origin_y=static_cast<std::uint16_t>(((unsigned(word(track,5))<<4)-256U)&0xfff0U);
+    const int bg_x=static_cast<std::uint16_t>(background_x-origin_x)>>1U;
+    const int bg_y=static_cast<std::uint16_t>(background_y-origin_y)>>1U;
     for(int y=0;y<224;++y)for(int x=0;x<256;++x) {
         const auto background=background_pixel(vram,0xe000,true,true,0x2000,false,static_cast<std::int16_t>(bg_x),static_cast<std::int16_t>(bg_y),x,y);
         pixel(frame,x,y,colour(cgram,background));
-        const int world_x=camera_x+x,world_y=camera_y+y;
+        const int world_x=background_x+x,world_y=background_y+y;
         if(world_x<0 || world_y<0 || world_x>=16384 || world_y>=4096)continue;
         const auto selector=word(track,15+static_cast<std::size_t>((world_y/64)*256+world_x/64)*2);
         const auto descriptor=word(track,0x800f+static_cast<std::size_t>(selector)*32+static_cast<std::size_t>((world_y%64)/16)*8+static_cast<std::size_t>((world_x%64)/16)*2);

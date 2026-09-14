@@ -69,9 +69,9 @@ int main() {
     ZoomZooContent initial_content{};initial_content.movement.sampling.track=header;
     auto initial=classic_crawler_zoom_zoo_start(initial_content);
     const auto initial_bytes=serialize_zoom_zoo(initial);
-    require(initial_bytes.size()==581);
+    require(initial_bytes.size()==585);
     require(serialize_zoom_zoo(deserialize_zoom_zoo(initial_bytes))==initial_bytes);
-    for(unsigned offset:{565U,567U,569U}) {
+    for(unsigned offset:{565U,567U,569U,581U,583U}) {
         auto corrupt=initial_bytes;corrupt[offset]^=1;
         rejects([&]{(void)deserialize_zoom_zoo(corrupt);});
     }
@@ -91,6 +91,9 @@ int main() {
         rejects([&]{(void)deserialize_zoom_zoo(corrupt);});
     }
 
+    auto impossible=result;impossible.movement.frame=1376;impossible.movement.countdown=270;
+    impossible.fade_level=0;impossible.start_boost.fill(384);impossible.result_updates=1;impossible.result={};
+    rejects([&]{(void)deserialize_zoom_zoo(serialize_zoom_zoo(impossible));});
     const auto before_early_restart=serialize_zoom_zoo(initial);
     rejects([&]{restart_zoom_zoo(initial,initial_content);});
     require(serialize_zoom_zoo(initial)==before_early_restart);

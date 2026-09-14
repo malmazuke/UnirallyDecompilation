@@ -83,6 +83,18 @@ int main() {
     require(serialize_zoom_zoo(paused)==initial_bytes);
     require(initial_bytes.size()==742);
     require(serialize_zoom_zoo(deserialize_zoom_zoo(initial_bytes))==initial_bytes);
+    // $82DB87-DB94 copies one 26-byte $82D7A4 template into both learned
+    // banks, so the opponent's event-one weight follows the static content
+    // rather than a constant repeated in the initializer.
+    require(initial.movement.rewards.event_one_weight==4);
+    {
+        std::array<std::uint8_t,26> other{};other[0]=6;other[1]=9;
+        auto other_content=initial_content;other_content.reward_weights=other;
+        const auto started=classic_crawler_zoom_zoo_start(other_content);
+        require(started.movement.rewards.event_one_weight==6);
+        require(started.player_announcements.queue.event_one_weight==6);
+        require(started.learned_weights[0][0]==9 && started.learned_weights[1][0]==9);
+    }
     for(unsigned offset:{565U,567U,569U,581U,583U}) {
         auto corrupt=initial_bytes;corrupt[offset]^=1;
         rejects([&]{(void)deserialize_zoom_zoo(corrupt);});

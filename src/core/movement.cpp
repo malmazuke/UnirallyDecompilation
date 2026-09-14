@@ -598,9 +598,22 @@ unsigned update_quarter_turns(RiderMovementState& rider,bool leading_support=fal
     throw std::invalid_argument("rotation reward is outside the recovered event-one domain");
 }
 
-void update_reward_queue(MovementState& state,unsigned event_one,const MovementContent& content) {
+// $81C219-C2C9 consumes the opponent queue. It mirrors the player consumer
+// $81C0CE-C18A with the opponent addresses ($0D11/$0D13 cursors, $0CEB
+// entries, $7E2102 learned weights, $770825 feature total, $11DB/$11E1
+// boost) and one deliberate difference: the opponent adds the *whole* reward
+// word to vertical boost ($81C2A5-C2AD) where the player adds half ($81C169).
+//
+// learned_weights is the opponent's serialized events 2-26 bank. The legacy
+// DRAGSTER/M4-12-15 formats never serialized it, so those callers pass an
+// empty span and keep the reached event-one domain they were accepted with.
+void update_reward_queue(MovementState& state,unsigned event_one,const MovementContent& content,
+                         std::span<std::uint8_t> learned_weights) {
     if(content.rotation_reward.size()<2 || content.rotation_class.empty()) {
         throw std::invalid_argument("rotation reward content has the wrong size");
+    }
+    if(!learned_weights.empty() && learned_weights.size()!=25) {
+        throw std::invalid_argument("opponent learned reward bank has the wrong size");
     }
     if(event_one && state.rewards.write_cursor!=state.rewards.read_cursor) {
         state.rewards.entries[state.rewards.write_cursor]=static_cast<std::uint8_t>(event_one);
@@ -614,21 +627,51 @@ void update_reward_queue(MovementState& state,unsigned event_one,const MovementC
     }
     state.rewards.read_cursor=next;
     const auto event=state.rewards.entries[next];
-    const bool leading_event=event>=1 && content.rotation_class.size()>=event && content.rotation_class[event-1]==255;
-    if(!leading_event && (event!=1 || content.rotation_class[0]!=0 || state.rewards.event_one_weight==0)) {
-        throw std::invalid_argument("reward queue left the recovered event-one domain");
+    std::uint8_t* weight=nullptr;
+    if(learned_weights.empty()) {
+        // Legacy DRAGSTER/M4-12-15 domain, deliberately unchanged. Those
+        // formats carry no opponent learned-weight bank, so only the reached
+        // event-one reward is modelled and every other event is rejected
+        // rather than silently given the original's skip.
+        const bool leading_event=event>=1 && content.rotation_class.size()>=event && content.rotation_class[event-1]==255;
+        if(!leading_event && (event!=1 || content.rotation_class[0]!=0 || state.rewards.event_one_weight==0)) {
+            throw std::invalid_argument("reward queue left the recovered event-one domain");
+        }
+        if(!leading_event)weight=&state.rewards.event_one_weight;
     }
-    if(!leading_event) {
-    state.rewards.feature_total=add_word(state.rewards.feature_total,state.rewards.event_one_weight);
-    state.rewards.event_one_weight=std::max<std::uint8_t>(state.rewards.event_one_weight>>1U,1);
-    const auto amount=static_cast<std::int16_t>(content_word(content.rotation_reward,0));
-    auto& boost=state.riders[1].speed.boost;
-    if(negative(static_cast<std::uint16_t>(boost+1U)))boost=static_cast<std::uint16_t>((boost>>1U)|0x8000U);
-    if(amount>=0) {
-        boost=add_word(boost,static_cast<std::uint16_t>(amount));
-        state.riders[1].speed.vertical_boost=add_word(
-            state.riders[1].speed.vertical_boost,static_cast<std::uint16_t>(amount));
+    // $81C238 branches on a *signed* comparison with 72, so the fixed BRONSEN
+    // voice range 200-215 is negative and enters the reward path instead of
+    // the voice path that the player's positive 72-87 take.
+    else if(static_cast<std::int8_t>(event)<72) {
+        if(event==0)throw std::invalid_argument("reward queue holds no published event");
+        if(event<=content.rotation_class.size()) {
+            if(content.rotation_class[event-1]!=255) {
+                if(event==1)weight=&state.rewards.event_one_weight;
+                else if(event<=26)weight=&learned_weights[event-2];
+                else throw std::invalid_argument("reward queue left the recovered event-one domain");
+            }
+        } else if(event<200 || event>215) {
+            throw std::invalid_argument("reward queue left the recovered event-one domain");
+        }
+        // Beyond the 72-entry class table only the BRONSEN voice range is
+        // reachable. $81C241 then indexes past the table into ROM code and
+        // $81C260 past the 26-byte learned bank into $7E21C9-$7E21D8, which
+        // the reference guard holds at zero on every authenticated frame, so
+        // the original takes its zero-weight exit and publishes no reward.
+        // The cartridge class counter it still bumps is outside the recovered
+        // inventory here exactly as it is for the player.
     }
+    if(weight && *weight) {
+        state.rewards.feature_total=add_word(state.rewards.feature_total,*weight);
+        *weight=std::max<std::uint8_t>(*weight>>1U,1);
+        const auto amount=static_cast<std::int16_t>(content_word(content.rotation_reward,2U*(event-1U)));
+        auto& boost=state.riders[1].speed.boost;
+        if(negative(static_cast<std::uint16_t>(boost+1U)))boost=static_cast<std::uint16_t>((boost>>1U)|0x8000U);
+        if(amount>=0) {
+            boost=add_word(boost,static_cast<std::uint16_t>(amount));
+            state.riders[1].speed.vertical_boost=add_word(
+                state.riders[1].speed.vertical_boost,static_cast<std::uint16_t>(amount));
+        }
     }
     const auto remaining=static_cast<unsigned>(
         (state.rewards.write_cursor-state.rewards.read_cursor-1U)&31U);
@@ -867,7 +910,7 @@ void update_movement(MovementState& state, const ControllerButtons& player_butto
         }
     }
     (void)advance_timer_digits(state.timer, timer_enabled);
-    update_reward_queue(state,opponent_event_one,content);
+    update_reward_queue(state,opponent_event_one,content,{});
     std::array<TrackSamples,2> samples{};
     for (std::size_t rider=0;rider<state.riders.size();++rider) {
         const auto& movement=state.riders[rider];
@@ -1409,7 +1452,6 @@ ZoomZooState classic_crawler_zoom_zoo_start(const ZoomZooContent& content) {
     movement.player_input.vertical=movement.player_input.horizontal=1;
     movement.countdown=270; // $82:D841-D844; timer begins below 68 after countdown publication.
     movement.rewards.write_cursor=1; // $81:C615-C619.
-    movement.rewards.event_one_weight=4; // $82:DB85-DB93 static reward template.
     for(unsigned i=0;i<2;++i) {
         auto& rider=movement.riders[i];
         const auto y=content_word(track,5+4*i);
@@ -1428,7 +1470,11 @@ ZoomZooState classic_crawler_zoom_zoo_start(const ZoomZooContent& content) {
     state.start_boost.fill(384);
     state.player_announcements.queue.write_cursor=1;
     if(content.reward_weights.size()!=26)throw std::invalid_argument("ZOOM ZOO reward-weight table is missing");
+    // $82DB87-DB94 copies the same 26-byte $82D7A4 template into both banks,
+    // so the opponent's event-one weight is that content byte too rather than
+    // a constant repeated here.
     state.player_announcements.queue.event_one_weight=content.reward_weights[0];
+    movement.rewards.event_one_weight=content.reward_weights[0];
     for(auto& weights:state.learned_weights)std::copy(content.reward_weights.begin()+1,content.reward_weights.end(),weights.begin());
     state.player_announcements.hints_active=1; // $82D95C fresh scenario tutorial bit.
     state.player_announcements.hint_updates=30; // $82D972-D975.
@@ -1614,8 +1660,10 @@ ZoomZooState deserialize_zoom_zoo(std::span<const std::uint8_t> bytes) {
         if(!state.result_updates && a.hints_active &&
            (a.hint_updates!=(elapsed-state.pause.suspended_updates+30U)%300U || a.hint_group!=((elapsed-state.pause.suspended_updates+30U)/300U)%8U))
             throw std::invalid_argument("inconsistent ZOOM ZOO hint phase");
-        // $829D47-D5B constrains voice producers for MIKE/BRONSEN even
-        // though the original consumer routes every byte >=72 as voice.
+        // $829D47-D5B constrains voice producers for MIKE/BRONSEN. The
+        // opponent consumer's domain test $81C238 is signed, so its 200-215
+        // range reaches the reward path and exits on the zero learned weight
+        // beyond the bank; only these produced values are admitted here.
         for(auto event:q.entries)if(event>=88)
             throw std::invalid_argument("invalid ZOOM ZOO player voice event");
         for(auto event:state.movement.rewards.entries)if(event>=72 && (event<200 || event>215))
@@ -1873,7 +1921,8 @@ void update_zoom_zoo(ZoomZooState& state,const ControllerButtons& requested_butt
     }
     (void)advance_timer_digits(whole.timer,whole.countdown<68);
     if(state.native_initialization)consume_zoom_player(next,content.movement);
-    update_reward_queue(whole,reward,content.movement);
+    update_reward_queue(whole,reward,content.movement,
+        state.native_initialization?std::span<std::uint8_t>{next.learned_weights[1]}:std::span<std::uint8_t>{});
     if(state.complete_race)update_zoom_camera(next);
     for(unsigned index=0;index<2;++index) {
         auto& rider=whole.riders[index];

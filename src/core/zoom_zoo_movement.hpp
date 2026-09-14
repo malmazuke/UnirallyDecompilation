@@ -36,9 +36,14 @@ struct ZoomZooResult {
     std::array<std::uint16_t,2> published_totals{};
     bool operator==(const ZoomZooResult&) const = default;
 };
+struct ZoomZooPlayerAnnouncements {
+    RewardQueueState queue;
+    std::uint16_t hints_active{}, hint_updates{}, hint_group{}, empty_display{};
+};
 struct ZoomZooState {
     bool native_initialization{};
     ZoomZooResult result;
+    ZoomZooPlayerAnnouncements player_announcements;
     std::array<std::uint16_t,2> charge_announced{}; // $0D53/$0D55, audio latch only.
     std::uint16_t fade_level{};
     std::uint16_t result_updates{};

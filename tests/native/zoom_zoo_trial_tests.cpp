@@ -69,9 +69,13 @@ int main() {
     ZoomZooContent initial_content{};initial_content.movement.sampling.track=header;
     auto initial=classic_crawler_zoom_zoo_start(initial_content);
     const auto initial_bytes=serialize_zoom_zoo(initial);
-    require(initial_bytes.size()==585);
+    require(initial_bytes.size()==632);
     require(serialize_zoom_zoo(deserialize_zoom_zoo(initial_bytes))==initial_bytes);
     for(unsigned offset:{565U,567U,569U,581U,583U}) {
+        auto corrupt=initial_bytes;corrupt[offset]^=1;
+        rejects([&]{(void)deserialize_zoom_zoo(corrupt);});
+    }
+    for(unsigned offset:{585U,617U,618U,619U,621U,623U,624U,626U,628U,630U}) {
         auto corrupt=initial_bytes;corrupt[offset]^=1;
         rejects([&]{(void)deserialize_zoom_zoo(corrupt);});
     }

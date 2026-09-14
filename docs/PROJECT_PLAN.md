@@ -17,6 +17,10 @@ Both profiles use deterministic simulation. Higher-resolution visuals and smooth
 
 ### Human-readable source and community contributions
 
+External contributions are not currently accepted; see
+[the contribution policy](../CONTRIBUTING.md). The community goals below are
+future direction. Authorized internal development and review continue.
+
 Human-readable, maintainable source is an explicit goal from the first native routine. A contributor should be able to understand an update, locate its supporting evidence, and change it while running the relevant checks. Use descriptive domain names where meanings are established, small functions with explicit state/input/content dependencies, documented units and integer semantics, and comments explaining unusual original behavior with ROM addresses and research links. Keep uncertain meanings visibly provisional; do not turn a guess into an authoritative name.
 
 Preserve verified Classic arithmetic and update order while improving structure. Keep processor bookkeeping and extraction offsets out of the public simulation interface where possible. A literal register-level translation may be a useful research intermediate, but delivering it as production code requires a documented reason and reviewable boundaries. Refactor in small steps under frozen differential tests; do not defer basic readability to a future wholesale rewrite.

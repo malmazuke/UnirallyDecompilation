@@ -108,7 +108,10 @@ def compare(a,b,contract,binary,pack,out):
     head=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT);diff=sha(subprocess.check_output(['git','diff','HEAD'],cwd=ROOT));binary_sha=sha(binary.read_bytes());pack_sha=sha(pack.read_bytes())
     reference,rows,events=original(a);repeat,other,other_events=original(b);frozen=json.loads(contract.read_text())
     if reference!=repeat or rows!=other or events!=other_events:raise ValueError('original repeats differ')
-    if digest(reference)!=frozen['original_sha256'] or digest(rows)!=frozen['rows_sha256'] or events!=frozen['events']:
+    expected_inventory=dict(kind='m4_16_playable_freeze',frames=[1376,reference['frames'][1]],state_bytes=742,
+                            original_sha256=digest(reference),rows_sha256=digest(rows),events=events,
+                            timeline_sha256=reference['timeline_sha256'],rom_sha256=ROM_SHA,core_sha256=CORE_SHA)
+    if any(frozen.get(key)!=value for key,value in expected_inventory.items()):
         raise ValueError('frozen original inventory differs')
     rules,rules_sha=load_rules(ROOT/TWO_TRACK_RULES_PATH);validate_pack(pack.read_bytes(),rules,rules_sha)
     last=reference['frames'][1]

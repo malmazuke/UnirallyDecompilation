@@ -95,6 +95,22 @@ int main() {
     result.result.graph_minimum=2800;result.result.graph_maximum=3000;result.result.published_totals.fill(9000);
     auto result_bytes=serialize_zoom_zoo(result);
     require(serialize_zoom_zoo(deserialize_zoom_zoo(result_bytes))==result_bytes);
+    for(unsigned value:{88U,199U,200U,215U,216U,255U}) {
+        auto corrupt=result_bytes;corrupt[585]=static_cast<std::uint8_t>(value);
+        rejects([&]{(void)deserialize_zoom_zoo(corrupt);});
+    }
+    for(unsigned value:{72U,87U,88U,199U,216U,255U}) {
+        auto corrupt=result_bytes;corrupt[288]=static_cast<std::uint8_t>(value);
+        rejects([&]{(void)deserialize_zoom_zoo(corrupt);});
+    }
+    for(unsigned value:{72U,87U}) {
+        auto valid=result_bytes;valid[585]=static_cast<std::uint8_t>(value);
+        require(serialize_zoom_zoo(deserialize_zoom_zoo(valid))==valid);
+    }
+    for(unsigned value:{200U,215U}) {
+        auto valid=result_bytes;valid[288]=static_cast<std::uint8_t>(value);
+        require(serialize_zoom_zoo(deserialize_zoom_zoo(valid))==valid);
+    }
     for(unsigned offset:{467U,487U,507U,509U,573U,575U,577U,579U}) {
         auto corrupt=result_bytes;corrupt[offset]=0x60;corrupt[offset+1]=0xea;
         rejects([&]{(void)deserialize_zoom_zoo(corrupt);});

@@ -1588,7 +1588,12 @@ ZoomZooState deserialize_zoom_zoo(std::span<const std::uint8_t> bytes) {
         if(!state.result_updates && a.hints_active &&
            (a.hint_updates!=(elapsed-state.pause.suspended_updates+30U)%300U || a.hint_group!=((elapsed-state.pause.suspended_updates+30U)/300U)%8U))
             throw std::invalid_argument("inconsistent ZOOM ZOO hint phase");
-        // Byte events >=72 are non-scoring rider voice announcements ($81C0F6).
+        // $829D47-D5B constrains voice producers for MIKE/BRONSEN even
+        // though the original consumer routes every byte >=72 as voice.
+        for(auto event:q.entries)if(event>=88)
+            throw std::invalid_argument("invalid ZOOM ZOO player voice event");
+        for(auto event:state.movement.rewards.entries)if(event>=72 && (event<200 || event>215))
+            throw std::invalid_argument("invalid ZOOM ZOO opponent voice event");
         for(unsigned cursor=(q.read_cursor+1U)&31U;cursor!=q.write_cursor;cursor=(cursor+1U)&31U)
             if(q.entries[cursor]==0)throw std::invalid_argument("empty pending ZOOM ZOO announcement");
         if(elapsed==0 && (state.charge_announced[0] || state.charge_announced[1]))throw std::invalid_argument("initial charge flag must be clear");

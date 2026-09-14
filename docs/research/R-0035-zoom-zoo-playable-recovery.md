@@ -135,11 +135,47 @@ artificial mechanics experiment, frozen inb83d7f3, separate from native-start ga
 Independent landing/persistent reviews are integrated; the durable
 [persistent-input ledger](M4-16-persistent-input-ledger.md) distinguishes fresh
 scenario defaults, current-race result inputs, presentation-only loads and
-excluded tour continuity. The generic opponent landing producer now exposes a
-missing non-event1 reward consumer, a high-priority open finding. Do not reject
-legitimate low events to mask it. Next source experiment is `$81C219-C2C9` learned
-weights and full vertical reward for the opponent; no artificial original event2
-probe was started before the user's handover request.
+excluded tour continuity.
+
+## Generic opponent reward consumption
+
+The high-priority missing non-event-one opponent consumer is recovered at
+`aeb62e0`. `$81C219-C2C9` is the player consumer `$81C0CE-C18A` with the
+opponent addresses and one deliberate difference: it adds the **whole** reward
+word to vertical boost (`$81C2A5-C2AD`) where the player halves it (`$81C169`).
+Class table `$81C50A` has 72 entries and gives a real class only to events 1-12
+and 16-21; reward words are `$81C493`. `$82DB87-DB94` copies one 26-byte
+`$82D7A4` template into both learned banks, so the opponent event-one weight is
+static content, not a constant.
+
+The domain test `$81C238` is a **signed** comparison with 72. The fixed BRONSEN
+voices 200-215 are therefore negative and take the reward path, leaving both the
+class table and the 26-byte bank; the original exits on the zero weight at
+`$7E21C9-$7E21D8`, which holds zero on all 6,394 authenticated frames and is
+already covered by the reference zero guard, as is the opponent hint latch
+`$12E5` that the enqueue `$81C5D5-C5E3` would otherwise clear. The cartridge
+class counter the original still bumps is outside the recovered inventory here
+exactly as the player's `$77076B` is. Treat both as bounded observations, not as
+a claim about arbitrary opponent state.
+
+Evidence is `zoom_zoo_opponent_reward_probe`, an artificial original-only
+intervention. It cold-starts the authenticated primary timeline, verifies every
+pre-intervention frame, then performs exactly the enqueue the producer would
+perform and records the original's answer. The natural primary reaches only
+opponent events 1, 14, 15 and 39, so events 2, 8, 17, 13 and voice 200 were each
+captured twice, identically, to cover the full reward, zero-weight,
+leading-class and out-of-table branches. Native continuation matches all 742
+bytes across 9 observations for every capture; a single flipped byte at the
+consumption frame is detected. These probes are internal mechanics experiments
+and never a seed-based playable acceptance fallback.
+
+```sh
+python3 -m tools.unirally_lab.native.zoom_zoo_opponent_reward_probe capture --reference artifacts/m4-16/boundary-a --core local/emulators/bsnes/bsnes/out/bsnes_libretro.dylib --event 2 --out artifacts/m4-16/opponent-reward-probe/FRESH
+python3 -m tools.unirally_lab.native.zoom_zoo_opponent_reward_probe native --probe artifacts/m4-16/opponent-reward-probe/FRESH --reference artifacts/m4-16/boundary-a --binary build/app-debug/src/core/zoom_zoo_runner --pack local/classic-crawler-two-tracks-v5.pack
+```
+
+The legacy DRAGSTER/M4-12-15 caller keeps its accepted event-one domain and its
+rejections unchanged; those formats serialize no learned-weight bank to model.
 
 Standalone pause Down/Start is explicitly labelled RESTART RACE and uses shared
 fresh initialization, not original Retire/tour emulation. Both input/art reset

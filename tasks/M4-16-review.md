@@ -456,3 +456,105 @@ support mirror pass, but malformed active-roll restore is future-changing, and
 held/interrupted X plus the live/visual product gates remain incomplete. Recheck
 the pose-base invariant and recovered held/release fields on the newer frozen
 candidate.
+
+## V10 correction review — candidate fe02cd86
+
+This final bounded recovery review used exact detached candidate
+`fe02cd86d3a7fb0d16ccae89876328812d1a1594`. Shared weekly usage reached the
+80% D-0004 reserve boundary; no new feature scope, broad suite, live helper,
+integration, push or acceptance work occurred in this checkout. Review was
+limited to the V9/V10 restore findings, held-X gate, recovery documents and the
+coordinator's documentation-only main pointer.
+
+### Correction assessment
+
+The V9 active-roll defect is corrected. Starting from the authentic full-X
+frame 1712 state, each of these mutations rejects before the runner emits a
+state:
+
+- toggling `pose_base` bit 15: `inconsistent ZOOM ZOO active roll reflection`;
+- toggling one low pose-base bit: `ZOOM ZOO roll base differs from static entry
+  pose` during content-dependent runner validation;
+- setting bounce charge, bounce-active or prior-step state: `invalid ZOOM ZOO
+  roll state`;
+- changing the support-count mirror: `inconsistent ZOOM ZOO support-count
+  mirror`.
+
+The first V10 candidate still admitted a future-changing held-counter mutation.
+Authentic held-X frame 1712 has signed step -5, positive held duration 6 and
+accumulated held rotations 6. Changing only duration to 7 was accepted and an X
+re-press changed the learned event-17 weight from 6 to 7. Candidate `fe02cd86`
+now rejects this seed before output with `inconsistent ZOOM ZOO held roll
+counters`.
+
+The correction avoids the over-strict equality initially considered during
+review. Source `$829398-9422` retains accumulated rotations on a new pre-landing
+roll, while `$82955F-9598` advances positive held duration and accumulated
+rotations together. Therefore positive duration may be less than accumulated
+rotations, but cannot exceed it before counter wrap. The decoder implements
+that inequality and bounds held magnitude, accumulated rotations and completed
+rolls by elapsed updates while fewer than 65,536 updates have elapsed. The
+authored test accepts duration 6/rotations 7, rejects 7/6 and rejects a counter
+larger than elapsed time. This is a sound bounded invariant; negative return
+states remain explicitly less constrained rather than being assigned an
+unsupported equality.
+
+### Independent held-X result
+
+The complete held-X comparison passed on exact `fe02cd86`. Both original runs
+were frozen before implementation. Native matched all 6,225 730-byte states
+from frame 1376 through 7600, including finishes at 6483/6488, result loading at
+6724 and fully visible result at 6838. It passed 768 fresh-process restore
+boundaries, repeated clean initialization and the entire restarted race. The
+review binary SHA-256 was `44b5d64a...`; independently rebuilt 49-entry v4 pack
+SHA-256 was `83a1c902...`; rows SHA-256 was `c8fb39e2...`.
+
+Focused debug tests for state/guards and content-pack identity passed 2/2. The
+primary separately records the corrected primary as 6,225 states, 757 restores
+and full restart, plus focused debug and sanitizer passes. Those primary results
+were not rerun or reclassified as independent evidence here.
+
+### Recovery documentation and main pointer
+
+Tracked R-0035, task checkpoint and NEXT_SESSION clearly state that M4-16 is an
+incomplete experiment. They distinguish the 720 projected/archive bytes, eight
+original result publications and semantic two-byte load clock; preserve the
+nonqualifying re-press case; identify incomplete producer closure; and list the
+live, visual, control, bootstrap and regression gaps. R-0035 also records the
+held-counter review finding and bounded correction without claiming a complete
+reachability proof. The proposed source-comment correction for the roll
+reflection and pose-bit publication, from `$8295B5-95D5` to verified
+`$8295D5-95F6`, is accurate and changes provenance text only.
+
+The coordinator's main change at accepted ancestor `ede4c0b3` contains only
+`docs/STATE.md`, `tasks/M4-16.md`, `tasks/NEXT_SESSION.md` and
+`tasks/README.md`. It states that main retains accepted M4-15 gameplay, labels
+M4-16 in progress and unaccepted, points unambiguously to the existing task
+branch/worktree and private closeout, and forbids a replacement task or M4-17
+dispatch. `git diff --check` passed. This reviewer approves that
+documentation-only recovery pointer; it contains no gameplay/source integration
+or acceptance claim.
+
+### Commands and disposition
+
+- `tools/project.py build --preset app-debug --report
+  artifacts/m4-16-review/candidate-fe02cd86-build.json`: passed.
+- Task-local v4 pack extraction from the exact ROM passed all 49 entries before
+  the candidate correction and remained byte-identical for this source-only
+  change.
+- Exact frame-1712 mutation scripts produced the rejection and retained-state
+  results above.
+- `tools.unirally_lab.native.zoom_zoo_playable compare` on held-X passed 6,225
+  states, 768 restores and the full restart race.
+- `ctest --test-dir build/app-debug -R
+  'zoom_zoo_trial_width_state_and_guards|classic_content_pack_identity_rejection'
+  --output-on-failure`: 2/2 passed.
+
+The reviewed V9/V10 restore defects are corrected in `fe02cd86`; no further
+defect surfaced in this bounded correction review. M4-16 remains unaccepted.
+Bounce and compound rewards, Start behavior, wrong-direction boundary and full
+producer closure remain incomplete. Required live complete racing through
+result/restart, independent live input, frozen representative visuals, clean
+bootstrap/denied-access coverage, latest full regressions, merge and final CI
+are also outstanding. Preserve this as recovery work on the task branch; do not
+merge the experimental gameplay or create an M4 tag.

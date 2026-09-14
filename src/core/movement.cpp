@@ -1495,7 +1495,7 @@ ZoomZooState deserialize_zoom_zoo(std::span<const std::uint8_t> bytes) {
         }
         for(unsigned i=0;i<2;++i) {
             const auto& roll=state.rolls[i];
-            // $8295B5-95D5 publishes the reflection flag and bit15 together
+            // $8295D5-95F6 publishes the reflection flag and bit15 together
             // on every active roll pose, including held/returning poses.
             if(roll.step && bool(roll.pose_base&0x8000U)!=
                (state.movement.riders[i].pose.reflected!=(roll.prior_reflection!=0)))

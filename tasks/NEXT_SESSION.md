@@ -35,7 +35,7 @@ Follow-up commits contain review/corrections and recovery docs; inspect them.
 
 Private ROM locator `local/rom-location.txt`; core
 `local/emulators/bsnes/bsnes/out/bsnes_libretro.dylib`. Identities in R-0035.
-Current pack: `local/classic-crawler-two-tracks-v4.pack`. Older default
+Current pack: `local/classic-crawler-two-tracks-v5.pack`. Older default
 `local/classic-crawler-two-tracks.pack` is a frozen incompatible v2 experiment.
 Do not overwrite it. Warm first-extraction and pack-only launch reports are in
 `artifacts/m4-16/launch-9f7f3b4`; these do not prove clean bootstrap or live play.
@@ -43,7 +43,7 @@ Do not overwrite it. Warm first-extraction and pack-only launch reports are in
 Prototype launch from this checkout, after a matching build:
 
 ```sh
-python3 tools/project.py frontend run --track zoom-zoo --pack local/classic-crawler-two-tracks-v4.pack --preset app-debug --report artifacts/m4-16/FRESH-live.json
+python3 tools/project.py frontend run --track zoom-zoo --pack local/classic-crawler-two-tracks-v5.pack --preset app-debug --report artifacts/m4-16/FRESH-live.json
 ```
 
 For a new pack, pass the supported ROM with `--rom` and a fresh `--pack` path.

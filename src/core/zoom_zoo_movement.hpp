@@ -79,6 +79,7 @@ struct ZoomZooContent {
     std::span<const std::uint8_t> roll_poses;
     std::span<const std::uint8_t> roll_directions;
     std::span<const std::uint8_t> reward_weights;
+    std::span<const std::uint8_t> trick_combinations;
 };
 // $82:9715–979D: count active updates opposing the track direction, with
 // original wrapped word comparisons at velocities -16 and +16 (1/32 units).

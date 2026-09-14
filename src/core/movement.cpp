@@ -1021,10 +1021,10 @@ void update_zoom_throttle(RiderMovementState& rider,ReflectionTransition& transi
         }
         if(transition.brake_input) {
             rider.motion.velocity_x=0;
-            // $829995-99EF: reflection inhibits charge accumulation. The
-            // $0BCB mode remains an authenticated zero in this race domain.
-            if(transition.step)rider.throttle=0;
-            charge_announced=rider.throttle?1:0;
+            // $829995-99EF: a reflection step inhibits the announcement,
+            // but preserves accumulated throttle ($0F5F). $0FB1/$0F45
+            // clear throttle separately and remain zero in this scenario.
+            charge_announced=rider.throttle && !transition.step?1:0;
         }
         else if(rider.previous_brake && rider.throttle) {
             rider.motion.velocity_x=add_word(rider.motion.velocity_x,rider.throttle);rider.throttle=0;rider.launch_override=256;
@@ -1048,6 +1048,49 @@ void enqueue_zoom_player(ZoomZooState& state,unsigned event) {
     q.write_cursor=static_cast<std::uint8_t>((q.write_cursor+1U)&31U);
 }
 
+// $829B69-9D97: landing announcements precede queue consumption. Four
+// independent trick counts form a radix-five static combination-table index.
+void update_zoom_landing_rewards(ZoomZooState& state,unsigned index,const ZoomZooContent& content) {
+    auto& rider=state.movement.riders[index];auto& turns=rider.quarter_turn;
+    auto& roll=state.rolls[index];auto& transition=state.reflection[index];
+    const bool vertical=std::abs(static_cast<std::int16_t>(rider.contact.surface_angle))==31;
+    if(vertical || (!rider.motion.response_a && rider.contact.unsupported_count>=2)) {
+        (void)update_quarter_turns(rider,false,transition.air_turns,roll.step!=0,roll.held_rotations);
+        return;
+    }
+    const auto announce=[&](unsigned event) {
+        if(index==0)enqueue_zoom_player(state,event);else enqueue_zoom_opponent(state.movement,event);
+    };
+    if(state.surface[index].leading_support) {
+        const auto count=static_cast<std::uint16_t>((turns.forward_turns&255U)+turns.reverse_turns+roll.held_rotations+transition.air_turns);
+        if(count) {
+            if(!roll.bounce_active)announce(14);
+            rider.speed.boost=rider.speed.vertical_boost=0;
+        }
+    } else {
+        const auto forward=std::min<unsigned>(add_word(turns.forward_turns,turns.forward_quarters==3?1:0),4);
+        const auto reverse=std::min<unsigned>(add_word(turns.reverse_turns,turns.reverse_quarters==3?1:0),4);
+        const std::array<unsigned,4> counts{{turns.reflected_at_start?reverse:forward,
+            turns.reflected_at_start?forward:reverse,std::min<unsigned>(transition.air_turns>>1U,4),
+            std::min<unsigned>(roll.completed_rolls,4)}};
+        if(roll.bounce_active && !roll.support_count_mirror) {announce(16);roll.bounce_active=0;}
+        if(roll.held_rotations>=3)announce(17);
+        constexpr std::array<unsigned,4> event_bases{{4,0,8,17}};
+        for(unsigned i=0;i<4;++i)if(counts[i])announce(event_bases[i]+counts[i]);
+        const auto combination=counts[0]*125U+counts[1]*25U+counts[2]*5U+counts[3];
+        if(content.trick_combinations.size()!=625)throw std::invalid_argument("ZOOM ZOO trick combination table missing");
+        if(content.trick_combinations[combination]!=254) {
+            // $829D3A-9D70: incoming X scratch ($A5), fixed scenario rider ID.
+            // A is replaced by this voice ID before BOTH enqueue calls.
+            const auto voice=72U+(index==0?0U:128U)+(rider.motion.x&15U);
+            announce(voice);announce(voice);
+        }
+    }
+    turns.previous_quadrant=turns.forward_turns=turns.reverse_turns=0;
+    turns.forward_quarters=turns.reverse_quarters=0;turns.initialized=false;
+    transition.air_turns=0;roll.completed_rolls=roll.held_rotations=0;
+}
+
 // $81BEA8-BEF1, $81C0CE-C18A and $81C02A-C054. This queue is
 // gameplay state: an earlier message delays publication of a trick boost.
 void consume_zoom_player(ZoomZooState& state,const MovementContent& content) {
@@ -1060,8 +1103,8 @@ void consume_zoom_player(ZoomZooState& state,const MovementContent& content) {
     }
     q.read_cursor=cursor;
     const auto event=q.entries[cursor];
-    if(!event || event>content.rotation_class.size())throw std::invalid_argument("player announcement event is outside static inventory");
-    if(content.rotation_class[event-1]!=255) {
+    if(!event || (event<72 && event>content.rotation_class.size()))throw std::invalid_argument("player announcement event is outside static inventory");
+    if(event<72 && content.rotation_class[event-1]!=255) {
         if(event>26)throw std::invalid_argument("player reward class is outside learned inventory");
         auto& weight=event==1?q.event_one_weight:state.learned_weights[0][event-2];
         if(weight) {
@@ -1545,7 +1588,7 @@ ZoomZooState deserialize_zoom_zoo(std::span<const std::uint8_t> bytes) {
         if(!state.result_updates && a.hints_active &&
            (a.hint_updates!=(elapsed-state.pause.suspended_updates+30U)%300U || a.hint_group!=((elapsed-state.pause.suspended_updates+30U)/300U)%8U))
             throw std::invalid_argument("inconsistent ZOOM ZOO hint phase");
-        for(auto event:q.entries)if(event>72)throw std::invalid_argument("invalid ZOOM ZOO announcement event");
+        // Byte events >=72 are non-scoring rider voice announcements ($81C0F6).
         for(unsigned cursor=(q.read_cursor+1U)&31U;cursor!=q.write_cursor;cursor=(cursor+1U)&31U)
             if(q.entries[cursor]==0)throw std::invalid_argument("empty pending ZOOM ZOO announcement");
         if(elapsed==0 && (state.charge_announced[0] || state.charge_announced[1]))throw std::invalid_argument("initial charge flag must be clear");
@@ -1713,22 +1756,14 @@ void update_zoom_zoo(ZoomZooState& state,const ControllerButtons& buttons,const 
         if(index==0)update_reflection_transition(rider,transition,horizontal,index!=active,content.reflection_pose_table,state.native_initialization && buttons.a);
         if(state.native_initialization && index==active)update_zoom_roll(next,index,index==0 && buttons.x,content);
         if(index==active || surface.leading_support) {
-            const bool landed = rider.motion.response_a || rider.contact.unsupported_count < 2;
-            // $829C98-C9A7 announces a held rotation before ordinary turn rewards.
-            if(state.native_initialization && landed && !surface.leading_support &&
-               std::abs(static_cast<std::int16_t>(rider.contact.surface_angle))!=31 && next.rolls[index].held_rotations>=3) {
-                if(index==0)enqueue_zoom_player(next,17);else enqueue_zoom_opponent(whole,17);
+            if(state.native_initialization)update_zoom_landing_rewards(next,index,content);
+            else {
+                const bool landed=rider.motion.response_a || rider.contact.unsupported_count<2;
+                const auto event=update_quarter_turns(rider,surface.leading_support!=0,transition.air_turns);
+                if(landed)transition.air_turns=0;
+                if(index==0 && event && (!state.complete_race || event!=14))throw std::invalid_argument("ZOOM ZOO player reward is unrecovered");
+                if(event && index==1)reward=event;
             }
-            const auto event=update_quarter_turns(rider,surface.leading_support!=0,transition.air_turns,next.rolls[index].step!=0,next.rolls[index].held_rotations);
-            // $829D7F clears the reflection-turn counter on the landing path,
-            // including a landing with no completed rotation reward.
-            if(landed) {
-                transition.air_turns=0;
-                if(state.native_initialization) {next.rolls[index].completed_rolls=0;next.rolls[index].held_rotations=0;}
-            }
-            if(index==0 && event && !state.native_initialization && (!state.complete_race || event!=14))throw std::invalid_argument("ZOOM ZOO player reward is unrecovered");
-            if(event && index==1)reward=event;
-            if(event && index==0)enqueue_zoom_player(next,event);
         }
         if(index==active) {
             // $82:A027-A068 initializes the direction latch on first opposition.

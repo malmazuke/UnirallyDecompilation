@@ -450,7 +450,7 @@ and extend each horizon to include its own post-finish continuation.
 Implemented in `codex/m4-16-playable-zoom-zoo`, not accepted gameplay on main:
 
 ```sh
-python3 tools/project.py frontend run --track zoom-zoo --pack local/classic-crawler-two-tracks-v4.pack --preset app-debug --report artifacts/m4-16/FRESH-live.json
+python3 tools/project.py frontend run --track zoom-zoo --pack local/classic-crawler-two-tracks-v5.pack --preset app-debug --report artifacts/m4-16/FRESH-live.json
 python3 -m tools.unirally_lab.native.zoom_zoo_playable --help
 python3 -m tools.unirally_lab.native.zoom_zoo_playable_reference --help
 ```

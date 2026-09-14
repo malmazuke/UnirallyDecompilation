@@ -10,6 +10,6 @@ inline ZoomZooContent zoom_zoo_content(const ClassicContentPack& pack) {
              entry("race-finish-reward-values"),entry("race-finish-reward-classes"),
              {entry("speed-masks"),entry("speed-decrements")}},
              entry("sustained-slope-coefficients"),entry("reflection-pose-table"),
-             entry("landing-response-matrices"),entry("race-finish-poses"),entry("roll-pose-table"),entry("roll-direction-table"),entry("roll-reward-weights")};
+             entry("landing-response-matrices"),entry("race-finish-poses"),entry("roll-pose-table"),entry("roll-direction-table"),entry("roll-reward-weights"),entry("trick-combinations")};
 }
 }

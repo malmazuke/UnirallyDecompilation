@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "kind": "classic_pack_rules",
-  "profile_id": "classic.pal.crawler.two-tracks.v4",
+  "profile_id": "classic.pal.crawler.two-tracks.v5",
   "source_rom": {
     "size": 2097152,
     "sha256": "a1105819d48c04d680c8292bbfa9abbce05224f1bc231afd66af43b7e0a1fd4e"
@@ -3190,6 +3190,20 @@
       },
       "size": 26,
       "sha256": "e27d32975fbc09805fa6bff958aaa3729167a1da354f7b6dfefa0bb838f104a2"
+    },
+    {
+      "id": "zoom.trick-combinations",
+      "source": {
+        "kind": "raw",
+        "pieces": [
+          {
+            "file_offset": 73142,
+            "length": 625
+          }
+        ]
+      },
+      "size": 625,
+      "sha256": "a6424f66bbd354883f3bfe128487d6cab92add5651adbf969976733a353f0217"
     }
   ],
   "description": "Additive two-track content inventory; retains every v1 entry unchanged."

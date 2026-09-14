@@ -558,3 +558,129 @@ result/restart, independent live input, frozen representative visuals, clean
 bootstrap/denied-access coverage, latest full regressions, merge and final CI
 are also outstanding. Preserve this as recovery work on the task branch; do not
 merge the experimental gameplay or create an M4 tag.
+
+## Initialization/result closure review — checkpoint e0d2dba
+
+This read-only follow-up reviewed exact checkpoint
+`e0d2dba1ad47e9c0347de9d6f3319dfd917ff7c9`, whose gameplay is unchanged from
+the corrected V10 candidate. It inspected the authenticated original captures,
+R-0035, the native initializer, result publication and standalone restart. It
+did not evaluate new controller cases or change native source.
+
+### Initial scenario inputs
+
+The original initialization capture authenticates the implemented state
+producers. At frame 1291 `$82D89D-D904` reads the decompressed fixed track
+header and writes rider positions 9200/1488 and camera origin 8944/1232;
+`$82DB25-DB7F` writes 60000 into both ten-slot lap arrays and totals;
+`$82DB96` reads `$77074B=1` before `$82DBAF/$82DBB2` publishes four line
+crossings (three laps), and `$82DBA6` reads `$770744=3` before
+`$82DBBA/$82DBBD` publishes cap 448. The same capture directly establishes
+countdown 270 at `$82D844`, boosts 384 at `$82D897/$82D89A`, player/opponent
+reward weight copies at `$82DB8B/$82DB8F`, tutorial active 1/update 30 at
+`$82D95C/$82D975`, and the broad zero clear at `$82D7C6-D7FA`.
+
+The fixed scenario nevertheless needs an explicit input ledger before a
+producer-closure claim. The initializer also reads fresh persistent bytes
+`$770750=00`, `$770748=00`, `$770749=11`, `$77074A=01`, `$77074B=01`,
+`$770744=03`, `$771116=0000` and `$77111A=0000`. The native entry point accepts
+only the fixed v4 pack and hardcodes the resulting state/presentation. That is
+consistent with the declared one-player MIKE/BRONSEN CRAWLER/ZOOM ZOO
+three-lap product; it is not support for other riders, modes, tracks, lap
+settings, persistent tutorial state or tour records. R-0035 names the scenario
+but does not yet map each of these reads to a native field, fixed presentation
+choice or excluded menu/tour input. This is an evidence/documentation omission,
+not a mismatch in the tested initialization: the full 730-byte frame-1376
+comparison and fresh restart already match the two identical original runs.
+
+### Result publication and transient presentation
+
+The eight projected result bytes have closed producers for this fresh scenario:
+
+- `$83904A-90F0` reads both ten-slot current-race lap arrays
+  (`$770755-0768`, `$7707BF-07D2`) plus fresh prior-record sentinel
+  `$770424=60000`, then writes graph maximum 3288 to `$771071` and minimum
+  3088 to `$77106F` at original frame 6830. Native derives the same values at
+  result update 106 from the serialized lap archive, using 60000 as the
+  declared fresh-record sentinel and enforcing the same 200-centisecond span.
+- `$80F88D-F8AF` publishes current-race totals 9802/9810 to
+  `$770618/$77061A` at frame 6831. Native publishes the two serialized totals
+  at result update 107. The native result renderer derives each current-race
+  best lap from the same serialized lap arrays and derives winner from the two
+  totals.
+
+Other reached reads are presentation or persistent-tour state rather than a
+missing next-race simulation input. `$770748=0`, `$770749=17` and `$77074B=1`
+select fixed result labels/layout; native explicitly draws MIKE, BRONSEN,
+three laps and ZOOM ZOO. `$770551=4112`, `$77106B=1026`, `$7710AD=1` and the
+bulk `$77000C-073A` reads feed the original result graphics/text pipeline.
+`$77082B` changes from the fresh 59999 sentinel to best lap 3250 at frame 6831,
+and `$771118` changes during the result transition; these are persistent
+record/tour side effects deliberately discarded by the reviewed standalone
+Race Again design. `$770742` is the original screen/transition control retained
+on the stable result. Native replaces that loading/display control with the
+bounded semantic counter and only admits Race Again once it reaches 115.
+
+A focused authenticated capture resolved the apparent non-ROM block-move
+residual rather than exposing a defect. At frame 6831 generated code
+`$000199` executes 48 `MVN` iterations and `$00019C` executes three `RTL`s.
+The three 16-byte moves are:
+
+- `$83A003-A012` (`zoom_zoo`, followed by other static labels) to scratch
+  `$0000DE-00ED`, entered through `$809B72` with A=15, X=A003, Y=00DE;
+- `$77000C-001B` (MIKE label) to the same scratch range through `$809B4E`;
+- `$77011C-012B` (BRONSEN label) to the same scratch range through `$809B4E`.
+
+The access report correctly records the ROM move under `rom_reads`, the two
+SRAM moves under `accesses`, and the generated operands from the preceding
+`$019A/$019B` writes. Its `end_of_frame` label applies to the unchanged opcode
+byte, not all source operands. This corrects the review's preliminary concern
+that the aggregate had lost the bank-$83 source.
+
+The result audit still has 11,738 unresolved reads, all before frame 6795; there
+are none from stable result frame 6839 through 7200 and no unresolved stores.
+They prevent a global zero-residual claim, but the inspected data contains no
+unaccounted supported-domain simulation input after the race archive. The
+remaining closure work is to record a field/read classification for the
+loading interval and bind the render-only class to the required frozen visual
+checks. Exact original result rendering is not implied by the successful eight
+byte/clock comparison: the native result is an authored semantic renderer, and
+representative visual acceptance remains outstanding.
+
+### Restart conclusion and commands
+
+For the explicitly chosen standalone fresh-scenario restart, no missing
+future-state input was identified. `restart_zoom_zoo` requires stable result
+update 115 and reconstructs the same initializer, so it intentionally drops
+`$77082B` and tour-transition state rather than pretending to implement the
+original Start-to-STUNT continuation. Existing full restart comparisons prove
+that all 730 represented fields equal a direct fresh race for the fixed pack.
+They do not prove alternate persistent defaults or tour continuity.
+
+Focused commands/results:
+
+- Python inspection of both `boundary-a/b` raw SRAM series confirmed the
+  persistent values above and identical transitions at frames 1207, 1291,
+  1376, 6725, 6830, 6831, 6839 and 7200.
+- Python classification of `initialization-audit/access.json` and
+  `result-audit/access.json` mapped the cited PCs, bus addresses, widths and
+  frames. Initialization reports 23,518 unresolved reads/zero unresolved
+  stores; result reports 11,738/zero, with no unresolved read after 6794.
+- `python3 tools/project.py access capture --manifest
+  artifacts/m4-16-review/boundary-manifest.json --out
+  artifacts/m4-16-review/result-mvn-watch2 --from-frame 6725 --to-frame 6831
+  --watch-address 0x019a --watch-address 0x019b --watch-pc 0x000199
+  --watch-pc 0x00019c --watch-pc 0x809b4e --watch-pc 0x809b72
+  --wram-series-range 0 0x2200 --timeout 600 --report
+  artifacts/m4-16-review/result-mvn-watch2-report.json`: passed, 1,690,660
+  authenticated instructions and 717,378 accesses; access record SHA-256
+  `51a86f6352f1383442cab11edb10537efff4c9a0257c1cb06508a9f3f1cffc8b`.
+
+Disposition: no new native initializer/result/restart bug was found in the
+fixed fresh scenario. Producer closure remains incomplete as documented because
+the persistent-input ledger and result loading/render classification are not
+yet durable acceptance evidence, and frozen result visuals remain absent.
+Alternate scenario defaults, persistent record carryover and original tour
+continuation remain unsupported by design. M4-16 remains unaccepted while
+ordinary controls/rewards, visual/live product evidence and final gates are
+unfinished.

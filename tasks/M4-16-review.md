@@ -249,3 +249,119 @@ has a defensible explicitly bounded abstraction, and the native restart boundary
 is substantially stronger. Correct finding 5, finish the source-backed result
 inventory, and re-run the affected focused gate before final-candidate review.
 The two preregistered controller variations remain untuned and unevaluated.
+
+## Final-candidate review — candidate 4f8aaad
+
+This review used exact detached candidate
+`4f8aaada48a326eefacad264b5de3beebc0ada50`. The candidate built cleanly and
+the focused `zoom_zoo_trial_width_state_and_guards` test passed. This remains a
+task acceptance review: no implementation was changed here, and broad suites,
+merge, CI, push and milestone approval remain with the primary.
+
+### Independent controller cases
+
+The two preregistered cases were captured on the original twice before any
+native evaluation of each case.
+
+- `m4-16-review-airborne-rotation-jump` overlays frames 1681–1695 with
+  `[left,b,r]`. Both original runs were identical and completed: player/opponent
+  finishes were 6483/6488, result loading was 6724, first visible result was
+  6832 and the fully visible result boundary was 6838. Its frozen 632-byte
+  contract has rows SHA-256 `71392af5...`. Exact candidate comparison passed all
+  6,225 states from 1376 through 7600, 480 fresh-process restore points,
+  a second clean native initialization, and the full restarted race.
+- `m4-16-review-mid-race-brake-before-reversal` overlays frames 3388–3403 with
+  `[left,y]`. Two original runs were deterministic, but it did not qualify at
+  7600. Two further original-only runs through frame 10000 show a route failure,
+  rather than a delayed finish: the opponent finishes at 6488 while the player
+  remains at two laps remaining, checkpoint 2, next checkpoint 3, with no finish
+  through 10000. The freeze correctly rejects `case must finish both riders`.
+  The case and captures are retained as preregistered evidence and were never
+  evaluated on native code.
+- Following the preregistered replacement rule, I chose
+  `m4-16-review-short-mid-race-brake-before-reversal` before native evaluation.
+  It retains the material left-plus-Y moving brake at the same lap-two boundary
+  but limits it to frames 3388–3395. The two original runs were identical and
+  completed at 6481/6488, loaded at 6722, and reached the fully visible result
+  boundary at 6836. Its frozen rows SHA-256 is `78bc9241...`. Exact candidate
+  comparison passed all 6,225 updates, 476 restore points, repeated clean
+  initialization, and the complete restarted race.
+
+### State, result and source assessment
+
+The URZZ0008 corrections resolve the review's state findings. The authored
+cross-phase mutation now rejects, and focused exact-result mutations of graph
+minimum, published total, either charge flag, queue cursors, cooldown, reward
+weight, hint enable/tick/group and empty-display flag all exited 1 with the
+appropriate publication, charge or announcement-state error. The independent
+case comparisons also restore from initialization, racing, finish, loading,
+fully visible result and final state, then restart from the final serialized
+state in a fresh process and compare the entire new race with clean native
+initialization.
+
+The result abstraction is defensible for the declared fresh-scenario product
+flow. Before loading, 622 bytes are original projections. After loading, those
+bytes are explicitly the final-race archive, while eight result publication
+bytes remain independently projected from original SRAM and the last two bytes
+are a semantic loading clock. Rendering consumes the archived lap slots and the
+eight publications; the only next action replaces the whole state through the
+shared clean restart. This does not claim equivalence to overwritten original
+result WRAM or original tour progression. `stable_result` in reports denotes the
+fully visible boundary; original result animation continues changing afterward.
+
+The source audit is adequate for the reached event-one producer. The read-only
+`trick-long-audit` authenticates 6,394 whole-WRAM frames and its focused
+1718–1785 instruction/access capture reports zero unresolved store PCs. The
+implemented queue, hint, cooldown and boost paths cite the reached producers at
+`$81C598-C5C8`, `$81BEA8-BEF1`, `$81C0CE-C18A`, `$81C02A-C054` and
+`$83CDBC-CE43`. This evidence does not establish general multi-event rotations;
+the implementation correctly keeps unrecovered reward classes outside its
+claim.
+
+### Presentation and acceptance finding
+
+The current race scene is readable and materially improved from the initial
+candidate. At frame 3208 the native renderer places the same checker line,
+curved green/blue/yellow track, tiled background and both riders in the current
+camera scene as the original capture. Live rendering now follows DRAGSTER's
+recovered-pair/last-recovered-pair policy and resets that cache on restart, so
+its art fallback is no worse than the accepted DRAGSTER design. The headless
+renderer's fixed pair is only its fallback when no live art pair is supplied.
+
+**Acceptance blocker:** candidate `4f8aaad` is still not an acceptable M4-16
+product completion. The tracked visual contract itself remains marked pending;
+the native result is an authored legible layout rather than the original result
+art; required both-outcome screenshots and representative visual checks are not
+present. More decisively, there is no visible actual-app complete race through
+result and restart, nor the required independent live-control exercise. The app
+still throws on A/X/Up/Down/Select/Start during racing, and the task has not
+shown that those guarded controls are outside ordinary supported play. Headless
+byte equality and scripted restart cannot substitute for acceptance items 5 and
+6. Keep this candidate unaccepted until the primary supplies the live and visual
+evidence and either recovers those ordinary controls or narrows them with
+source-backed evidence.
+
+### Focused commands and results
+
+- `tools/project.py build --preset app-debug --report
+  artifacts/m4-16-review/candidate-4f8aaad-build.json`: passed on the exact
+  candidate; runner SHA-256 `ffde80ce...`, pack SHA-256 `5bd961f6...`.
+- Four original-only 7600-horizon captures plus two 10000-horizon extensions
+  used `tools.unirally_lab.native.zoom_zoo_playable_reference capture --case`.
+  Each repeated pair was identical.
+- `tools.unirally_lab.native.zoom_zoo_playable freeze` rejected the long brake
+  case at both horizons and froze the two completing cases before native use.
+- `tools.unirally_lab.native.zoom_zoo_playable compare` passed the airborne and
+  replacement brake contracts with 480 and 476 restore boundaries respectively,
+  including each complete fresh restart race.
+- `ctest --test-dir build/app-debug -R
+  'zoom_zoo_trial|zoom_zoo_runner|presentation_contract' --output-on-failure`:
+  the selected `zoom_zoo_trial_width_state_and_guards` test passed; no other test
+  name matched the expression.
+
+### Disposition
+
+The state, result, restart, producer-closure and deterministic independent-case
+corrections pass this review. Do not accept M4-16 at `4f8aaad`: the required live
+full-race/result/restart review and final visual evidence are still absent, and
+ordinary guarded controls remain unresolved as a product boundary.

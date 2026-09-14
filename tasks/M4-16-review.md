@@ -776,3 +776,109 @@ or standalone-restart defect in the fixed scenario. Native parity for the
 primary's separate event-18 compound case remains implementation and frozen
 differential work. M4-16 remains unaccepted; source closure, visuals, live
 complete play and the other recorded capability gaps remain open.
+
+## Candidate `239ae836` landing, restore and pause re-review
+
+This bounded pass reviewed exact candidate
+`239ae83642409bc6613c9c64f01c44ce5e729a76`. It preserves the independent
+early compound case frozen before native evaluation and does not accept
+M4-16.
+
+### Severity findings
+
+1. **High: the generic opponent reward producer exceeds the recovered native
+   consumer domain.** `update_zoom_landing_rewards` submits opponent landing
+   events 1 through 21 to `enqueue_zoom_opponent`, but
+   `update_reward_queue` still implements a non-leading reward only for event
+   1. Original `$81C219-C2C9` has the corresponding opponent learned-weight,
+   feature-total, weight-halving and full vertical-boost path. The serialized
+   second learned-weight bank is otherwise unused by queue consumption.
+
+   A seed derived from authentic reviewer frame 1718 had opponent queue
+   `read=1`, `write=2`, cooldown 8. Setting only entry 2 to event 2 and the
+   write cursor to 3 is accepted and emitted, then fails at frame 1722 with
+   `reward queue left the recovered event-one domain`. The same intervention
+   with event 1 continues successfully. This is a future-state recovery gap,
+   rather than proof of a malformed producer: the new generic landing routine
+   can produce event 2 for the opponent. A requested artificial original-only
+   event-2 probe was stopped before launch when the coordinator requested a
+   bounded handoff; it is not claimed as evidence here.
+
+2. **Resolved build blocker:** exact predecessor `db89d586` did not build the
+   visible app with the configured warnings-as-errors flags. Local
+   `previous_frame` at `src/app/sdl_main.cpp:384` shadowed the rendering-frame
+   cache at line 314 (`-Wshadow`). Candidate `239ae836` renames the local,
+   builds the complete app target, and records that the earlier chained command
+   masked the app failure. This review found no remaining build error.
+
+The new high-event restore constraints behave as intended. A player queue
+byte 100 now rejects before output with `invalid ZOOM ZOO player voice event`;
+an opponent queue byte 199 rejects with `invalid ZOOM ZOO opponent voice
+event`. Voice-source ranges 72-87 for MIKE and 200-215 for BRONSEN remain
+consistent with `$829D3A-D6F`. Low opponent reward events cannot be classified
+as malformed until the reached consumer domain above is implemented or
+excluded with original evidence.
+
+### Independent complete case
+
+`m4-16-review-early-compound-reverse` adds X+R at frames 1681-1720. Its two
+pre-native original runs are identical: player/opponent finish 6483/6488,
+loading 6724, first visible result 6832, stable result 6838, player win. The
+frozen rows SHA-256 is
+`3113fa666d37944c965e62aac3925504ecc844a1fdf4082e5d9f6985ff62efd1`.
+Exact candidate `239ae836` passes all 6,225 observations, all 742 serialized
+bytes, 739 fresh-process restores, repeated clean initialization and the full
+fresh restarted race. Runner SHA-256 is
+`00fe978961d8f693be1e6104653ec8ab840773b00c255f9a96ac6294394df0f7`;
+pack SHA-256 is
+`b9c5f0ea3dec6a6458d53ec682128cefbde172c82ca4f1ee27ea5b2b6d852647`.
+
+### Pause/restart and presentation assessment
+
+The authored `RESUME` / `RESTART RACE` pause menu is compatible with the
+fixed standalone-race scope. Original Down/Start Retire enters excluded tour
+progression; the native label and comment explicitly avoid an emulation claim.
+The core replaces the whole state with the shared fresh initializer, and the
+app detects the lower simulation frame, clears keyboard/gamepad masks and
+resets retained presentation art. This prevents the held event state from
+immediately pausing the replacement race. Core tests prove both direct paused
+restart and Start-selected paused restart serialize exactly as a clean fresh
+initializer. Actual keyboard/gamepad live restart remains necessary product
+evidence.
+
+The representative comparison image
+`artifacts/m4-16/visual-7c3e3b6/comparison.png` is readable but not a live or
+pixel-fidelity approval. Native omits the original large direction arrow and
+pink `MORE STUNTS` coaching cue in the early race; rider scale/anchors differ
+by roughly 8-14 pixels in representative lap-line scenes. The authored result
+communicates winner, totals, best lap and graph, but its small colored graph
+points have lower salience than the original rider-icon graph. These are
+concrete presentation limitations, while the current track/camera/HUD and
+result text remain usable in the captured frames.
+
+### Commands and disposition
+
+- `cmake --build build/app-debug -j4`: passed for `239ae836`; the same command
+  failed for `db89d586` at the shadowed local above.
+- `ctest --test-dir build/app-debug -R
+  'zoom_zoo_trial_width_state_and_guards|classic_content_pack_identity_rejection|frontend_contract'
+  --output-on-failure`: 2/2 selected tests passed (the regex selected the two
+  named core/content tests; the app itself was covered by the full build).
+- `python3 -m tools.unirally_lab.native.zoom_zoo_playable compare --reference
+  artifacts/m4-16-review/early-compound-reverse-a --repeat
+  artifacts/m4-16-review/early-compound-reverse-b --contract
+  artifacts/m4-16-review/rereview-inputs/zoom-zoo-playable-review-early-compound-reverse-v11.freeze.json
+  --binary build/app-debug/src/core/zoom_zoo_runner --pack
+  local/classic-crawler-two-tracks-v5-review.pack --out
+  artifacts/m4-16-review/early-compound-reverse-239ae83-compare.json`: passed,
+  6,225 observations and 739 restores.
+- Direct `zoom_zoo_runner --seed ... --content-pack ... --inputs ...`
+  mutations are preserved under
+  `artifacts/m4-16-review/voice-mutation-239ae83/`.
+
+M4-16 remains unaccepted. The opponent learned reward consumer is a concrete
+gameplay/future-state omission. The recorded incomplete long-control cases and
+the primary's later bounce work are recovery evidence only. A complete visible
+live race with ordinary controls, pause/restart and result restart is still
+required, together with final candidate gates and independent acceptance
+review.

@@ -3,12 +3,16 @@
 Updated 14 September 2026: M4-15 is accepted at `8bc2e71`; private main ref and
 exact-tip macOS/Linux CI `34785933369` verified during M4-16 preparation.
 M4-16 is in progress and unaccepted in `.worktrees/m4-16-playable-zoom-zoo`.
-Candidate9f7f3b4 matches730-byte primary/held-X start-to-result states, fresh
-restores and restart; debug/sanitize each405 checks pass. Native initialization,
-49-entry pack, frontend/result and held-roll recovery remain provisional until
-ordinary controls, live/visual and remaining acceptance gates close. See
-[R-0035](research/R-0035-zoom-zoo-playable-recovery.md) and
-[NEXT_SESSION](../tasks/NEXT_SESSION.md); no M4-17 dispatch.
+Latest behaviorca46025 uses experimental742-byte state and50-entry v5 pack.
+Debug/sanitizer builds and focused tests pass; five complete diagnostic cases
+match6225 states. Independent239ae83 compound case passed739 restores/restart,
+but latest bounce changes still require re-review. Generic opponent trick reward
+consumption is an open high-priority finding. The user requested a committed
+handover near94% weekly usage; no automatic continuation. Live/visual, clean
+bootstrap and final regression/integration gates remain incomplete. See
+[R-0035](research/R-0035-zoom-zoo-playable-recovery.md),
+[review](../tasks/M4-16-review.md) and [NEXT_SESSION](../tasks/NEXT_SESSION.md).
+No M4-17 dispatch or M4 milestone tag.
 
 ## Accepted product and evidence
 

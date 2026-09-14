@@ -18,12 +18,11 @@ with static content and controllers only. Primary input is inherited from the
 M4-15 manifest through6724, then neutral. Experimental overlays are retained in
 tracked `tests/manifests/native/zoom-zoo-playable-*.case.json` and freeze files.
 
-`URZZ000A` is730 bytes: historical565 race bytes, fade/start boost/result clock,
-eight separately projected original result publication bytes, charge latches,
-player announcement/tutorial state, twelve roll words per rider, and25 additional
-learned reward weights per rider. Historical accepted URZZ0001/2/3 remain readable;
-unaccepted V4–V9 experiments are preserved as evidence, not compatibility promises.
-Frame1376–7600 comprises6225 observations and6224 updates.
+Current experimental `URZZ000B` is742 bytes: the prior730-byte inventory plus
+four original pause bytes and eight semantic suspended-update clock bytes.
+Historical accepted URZZ0001/2/3 remain readable; unaccepted intermediate formats
+are retained as evidence, not compatibility promises. Packv5 has50 static entries,
+including the625-byte combination table frozen before native tuning.
 
 ## Recovered producers and decisions
 
@@ -63,7 +62,7 @@ WRAM frames. Access reports retain residual reads and original hashes.
 From the task checkout, repeat the immutable primary candidate gate:
 
 ```sh
-python3 -m tools.unirally_lab.native.zoom_zoo_playable compare --reference artifacts/m4-16/boundary-a --repeat artifacts/m4-16/boundary-b --contract tests/manifests/native/zoom-zoo-playable-primary-v10.freeze.json --binary build/app-debug/src/core/zoom_zoo_runner --pack local/classic-crawler-two-tracks-v4.pack --out artifacts/m4-16/FRESH-primary-v10.json
+python3 -m tools.unirally_lab.native.zoom_zoo_playable compare --reference artifacts/m4-16/boundary-a --repeat artifacts/m4-16/boundary-b --contract tests/manifests/native/zoom-zoo-playable-primary-v11.freeze.json --binary build/app-debug/src/core/zoom_zoo_runner --pack local/classic-crawler-two-tracks-v5.pack --out artifacts/m4-16/FRESH-primary-v11.json
 ```
 
 Use fresh output names and a clean source/binary for the entire gate. Original
@@ -114,3 +113,36 @@ paths are intentionally not overwritten and will be rejected by current code.
 The landing-matrix extraction helper is tied to the audited macOS core identity;
 clean Linux private extraction has not been established. Hosted synthetic CI
 cannot substitute for it. M4 remains incomplete; no milestone tag is due.
+
+## Latest user-requested handover
+
+Latest behaviorca4602597960426629ad743f92f788e84c01a175 recovers the frozen
+late-roll bounce: `$829636-9711` retains charge160, applies wrapped complement
+bounce velocity, and shares ordinary completion/landing ordering. Late-roll
+originals finish6468/6488, stable6823; all742 bytes match6225 native observations.
+`late-roll-audit` authenticates6394 WRAM frames; residual3835 reads/zero stores
+remain explicitly reported. Full latest restores and independent bounce review
+are still due. Focused debug/sanitizer builds/tests and five complete diagnostic
+cases pass; see NEXT_SESSION for exact evidence and known failed invocations.
+
+Additional recovered source boundaries: NMI `$808642-865B` delays controller
+publication through prior fade4; `$818721-875B` skips horizontal boost under
+leading support; `$8191F4-920C` clears leading support on auxiliary boundary return.
+Constant-direction/long-roll diagnostics match but do not finish and never count
+as playable acceptance. The wrong-way counter179 intervention is an explicitly
+artificial mechanics experiment, frozen inb83d7f3, separate from native-start gates.
+
+Independent landing/persistent reviews are integrated; the durable
+[persistent-input ledger](M4-16-persistent-input-ledger.md) distinguishes fresh
+scenario defaults, current-race result inputs, presentation-only loads and
+excluded tour continuity. The generic opponent landing producer now exposes a
+missing non-event1 reward consumer, a high-priority open finding. Do not reject
+legitimate low events to mask it. Next source experiment is `$81C219-C2C9` learned
+weights and full vertical reward for the opponent; no artificial original event2
+probe was started before the user's handover request.
+
+Standalone pause Down/Start is explicitly labelled RESTART RACE and uses shared
+fresh initialization, not original Retire/tour emulation. Both input/art reset
+paths are implemented; actual live evidence remains due. The earlier producer
+table/gap lists above describe historical recovery boundaries where superseded
+by this checkpoint. M4-16 remains unaccepted.

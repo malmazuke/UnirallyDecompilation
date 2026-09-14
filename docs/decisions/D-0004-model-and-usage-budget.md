@@ -12,6 +12,11 @@ This overrides the M4-16 percentage limits below; it does not authorize credit
 redemption, purchases, paid fallback or a provider change. Actual tool/account
 unavailability remains a resource limitation, not an invented percentage cutoff.
 
+The user subsequently requested committing a handover because usage was nearly
+exhausted (latest sample94%). Stop this run after recovery/synchronization; the
+prior continuation override does not imply automatic continuation past that
+new request. Preserve the no-spending/reset/provider-change boundary.
+
 ## M4-16 playable-track extension
 
 The user authorized preparation of [M4-16](../../tasks/M4-16.md) after M4-15.

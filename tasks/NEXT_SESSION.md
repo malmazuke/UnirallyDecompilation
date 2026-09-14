@@ -1,96 +1,137 @@
 # Next session — resume incomplete M4-16
 
-**M4-16 is in progress and unaccepted. Do not start a replacement task.**
-Work in `.worktrees/m4-16-playable-zoom-zoo` on
-`codex/m4-16-playable-zoom-zoo`, dispatched from synchronized
-`ede4c0b3b17269cd6984b21765efd98f11fe1085`. Main retains accepted M4-15 gameplay.
-Read [M4-16](M4-16.md), [STATE](../docs/STATE.md), AGENTS, AGENT_WORKFLOW,
-D-0004/D-0006 and [R-0035](../docs/research/R-0035-zoom-zoo-playable-recovery.md).
-Resume the existing checkout; `git status`, `git log -5` and the ignored recovery
-record identify its actual tip. Do not overwrite private fixtures or old packs.
+**M4-16 is incomplete and unaccepted.** The user requested a committed handover
+because usage was nearly exhausted. This is a user-requested pause, not task
+acceptance; do not continue automatically or dispatch M4-17.
 
-## Active continuation override
+## Resume location and identity
 
-The user resumed M4-16 with “You can ignore usage boundaries. Continue”.
-Percentage stop/reserve rules in the historical checkpoint below are superseded
-for this execution; continue until acceptance or actual unavailable prerequisites.
-No reset/purchase/provider change is authorized. Resumed from debb2729a629e4e5b90096042b7c8fc6c6e73a96.
+Use `.worktrees/m4-16-playable-zoom-zoo`, branch
+`codex/m4-16-playable-zoom-zoo`, not main for implementation. Main retains accepted
+M4-15 gameplay and a documentation pointer. Latest behavior commit:
+`ca4602597960426629ad743f92f788e84c01a175`. Later review/handover commits do not
+change that behavior; inspect actual `git status`/`git log` before resuming.
+Independent review `d8ec276db17640054831062e04b8e6d9f7f041c7` is integrated as
+`60a1544`. Read [M4-16](M4-16.md), [review](M4-16-review.md),
+[STATE](../docs/STATE.md), AGENTS, AGENT_WORKFLOW, D-0004/D-0006 and
+[R-0035](../docs/research/R-0035-zoom-zoo-playable-recovery.md).
 
-## Historical resource and review boundary
+Ignored `artifacts/m4-16/handover-closeout-2026-09-14.json` records final task/main
+SHAs, remote verification, CI, commands, hashes and resource measurements. If
+absent, recover refs with `git log`, `git ls-remote origin`, and `gh run list`.
+The older `recovery-closeout.json` describes the previous 82% checkpoint only.
 
-Session started2026-09-13 22:55:27 UTC, OpenAI Astra/medium, weekly57% used.
-Latest sampling and the stopping reason are recorded in `recovery-closeout.json`
-under ignored `artifacts/m4-16` in the task checkout. Preserve final20% weekly
-review/recovery reserve. At80% used stop scope expansion; below20% remaining
-perform recovery only until allowance is restored. No reset, purchase or provider
-switch is authorized. No M4-17 or M4 milestone acceptance.
+Primary is OpenAI Astra/medium; reviewer is Sol/medium in separate checkout
+`.worktrees/m4-16-review`. Preserve independent review and isolated ownership.
+Starting weekly usage was57%; the latest handover sample is94% used. The user
+previously overrode percentage limits to continue, then explicitly requested
+this handover. No reset, credit purchase, paid fallback or provider switch is
+authorized. Sample fresh usage on a user-requested resumption.
 
-Fresh independent Sol/medium reviewer owns `.worktrees/m4-16-review`.
-Review history and exact candidate results are in [M4-16-review](M4-16-review.md).
-Code9f7f3b4 implements experimental V10/730-byte native start-to-result state,
-49-entry static pack and held-roll feedback. This is not a playable acceptance.
-Follow-up commits contain review/corrections and recovery docs; inspect them.
+## Current implementation and evidence
 
-## Evidence and commands
+Experimental state is **URZZ000B / 742 bytes**. Historical accepted URZZ0001/2/3
+remain readable. Current static pack is **v5 / 50 entries**:
+`local/classic-crawler-two-tracks-v5.pack`. Do not overwrite frozen v2/v3/v4 packs.
+The old default `local/classic-crawler-two-tracks.pack` is incompatible v2.
+Private ROM locator: `local/rom-location.txt`; audited core:
+`local/emulators/bsnes/bsnes/out/bsnes_libretro.dylib`. Identities are in R-0035.
 
-Private ROM locator `local/rom-location.txt`; core
-`local/emulators/bsnes/bsnes/out/bsnes_libretro.dylib`. Identities in R-0035.
-Current pack: `local/classic-crawler-two-tracks-v5.pack`. Older default
-`local/classic-crawler-two-tracks.pack` is a frozen incompatible v2 experiment.
-Do not overwrite it. Warm first-extraction and pack-only launch reports are in
-`artifacts/m4-16/launch-9f7f3b4`; these do not prove clean bootstrap or live play.
+Native fresh initialization, countdown, ordinary reflection/roll/held-roll,
+player rewards and combination voices, pause/resume, result and fresh restart
+are implemented in the experimental branch. Latest bounce recovery reaches
+charge160 at5345 and completes6468/6488, stable6823; its original pair was frozen
+before tuning in57f1b27. Native diagnostic matches every742-byte state across
+6225 observations. Full app-debug and app-sanitize builds plus focused
+`tests/native/zoom_zoo_trial_tests` pass at the latest behavior. Five final
+complete-case diagnostics (primary, loss, late bounce, held X, shifted countdown
+pause) also match6225 states; logs are `artifacts/m4-16/handover-diagnostics-retry`.
+These are not full latest restore gates or playable acceptance.
 
-Prototype launch from this checkout, after a matching build:
+Full gates on earlier immutable candidates:
+
+- 7c3e3b6 compound X+R:742 bytes,6225 observations,751 fresh-process restores,
+  repeat initialization and full restart (`compound-reverse-v11-full-7c3e3b6.json`).
+- Independent239ae83 early compound X+R:742 bytes,6225 observations,739 restores,
+  repeat initialization/full restart. Exact full app-debug build and focused
+  tests pass. See review report and reviewer-owned ignored artifacts.
+- Older broad debug/sanitize each405 no skips at9f7f3b4, and all28 historical
+  M4-12–14 commands plus DRAGSTER gates at4f8aaad are historical evidence only.
+  Latest full historical M4-15 and final merge/CI matrices remain due.
+
+A chained build/test invocation masked an app -Wshadow failure atdb89d58. Review
+caught it;239ae83 fixed the name, and explicit checked full builds pass. Always
+check each command's return code. An initial handover diagnostic omitted
+PYTHONPATH and failed import; the separately preserved retry passes. No failed
+invocation is counted as passing.
+
+## First recovery experiment
+
+**Open high-priority review finding: generic opponent reward consumption.**
+`update_zoom_landing_rewards` can queue events1–21 for the opponent, but legacy
+`update_reward_queue` only consumes event1 or class255. An authentic-derived
+pending event2 restore is accepted and then aborts at1722. Player100/opponent199
+forged voice events now reject correctly; do not reject legitimate low trick
+producers merely to hide the missing consumer.
+
+Recover `$81C219-C2C9`: opponent uses `learned_weights[1]`, feature total,
+weight halving with minimum1, horizontal reward and **full** vertical reward
+(player uses half). Voice events>=72 bypass scoring; valid fixed producer ranges
+are player72–87/opponent200–215. Plan a clearly labelled artificial original-only
+queued-event2 probe twice before tuning, following the counter probe pattern;
+reviewer did **not** start that probe after the user's stop request. This is an
+internal mechanics experiment, never a seed-based playable acceptance fallback.
+Then independently re-review the new consumer and latest bounce restore domain.
+
+`zoom_zoo_wrong_way_probe` is an explicitly artificial original counter179
+intervention at1997: both originals return120 and queue22. Its native one-update
+742-byte check passes. Constant-direction and long-roll cases never finish by
+7600; their inventories are labelled non-acceptance even though diagnostics match.
+
+## Remaining product and acceptance work
+
+1. Resolve opponent consumer and any further ordinary reached guards, then freeze
+   an immutable candidate for fresh independent complete variations and restores.
+   Latest bounce source/restore change has not had independent final review.
+2. Finish result-loading/read classification against the durable
+   [persistent-input ledger](../docs/research/M4-16-persistent-input-ledger.md).
+   Zero unresolved stores is not zero unresolved reads. Fresh standalone restart
+   intentionally discards tour progression/persistent best-record carryover.
+3. Complete representative visual comparison and independent readability checks.
+   Original scene identities are frozen in
+   `tests/manifests/presentation/zoom-zoo-playable-v2.json`; private originals are
+   `visual-original-a/b`, comparison `visual-7c3e3b6/comparison.png`. Extra original
+   captures use the ignored `capture-visual-scenes.py`; authenticate ROM/core,
+   timeline, whole memories and repeat PNG hashes when recreating.
+4. Actual visible live controls through a complete race/result/restart, focus-loss
+   clearing and independent reviewer live exercise remain missing. Gamepad hardware
+   is untested. No fixed-mask/replay/terminal demonstration substitutes for this.
+5. Clean isolated bootstrap/extraction, pack-only denied-ROM/reference/repository
+   execution, negative controls, latest complete DRAGSTER/M4-12–15 regressions,
+   debug/sanitizer, reviewed exact integration and hosted CI remain required.
+   Do not merge experimental gameplay or create a milestone tag before acceptance.
+
+The authored pause menu is RESUME / RESTART RACE. Down/Start deliberately invokes
+shared fresh initialization; original Retire/tour flow is excluded, not emulated.
+Input and retained art clear on restart. Resume remains original-comparable.
+Core restart equality is tested; actual live paused restart still needs evidence.
+
+## Launch and tool access
+
+From the task checkout after a successful current build:
 
 ```sh
 python3 tools/project.py frontend run --track zoom-zoo --pack local/classic-crawler-two-tracks-v5.pack --preset app-debug --report artifacts/m4-16/FRESH-live.json
 ```
 
-For a new pack, pass the supported ROM with `--rom` and a fresh `--pack` path.
-The standalone `content pack` command still targets accepted DRAGSTER rules.
-Current frontend exposes keyboard controls and Enter Race Again after stable
-result. Start and other remaining native guards can abort ordinary play; do not
-present this as a tested usable release. No automated fixed input is live proof.
+For first extraction, add `--rom` with the private locator's ROM and a fresh pack
+path. This remains a prototype with the open opponent reward bug.
 
-At code9f7f3b4 debug and sanitizer each405 synthetic checks pass with no skips.
-Primary V10 gate, reviewer held-X restore and launch results are recorded in the
-final checkpoint below. Earlier clean4f8aaad passed primary V8/479 restores and
-28 historical M4-12–14 commands; independent edec610 X V9/1782 restores passed.
-These older results do not replace latest candidate/merge evidence.
-
-## Resume order
-
-1. Read fresh quota and review findings. Finish any outstanding review fixes
-   under frozen original comparisons. Never tune after a gate starts.
-2. Recover ordinary Start, bounce/compound rewards and wrong-direction boundary
-   as internal M4-16 experiments. Expand original state/producer inventory before
-   native tuning; preserve the original-only freeze ordering.
-3. Complete initialization/result/restart producer closure. Standalone Race Again
-   resets a fresh scenario; original result Start advances to STUNT and is not
-   the same restart. The re-press-X case never finishes by7600 and cannot count
-   as an acceptance case.
-4. Complete frozen representative visual checks and actual live full race,
-   stable result, restart, focus loss and independent reviewer live exercise.
-5. Clean isolated bootstrap/extraction, denied ROM/reference/repository execution,
-   wrong/incomplete-pack checks, full latest M4-12–15 and DRAGSTER regressions,
-   fresh untuned cases/outcomes, independent review, exact merged checks and CI.
-   Only accepted integration is pushed to main; verify exact remote refs/CI.
-
-Desktop built-in CUA key taps yielded no nonzero50Hz input updates. A private
-PID-restricted helper at `artifacts/m4-16/live-key.swift` is compiled but unused.
-An explicit CGEvent permission request is pending because the desktop tool
-prohibits this fallback without authorization. Check current conversation for
-an actual answer; never infer it. The helper is not a replay/autopilot and only
-posts one actual key transition to the validated Unirally PID. Gamepad untested.
-
-## Frozen candidate checkpoint
-
-Code9f7f3b46c7d49916bc3dc96547979cd6b10874ae: primary730 bytes6225 observations,757 restores and full fresh restart passed (`artifacts/m4-16/primary-start-result-v10.json`). Independent held-X gate passed6225 observations,768 restores and full restart with independently rebuilt matching pack. Debug/sanitize each405 passed, no skipped tests. Both sides used immutable candidate sources. V9 review actual commit d0c2c785c471f3696aacb33760ddb5716d57f790 is integrated as a7070ac; its initially reported expanded SHA was erroneous and recovered from the review checkout reflog.
-
-Warm fresh extraction and pack-only hidden20-update launches pass. Wrong-ROM and truncated-pack commands exit3 with explicit identity/truncated-entry errors and do not replace the invalid pack. No new live/visual/clean-bootstrap/full historical matrix/merge/CI acceptance claim.
-
-## Final review correction checkpoint
-
-Behavior candidate fe02cd86d3a7fb0d16ccae89876328812d1a1594 passes primary730/6225/757 restores/full restart (`primary-start-result-v10-corrected.json`) and independent held-X730/6225/768 restores/full restart. Focused debug/sanitizer tests pass. Sol review438b3aef10f0f6f56639a7d2f43593194bf60c70, integrated415e460, closes the reported pose/held-counter restore findings; retained-rotation6/7 is valid, impossible7/6 rejects. The subsequent source edit corrects only a provenance comment to `$8295D5-95F6`; no behavior changed after the tested candidate.
-
-New implementation stopped at80% weekly usage. Review/fix/recovery reached81% in the latest sample; final measurement is in `artifacts/m4-16/recovery-closeout.json`. Main documentation pointer7c62de5d6d2957b12096d6e6b9730f7d086ec036 was independently reviewed and its private remote ref verified. CI34795065815 and final task-branch backup refs are recorded in the closeout after verification. No gameplay acceptance, no milestone tag, no automatic continuation into reserve-funded feature work.
+Built-in CUA taps produced no sustained50Hz input in earlier live attempts.
+A PID-restricted CGEvent helper (`artifacts/m4-16/live-key.swift`, compiled
+`live-key`) is prepared but has **never been executed**. The desktop tool requires
+explicit permission for this fallback; the question remains unanswered. The
+usage override did not authorize CGEvent. Check for an actual subsequent answer
+before using it. CUA documentation must be refreshed after compaction; Orca
+runtime was unavailable in prior attempts. Do not ask again for routine git,
+local tests or task-scoped source synchronization already authorized by AGENTS.

@@ -882,3 +882,646 @@ the primary's later bounce work are recovery evidence only. A complete visible
 live race with ordinary controls, pause/restart and result restart is still
 required, together with final candidate gates and independent acceptance
 review.
+
+## Candidate `aeb62e0` opponent reward consumer review — 14 September 2026
+
+**Reviewing model: Claude Opus 5** (effort high), a fresh subagent with no
+inherited conversation, in the isolated detached checkout
+`.worktrees/m4-16-review`. This task's earlier reviews were Sol/medium; the
+provider changed by user instruction (recorded in D-0004 and `tasks/M4-16.md`),
+so this record names the actual reviewing model as D-0006 requires.
+
+Exact candidate: `aeb62e07a9f1750453d9c6cd8bcb2715a52aed6a` on
+`codex/m4-16-playable-zoom-zoo`. Range reviewed `9f4c423..aeb62e0`
+(`fbc9cae` documentation, `aeb62e0` implementation). Source was kept immutable
+throughout; the complete-case diagnostic re-verified `source_commit`
+`aeb62e0`, an empty working diff and unchanged binary/pack at the end of its
+own run. This pass also re-reviews the bounce/late-roll restore domain of
+`ca46025`, which had had no independent review. It does not accept M4-16.
+
+Reviewer inputs: ROM SHA-256
+`a1105819d48c04d680c8292bbfa9abbce05224f1bc231afd66af43b7e0a1fd4e`; core
+`e59bf88d4fc922c9fe3b5438e65ff3a6909d24e1628f0f87141c8de17699a91b`; pack
+`local/classic-crawler-two-tracks-v5-review.pack`
+(`b9c5f0ea3dec6a6458d53ec682128cefbde172c82ca4f1ee27ea5b2b6d852647`);
+reviewer build `build/app-debug`, runner
+`f09dfdb47597f094274446ec4bc6196ed3f744ca7eb94aa1db3fdba3cf2b02e8`.
+Disclosed honestly: `local/emulators` in this checkout is a symlink to the
+shared repository-root emulator directory, so the core bytes are the same
+audited `bsnes_libretro.dylib` the primary uses, gated by the SHA above rather
+than by an independently built binary. The disassembly below is the reviewer's
+own, from a mode-tracking 65816 decoder written for this pass over
+`tools/unirally_lab/coverage/opcodes.py`; no primary artifact was used as
+evidence.
+
+### Verdict: reject with findings
+
+The recovery itself is correct and I reproduced its central claim
+independently. Four findings must be fixed before acceptance; three of them are
+a few lines. Nothing here disputes that `$81C219-C2C9` is now modelled.
+
+### Severity findings
+
+1. **Required correction — the source fact justifying the new 200-215 branch
+   is false, and the C++ implements a test the original does not.**
+   `src/core/movement.cpp:642-644` and `:1663-1666` (and the commit message)
+   state that `$81C238` "branches on a *signed* comparison with 72". It does
+   not. Disassembled from the routine's own `SEP #$30` at `$81C219`:
+
+   ```
+   $81C238: C9 48        CMP #$48
+   $81C23A: 30 03        BMI $81C23F
+   ```
+
+   `BMI` tests bit 7 of `(A - $48) mod 256`, so the reward path is taken for
+   `A` in `[$00,$47]` and `[$C8,$FF]` — 0-71 and 200-255. A signed
+   `int8_t < 72` test is taken for 0-71 and **128**-255. `movement.cpp:646`
+   implements `static_cast<std::int8_t>(event)<72`, so it diverges from the
+   original for events 128-199.
+
+   Refuted empirically, not only on paper. The reward path increments a
+   cartridge class counter at `$7707D5+((class*2)&$FF)` (`$81C24E-C258`) before
+   any weight test; the voice path at `$81C23C` jumps to `$C357` and touches
+   none of it. Using the same artificial original-only intervention shape as the
+   candidate's probe (identity-gated ROM/core, pre-intervention frames
+   1207-1717 hash-verified against `early-compound-reverse-a`), injecting one
+   opponent queue entry at frame 1718 and reading `$7707D5-$7708D4` at 1724:
+
+   | injected event | expected counter if reward path | observed change |
+   | --- | --- | --- |
+   | 100 (undisputed voice) | `$770807` | none |
+   | 150 (disputed) | `$7707F5` | **none** |
+   | 205 (undisputed reward) | `$770801` | `$770801` 0 to 1 |
+
+   Event 150 took the voice path. A signed comparison would have put it on the
+   reward path. Not reachable today — `deserialize_zoom_zoo` rejects opponent
+   entries >=72 outside 200-215 and the landing producer never emits 128-199 —
+   so this is not a live gameplay defect. It is a false recovered-source claim
+   stated three times as the load-bearing justification for the new branch,
+   which AGENTS.md specifically forbids, plus a latent divergence for anyone who
+   later widens the restore domain. Fix: `else if(event<72 || event>=200)` and
+   restate the comments as the N-flag test they are.
+
+2. **Required correction — the probe can report success without exercising the
+   recovered consumer, and nothing enforces the repeat the commit message
+   claims.** Reproduced:
+
+   ```
+   capture --event 21 --before-frame 1718 --through 1720   -> rc 0
+   native  --probe .../rev-probe-vacuity2                  -> "status": "passed", rc 0, 3 observations
+   ```
+
+   The injected entry is consumed at frame **1722**, outside that window, so
+   the run proves nothing about `$81C219-C2C9`, yet the tool and its exit code
+   report success. Nothing asserts that `read_cursor` ever reaches
+   `intervention.entry_index`, or that any reward field moved. Related gaps in
+   the same tool: `guards_tripped` is computed per frame, stored and never
+   allowed to fail a capture; and unlike `zoom_zoo_playable.freeze` there is no
+   subcommand that requires two independent captures to agree, so
+   "each is captured twice and the repeats are identical" is an unenforced
+   manual step. The probe is also self-certifying — its `rows_sha256` comes from
+   the same run it compares against, with no external frozen contract. Fix:
+   assert consumption inside the window, fail on a tripped guard, and add a
+   two-capture freeze step.
+
+3. **Required correction — the candidate removes the last constraint on the
+   opponent's `event_one_weight` and adds no deserialize guard, although the
+   player's identical field has one.** `deserialize_zoom_zoo` constrains
+   `player_announcements.queue.event_one_weight` to {1,2,4} and its cooldown to
+   <=120 (`movement.cpp:1600-1602`). `movement.rewards.event_one_weight` and
+   `.cooldown` have no domain guard anywhere; `deserialize_movement_state`
+   checks only the cursors. Until this candidate, `update_reward_queue` still
+   threw on `event_one_weight==0`; it now correctly skips, faithful to
+   `$81C260-C266`, leaving the field unconstrained. From the frozen 742-byte
+   probe seed with the published opponent entry set to event 1:
+
+   | mutation | result |
+   | --- | --- |
+   | weight 0 | accepted, no reward, feature total stays 4 |
+   | weight 3 | accepted, feature total 4 to 7, weight to 1 |
+   | weight 250 | accepted, feature total 4 to 254, weight to 125 |
+   | cooldown 60000 | accepted |
+
+   The bank is initialized from `$82D7A4`[0] = `$04` and halved with a floor of
+   one, so the opponent's event-one weight can only ever be 4, 2 or 1, and this
+   queue's own formula caps its cooldown at 40. Weights 3 and 250 were already
+   admitted before this candidate and the cooldown gap is pre-existing; what is
+   new is that the incidental zero-weight rejection is gone with nothing in its
+   place. Fix: mirror the player's guard on the opponent queue.
+
+4. **Required correction — the `ca46025` bounce restore domain admits states
+   the original gates out.** `bounce_charge in {0,160}` is applied to both
+   riders. Reproduced against the frozen 742-byte probe seed:
+
+   | mutation (offset) | result |
+   | --- | --- |
+   | rolls[1].bounce_charge = 160 (668) | accepted, diverges from baseline within 13 frames at opponent offsets 144-210 |
+   | rolls[0].bounce_charge = 160 (644), pose_override not `$9A8` | accepted, diverges within 13 frames |
+   | rolls[1].bounce_active = 1 (674) | accepted, alters the opponent queue by frame 1730 (offsets 291, 321, 322) |
+   | rolls[0].bounce_charge = 161 | rejected, `invalid ZOOM ZOO roll state` |
+   | rolls[0].bounce_active = 2 | rejected, `invalid ZOOM ZOO roll state` |
+
+   The original gates the charge on `$829641: LDA $0C6D / BEQ / LDA $0FF9 /
+   BNE $96C3` and identically at `$82965E-$829666`, so the opponent
+   (`$0FF9`==2) is excluded whenever `$0C6D` is non-zero. Measured over the
+   authenticated race window of `early-compound-reverse-a`: `$0C6D` is zero in
+   **0 of 5,348** frames 1376-6723 (it is zero only outside the race), so the
+   native's hard `index==0` is scenario-correct — and the opponent can never
+   carry a charge, yet the restore domain admits one. There is also no relation
+   between `bounce_charge==160` and the `pose_override==$9A8` that
+   `$829636-$829658` requires to set it. The guards that were added
+   (`!=0 && !=160`, `bounce_active>1`, `bounce_charge && step`) are correct and
+   do fire. Fix: restrict the charge to rider 0 and tie it to pose_override
+   `$9A8`.
+
+5. **Low — the cited justification for the out-of-table exit does not exist.**
+   `movement.cpp:657-660` says the overrun weight range `$7E21C9-$7E21D8` is
+   one "which the reference guard already holds at zero on every authenticated
+   frame". `tests/manifests/native/zoom-zoo-race-guards.reference.json` has 82
+   items whose highest address is `0x150B`; none covers `0x21C9-0x21D8`. The
+   substance is nevertheless true here: I scanned all 6,394 frames of
+   `early-compound-reverse-a` and `$7E21C9-$7E21D8` is zero in every one. But
+   nothing enforces it, so a future capture could break the assumption
+   silently. Fix: add the 16 bytes to the guard manifest, or restate the
+   justification as a measurement rather than a guard.
+
+6. **Low — the restore domain admits a published zero opponent queue entry
+   that the next update rejects, where the original consumes it without
+   incident.** The frozen probe seed with the published entry at offset 290 set
+   to 0 is accepted by `deserialize_zoom_zoo` and then fails at frame 1722 with
+   `reward queue holds no published event` (rc 1, 5 frames emitted). Given the
+   same intervention — advance `$0D13` over a zero `$0CEB` slot — the original
+   consumes it: read cursor 1 to 2, class byte `$81C609` = `$8D`, class counter
+   `$7707EF` 0 to 1, then the zero weight at `$7E2201` exits with no reward and
+   no error. Pre-existing in effect (the old code threw a different message),
+   but the candidate re-asserted the decision while now holding the evidence to
+   model the original. Same class as the earlier URZZ0005 finding.
+
+7. **Low — the initializer is content-driven while the restore guard is still
+   hard-coded.** `classic_crawler_zoom_zoo_start` now takes both banks'
+   event-one weight from `content.reward_weights[0]`, and the new unit test
+   exercises a pack with template[0] = 6, but `deserialize_zoom_zoo` still
+   hard-codes `q.event_one_weight in {1,2,4}` and `!=4` at frame 1376. With any
+   pack whose template[0] is not 4 a freshly started state could not be
+   restored. Informational for the frozen pack.
+
+8. **Low, process — the candidate records none of its claimed evidence.**
+   `git diff 9f4c423..aeb62e0 -- tasks/M4-16.md` contains only the provider-move
+   note from `fbc9cae`. The commit message asserts five probes captured twice,
+   six complete cases, 6225 observations, 757 restores, app-sanitize 405 checks
+   and six named regressions; `tasks/M4-16.md`, `tasks/NEXT_SESSION.md` and
+   `docs/STATE.md` carry none of it. AGENTS.md requires the handoff to carry the
+   actual commands and results.
+
+### What I verified as correct
+
+Stated plainly, because most of this candidate is right.
+
+- **Full versus half vertical boost — confirmed, and reproduced.**
+  `$81C165-C170` is `LDA $81C493,X / LSR / CLC / ADC $11DF / STA $11DF`;
+  `$81C2A5-C2AF` is `LDA $81C493,X / CLC / ADC $11E1 / STA $11E1`, with no
+  `LSR`. Injecting opponent event 21 before frame 1718 (consumed at 1722): the
+  original's opponent vertical boost goes 79 to **278** — that is 79, minus the
+  one-per-frame decay, plus the whole word `$00C8` = 200 — not 178. Horizontal
+  boost 80 to 280, feature total 4 to 36, learned weight index 19 (event 21)
+  32 to 16. The native matched all 742 bytes across all 43 frames.
+- **The probe is a genuine original-only minimal intervention.** It writes
+  exactly one entry byte and advances `$0D13` by one, refuses to overwrite a
+  pending entry or fill the ring, and asserts that exactly those two of 131,072
+  WRAM bytes changed. Its seed row is constructed slice-for-slice identically to
+  the frozen playable projection in `zoom_zoo_playable.original()` — I compared
+  both constructions field by field and the ordering, widths and the
+  `row[7]='B'` marker agree, so the native comparison is not comparing the wrong
+  thing. Pre-intervention frames 1207-1717 are hash-checked against the frozen
+  original on every run and did check out on all six of my captures.
+- **Determinism.** Two independent captures of event 21 produced identical
+  `seed_sha256` `0352ee1d...` and `rows_sha256` `6c35df23...`.
+- **The probe does discriminate the recovered behaviour.** Negative control: I
+  rewrote the expected rows to the halved vertical boost a copy of the player's
+  code would have produced, recomputed the report digest, and re-ran the
+  comparison. It failed at exactly frame 1722, offsets 181-182, native `$0116`
+  (278) against the mutated 178, rc 1.
+- **An event the implementer did not probe.** Events 2, 8, 13, 17 and 200 were
+  the candidate's. I ran **21** (real class `$1E`, weight 32, word `$00C8` —
+  the largest reward in the reachable set) and **215** (the top of the voice
+  range, which the candidate probed only at 200). Event 215 is consumed at 1722,
+  resets the cooldown to 40 and publishes nothing; native matched 28/28 frames.
+- **Branch structure against the real tables.** `$81C50A` is 72 entries:
+  events 1-12 and 16-21 carry a real class, 13-15 and 22-72 are `$FF`. Reward
+  words `$81C493` give event 1 = `$0080` up to event 21 = `$00C8`, with `$FFFF`
+  at 13, 14 and 22 onward. The candidate's class/weight/word branch structure
+  matches, and `learned_weights[event-2]` is exactly `$7E2102+(event-1)`.
+- **`$82DB87-DB94` justifies the content-driven event-one weight.**
+  `$82DB85: LDX #$19`, then `LDA $82D7A4,X / STA $7E20E8,X / STA $7E2102,X /
+  DEX / BPL` copies one 26-byte template into both banks; `$82D7A4`[0] = `$04`.
+  The initializer change is correct.
+- **The omitted cartridge class counters really are outside the inventory.**
+  The 742-byte projection's cartridge coverage is `0x755-0x76A`, `0x7BB-0x7BD`,
+  `0x7BF-0x7D4`, `0x825-0x826`, `0x618-0x61B` and `0x106F-0x1072`. The player's
+  counters begin at `0x76B`, immediately after the serialized `0x769-0x76A`
+  word, and the opponent's at `0x7D5`. I enumerated every class value reachable
+  for events 1-21 and every class byte in the 200-215 overrun and no resulting
+  counter address lands inside a serialized byte. The omission is defensible.
+- **Legacy DRAGSTER / M4-12-15 path unchanged.** The empty-span branch keeps
+  the identical `leading_event` computation and the identical throw condition;
+  the one changed expression, `content_word(rotation_reward, 2*(event-1))`,
+  evaluates to index 0 there because the surviving guard admits a weight only
+  when `event==1`, and `if(weight && *weight)` is implied by that guard's
+  `event_one_weight==0` rejection. No rejection was removed. `update_movement`
+  passes `{}`; `native_initialization` implies `complete_race`
+  (`movement.cpp:1542-1543`), so the 72-entry class table and 144-byte reward
+  table are always bound whenever the learned bank is passed.
+- **`ca46025` bounce arithmetic is faithful.** `$829655: LDA #$00A0` is the
+  literal retained 160; `$829675-C67D` stores the charge back unchanged below
+  512, a genuine no-op as commented; `$829685-C693` is `EOR #$FFFF` of
+  `min(charge,256)` into `$0FAB`; `$829696-C69C` stores literally 1 into
+  `$042B,Y`, so binary `bounce_active` is right; `$8296A1-C6A7` is
+  `CMP #$0002 / BPL` on `$0F33`. All match the native.
+- Also confirmed the restore domain still rejects the previously accepted
+  forged high entries: an opponent entry of 250 is refused at deserialization
+  with `invalid ZOOM ZOO opponent voice event`, which the probe surfaced as
+  "native did not start from the frozen probe seed".
+
+### Commands, return codes and counts
+
+Every command was run as its own invocation with its own return code inspected;
+build and test were never chained.
+
+| Command | rc | Result |
+| --- | --- | --- |
+| `cmake --build build/app-debug -j4` | 0 | 17 steps; `movement.cpp` recompiled, all 16 targets relinked including `src/app/unirally.app/Contents/MacOS/unirally`. `LAB_WARNINGS_AS_ERRORS=ON`, `LAB_SANITIZERS=OFF`, AppleClang 17.0.0 |
+| `cmake --build build/app-debug -j4` (repeat) | 0 | `ninja: no work to do` — nothing stale |
+| `ctest --test-dir build/app-debug --output-on-failure` | 0 | **21/21 passed, 0 failed**, 3.77 s |
+| `python3 -m tools.unirally_lab.native.zoom_zoo_playable compare --reference .../early-compound-reverse-a --repeat .../early-compound-reverse-b --contract .../zoom-zoo-playable-review-early-compound-reverse-v11.freeze.json --binary build/app-debug/src/core/zoom_zoo_runner --pack local/classic-crawler-two-tracks-v5-review.pack --out .../early-compound-reverse-aeb62e0-compare.json` | 0 | passed; frames 1376-7600 = **6,225 states**, **739 fresh-process restores** plus a repeated fresh initialization and a full fresh restarted race; `rows_sha256` `3113fa66...` equals the frozen contract; recorded `source_commit` `aeb62e0` with an empty working diff |
+| `... zoom_zoo_opponent_reward_probe capture --event 21 --before-frame 1718 --through 1760` | 0 | cooldown 10 at 1718, consumed 1722; `rows_sha256` `6c35df23...` |
+| same capture, second run | 0 | identical `seed_sha256` and `rows_sha256` — deterministic |
+| `... probe native --probe rev-probe-e21-a` | 0 | **passed, 43/43 observations, 742/742 bytes** |
+| `... capture --event 215 --before-frame 1718 --through 1745` | 0 | consumed 1722, no reward published |
+| `... probe native --probe rev-probe-e215-a` | 0 | **passed, 28/28 observations** |
+| `... probe native` on the half-vertical-boost mutated expectation | 1 | **failed at frame 1722, offsets 181-182** — the negative control fires |
+| `... capture --event 21 --through 1720` then `native` | 0 | **"passed" with 3 observations and no consumption** — finding 2 |
+| reviewer branch discriminator (events 100 / 150 / 205, `$7707D5-$7708D4`) | 0 | only 205 incremented a counter — finding 1 |
+| zero-entry restore reproduction via `zoom_zoo_runner --seed` | 1 | `frame 1722: reward queue holds no published event` — finding 6 |
+| bounce-domain reproductions via `zoom_zoo_runner --seed` (6 states) | 0 / 1 | 160 on either rider accepted, 161 and `bounce_active` 2 rejected — finding 4 |
+| weight/cooldown-domain reproductions via `zoom_zoo_runner --seed` (5 states) | 0 | weights 0, 3, 250 and cooldown 60000 all accepted — finding 3 |
+| `python3 tools/project.py native compare --manifest tests/manifests/native/primary.case.json` | 2 | **MISSING PREREQUISITE, not a pass**: `local/native/dragster-idle/runtime.json` is absent from this checkout |
+
+### Not verified, and stated as such
+
+- The DRAGSTER `native compare`, `finish-check`, `opponent-first-check` and
+  `restore-check` regressions could not run here: this checkout has no
+  `local/native/` tree and the CLI exposes no command that regenerates it.
+  Reported as missing prerequisites. The legacy path is covered instead by the
+  source equivalence argument above and by the 21/21 ctest suite, which
+  includes `movement_state_roundtrip`, `movement_first_update` and
+  `movement_restore_continuation`. No unit test asserts that the legacy
+  "reward queue left the recovered event-one domain" rejection is preserved.
+- `app-sanitize`, the broad/CI suites, live controls, visuals and the full
+  restart product evidence were out of this pass's scope and are not claimed.
+- The `$1007` bounce-charge write audit is limited to the two writes inside
+  `$829398-$8296C3`; no cross-bank write audit of that address was performed.
+- `$0C6D` is characterized only by measurement over one authenticated capture;
+  its meaning was not recovered.
+- Only `early-compound-reverse-a/b` were used as original captures. All probe
+  interventions sit at frame 1718 on that timeline.
+
+M4-16 remains unaccepted.
+
+### Addendum — both refuted claims have since propagated into tracked records
+
+Checked after the review above was written. `codex/m4-16-playable-zoom-zoo` has
+advanced to `7d1904d`; the three commits after the reviewed candidate
+(`5f850a5`, `825adf7`, `7d1904d`) are documentation only and change no source,
+so every finding above still applies to the branch tip unchanged. But `5f850a5`
+copied both refuted claims out of the code comments and into the project's
+tracked evidence:
+
+- `docs/research/R-0035-zoom-zoo-playable-recovery.md`: "The domain test
+  `$81C238` is a **signed** comparison with 72." Refuted by finding 1 —
+  `CMP #$48` followed by `BMI` is an N-flag test taken for 0-71 and 200-255,
+  and injecting event 150 into the original leaves the reward path's class
+  counter untouched while event 205 increments `$770801`.
+- `tasks/M4-16.md`: the overrun weight range "`$7E21C9-$7E21D8` ... is already
+  an explicit zero guard in `zoom-zoo-race-guards.reference.json`". Refuted by
+  finding 5 — that file has 82 items whose highest address is `0x150B` and none
+  covers `0x21C9-0x21D8`. The parenthetical in the same sentence is correct:
+  `$12E5` is guarded at zero (item `{address: 4837, width: 2, value: 0}`),
+  which makes the neighbouring false claim easier to mistake for verified.
+
+Findings 1 and 5 therefore escalate: they are no longer only source comments
+but the recorded research and task evidence, which is exactly what a later
+reader would rely on. Correct both records alongside the code.
+
+## Re-review of the corrections — candidate `9a3c504` — 14 September 2026
+
+**Reviewing model: Claude Opus 5**, the same independent reviewer, same isolated
+checkout, no inherited implementation context. Exact candidate
+`9a3c5045d0b029057bbfa1ad63359585a6378f8d` on `codex/m4-16-playable-zoom-zoo`,
+range `aeb62e0..9a3c504`; the three documentation commits in that range
+(`5f850a5`, `825adf7`, `7d1904d`) predate the report above and carry no source.
+
+### Verdict on this round: findings 1-5 are genuinely closed — approve the corrections
+
+Each one was re-derived from the ROM and re-reproduced against the corrected
+binary rather than read off the commit message. Two Low residuals remain inside
+finding 2, and one factual slip is new. M4-16 itself stays unaccepted for the
+reasons its own record already carries.
+
+### Finding-by-finding
+
+1. **Closed.** The predicate is now `event<72 || event>=200`
+   (`src/core/movement.cpp:648`), which is exactly the taken set I derived for
+   `CMP #$48` / `BMI`, and the comment states the bit-7-of-the-8-bit-difference
+   reading and says explicitly that it is deliberately not `int8(event)<72`.
+   `docs/research/R-0035` and `tasks/M4-16.md` both now say plainly that the
+   earlier revision was wrong, why, and how it was settled. Re-verified rather
+   than assumed: my own frozen event-21 and event-215 original rows from the
+   previous round still match the **new** binary
+   `5f0d9695b519e8ecd17a38c9aff98070efcb36fcfada3e9e1dd88a6cba5613a9`
+   byte-exactly (43/43 and 28/28 observations), and the complete case produces
+   the identical `rows_sha256` `3113fa66...`, so the correction is
+   behaviour-preserving on the reachable domain, which is what a correct fix of
+   an unreachable divergence must be.
+
+   One qualification worth keeping in the record: the new event-150 probe does
+   **not** on its own discriminate the two predicates. I captured it
+   independently — consumed at frame 1722, cooldown reset to 40, no boost, no
+   feature total, no weight change — and at the 742-byte projection the voice
+   path and the out-of-table reward path are both "consume and publish
+   nothing". What settles it is the cartridge class counter, which only the
+   reward path touches: event 150 changes nothing in `$7707D5-$7708D4` while
+   event 205 increments `$770801`. R-0035 cites that correctly. The native
+   refusal of the event-150 seed reproduced exactly as described
+   (`invalid ZOOM ZOO opponent voice event`, rc 1), so the recorded
+   "source and original-side evidence but no native differential coverage for
+   128-199" is an accurate and appropriately hedged statement.
+
+2. **Closed, with two Low residuals.** My exact reproduction
+   (`capture --event 21 --through 1720`) now exits **1** with
+   `probe window ended before the injected entry was consumed`. Tripped guards
+   now fail a capture. A `freeze` subcommand exists and I drove the full
+   hardened pipeline end to end on event 8: two captures, identical
+   `seed_sha256 c142d8a5...` and `rows_sha256 acafeeb0...`,
+   `consumed_at_frame` 1722, freeze rc 0, native rc 0 and 9/9 observations.
+   Residuals:
+   - `freeze --first X --second X` with the **same directory twice** passes
+     rc 0 and emits a record indistinguishable from a genuine pair. Verified.
+     The captures carry no per-run identity, so the freeze cannot tell one run
+     from two. Fix: reject `first.resolve()==second.resolve()` and record a
+     per-capture run nonce.
+   - Neither `freeze` nor `native` requires `consumed_at_frame` to be present,
+     so a report produced before the hardening still freezes and still reports
+     `"status": "passed"` — verified, with `consumed_at_frame: null`, on my two
+     pre-correction probe directories against the corrected binary. The
+     assertion therefore cannot be satisfied vacuously *when `capture` runs*,
+     but it can be bypassed by reusing an older report. Fix: require the field.
+
+3. **Closed, and the bound is tight rather than over-tight.** The guard sits
+   inside `if(native_initialization)`, so the legacy DRAGSTER/M4-12-15 and
+   `deserialize_movement_state` paths are untouched. Boundary-tested against a
+   real 742-byte state: weights 1, 2, 4 and cooldowns 5 and **40** accepted;
+   weights 0, 3, 250 and cooldowns 41 and 60000 rejected with
+   `invalid ZOOM ZOO opponent reward queue state`. The ceiling is right: across
+   **81,528 frames of 12 independent reviewer captures** the maximum opponent
+   cooldown `$0CA7` is exactly **40**, while the player's `$0CA5` reaches 120 —
+   so the two different ceilings are a real asymmetry, not a copied constant,
+   and 40 itself is observed live (frame 1722 of every probe).
+
+4. **Closed, and it cannot reject a reachable state.** `rolls[1].bounce_charge`
+   or `bounce_active` now rejects with `invalid ZOOM ZOO opponent bounce
+   state`; rider 0's charge 160 and bounce flag 1 still restore. Evidence that
+   nothing reachable is lost: `$1007`, `$1009` and `$100B` are zero in all
+   81,528 frames of my 12 captures, and the serialized `bounce_active` words
+   `$042B`/`$042D` are zero in **every** frame of the projected race window
+   1376-6723 — they take `$4C00` only outside it, which the projection never
+   includes, so my initial whole-file scan that flagged them was measuring the
+   load and result phases. `$0C6D` is itself an existing guard at value 1,
+   which is what makes the rider gate at `$829641-9649` / `$82965E-9666`
+   sound. The corrected test rejecting both values at offset 674 is right; the
+   previous test had encoded the permissive domain.
+
+   Honest limit: none of my 12 captures ever charges a bounce at all, so I have
+   no original-side trace of one. My confirmation of the bounce arithmetic is
+   from the disassembly only — `$829655 LDA #$00A0`, the no-op below-512 store
+   at `$829675-C67D`, `EOR #$FFFF` of `min(charge,256)` at `$829685-C693`, the
+   literal 1 into `$042B,Y` at `$829696-C69C`, and `CMP #$0002 / BPL` at
+   `$8296A1-C6A7`.
+
+5. **Closed.** Exactly sixteen single-byte zero guards added at
+   `0x21C9-0x21D8`; nothing removed, nothing altered, 82 items to 98. `$12E5`
+   was indeed already guarded at zero, as the record says.
+
+### The four specific questions
+
+**(a) 216-255 and event 0.** Handled consistently, and I tested rather than
+reasoned. Entries **216** and **255** are rejected at deserialization with
+`invalid ZOOM ZOO opponent voice event`, so `update_reward_queue` is never
+reached for them; the new predicate does admit them to the block, where the
+out-of-table branch throws, but that is unreachable defense in depth — the
+producer emits only `200+(x&15)`. Note the new guards stop at `$21D8` and do
+not cover the `$7E21D9-$7E2200` an event 216-255 would read, which is sound
+only because the upstream rejection holds; if anyone ever widens the entry
+domain past 215, that guard range must widen with it. Entries **215** and
+**71** restore and run normally, confirming both edges of the admitted set.
+**Event 0** is unchanged: the native still throws
+`reward queue holds no published event` at frame 1722 on a state
+`deserialize_zoom_zoo` accepts, while the original consumes it without incident
+— I re-measured it (class byte `$81C609` = `$8D`, class counter `$7707EF` 0 to
+1, zero weight at `$7E2201`, no error, read cursor 1 to 2). That is finding 6,
+still open.
+
+**(b) Can the new bounds reject a reachable state? No, on my evidence.** The
+cooldown ceiling and the bounce rejection are each measured above against
+81,528 original frames from 12 independent captures, with the boundary values
+themselves exercised through the runner. The one caveat is the absence of any
+bounce in my captures, stated in finding 4.
+
+**(c) Does the guard addition invalidate a frozen reference? No.** The manifest
+is not hash-pinned anywhere — I computed the pre-change digest
+`266799e8...` and it appears nowhere in the tree — and its three consumers
+(`zoom_zoo_playable`, `zoom_zoo_race_reference`, the probe) read it directly,
+so extending it can only make them stricter. The frozen contract's
+`rows_sha256` depends on the projection, not on the guards. And the new guards
+hold: zero at `$7E21C9-$7E21D8` on every one of the 81,528 frames of all 12 of
+my captures, independent of the implementer's 53-capture scan. The complete
+case still reproduces `rows_sha256` `3113fa66...` unchanged.
+
+**(d) Can the consumption assertion be satisfied vacuously? Not by `capture`;
+yes by reuse.** Detailed in finding 2. The assertion itself is sound for its
+purpose — the read cursor can only reach the injected index by consuming that
+slot — but note it guarantees *consumption*, not reward-path coverage: for the
+class-255 and out-of-table controls (13, 22, 200, 215) it is satisfied while
+nothing in the reward machinery runs, which is correct for a negative control
+but should not be read as differential coverage. One unguarded corner: the
+capture refuses a full ring (`advanced == read`) but not `write == read`, in
+which case `entry_index` would already equal the read cursor; unreachable on
+this timeline (read 1, write 2 at frame 1718), worth a line of code anyway.
+
+### New minor finding
+
+**Low — the new evidence table misstates one class number.**
+`tasks/M4-16.md` records "event 17 | class 24 counted, zero weight, no reward".
+Event 17's class byte at `$81C50A+16` is `$22` = **34**, and its counter is
+`$770819`, which I measured going 0 to 1 with the feature total `$770825`
+unchanged. **24** is event *18*'s class (`$18`); I measured event 18
+incrementing `$770805` 0 to 1, its paired accumulator `$770807` 0 to 4, and the
+feature total `$770825` 4 to 8. The substance of the row — class counted, zero
+weight, no reward — is correct; the number is not. Relatedly, R-0035 still
+lists five probed events where the task record now reports nine.
+
+### My position on findings 6-8
+
+- **6 (zero queue entry accepted by restore, rejected by the next update):
+  recommended, not blocking.** It is the only remaining place where the
+  742-byte restore domain is not closed under one update, which is the property
+  URZZ0005 established. The cheapest close is to reject a published zero entry
+  in `deserialize_zoom_zoo`, matching the update; modelling the original's skip
+  is also defensible now that the evidence exists. I would fix it, but I would
+  not hold acceptance for it alone.
+- **7 (initializer content-driven while the restore guard hard-codes 4 and
+  {1,2,4}): not blocking.** The values coincide for the frozen pack. It only
+  bites if a second scenario's `$82D7A4` template differs. Record the coupling.
+- **8 (evidence not recorded): withdrawn.** `5f850a5` and `9a3c504` add 213
+  lines to `tasks/M4-16.md` and 63 to `R-0035` carrying the commands, the
+  per-event outcome table and the corrections, including an explicit statement
+  that the earlier revision was wrong. That satisfies the AGENTS.md handoff
+  requirement.
+
+### Commands, return codes and counts for this round
+
+Each invoked separately with its own return code inspected; build and test never
+chained.
+
+| Command | rc | Result |
+| --- | --- | --- |
+| `cmake --build build/app-debug -j4` | 0 | 17 steps, all targets relinked, warnings-as-errors on |
+| `ctest --test-dir build/app-debug --output-on-failure` | 0 | **21/21 passed, 0 failed** |
+| `zoom_zoo_playable compare` (early-compound-reverse a/b, v11 contract) | 0 | **6,225 states, 739 fresh-process restores**; `source_commit 9a3c504`, empty diff, binary `5f0d9695...`; `rows_sha256 3113fa66...` **unchanged from the pre-correction run** |
+| `probe capture --event 8 --through 1726` twice | 0, 0 | identical `seed`/`rows` digests, `consumed_at_frame` 1722; feature total +64, weight 64 to 32, boost +248, vertical **+248** (full word again) |
+| `probe freeze --first rev2-probe-e8-a --second rev2-probe-e8-b` | 0 | pair agrees |
+| `probe native --probe rev2-probe-e8-a` | 0 | **passed, 9/9 observations, 742 bytes** |
+| `probe native` on my frozen event-21 rows, new binary | 0 | **passed, 43/43** |
+| `probe native` on my frozen event-215 rows, new binary | 0 | **passed, 28/28** |
+| `probe capture --event 150 --through 1730` | 0 | consumed 1722, no reward at all |
+| `probe native --probe rev2-probe-e150` | 1 | refused: `invalid ZOOM ZOO opponent voice event` — the recorded original-only control |
+| `probe capture --event 21 --through 1720` (the old vacuity repro) | **1** | `probe window ended before the injected entry was consumed` |
+| `probe freeze --first X --second X` (same directory) | 0 | **residual hole**, finding 2 |
+| `probe native` on a pre-hardening report | 0 | `"passed"` with `consumed_at_frame: null` — **residual bypass** |
+| 21 restore-boundary states through `zoom_zoo_runner --seed` | 0 / 1 | all 21 accept/reject outcomes as intended (table above) |
+| reviewer branch discriminator, events 17 and 18 | 0 | `$770819` and `$770805`/`$770807`/`$770825` — the class-number slip |
+| 12-capture scan, 81,528 frames | 0 | `$7E21C9-$7E21D8` zero everywhere; max `$0CA7` 40, max `$0CA5` 120; `$1007`/`$1009`/`$100B` zero; `$042B`/`$042D` zero in every projected race frame |
+
+### Still not verified in this checkout
+
+Unchanged from the previous round and reported as missing rather than passing:
+the DRAGSTER `native compare`, `finish-check`, `opponent-first-check` and
+`restore-check` regressions cannot run here — there is no `local/native/` tree
+and no CLI command regenerates it. The legacy path remains covered by the
+source-equivalence argument and the 21/21 ctest suite. `app-sanitize`, the
+broad and CI suites, live controls, visuals and the restart product evidence
+were out of scope for this pass and are not claimed. No capture available to me
+exercises a bounce.
+
+M4-16 remains unaccepted.
+
+## Narrow confirmation pass — candidate `a16b88c` — 14 September 2026
+
+**Reviewing model: Claude Opus 5**, same reviewer and isolated checkout. Exact
+candidate `a16b88c`, range `9a3c504..a16b88c` (`adbbeb3` in that range is
+documentation). Scoped as requested: the two probe residuals, finding 6, the two
+couplings and the class number. Broad suites deliberately not re-run.
+
+### Verdict: all four confirmed closed. Approve this round.
+
+**Probe residuals — closed, reproduced four ways.**
+
+| reproduction | rc | result |
+| --- | --- | --- |
+| `freeze --first X --second X` | 1 | `a freeze needs two independent captures, not one directory twice` |
+| `freeze` with `consumed_at_frame` stripped from a copied report | 1 | `probe predates the consumption assertion; recapture before freezing` |
+| `native` with the field stripped | 1 | `probe predates the consumption assertion; recapture before comparing` |
+| `native` on my genuine pre-hardening event-21 report | 1 | same refusal — the bypass I demonstrated last round is gone |
+| `freeze` on the genuine event-8 pair | 0 | still accepted; the tightening is not over-tight |
+
+The capture's new cursors-meet refusal cites `$81C5CD-C5D0`, and that citation is
+exact: I disassembled it as `CPY $0D11` / `BEQ $81C5ED`, the opponent enqueue's
+return-without-publishing when the write cursor already equals the read cursor.
+(The same routine at `$81C5D5-C5E3` clears `$0CA7` and `$12E5` for events below
+22; `$12E5` is guarded at zero throughout, so that branch is never taken — which
+is what justifies `enqueue_zoom_opponent` omitting it, and this time the cited
+guard really does exist.)
+
+**Finding 6 — closed at the restore, and provably unable to refuse a reachable
+state.**
+
+The check walks `(read_cursor+1)&31` until it meets `write_cursor`. That set is
+*exactly* the set the consumer will read before the queue reports empty,
+including the degenerate `read == write` case, where both the check and the
+consumer traverse the same 31 slots. So it is structurally closed under one
+update rather than approximately so.
+
+Empirically, over **79,500 frames of my 12 independent captures** (1376 to each
+capture's last frame):
+
+- opponent pending-zero occurrences with `read != write`: **0**, at pending
+  depths up to 30;
+- frames with `read == write`: 3,876, of which **640 are inside the race window
+  1376-6723**; in every one of those 640 all 31 consumable slots are non-zero
+  (they saturate with event 39, the opponent finish publication, from frame
+  6565);
+- player pending-zero occurrences, as an accepted control: 0.
+
+Driven through the runner rather than only measured:
+
+| state | rc | result |
+| --- | --- | --- |
+| published zero in the opponent ring | 1 | `empty pending ZOOM ZOO opponent reward` at **restore**, 0 frames emitted — previously accepted, then thrown at frame 1722 |
+| same slot holding event 1 | 0 | restores and runs |
+| `read == write == 24` with all 31 consumable slots = 39, the exact shape the original reaches at 6565+ | **0** | **accepted and runs** |
+| the same state with one of those slots zeroed | 1 | rejected |
+
+That last pair is the point: the rejection discriminates the forged state from
+the reachable degenerate one rather than refusing both.
+
+**The 216-255 coupling — recording it is the right call, and I would not widen
+the guards.** I agree with the decision and would argue against the alternative.
+The race guards assert things about the *original's* authenticated timeline, and
+are checked before native evaluation; their purpose is to stop a capture that
+reaches unmodelled gameplay. `$7E21C9-$7E21D8` qualifies, because 200-215 is
+produced, does reach the reward path, and the model's correctness depends on
+those sixteen bytes. `$7E21D9` upward does not: nothing in the original can hand
+the consumer an event in 216-255, since the producer emits `200+(x&15)`. A guard
+there would block otherwise valid captures for a condition that is not a
+modelling gap — a false-positive generator. Guarding exactly the load-bearing
+range and recording the coupling is the principled line.
+
+One optional improvement, not blocking: the coupling is stated at the consumer
+branch, but the clause that actually enforces it is the entry-domain check
+`event>=72 && (event<200 || event>215)` in `deserialize_zoom_zoo`. A one-line
+cross-reference there would make the pair discoverable from either side.
+
+**Finding 7's coupling** is now recorded at the player weight bound, naming the
+`$82D7A4` template as the thing a future pack change must revisit. Adequate.
+
+**Class number — corrected and independently re-confirmed.** `tasks/M4-16.md`
+now reads "event 17 | class 34 counted at `$770819`" and records that 24 is
+event 18's class at `$770805`. That matches my measurements exactly: event 17
+increments `$770819` 0 to 1 with the feature total `$770825` unchanged; event 18
+increments `$770805` 0 to 1, its paired accumulator `$770807` 0 to 4 and the
+feature total `$770825` 4 to 8.
+
+### Commands for this pass
+
+| Command | rc | Result |
+| --- | --- | --- |
+| `cmake --build build/app-debug -j4` | 0 | 17 steps, all targets relinked |
+| `ctest --test-dir build/app-debug` | 0 | **21/21 passed, 0 failed** |
+| `probe native --probe rev2-probe-e8-a` on the closure binary `ed1de830...` | 0 | **passed, 9/9 observations**, `consumed_at_frame` 1722 — the closures changed no reachable behaviour |
+| five restore-domain states through `zoom_zoo_runner --seed` | 0 / 1 | all five as intended, table above |
+| four probe-residual reproductions plus the genuine-pair control | 1,1,1,1 / 0 | table above |
+| 12-capture pending-ring scan, 79,500 frames | 0 | zero violations; 640 in-race degenerate states all fully published |
+| disassembly of `$81C5C9-C5EA` | — | confirms the cited `$81C5CD-C5D0` publication limit |
+
+Broad suites, sanitizers, DRAGSTER native regressions, live controls and visuals
+were out of scope for this pass at the coordinator's request and are not
+claimed. M4-16 remains unaccepted on its own open product evidence.

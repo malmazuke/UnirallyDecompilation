@@ -1701,6 +1701,9 @@ ZoomZooState deserialize_zoom_zoo(std::span<const std::uint8_t> bytes) {
         // beyond the bank; only these produced values are admitted here.
         for(auto event:q.entries)if(event>=88)
             throw std::invalid_argument("invalid ZOOM ZOO player voice event");
+        // This clause is what keeps update_reward_queue's 216-255 rejection
+        // unreachable and its $7E21C9-$7E21D8 guards sufficient; widening the
+        // admitted range means widening those guards too.
         for(auto event:state.movement.rewards.entries)if(event>=72 && (event<200 || event>215))
             throw std::invalid_argument("invalid ZOOM ZOO opponent voice event");
         for(unsigned cursor=(q.read_cursor+1U)&31U;cursor!=q.write_cursor;cursor=(cursor+1U)&31U)

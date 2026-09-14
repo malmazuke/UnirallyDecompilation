@@ -99,6 +99,13 @@ def compare(a,b,contract,binary,pack,out):
     last=reference['frames'][1]
     boundaries={1376,1377,1380,1381,1550,1551,1582,1583,1649,events['loading_frame']-1,events['loading_frame'],events['first_visible'],events['stable_result'],last-1}
     boundaries.update(restore_frames(rows[1649-1376:events['loading_frame']-1376]))
+    # Restore across queue publication/consumption, learned reward weight,
+    # tutorial interruption/group changes and charge latches. Cooldowns/ticks
+    # alone intentionally do not turn every ordinary update into a restore.
+    for i in range(1,events['loading_frame']-1376):
+        before,after=bytes.fromhex(rows[i-1]),bytes.fromhex(rows[i])
+        if any(before[a:b]!=after[a:b] for a,b in [(12,16),(581,619),(621,626),(628,632)]):
+            boundaries.update((1375+i,1376+i))
     boundaries=sorted(f for f in boundaries if 1376<=f<last)
     with tempfile.TemporaryDirectory(prefix='zoom-playable-native-') as directory:
         root=Path(directory);local_pack=root/'classic.pack';local_pack.write_bytes(pack.read_bytes());inputs=root/'inputs.txt';seed=root/'restore.bin'

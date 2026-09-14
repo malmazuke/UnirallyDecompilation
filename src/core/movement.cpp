@@ -906,11 +906,20 @@ void read_reflection(Reader& in,ReflectionTransition& r) {
                  &r.rotate_negative_input,&r.rotate_positive_input,&r.jump_input,&r.wrong_direction_counter})*v=in.u16();
 }
 void update_reflection_transition(RiderMovementState& rider,ReflectionTransition& transition,
-                                  unsigned horizontal,bool inactive_phase,std::span<const std::uint8_t> table) {
-    // $82:A35B-A49E; ordinary mode and neutral indexed trick control.
-    if (!(rider.contact.unsupported_count==9 && transition.step) && !rider.contact.recontact && !inactive_phase)return;
+                                  unsigned horizontal,bool inactive_phase,std::span<const std::uint8_t> table,bool manual=false) {
+    // $82:A35B-A49E: A permits a direction-selected turn while airborne,
+    // including a turn toward the current facing. Contact A halves velocity.
+    const bool manual_airborne=rider.contact.unsupported_count==9 && !transition.step &&
+        !(rider.contact.selected_high&0x80U) && manual && horizontal!=1;
+    if (!(rider.contact.unsupported_count==9 && transition.step) && !manual_airborne && !rider.contact.recontact && !inactive_phase)return;
+    if (!transition.step && !manual_airborne &&
+        (horizontal==1 || (horizontal==2 && rider.pose.reflected) || (horizontal==0 && !rider.pose.reflected)))return;
+    if(manual && rider.contact.recontact) {
+        const auto velocity=rider.motion.velocity_x;
+        rider.motion.velocity_x=static_cast<std::uint16_t>((velocity>>1U)|(velocity&0x8000U));
+        transition.air_turns=0;
+    }
     if (!transition.step) {
-        if(horizontal==1 || (horizontal==2 && rider.pose.reflected) || (horizontal==0 && !rider.pose.reflected))return;
         if(transition.pose_override)return;
         if(rider.pose.reflected) {
             rider.pose.reflected_orientation=static_cast<std::uint16_t>(64-rider.pose.reflected_orientation)&63U;
@@ -1446,8 +1455,8 @@ void update_zoom_zoo(ZoomZooState& state,const ControllerButtons& buttons,const 
         ++state.movement.frame;
         return;
     }
-    if((buttons.y && !state.native_initialization) || buttons.select || buttons.start || buttons.up || buttons.down ||
-       (!state.complete_race && buttons.left) || buttons.a || buttons.x || ((!state.native_initialization) && (buttons.left_shoulder || buttons.right_shoulder)))
+    if((buttons.y && !state.native_initialization) || buttons.select || buttons.start || ((!state.native_initialization) && (buttons.up || buttons.down || buttons.a)) ||
+       (!state.complete_race && buttons.left) || buttons.x || ((!state.native_initialization) && (buttons.left_shoulder || buttons.right_shoulder)))
         throw std::invalid_argument("ZOOM ZOO trial currently admits Right/neutral and B jump controls only");
     if(state.movement.frame<(state.native_initialization?1376U:1649U) || (!state.native_initialization && state.movement.frame>=(state.sustained?9999U:1849U)))
         throw std::invalid_argument("ZOOM ZOO update is outside the declared trial horizon");
@@ -1526,7 +1535,7 @@ void update_zoom_zoo(ZoomZooState& state,const ControllerButtons& buttons,const 
         }
         if(transition.pose_override>=0x600 && transition.pose_override<0x610)transition.pose_override=0;
         int animation_override=0;bool throttle_target=false;
-        if(index==0)update_reflection_transition(rider,transition,horizontal,index!=active,content.reflection_pose_table);
+        if(index==0)update_reflection_transition(rider,transition,horizontal,index!=active,content.reflection_pose_table,state.native_initialization && buttons.a);
         if(index==active || surface.leading_support) {
             const bool landed = rider.motion.response_a || rider.contact.unsupported_count < 2;
             const auto event=update_quarter_turns(rider,surface.leading_support!=0,transition.air_turns);
@@ -1561,7 +1570,7 @@ void update_zoom_zoo(ZoomZooState& state,const ControllerButtons& buttons,const 
                 (std::abs(static_cast<std::int16_t>(rider.contact.surface_angle))<30 && rider.contact.unsupported_count<9) ||
                 (!transition.rotate_negative_input && !transition.rotate_positive_input);
             if(clear)rider.motion.response_b=0;
-            else rider.motion.response_b=static_cast<std::uint16_t>((rider.motion.response_b&0xff00U)|(transition.rotate_negative_input?254U:2U));
+            else rider.motion.response_b=static_cast<std::uint16_t>((rider.motion.response_b&0xff00U)|(transition.rotate_negative_input?(buttons.a && index==0?255U:254U):(buttons.a && index==0?1U:2U)));
             transition.wrong_direction_counter=next_wrong_direction_counter(
                 transition.wrong_direction_counter,rider.motion.velocity_x,
                 rider.progress.marker_word,horizontal);

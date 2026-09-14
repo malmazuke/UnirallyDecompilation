@@ -45,6 +45,10 @@ def original(directory):
                     for item in guards:
                         at=item['address']
                         if at in (0xd53,0xd55):continue # Now serialized, no longer a constant-domain guard.
+                        if at==0x31d:
+                            if int.from_bytes(w[at:at+2],'little')!=int('a' in document['timeline'][frame][0]):
+                                raise ValueError('A input publication differs from controller timeline')
+                            continue # $82AAA4-AAB4; redundant with serialized controller low image.
                         if int.from_bytes(w[at:at+item['width']],'little')!=item['value']:
                             raise ValueError(f'new gameplay guard at {frame}: {at:04x}; recover before evaluating native')
                 row=bytearray(project(w,s,frame)+w[0xff1:0xff3]+w[0x1261:0x1265]+b'\0\0')

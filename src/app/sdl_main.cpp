@@ -381,12 +381,12 @@ int main(int argc, char **argv) try {
         ++neutral_updates_after_input;
       }
       if(parsed->zoom_zoo) {
-        const auto previous_frame=zoom_state.movement.frame;
+        const auto previous_simulation_frame=zoom_state.movement.frame;
         const auto buttons=unirally::app::controller_buttons(ports[0]);
         if(zoom_state.result_updates==115 && buttons.start)
           unirally::restart_zoom_zoo(zoom_state,zoom_content);
         else unirally::update_zoom_zoo(zoom_state,buttons,zoom_content);
-        if(zoom_state.movement.frame<previous_frame) {
+        if(zoom_state.movement.frame<previous_simulation_frame) {
           // Both keyboard and gamepad navigation replace all simulation/art
           // state. A physically held Start cannot immediately pause the new race.
           input.clear();live_presentation=unirally::app::LivePresentation{};++restarts;

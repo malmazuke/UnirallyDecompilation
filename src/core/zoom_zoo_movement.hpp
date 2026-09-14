@@ -40,7 +40,14 @@ struct ZoomZooPlayerAnnouncements {
     RewardQueueState queue;
     std::uint16_t hints_active{}, hint_updates{}, hint_group{}, empty_display{};
 };
+struct ZoomZooRoll {
+    // $829398-9714. Word step is signed; all other values retain original bits.
+    std::uint16_t input_latched{}, prior_orientation{}, prior_reflection{}, pose_base{};
+    std::uint16_t step{}, held_updates{}, bounce_charge{}, completed_rolls{};
+    std::uint16_t held_rotations{}, bounce_active{}, support_count_mirror{}, prior_step{};
+};
 struct ZoomZooState {
+    std::array<ZoomZooRoll,2> rolls{};
     bool native_initialization{};
     ZoomZooResult result;
     ZoomZooPlayerAnnouncements player_announcements;
@@ -63,6 +70,8 @@ struct ZoomZooContent {
     std::span<const std::uint8_t> reflection_pose_table;
     std::span<const std::uint8_t> landing_matrices;
     std::span<const std::uint8_t> finish_poses;
+    std::span<const std::uint8_t> roll_poses;
+    std::span<const std::uint8_t> roll_directions;
 };
 // $82:9715–979D: count active updates opposing the track direction, with
 // original wrapped word comparisons at velocities -16 and +16 (1/32 units).

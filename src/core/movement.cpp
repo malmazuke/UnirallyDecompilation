@@ -1080,6 +1080,56 @@ void update_zoom_hints(ZoomZooState& state) {
     for(unsigned i=0;i<4;++i)enqueue_zoom_player(state,40U+4U*a.hint_group+i);
 }
 
+// $829398-9714: X enters a roll on unsupported contact. The signed
+// step selects the original nine-frame pose strip and is advanced only on
+// this rider's active update. Pose/reflection feed the next collision sample.
+void update_zoom_roll(ZoomZooState& state,unsigned index,bool pressed,const ZoomZooContent& content) {
+    auto& roll=state.rolls[index];auto& rider=state.movement.riders[index];
+    auto& turn=state.reflection[index];
+    if(roll.bounce_charge || roll.held_updates || roll.held_rotations)
+        throw std::invalid_argument("ZOOM ZOO held-roll reward feedback is unrecovered");
+    if(!roll.step) {
+        if(turn.pose_override || rider.contact.unsupported_count<9)return;
+        if(!pressed) {roll.input_latched=0;return;}
+        if(roll.input_latched)return;
+        roll.input_latched=1;roll.prior_orientation=rider.pose.orientation;
+        roll.prior_reflection=rider.pose.reflected;
+        const auto entry=content_word(content.roll_poses,2U*(rider.pose.orientation&63U));
+        roll.step=static_cast<std::uint16_t>(-9);
+        if(entry&0x8000U) {roll.step=9;rider.pose.reflected=!rider.pose.reflected;}
+        roll.pose_base=static_cast<std::uint16_t>(entry&0x3fffU);
+    }
+    const auto orientation=rider.pose.orientation&63U;
+    if(orientation>=content.roll_directions.size())throw std::invalid_argument("ZOOM ZOO roll direction table is missing");
+    if((content.roll_directions[orientation]==1 && negative(roll.step)) ||
+       (content.roll_directions[orientation]!=1 && !negative(roll.step)))roll.step=static_cast<std::uint16_t>(~roll.step);
+    if(rider.contact.unsupported_count<2) {
+        throw std::invalid_argument("ZOOM ZOO interrupted roll feedback is unrecovered");
+    }
+    if(!pressed && ((!negative(roll.step) && roll.step>=4) ||
+                    (negative(roll.step) && static_cast<std::int16_t>(roll.step)<=-5)))
+        throw std::invalid_argument("ZOOM ZOO held-roll control is unrecovered");
+    roll.step=add_word(roll.step,negative(roll.step)?1:static_cast<std::uint16_t>(-1));
+    if(!roll.step) {
+        // $8296C3-9711, reached non-bounce completion. The orientation
+        // subtraction is wrapped modulo64 before later pose generation.
+        if(!roll.bounce_active)roll.completed_rolls=add_word(roll.completed_rolls,1);
+        roll.bounce_charge=0;turn.pose_override=0;
+        if(!(roll.pose_base&0x8000U))rider.pose.reflected=!rider.pose.reflected;
+        rider.pose.orientation=static_cast<std::uint16_t>(rider.pose.orientation-32U)&63U;
+        return;
+    }
+    const auto step_index=negative(roll.step)?add_word(roll.step,9):roll.step;
+    auto angle=rider.pose.orientation&63U;
+    auto entry=content_word(content.roll_poses,2U*angle);
+    if(entry&0x8000U) {rider.pose.reflected=!roll.prior_reflection;roll.pose_base|=0x8000U;}
+    else {rider.pose.reflected=roll.prior_reflection!=0;roll.pose_base&=0x7fffU;}
+    if(rider.pose.reflected)angle=(64U-angle)&63U;
+    entry=content_word(content.roll_poses,2U*angle);
+    if(entry&0x8000U)entry=content_word(content.roll_poses,2U*(64U-angle));
+    turn.pose_override=static_cast<std::uint16_t>((entry&0x3fffU)+step_index+0x9a0U);
+}
+
 // $83E8E0-EC13 and $828953-89C2. Finish animation is a collision-pose input.
 void update_zoom_finish(ZoomZooState& state,const ZoomZooContent& content) {
     auto& whole=state.movement;
@@ -1299,7 +1349,7 @@ std::vector<std::uint8_t> serialize_zoom_zoo(const ZoomZooState& state) {
             for(auto v:{r.mode,r.angle,r.tile_mode,r.leading_support,r.tile_pose,r.animation_delta,r.tile_pose_enabled})put16(bytes,v);
     }
     if(state.complete_race) {
-        bytes[7]=state.native_initialization?'8':'3';
+        bytes[7]=state.native_initialization?'9':'3';
         for(const auto& r:state.race.riders) {
             for(auto v:{r.laps_remaining,r.checkpoint,r.next_checkpoint,r.start_line_latch,r.checkpoint_display_countdown,r.finished})put16(bytes,v);
             for(auto v:r.time_digits)put16(bytes,v);
@@ -1324,12 +1374,15 @@ std::vector<std::uint8_t> serialize_zoom_zoo(const ZoomZooState& state) {
         put8(bytes,q.read_cursor);put8(bytes,q.write_cursor);put16(bytes,q.cooldown);
         put16(bytes,q.feature_total);put8(bytes,q.event_one_weight);
         for(auto v:{a.hints_active,a.hint_updates,a.hint_group,a.empty_display})put16(bytes,v);
+        for(const auto& r:state.rolls)
+            for(auto v:{r.input_latched,r.prior_orientation,r.prior_reflection,r.pose_base,r.step,r.held_updates,
+                        r.bounce_charge,r.completed_rolls,r.held_rotations,r.bounce_active,r.support_count_mirror,r.prior_step})put16(bytes,v);
     }
     return bytes;
 }
 ZoomZooState deserialize_zoom_zoo(std::span<const std::uint8_t> bytes) {
     const std::array<std::uint8_t,8> magic{'U','R','Z','Z','0','0','0','1'};
-    const bool native_initialization=bytes.size()==632 && bytes[7]=='8';
+    const bool native_initialization=bytes.size()==680 && bytes[7]=='9';
     const bool complete_race=((bytes.size()==565 && bytes[7]=='3') || native_initialization) && std::equal(magic.begin(),magic.begin()+7,bytes.begin());
     const bool sustained=complete_race || (bytes.size()==423 && bytes[7]=='2' && std::equal(magic.begin(),magic.begin()+7,bytes.begin()));
     if(!sustained && (bytes.size()!=395 || !std::equal(magic.begin(),magic.end(),bytes.begin())))throw std::invalid_argument("ZOOM ZOO state identity/width differs");
@@ -1395,6 +1448,19 @@ ZoomZooState deserialize_zoom_zoo(std::span<const std::uint8_t> bytes) {
             throw std::invalid_argument("ZOOM ZOO finish/result conflicts with start phase");
         if(state.result!=zoom_result_fields(state.race,state.result_updates))
             throw std::invalid_argument("inconsistent ZOOM ZOO result publication");
+        for(auto& r:state.rolls) {
+            for(auto* v:{&r.input_latched,&r.prior_orientation,&r.prior_reflection,&r.pose_base,&r.step,&r.held_updates,
+                         &r.bounce_charge,&r.completed_rolls,&r.held_rotations,&r.bounce_active,&r.support_count_mirror,&r.prior_step})*v=in.u16();
+            if(r.input_latched>1 || r.prior_orientation>63 || r.prior_reflection>1 ||
+               static_cast<std::int16_t>(r.step)<-9 || static_cast<std::int16_t>(r.step)>9 || r.bounce_active>1)
+                throw std::invalid_argument("invalid ZOOM ZOO roll state");
+            if(state.movement.frame==1376 && (r.input_latched || r.prior_orientation || r.prior_reflection || r.pose_base ||
+               r.step || r.held_updates || r.bounce_charge || r.completed_rolls || r.held_rotations || r.bounce_active || r.support_count_mirror || r.prior_step))
+                throw std::invalid_argument("inconsistent initial ZOOM ZOO roll state");
+        }
+        for(unsigned i=0;i<2;++i)
+            if(state.rolls[i].support_count_mirror!=state.movement.riders[i].contact.unsupported_count)
+                throw std::invalid_argument("inconsistent ZOOM ZOO support-count mirror");
         if(state.result_updates>115 || (state.result_updates && state.race.finish_delay!=240))throw std::invalid_argument("invalid ZOOM ZOO result phase");
         for(auto v:state.start_boost)if(v!=0 && v!=384)throw std::invalid_argument("invalid ZOOM ZOO start boost");
         if(state.fade_level>30)throw std::invalid_argument("invalid ZOOM ZOO fade level");
@@ -1456,8 +1522,8 @@ void update_zoom_zoo(ZoomZooState& state,const ControllerButtons& buttons,const 
         return;
     }
     if((buttons.y && !state.native_initialization) || buttons.select || buttons.start || ((!state.native_initialization) && (buttons.up || buttons.down || buttons.a)) ||
-       (!state.complete_race && buttons.left) || buttons.x || ((!state.native_initialization) && (buttons.left_shoulder || buttons.right_shoulder)))
-        throw std::invalid_argument("ZOOM ZOO trial currently admits Right/neutral and B jump controls only");
+       (!state.complete_race && buttons.left) || (buttons.x && !state.native_initialization) || ((!state.native_initialization) && (buttons.left_shoulder || buttons.right_shoulder)))
+        throw std::invalid_argument("ZOOM ZOO controller is outside the recovered domain");
     if(state.movement.frame<(state.native_initialization?1376U:1649U) || (!state.native_initialization && state.movement.frame>=(state.sustained?9999U:1849U)))
         throw std::invalid_argument("ZOOM ZOO update is outside the declared trial horizon");
     auto next=state;auto& whole=next.movement;
@@ -1536,12 +1602,16 @@ void update_zoom_zoo(ZoomZooState& state,const ControllerButtons& buttons,const 
         if(transition.pose_override>=0x600 && transition.pose_override<0x610)transition.pose_override=0;
         int animation_override=0;bool throttle_target=false;
         if(index==0)update_reflection_transition(rider,transition,horizontal,index!=active,content.reflection_pose_table,state.native_initialization && buttons.a);
+        if(state.native_initialization && index==active)update_zoom_roll(next,index,index==0 && buttons.x,content);
         if(index==active || surface.leading_support) {
             const bool landed = rider.motion.response_a || rider.contact.unsupported_count < 2;
             const auto event=update_quarter_turns(rider,surface.leading_support!=0,transition.air_turns);
             // $829D7F clears the reflection-turn counter on the landing path,
             // including a landing with no completed rotation reward.
-            if(landed) transition.air_turns=0;
+            if(landed) {
+                transition.air_turns=0;
+                if(state.native_initialization) {next.rolls[index].completed_rolls=0;next.rolls[index].held_rotations=0;}
+            }
             if(index==0 && event && !state.native_initialization && (!state.complete_race || event!=14))throw std::invalid_argument("ZOOM ZOO player reward is unrecovered");
             if(event && index==1)reward=event;
             if(event && index==0)enqueue_zoom_player(next,event);
@@ -1619,6 +1689,7 @@ void update_zoom_zoo(ZoomZooState& state,const ControllerButtons& buttons,const 
             content.slope_coefficients.subspan(state.sustained && next.surface[index].mode?64:0,state.sustained?32:9),content.slope_coefficients.subspan(state.sustained?(next.surface[index].mode?96:32):9),content.landing_matrices,
             index==0?whole.player_input.horizontal:next.opponent_horizontal,rider.pose.pose_index,rider.pose.reflected);
         next.surface[index].leading_support=summary.leading_support;
+        if(state.native_initialization)next.rolls[index].support_count_mirror=rider.contact.unsupported_count;
         observe_track_markers(rider.progress,samples);
     }
     if(state.complete_race)update_zoom_visibility(next);

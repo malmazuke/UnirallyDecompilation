@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "kind": "classic_pack_rules",
-  "profile_id": "classic.pal.crawler.two-tracks.v2",
+  "profile_id": "classic.pal.crawler.two-tracks.v3",
   "source_rom": {
     "size": 2097152,
     "sha256": "a1105819d48c04d680c8292bbfa9abbce05224f1bc231afd66af43b7e0a1fd4e"
@@ -3148,6 +3148,34 @@
       },
       "size": 352,
       "sha256": "874033ba4d54a86a3706e7ba92a17019d6df2ea1a9a3178de2b675ed8f6a7de6"
+    },
+    {
+      "id": "zoom.roll-pose-table",
+      "source": {
+        "kind": "raw",
+        "pieces": [
+          {
+            "file_offset": 232,
+            "length": 128
+          }
+        ]
+      },
+      "size": 128,
+      "sha256": "8d10c15244227029ba093c48a0d590553c9d48626e7f53a967a1f66a53341dcf"
+    },
+    {
+      "id": "zoom.roll-direction-table",
+      "source": {
+        "kind": "raw",
+        "pieces": [
+          {
+            "file_offset": 360,
+            "length": 64
+          }
+        ]
+      },
+      "size": 64,
+      "sha256": "670f922581331cb2546d768b7e2b94b6b3f0649b96ae1a46014cd9ebcf19f7ec"
     }
   ],
   "description": "Additive two-track content inventory; retains every v1 entry unchanged."

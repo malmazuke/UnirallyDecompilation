@@ -81,7 +81,9 @@ int main(int argc,char** argv) try {
     const unirally::MovementContent movement{{track,poses,templates},{columns,flags},progress,slopes,displacement,idle,reward,reward_class,{masks,decrements}};
     const auto landing=load("landing-response-matrices.bin");
     const auto finish_poses=state.complete_race?load("race-finish-poses.bin"):std::vector<std::uint8_t>{};
-    const unirally::ZoomZooContent data{movement,coefficients,reflection,landing,finish_poses};
+    const auto roll_poses=pack?load("roll-pose-table.bin"):std::vector<std::uint8_t>{};
+    const auto roll_directions=pack?load("roll-direction-table.bin"):std::vector<std::uint8_t>{};
+    const unirally::ZoomZooContent data{movement,coefficients,reflection,landing,finish_poses,roll_poses,roll_directions};
     if(native_start)state=unirally::classic_crawler_zoom_zoo_start(data);
     if(restart)unirally::restart_zoom_zoo(state,data);
     std::ifstream stream(inputs);

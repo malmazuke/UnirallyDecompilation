@@ -123,7 +123,7 @@ const std::array<RequiredEntry, 25> required{
      {"presentation.result.classic.palette-tail.v1", 128,
       "cd7b9fac3c3ec53d74450dcb28da0f53a09c927826ca3753ff047851c2b20641"}}};
 
-const std::array<RequiredEntry, 21> zoom_required{{
+const std::array<RequiredEntry, 23> zoom_required{{
     {"zoom.track-data", 50665, "db6770152e399f9d16fc6937b5d56588a8f67e825ae70d6578b77d36053fdd28"},
     {"zoom.collision-poses", 32768, "9d1754d38c20cb2900239557550211ab6fc23d9b0237e17b78fb29f3bf272c32"},
     {"zoom.collision-templates", 17249, "2f03a8cb985899436603ef36b233b28f7b4213e4ba106fca328a6b02cdb081c7"},
@@ -145,8 +145,10 @@ const std::array<RequiredEntry, 21> zoom_required{{
     {"zoom.bg2-tiles", 672, "ebb6921ca08d48bd76c02879a92647521524eb87d4ab4d4209fd7add1f37d949"},
     {"zoom.bg2-map", 8192, "a47ec4ddf2128d1126c299a8dea5fde497c326b01d6bd0ccc97483bf0fb904a6"},
     {"zoom.palette", 352, "874033ba4d54a86a3706e7ba92a17019d6df2ea1a9a3178de2b675ed8f6a7de6"},
+    {"zoom.roll-pose-table", 128, "8d10c15244227029ba093c48a0d590553c9d48626e7f53a967a1f66a53341dcf"},
+    {"zoom.roll-direction-table", 64, "670f922581331cb2546d768b7e2b94b6b3f0649b96ae1a46014cd9ebcf19f7ec"},
 }};
-constexpr std::string_view two_track_rules_sha="991dcde376b1c0b0a5694410d30650d1f92c3318adfb173bd7f7a7062605c742";
+constexpr std::string_view two_track_rules_sha="b45e82a0f16b89891dfacbc4b18f2bd2b3d1d8b2b29ca7a4079d6b68206b38e1";
 
 std::array<std::uint8_t, 32> hex_digest(std::string_view text) {
   if (text.size() != 64)
@@ -269,8 +271,8 @@ ClassicContentPack::ClassicContentPack(const std::filesystem::path &path) {
         "Classic pack source ROM identity is unsupported");
   const auto profile=in.text();
   const auto start=in.text();
-  const bool two_tracks=profile=="classic.pal.crawler.two-tracks.v2";
-  if (profile != (two_tracks ? "classic.pal.crawler.two-tracks.v2" : "classic.pal.crawler.dragster.v1"))
+  const bool two_tracks=profile=="classic.pal.crawler.two-tracks.v3";
+  if (profile != (two_tracks ? "classic.pal.crawler.two-tracks.v3" : "classic.pal.crawler.dragster.v1"))
     throw std::invalid_argument("Classic pack profile is unsupported");
   if (start != (two_tracks ? "classic.crawler.race-start.v2" : "classic.crawler.dragster.race-start.v1"))
     throw std::invalid_argument("Classic pack start state is unsupported");

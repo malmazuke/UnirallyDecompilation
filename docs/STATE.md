@@ -1,17 +1,39 @@
 # Project state
 
-Updated 14 September 2026: M4-15 is accepted at `8bc2e71`; private main ref and
-exact-tip macOS/Linux CI `34785933369` verified during M4-16 preparation.
-M4-16 remains incomplete and unaccepted on `codex/m4-16-playable-zoom-zoo`.
-Latest experimental behaviorca46025 uses742-byte state and50-entry v5 pack;
-detailed handover9f4c423 is in `.worktrees/m4-16-playable-zoom-zoo`. Latest
-debug/sanitizer builds and focused tests pass, with five complete diagnostic
-cases matching6225 states. Independent earlier239ae83 passed739 restores and
-full restart; latest bounce changes need re-review. Generic opponent reward
-consumption is an open high-priority finding. The user requested a committed
-handover near94% weekly usage; do not continue automatically. Main gameplay is
-unchanged. See [NEXT_SESSION](../tasks/NEXT_SESSION.md) for the actual checkout,
-remaining live/visual/acceptance gaps and synchronization closeout. No M4-17.
+Updated 14 September 2026: M4-15 is accepted at `8bc2e71`; main is unchanged
+gameplay plus this pointer. M4-16 remains **incomplete and unaccepted** on
+`codex/m4-16-playable-zoom-zoo`, now at `372822e`.
+
+The paused checkpoint this file previously described is superseded. The user
+moved M4-16 to Claude Opus 5 after GPT Astra and Fable 5.1 credits ran out;
+[D-0004](decisions/D-0004-model-and-usage-budget.md) records that authorized
+move, the fresh Opus 5 independent reviewer that replaces Sol/medium, and why
+shared weekly percentage telemetry no longer applies. Do not treat the old 94
+and 96 percent samples as current limits.
+
+The open high-priority generic opponent reward finding is **closed**: the
+original consumer `$81C219-C2C9` is recovered from the ROM and from artificial
+original-only probes, and three independent review rounds ending at `0945ef2`
+rejected, then approved, then confirmed the corrections. Review found the first
+candidate's stated source fact wrong and it had already reached tracked
+evidence; both the code and the records are corrected.
+
+Currently passing on that branch: 21/21 focused tests; six complete cases at
+6225 states covering both outcomes; the primary gate at 6225 observations, 757
+fresh-process restores and a full fresh restart; nine probe events; 405
+synthetic checks on both app presets with no skips; 20 historical M4-12-M4-14
+and DRAGSTER commands on both lab presets; bootstrap, pack-only and rejected-ROM
+and rejected-pack gates, with fresh extraction reproducing the v5 pack byte for
+byte; and denied-execution autonomy with controls proving the denial held.
+
+Still open, so M4-16 is not accepted: live controls through a complete race,
+result and restart, which is **blocked on a macOS Accessibility grant rather
+than on code**; the M4-15 race matrix and ZOOM ZOO trial differentials, whose
+reference captures that checkout does not hold; visual acceptance; result-load
+read classification; and reviewed merge with exact-tip CI. Main gameplay is
+unchanged and no milestone tag is due. See
+[NEXT_SESSION](../tasks/NEXT_SESSION.md) on that branch for the actual checkout
+and the ordered remaining work. No M4-17.
 
 ## Accepted product and evidence
 

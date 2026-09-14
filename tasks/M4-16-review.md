@@ -684,3 +684,95 @@ Alternate scenario defaults, persistent record carryover and original tour
 continuation remain unsupported by design. M4-16 remains unaccepted while
 ordinary controls/rewards, visual/live product evidence and final gates are
 unfinished.
+
+## Generic landing reward source audit
+
+This source-only follow-up used the same supported PAL ROM and an authenticated
+fresh compound-roll capture. It reviewed `$829B69-9D97`, the enqueue routine
+`$81C598-C5C8` and both player/opponent consumer paths `$81C0CE-C357`. It did
+not inspect or change the primary's evolving native implementation and does not
+accept the task.
+
+### Combination table and voice events
+
+The four five-way landing counts form an exact radix-five index. The three word
+tables at `$829D98`, `$829DA2` and `$829DAC` contain respectively
+`[0,125,250,375,500]`, `[0,25,50,75,100]` and `[0,5,10,15,20]`; `$829CD8`
+adds the fourth count directly. The resulting range is 0-624, so `$829DB6`
+is a complete 625-byte (`5^4`) table. Its SHA-256 is
+`a6424f66bbd354883f3bfe128487d6cab92add5651adbf969976733a353f0217`;
+it contains 404 `FE` bytes, 16 `FF` bytes and 205 values in `00-0F`.
+
+The table byte is a gate, not the queued event. `$829D35` compares its low byte
+only with `FE`; `FE` branches past the voice path, while every other value,
+including `FF`, permits it. `$829D3A` then overwrites A with direct-page `$A5`,
+masks its low nibble and combines it with the rider identity at `$770748/0749`
+and base `0x48`. `$A5` is the corrected incoming X-position scratch:
+`$818D1B/$818D97` copy player `$0415` to it,
+`$818E75/$818EF1` copy opponent `$0417`, and collision correction updates it at
+`$82A649-A651`. This agrees with the established position provenance in R-0021.
+For the fixed identities, the calculated event is therefore
+`72 + (player_x & 15)` for MIKE and `200 + (opponent_x & 15)` for BRONSEN.
+
+The two calls are intentional duplicates. `$829D61` loads only Y and calls the
+enqueue routine with the calculated event still in A. After returning,
+`$829D6A` reloads the same byte from `$0260`, and `$829D6D` enqueues it again
+with the same rider selector. There is no remaining path by which the table
+classification byte reaches the first call.
+
+Both consumer halves compare an event with decimal 72. Events 72 and above
+jump to the common `$81C357` continuation and bypass reward class, learned
+weight, feature-total and boost updates. Thus the duplicate calculated voice
+events can affect queue order/timing and presentation, but are not themselves
+two gameplay rewards.
+
+That broad original consumer comparison relies on constrained producers. In
+this fixed scenario, calculated voice events are only player `72-87` or
+opponent `200-215`; it does not justify accepting every byte at least 72 in a
+serialized queue. A future frozen candidate should reject forged high queue
+entries outside the rider's source range, because even a voice-only entry
+changes queue and cooldown timing. This is a prospective malformed-state check,
+not a finding against the evolving implementation excluded from this pass.
+
+### Event 18
+
+Event 18 is independent of the combination-table voice path. `$829D0C-D14`
+submits scratch `$0236`, which `$829CD8-D18` derives as 17 plus the fourth
+landing count; one completed roll therefore submits event 18 before the table
+gate is checked. For player event 18, `$81C0FD-C18A` uses class byte `0x18` at
+`$81C50A[17]` and reward word `0x0080` at `$81C493[17]`. When its learned
+weight `$7E20E8+17` is nonzero, the consumer adds that weight to the feature
+total, halves the stored weight with a minimum of one, adds 128 to horizontal
+boost and 64 to vertical boost, and updates the two persistent class counters.
+This is a gameplay-producing event and cannot be represented as voice-only.
+
+The companion persistent-input/result ledger is
+[M4-16-persistent-input-ledger](../docs/research/M4-16-persistent-input-ledger.md).
+It records the fixed values, reached uses, eight result publications and the
+fresh-restart exclusion rather than treating unresolved access totals as
+closure.
+
+### Focused evidence
+
+- ROM byte inspection and a mode-aware static disassembly covered
+  `$829B69-9D97`, `$81C598-C5C8` and `$81C0CE-C357`; table sizes, values and
+  hashes were computed directly from the identity-gated ROM.
+- `tools/project.py access capture --manifest
+  artifacts/m4-16-review/compound-roll-manifest.json --out
+  artifacts/m4-16-review/compound-reward-watch --from-frame 1695 --to-frame
+  1740` with explicit source/queue PC watches and `$7E00A5` watch passed. It
+  authenticated 845,988 instructions and 420,746 accesses, with zero unresolved
+  stores, zero non-ROM PCs and access SHA-256
+  `3f18a4d0060763052b775c7abbb29caedcf937859a7fd798cfb0f3ac03c3e1e2`.
+- The capture observes `$829B69` on both riders, player event 14 entering
+  `$81C598` at frame 1720, and player consumer events 45, 46 and 47 at frames
+  1707, 1720 and 1736. The particular L-shoulder compound trace does not reach
+  the new event-18 path, so event-18 behavior above is a source/table result,
+  not a claim that this capture exercised it.
+
+Disposition: the source establishes the radix table, duplicate calculated
+voice enqueue and event-18 gameplay consumer. It exposes no initializer/result
+or standalone-restart defect in the fixed scenario. Native parity for the
+primary's separate event-18 compound case remains implementation and frozen
+differential work. M4-16 remains unaccepted; source closure, visuals, live
+complete play and the other recorded capability gaps remain open.

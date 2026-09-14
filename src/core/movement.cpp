@@ -1500,6 +1500,18 @@ ZoomZooState deserialize_zoom_zoo(std::span<const std::uint8_t> bytes) {
             if(roll.step && bool(roll.pose_base&0x8000U)!=
                (state.movement.riders[i].pose.reflected!=(roll.prior_reflection!=0)))
                 throw std::invalid_argument("inconsistent ZOOM ZOO active roll reflection");
+            // Each held/completed counter advances at most once per update.
+            // Before any word can wrap, positive hold duration cannot exceed
+            // accumulated held rotations ($82955F-9598). Returning from an
+            // earlier hold retains rotations, so equality would be too strict.
+            const auto elapsed=state.movement.frame>=1376U?state.movement.frame-1376U:0U;
+            if(elapsed<65536U) {
+                const auto held=static_cast<std::int16_t>(roll.held_updates);
+                const auto magnitude=static_cast<unsigned>(held<0?-static_cast<int>(held):held);
+                if(magnitude>elapsed || roll.held_rotations>elapsed || roll.completed_rolls>elapsed ||
+                   (held>0 && static_cast<unsigned>(held)>roll.held_rotations))
+                    throw std::invalid_argument("inconsistent ZOOM ZOO held roll counters");
+            }
         }
         for(unsigned i=0;i<2;++i)
             if(state.rolls[i].support_count_mirror!=state.movement.riders[i].contact.unsupported_count)

@@ -109,6 +109,14 @@ int main() {
     auto active_roll=result;active_roll.rolls[0].step=0xffff;
     active_roll.rolls[0].pose_base=0x8000;
     rejects([&]{(void)deserialize_zoom_zoo(serialize_zoom_zoo(active_roll));});
+    auto held_roll=result;held_roll.rolls[0].step=0xfffb;
+    held_roll.rolls[0].held_updates=7;held_roll.rolls[0].held_rotations=6;
+    rejects([&]{(void)deserialize_zoom_zoo(serialize_zoom_zoo(held_roll));});
+    // Previous held rotations survive a return/new roll; equality is not required.
+    held_roll.rolls[0].held_updates=6;held_roll.rolls[0].held_rotations=7;
+    require(serialize_zoom_zoo(deserialize_zoom_zoo(serialize_zoom_zoo(held_roll)))==serialize_zoom_zoo(held_roll));
+    held_roll.rolls[0].held_rotations=65000;
+    rejects([&]{(void)deserialize_zoom_zoo(serialize_zoom_zoo(held_roll));});
     auto impossible=result;impossible.movement.frame=1376;impossible.movement.countdown=270;
     impossible.fade_level=0;impossible.start_boost.fill(384);impossible.result_updates=1;impossible.result={};
     rejects([&]{(void)deserialize_zoom_zoo(serialize_zoom_zoo(impossible));});

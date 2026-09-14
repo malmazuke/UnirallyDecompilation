@@ -52,3 +52,11 @@ alt text and a maintainer-supplied gameplay caption. Capture provenance is not
 verified, so it makes no claim to show an accepted native build or particular
 track. This explicitly requested presentation image is separate from private
 reference captures, ROMs, extracted asset packs and acceptance evidence.
+
+## Independent review corrections
+
+Sol/medium reviewed `328b560` and requested two wording corrections: the remaining
+private-repository approval boundary in AGENTS.md, and stale ready/unclaimed
+M4-16 status in the project plan. Both are corrected. The historical M4-15 sync
+is explicitly described as then-private, preserving the fact rather than
+retroactively claiming it was public. Re-review is required before integration.

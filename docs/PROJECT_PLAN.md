@@ -137,8 +137,9 @@ accepted at `38c72e8`, but repeated the same section. The next
 [M4-15](../tasks/M4-15.md) now demonstrates complete native race simulation
 from that seed: both finishes and 240 player post-finish updates, with independent
 review and debug/sanitizer gates. No fallback was used; `8bc2e71` is accepted
-with private sync and final-tip CI. [M4-16](../tasks/M4-16.md) is now ready/unclaimed
-for a playable ZOOM ZOO outcome: native initialization, live controls, readable
+with synchronization to the then-private origin and final-tip CI.
+[M4-16](../tasks/M4-16.md) is in progress and remains unaccepted; see
+[the current handoff](../tasks/NEXT_SESSION.md). Its target is a playable ZOOM ZOO outcome: native initialization, live controls, readable
 track/riders/HUD, correct result and restart, plus clean extraction and pack-only
 relaunch. Recover all coupled dependencies inside this assignment; no seed-based
 or headless fallback. Audio and broader menus/modes remain outside scope. No

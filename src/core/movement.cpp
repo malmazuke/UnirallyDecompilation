@@ -536,7 +536,15 @@ unsigned update_quarter_turns(RiderMovementState& rider,bool leading_support=fal
     auto& turns=rider.quarter_turn;
     const bool vertical_endpoint=std::abs(static_cast<std::int16_t>(rider.contact.surface_angle))==31;
     if(vertical_endpoint || (!rider.motion.response_a && rider.contact.unsupported_count>=2)) {
-        if((!vertical_endpoint && rider.contact.unsupported_count==2) || !turns.initialized || (rolling && !held_rotations)) {
+        // $829ABD-AF3 re-bases an active roll's quadrant and clears only
+        // partial quarters, then still compares the current angle this update.
+        // Completed turns and entry reflection survive; full init is separate.
+        if(rolling && !held_rotations && (vertical_endpoint || rider.contact.unsupported_count!=2)) {
+            const auto rotation=static_cast<std::int8_t>(rider.motion.response_b&0xffU);
+            turns.previous_quadrant=(static_cast<std::uint16_t>(static_cast<int>(rider.pose.orientation)-rotation)&63U)>>4U;
+            turns.forward_quarters=turns.reverse_quarters=0;
+        }
+        if((!vertical_endpoint && rider.contact.unsupported_count==2) || !turns.initialized) {
             const auto rotation=static_cast<std::int8_t>(rider.motion.response_b&0xffU);
             const int prior=static_cast<int>(rider.pose.orientation)-rotation;
             turns.previous_quadrant=static_cast<std::uint16_t>(prior)&63U;

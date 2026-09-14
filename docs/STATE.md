@@ -2,11 +2,16 @@
 
 Updated 14 September 2026: M4-15 is accepted at `8bc2e71`; private main ref and
 exact-tip macOS/Linux CI `34785933369` verified during M4-16 preparation.
-M4-16 execution is incomplete and unaccepted on `codex/m4-16-playable-zoom-zoo`
-in `.worktrees/m4-16-playable-zoom-zoo`. Weekly80% reserve boundary stopped new
-implementation; review/recovery records and resume instructions are in
-[NEXT_SESSION](../tasks/NEXT_SESSION.md). Main retains accepted M4-15 gameplay;
-this update is a documentation-only recovery pointer. No M4-17 dispatch.
+M4-16 remains incomplete and unaccepted on `codex/m4-16-playable-zoom-zoo`.
+Latest experimental behaviorca46025 uses742-byte state and50-entry v5 pack;
+detailed handover9f4c423 is in `.worktrees/m4-16-playable-zoom-zoo`. Latest
+debug/sanitizer builds and focused tests pass, with five complete diagnostic
+cases matching6225 states. Independent earlier239ae83 passed739 restores and
+full restart; latest bounce changes need re-review. Generic opponent reward
+consumption is an open high-priority finding. The user requested a committed
+handover near94% weekly usage; do not continue automatically. Main gameplay is
+unchanged. See [NEXT_SESSION](../tasks/NEXT_SESSION.md) for the actual checkout,
+remaining live/visual/acceptance gaps and synchronization closeout. No M4-17.
 
 ## Accepted product and evidence
 

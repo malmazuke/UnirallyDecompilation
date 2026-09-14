@@ -380,7 +380,18 @@ int main(int argc, char **argv) try {
       } else if (observed_nonzero_input) {
         ++neutral_updates_after_input;
       }
-      if(parsed->zoom_zoo)unirally::update_zoom_zoo(zoom_state,unirally::app::controller_buttons(ports[0]),zoom_content);
+      if(parsed->zoom_zoo) {
+        const auto previous_frame=zoom_state.movement.frame;
+        const auto buttons=unirally::app::controller_buttons(ports[0]);
+        if(zoom_state.result_updates==115 && buttons.start)
+          unirally::restart_zoom_zoo(zoom_state,zoom_content);
+        else unirally::update_zoom_zoo(zoom_state,buttons,zoom_content);
+        if(zoom_state.movement.frame<previous_frame) {
+          // Both keyboard and gamepad navigation replace all simulation/art
+          // state. A physically held Start cannot immediately pause the new race.
+          input.clear();live_presentation=unirally::app::LivePresentation{};++restarts;
+        }
+      }
       else unirally::update_movement(state,
                                 unirally::app::controller_buttons(ports[0]),
                                 movement_content);
@@ -450,9 +461,9 @@ int main(int argc, char **argv) try {
             << "Final native state: updates " << updates << "; frame "
             << state.frame << "; controller-0 mask " << last_ports[0]
             << "; player x " << state.riders[0].motion.x << "; velocity x "
-            << state.riders[0].motion.velocity_x << "; race phase "
-            << static_cast<unsigned>(state.finish.phase) << "; outcome "
-            << static_cast<unsigned>(state.finish.outcome) << '\n';
+            << state.riders[0].motion.velocity_x << '\n';
+  if(!parsed->zoom_zoo)std::cout<<"DRAGSTER race phase "<<static_cast<unsigned>(state.finish.phase)
+      <<"; outcome "<<static_cast<unsigned>(state.finish.outcome)<<'\n';
   if(parsed->zoom_zoo)std::cout<<"ZOOM ZOO result updates "<<zoom_state.result_updates<<"; restarts "<<restarts
       <<"; totals "<<zoom_state.race.total_times[0]<<'/'<<zoom_state.race.total_times[1]<<'\n';
   return 0;

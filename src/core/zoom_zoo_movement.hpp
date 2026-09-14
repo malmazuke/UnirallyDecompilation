@@ -47,7 +47,7 @@ struct ZoomZooRoll {
     std::uint16_t held_rotations{}, bounce_active{}, support_count_mirror{}, prior_step{};
 };
 struct ZoomZooPause {
-    std::uint16_t selection{}, released{}; // $0EF3: 0/racing, 1/resume, -1/retire; $0EF5.
+    std::uint16_t selection{}, released{}; // $0EF3: 0/racing, 1/resume, -1/authored restart (original Retire); $0EF5.
     std::uint32_t suspended_updates{}, suspended_countdown_updates{}; // Semantic update clocks.
 };
 struct ZoomZooState {
@@ -84,7 +84,7 @@ struct ZoomZooContent {
 // $82:9715–979D: count active updates opposing the track direction, with
 // original wrapped word comparisons at velocities -16 and +16 (1/32 units).
 std::uint16_t next_wrong_direction_counter(std::uint16_t previous,
-    std::uint16_t velocity_x,std::uint16_t marker,unsigned horizontal);
+    std::uint16_t velocity_x,std::uint16_t marker,unsigned horizontal,bool native_rewards=false);
 std::vector<std::uint8_t> serialize_zoom_zoo(const ZoomZooState& state);
 ZoomZooState deserialize_zoom_zoo(std::span<const std::uint8_t> bytes);
 // $82:D7C6-DBD6, authenticated track header and one-player three-lap scenario.

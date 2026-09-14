@@ -1018,6 +1018,14 @@ RgbFrame render_zoom_zoo(const ZoomZooState& state,const ClassicContentPack& pac
     if(state.movement.countdown>=70)ui_text(frame,110,35,"READY");
     if(state.movement.countdown && state.movement.countdown<70)ui_text(frame,122,35,"GO");
     if(state.race.riders[0].finished)ui_text(frame,99,35,state.race.total_times[0]<state.race.total_times[1]?"WINNER":"FINISHED");
+    if(state.pause.selection) {
+        for(auto& channel:frame.pixels)channel=static_cast<std::uint8_t>(channel/2U);
+        rect(frame,55,74,146,74,{15,30,30});
+        ui_text(frame,109,83,"PAUSED");
+        ui_text(frame,73,101,state.pause.selection==1?"> RESUME":"  RESUME");
+        ui_text(frame,73,115,state.pause.selection==0xffffU?"> RESTART RACE":"  RESTART RACE");
+        ui_text(frame,68,135,"UP DOWN - ENTER");
+    }
     // NMI $80883F-8849 uses the preceding update's $0FF1 and clamps
     // (fade-15) at zero. $83CCC1-CCC9 increments once per race update.
     const auto prior_fade=state.movement.frame<=1376U?0U:std::min(30U,state.movement.frame-1377U);

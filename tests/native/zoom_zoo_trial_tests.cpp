@@ -19,6 +19,10 @@ int main() {
     require(next_wrong_direction_counter(7,100,0xc000,2)==0);
     require(next_wrong_direction_counter(7,100,0,0)==8);
     rejects([]{(void)next_wrong_direction_counter(179,100,0x4000,2);});
+    require(next_wrong_direction_counter(179,100,0x4000,2,true)==120);
+    require(next_wrong_direction_counter(179,100,0,0,true)==120);
+    require(next_wrong_direction_counter(178,100,0,0,true)==179);
+    require(next_wrong_direction_counter(179,0,0,0,true)==0);
     ZoomZooState state{};state.movement.frame=1649;state.opponent_retained_oam_x=101;
     state.reflection[1].step=4;state.reflection[1].end=9;state.reflection[1].air_turns=3;
     auto encoded=serialize_zoom_zoo(state);require(encoded.size()==395);
@@ -70,6 +74,13 @@ int main() {
     std::array<std::uint8_t,26> weights{};weights[0]=4;initial_content.reward_weights=weights;
     auto initial=classic_crawler_zoom_zoo_start(initial_content);
     const auto initial_bytes=serialize_zoom_zoo(initial);
+    auto paused=initial;paused.movement.frame=1500;paused.pause.selection=0xffffU;paused.pause.released=1;
+    restart_zoom_zoo(paused,initial_content);
+    require(serialize_zoom_zoo(paused)==initial_bytes);
+    paused=initial;paused.movement.frame=1500;paused.pause.selection=0xffffU;paused.pause.released=1;paused.fade_level=30;
+    ControllerButtons restart_buttons{};restart_buttons.start=true;
+    update_zoom_zoo(paused,restart_buttons,initial_content);
+    require(serialize_zoom_zoo(paused)==initial_bytes);
     require(initial_bytes.size()==742);
     require(serialize_zoom_zoo(deserialize_zoom_zoo(initial_bytes))==initial_bytes);
     for(unsigned offset:{565U,567U,569U,581U,583U}) {

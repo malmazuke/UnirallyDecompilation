@@ -1362,12 +1362,15 @@ void integrate_zoom_axis(std::uint16_t& position,std::uint16_t velocity,std::uin
 } // namespace
 
 std::uint16_t next_wrong_direction_counter(std::uint16_t previous,
-    std::uint16_t velocity_x,std::uint16_t marker,unsigned horizontal) {
+    std::uint16_t velocity_x,std::uint16_t marker,unsigned horizontal,bool native_rewards) {
     const bool moving=!negative(static_cast<std::uint16_t>(velocity_x-16U)) ||
         negative(static_cast<std::uint16_t>(velocity_x-0xfff0U));
     if(!moving || (marker&0x8000U) || !((marker&0x4000U)?horizontal==2:horizontal==0))return 0;
     const auto next=add_word(previous,1);
-    if(next==180)throw std::invalid_argument("ZOOM ZOO wrong-direction reward is unrecovered");
+    if(next==180) {
+        if(native_rewards)return 120; // $82974B/977B repeats the warning after60 further active updates.
+        throw std::invalid_argument("ZOOM ZOO wrong-direction reward is unrecovered");
+    }
     return next;
 }
 
@@ -1412,8 +1415,9 @@ ZoomZooState classic_crawler_zoom_zoo_start(const ZoomZooContent& content) {
 }
 
 void restart_zoom_zoo(ZoomZooState& state,const ZoomZooContent& content) {
-    if(!state.native_initialization || state.result_updates!=115)
-        throw std::invalid_argument("ZOOM ZOO restart requires a stable result");
+    const bool paused_restart=state.pause.selection==0xffffU && state.pause.released;
+    if(!state.native_initialization || (state.result_updates!=115 && !paused_restart))
+        throw std::invalid_argument("ZOOM ZOO restart requires a stable result or selected paused restart");
     state=classic_crawler_zoom_zoo_start(content);
 }
 
@@ -1648,7 +1652,10 @@ void validate_zoom_zoo_content_state(const ZoomZooState& state,const ZoomZooCont
             throw std::invalid_argument("ZOOM ZOO initial reward weights differ from static content");
     }
 }
-void update_zoom_zoo(ZoomZooState& state,const ControllerButtons& buttons,const ZoomZooContent& content) {
+void update_zoom_zoo(ZoomZooState& state,const ControllerButtons& requested_buttons,const ZoomZooContent& content) {
+    // NMI $808642-865B skips controller publication through prior fade4;
+    // first controller publication uses prior fade5 (native update1382).
+    const auto buttons=state.native_initialization && state.fade_level<5?ControllerButtons{}:requested_buttons;
     validate_zoom_zoo_content_state(state,content);
     if(state.native_initialization && state.race.finish_delay==240) {
         // Original graph load begins on the update following finish display240.
@@ -1685,7 +1692,11 @@ void update_zoom_zoo(ZoomZooState& state,const ControllerButtons& buttons,const 
         if(whole.player_input.vertical!=1)pause.selection=whole.player_input.vertical?0xffff:1;
         if(!buttons.start)pause.released=1;
         else if(pause.released) {
-            if(negative(pause.selection))throw std::invalid_argument("ZOOM ZOO pause retirement is unrecovered");
+            if(negative(pause.selection)) {
+                // Authored standalone navigation: this menu says RESTART RACE.
+                // Original Retire/tour progression is deliberately not emulated.
+                restart_zoom_zoo(next,content);state=next;return;
+            }
             pause.selection=0;
         }
         ++pause.suspended_updates;
@@ -1752,9 +1763,13 @@ void update_zoom_zoo(ZoomZooState& state,const ControllerButtons& buttons,const 
         }
         const bool boost_tile=!rider.contact.auxiliary_flag && (content.movement.flat_contact.flags[tile]&0xfeU)==2;
         if(boost_tile) {
-            surface.tile_pose=1;surface.tile_pose_enabled=1;
-            rider.motion.velocity_y=0;rider.launch_override=80;
-            rider.motion.velocity_x=add_word(rider.motion.velocity_x,(descriptor&0x4000U)?static_cast<std::uint16_t>(-128):128);
+            // $81871C-875B always clears vertical velocity/enables tile mode,
+            // but leading support bypasses the horizontal boost and pose flag.
+            surface.tile_pose_enabled=1;rider.motion.velocity_y=0;
+            if(!surface.leading_support) {
+                surface.tile_pose=1;rider.launch_override=80;
+                rider.motion.velocity_x=add_word(rider.motion.velocity_x,(descriptor&0x4000U)?static_cast<std::uint16_t>(-128):128);
+            }
         }
         if(transition.pose_override>=0x600 && transition.pose_override<0x610)transition.pose_override=0;
         int animation_override=0;bool throttle_target=false;
@@ -1795,9 +1810,14 @@ void update_zoom_zoo(ZoomZooState& state,const ControllerButtons& buttons,const 
                 (!transition.rotate_negative_input && !transition.rotate_positive_input);
             if(clear)rider.motion.response_b=0;
             else rider.motion.response_b=static_cast<std::uint16_t>((rider.motion.response_b&0xff00U)|(transition.rotate_negative_input?(buttons.a && index==0?255U:254U):(buttons.a && index==0?1U:2U)));
+            const auto previous_wrong_direction=transition.wrong_direction_counter;
             transition.wrong_direction_counter=next_wrong_direction_counter(
-                transition.wrong_direction_counter,rider.motion.velocity_x,
-                rider.progress.marker_word,horizontal);
+                previous_wrong_direction,rider.motion.velocity_x,
+                rider.progress.marker_word,horizontal,state.native_initialization);
+            if(state.native_initialization && previous_wrong_direction==179 && transition.wrong_direction_counter==120) {
+                // $829751-9762 / $829781-9792: fixed one-player scenario $77074B=1.
+                if(index==0)enqueue_zoom_player(next,22);else enqueue_zoom_opponent(whole,22);
+            }
 
         }
         update_rolling_mode(rider,surface.mode!=0);
@@ -1842,7 +1862,9 @@ void update_zoom_zoo(ZoomZooState& state,const ControllerButtons& buttons,const 
         resolve_vertical_contact(rider.contact,rider.motion,summary,{whole.contact_phase,index==1,next.surface[index].mode,0xc200},
             content.slope_coefficients.subspan(state.sustained && next.surface[index].mode?64:0,state.sustained?32:9),content.slope_coefficients.subspan(state.sustained?(next.surface[index].mode?96:32):9),content.landing_matrices,
             index==0?whole.player_input.horizontal:next.opponent_horizontal,rider.pose.pose_index,rider.pose.reflected);
-        next.surface[index].leading_support=summary.leading_support;
+        // $8191F4-920C clears leading support on the auxiliary boundary
+        // return, even when an earlier probe initially established support.
+        next.surface[index].leading_support=rider.contact.auxiliary_flag==1?false:summary.leading_support;
         if(state.native_initialization)next.rolls[index].support_count_mirror=rider.contact.unsupported_count;
         observe_track_markers(rider.progress,samples);
     }

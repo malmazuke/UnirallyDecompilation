@@ -46,7 +46,12 @@ struct ZoomZooRoll {
     std::uint16_t step{}, held_updates{}, bounce_charge{}, completed_rolls{};
     std::uint16_t held_rotations{}, bounce_active{}, support_count_mirror{}, prior_step{};
 };
+struct ZoomZooPause {
+    std::uint16_t selection{}, released{}; // $0EF3: 0/racing, 1/resume, -1/retire; $0EF5.
+    std::uint32_t suspended_updates{}, suspended_countdown_updates{}; // Semantic update clocks.
+};
 struct ZoomZooState {
+    ZoomZooPause pause;
     std::array<ZoomZooRoll,2> rolls{};
     std::array<std::array<std::uint8_t,25>,2> learned_weights{}; // Events2–26; event1 remains in each queue.
     bool native_initialization{};

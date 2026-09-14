@@ -70,7 +70,7 @@ int main() {
     std::array<std::uint8_t,26> weights{};weights[0]=4;initial_content.reward_weights=weights;
     auto initial=classic_crawler_zoom_zoo_start(initial_content);
     const auto initial_bytes=serialize_zoom_zoo(initial);
-    require(initial_bytes.size()==730);
+    require(initial_bytes.size()==742);
     require(serialize_zoom_zoo(deserialize_zoom_zoo(initial_bytes))==initial_bytes);
     for(unsigned offset:{565U,567U,569U,581U,583U}) {
         auto corrupt=initial_bytes;corrupt[offset]^=1;
@@ -78,6 +78,10 @@ int main() {
     }
     for(unsigned offset:{585U,617U,618U,619U,621U,623U,624U,626U,628U,630U,632U,634U,636U,638U,640U,642U,644U,646U,648U,650U,652U,654U,656U}) {
         auto corrupt=initial_bytes;corrupt[offset]^=1;
+        rejects([&]{(void)deserialize_zoom_zoo(corrupt);});
+    }
+    for(unsigned offset:{730U,732U,734U,738U}) {
+        auto corrupt=initial_bytes;corrupt[offset]=2;
         rejects([&]{(void)deserialize_zoom_zoo(corrupt);});
     }
     auto result=initial;result.movement.frame=7000;result.movement.countdown=0;

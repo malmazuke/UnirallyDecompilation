@@ -1380,7 +1380,7 @@ std::vector<std::uint8_t> serialize_zoom_zoo(const ZoomZooState& state) {
             for(auto v:{r.mode,r.angle,r.tile_mode,r.leading_support,r.tile_pose,r.animation_delta,r.tile_pose_enabled})put16(bytes,v);
     }
     if(state.complete_race) {
-        bytes[7]=state.native_initialization?'A':'3';
+        bytes[7]=state.native_initialization?'B':'3';
         for(const auto& r:state.race.riders) {
             for(auto v:{r.laps_remaining,r.checkpoint,r.next_checkpoint,r.start_line_latch,r.checkpoint_display_countdown,r.finished})put16(bytes,v);
             for(auto v:r.time_digits)put16(bytes,v);
@@ -1409,12 +1409,14 @@ std::vector<std::uint8_t> serialize_zoom_zoo(const ZoomZooState& state) {
             for(auto v:{r.input_latched,r.prior_orientation,r.prior_reflection,r.pose_base,r.step,r.held_updates,
                         r.bounce_charge,r.completed_rolls,r.held_rotations,r.bounce_active,r.support_count_mirror,r.prior_step})put16(bytes,v);
         for(const auto& weights:state.learned_weights)for(auto v:weights)put8(bytes,v);
+        put16(bytes,state.pause.selection);put16(bytes,state.pause.released);
+        put32(bytes,state.pause.suspended_updates);put32(bytes,state.pause.suspended_countdown_updates);
     }
     return bytes;
 }
 ZoomZooState deserialize_zoom_zoo(std::span<const std::uint8_t> bytes) {
     const std::array<std::uint8_t,8> magic{'U','R','Z','Z','0','0','0','1'};
-    const bool native_initialization=bytes.size()==730 && bytes[7]=='A';
+    const bool native_initialization=bytes.size()==742 && bytes[7]=='B';
     const bool complete_race=((bytes.size()==565 && bytes[7]=='3') || native_initialization) && std::equal(magic.begin(),magic.begin()+7,bytes.begin());
     const bool sustained=complete_race || (bytes.size()==423 && bytes[7]=='2' && std::equal(magic.begin(),magic.begin()+7,bytes.begin()));
     if(!sustained && (bytes.size()!=395 || !std::equal(magic.begin(),magic.end(),bytes.begin())))throw std::invalid_argument("ZOOM ZOO state identity/width differs");
@@ -1493,6 +1495,13 @@ ZoomZooState deserialize_zoom_zoo(std::span<const std::uint8_t> bytes) {
         for(auto& weights:state.learned_weights)for(auto& v:weights) {
             v=in.u8();if(v>64)throw std::invalid_argument("invalid ZOOM ZOO learned reward weight");
         }
+        state.pause.selection=in.u16();state.pause.released=in.u16();
+        state.pause.suspended_updates=in.u32();state.pause.suspended_countdown_updates=in.u32();
+        if((state.pause.selection!=0 && state.pause.selection!=1 && state.pause.selection!=0xffff) || state.pause.released>1 ||
+           state.movement.frame<1376U || state.pause.suspended_updates>state.movement.frame-1376U ||
+           state.pause.suspended_countdown_updates>state.pause.suspended_updates ||
+           ((state.pause.selection || state.pause.released) && !state.pause.suspended_updates))
+            throw std::invalid_argument("invalid ZOOM ZOO pause state");
         for(unsigned i=0;i<2;++i) {
             const auto& roll=state.rolls[i];
             // $8295D5-95F6 publishes the reflection flag and bit15 together
@@ -1526,13 +1535,15 @@ ZoomZooState deserialize_zoom_zoo(std::span<const std::uint8_t> bytes) {
            std::any_of(q.entries.begin(),q.entries.end(),[](auto event){return event!=0;})))
             throw std::invalid_argument("inconsistent initial ZOOM ZOO announcements");
         if(!state.result_updates && a.hints_active &&
-           (a.hint_updates!=(elapsed+30U)%300U || a.hint_group!=((elapsed+30U)/300U)%8U))
+           (a.hint_updates!=(elapsed-state.pause.suspended_updates+30U)%300U || a.hint_group!=((elapsed-state.pause.suspended_updates+30U)/300U)%8U))
             throw std::invalid_argument("inconsistent ZOOM ZOO hint phase");
         for(auto event:q.entries)if(event>72)throw std::invalid_argument("invalid ZOOM ZOO announcement event");
         for(unsigned cursor=(q.read_cursor+1U)&31U;cursor!=q.write_cursor;cursor=(cursor+1U)&31U)
             if(q.entries[cursor]==0)throw std::invalid_argument("empty pending ZOOM ZOO announcement");
         if(elapsed==0 && (state.charge_announced[0] || state.charge_announced[1]))throw std::invalid_argument("initial charge flag must be clear");
-        const auto decrements=elapsed>4U?std::min(270U,elapsed-4U):0U;
+        if(state.pause.suspended_countdown_updates>(elapsed>4U?elapsed-4U:0U))
+            throw std::invalid_argument("invalid ZOOM ZOO suspended countdown clock");
+        const auto decrements=elapsed>4U?std::min(270U,elapsed-4U-state.pause.suspended_countdown_updates):0U;
         if(state.fade_level!=std::min(30U,elapsed) || state.movement.countdown!=270U-decrements)
             throw std::invalid_argument("inconsistent ZOOM ZOO countdown/fade phase");
         if(state.movement.countdown>=129U && (state.start_boost[0]!=384 || state.start_boost[1]!=384))
@@ -1592,7 +1603,7 @@ void update_zoom_zoo(ZoomZooState& state,const ControllerButtons& buttons,const 
         ++state.movement.frame;
         return;
     }
-    if((buttons.y && !state.native_initialization) || (buttons.select && !state.native_initialization) || buttons.start || ((!state.native_initialization) && (buttons.up || buttons.down || buttons.a)) ||
+    if((buttons.y && !state.native_initialization) || (buttons.select && !state.native_initialization) || (buttons.start && !state.native_initialization) || ((!state.native_initialization) && (buttons.up || buttons.down || buttons.a)) ||
        (!state.complete_race && buttons.left) || (buttons.x && !state.native_initialization) || ((!state.native_initialization) && (buttons.left_shoulder || buttons.right_shoulder)))
         throw std::invalid_argument("ZOOM ZOO controller is outside the recovered domain");
     if(state.movement.frame<(state.native_initialization?1376U:1649U) || (!state.native_initialization && state.movement.frame>=(state.sustained?9999U:1849U)))
@@ -1610,6 +1621,25 @@ void update_zoom_zoo(ZoomZooState& state,const ControllerButtons& buttons,const 
     // $82:AAE2-AAFB: B drives $0331 (jump); Y drives $0325 (brake).
     player_input.brake_input=buttons.y;player_input.jump_input=buttons.b;
     player_input.rotate_negative_input=buttons.left_shoulder;player_input.rotate_positive_input=buttons.right_shoulder;
+    // $83CD05-CD35: controller/global phase clocks are sampled before the
+    // pause menu diverts this update. Race, AI, queues and hints do not advance.
+    if(state.native_initialization && (state.pause.selection || (buttons.start && !state.race.riders[0].finished))) {
+        auto& pause=next.pause;
+        if(!pause.selection)pause.selection=1;
+        if(whole.player_input.vertical!=1)pause.selection=whole.player_input.vertical?0xffff:1;
+        if(!buttons.start)pause.released=1;
+        else if(pause.released) {
+            if(negative(pause.selection))throw std::invalid_argument("ZOOM ZOO pause retirement is unrecovered");
+            pause.selection=0;
+        }
+        ++pause.suspended_updates;
+        if(next.fade_level>=5 && whole.countdown)++pause.suspended_countdown_updates;
+        next.opponent_horizontal=1;
+        auto& opponent=next.reflection[1];
+        opponent.brake_input=opponent.jump_input=opponent.rotate_negative_input=opponent.rotate_positive_input=0;
+        ++whole.frame;state=next;return;
+    }
+    if(state.native_initialization && next.pause.released && !buttons.start)next.pause.released=0;
     update_zoom_ai(next);
     if(state.native_initialization && whole.countdown) {
         // $83:E59C-E7BD: countdown presentation feeds braking and start boost.

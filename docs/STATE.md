@@ -2,9 +2,11 @@
 
 Updated 14 September 2026: M4-15 is accepted at `8bc2e71`; private main ref and
 exact-tip macOS/Linux CI `34785933369` verified during M4-16 preparation.
-M4-16 is ready/unclaimed for the next Astra/medium session: playable ZOOM ZOO
-from native initialization through result/restart. No M4-16 gameplay work has
-started. See [NEXT_SESSION](../tasks/NEXT_SESSION.md); no M4-17 dispatch.
+M4-16 execution is incomplete and unaccepted on `codex/m4-16-playable-zoom-zoo`
+in `.worktrees/m4-16-playable-zoom-zoo`. Weekly80% reserve boundary stopped new
+implementation; review/recovery records and resume instructions are in
+[NEXT_SESSION](../tasks/NEXT_SESSION.md). Main retains accepted M4-15 gameplay;
+this update is a documentation-only recovery pointer. No M4-17 dispatch.
 
 ## Accepted product and evidence
 

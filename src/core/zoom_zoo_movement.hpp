@@ -48,6 +48,7 @@ struct ZoomZooRoll {
 };
 struct ZoomZooState {
     std::array<ZoomZooRoll,2> rolls{};
+    std::array<std::array<std::uint8_t,25>,2> learned_weights{}; // Events2–26; event1 remains in each queue.
     bool native_initialization{};
     ZoomZooResult result;
     ZoomZooPlayerAnnouncements player_announcements;
@@ -72,6 +73,7 @@ struct ZoomZooContent {
     std::span<const std::uint8_t> finish_poses;
     std::span<const std::uint8_t> roll_poses;
     std::span<const std::uint8_t> roll_directions;
+    std::span<const std::uint8_t> reward_weights;
 };
 // $82:9715–979D: count active updates opposing the track direction, with
 // original wrapped word comparisons at velocities -16 and +16 (1/32 units).
@@ -83,6 +85,8 @@ ZoomZooState deserialize_zoom_zoo(std::span<const std::uint8_t> bytes);
 ZoomZooState classic_crawler_zoom_zoo_start(const ZoomZooContent& content);
 // Race Again selects the same clean scenario after the stable result.
 void restart_zoom_zoo(ZoomZooState& state,const ZoomZooContent& content);
+// Validate content-dependent restore invariants before emitting or advancing a state.
+void validate_zoom_zoo_content_state(const ZoomZooState& state,const ZoomZooContent& content);
 // Historical continuation and native scenario share this update path.
 void update_zoom_zoo(ZoomZooState& state,const ControllerButtons& buttons,
                      const ZoomZooContent& content);

@@ -67,9 +67,10 @@ int main() {
     // than accepted with changed future countdown or winner/graph semantics.
     std::array<std::uint8_t,11> header{};header[3]=header[7]=64;header[5]=header[9]=33;
     ZoomZooContent initial_content{};initial_content.movement.sampling.track=header;
+    std::array<std::uint8_t,26> weights{};weights[0]=4;initial_content.reward_weights=weights;
     auto initial=classic_crawler_zoom_zoo_start(initial_content);
     const auto initial_bytes=serialize_zoom_zoo(initial);
-    require(initial_bytes.size()==680);
+    require(initial_bytes.size()==730);
     require(serialize_zoom_zoo(deserialize_zoom_zoo(initial_bytes))==initial_bytes);
     for(unsigned offset:{565U,567U,569U,581U,583U}) {
         auto corrupt=initial_bytes;corrupt[offset]^=1;
@@ -95,6 +96,19 @@ int main() {
         rejects([&]{(void)deserialize_zoom_zoo(corrupt);});
     }
 
+    // Reached post-initial archives must reject unsupported bounce fields too.
+    for(unsigned offset:{644U,650U,654U,668U,674U,678U}) {
+        auto corrupt=result_bytes;corrupt[offset]=1;
+        rejects([&]{(void)deserialize_zoom_zoo(corrupt);});
+    }
+    auto bad_weight=initial;bad_weight.learned_weights[0][0]=1;
+    const auto weight_before=serialize_zoom_zoo(bad_weight);
+    rejects([&]{validate_zoom_zoo_content_state(bad_weight,initial_content);});
+    rejects([&]{update_zoom_zoo(bad_weight,{},initial_content);});
+    require(serialize_zoom_zoo(bad_weight)==weight_before);
+    auto active_roll=result;active_roll.rolls[0].step=0xffff;
+    active_roll.rolls[0].pose_base=0x8000;
+    rejects([&]{(void)deserialize_zoom_zoo(serialize_zoom_zoo(active_roll));});
     auto impossible=result;impossible.movement.frame=1376;impossible.movement.countdown=270;
     impossible.fade_level=0;impossible.start_boost.fill(384);impossible.result_updates=1;impossible.result={};
     rejects([&]{(void)deserialize_zoom_zoo(serialize_zoom_zoo(impossible));});

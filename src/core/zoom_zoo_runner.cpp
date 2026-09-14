@@ -83,9 +83,11 @@ int main(int argc,char** argv) try {
     const auto finish_poses=state.complete_race?load("race-finish-poses.bin"):std::vector<std::uint8_t>{};
     const auto roll_poses=pack?load("roll-pose-table.bin"):std::vector<std::uint8_t>{};
     const auto roll_directions=pack?load("roll-direction-table.bin"):std::vector<std::uint8_t>{};
-    const unirally::ZoomZooContent data{movement,coefficients,reflection,landing,finish_poses,roll_poses,roll_directions};
+    const auto weights=pack?load("roll-reward-weights.bin"):std::vector<std::uint8_t>{};
+    const unirally::ZoomZooContent data{movement,coefficients,reflection,landing,finish_poses,roll_poses,roll_directions,weights};
     if(native_start)state=unirally::classic_crawler_zoom_zoo_start(data);
     if(restart)unirally::restart_zoom_zoo(state,data);
+    unirally::validate_zoom_zoo_content_state(state,data);
     std::ifstream stream(inputs);
     if(!stream)throw std::runtime_error("cannot open ZOOM ZOO controller stream");
     emit(state);

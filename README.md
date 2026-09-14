@@ -65,6 +65,18 @@ custom tracks, a track editor, and high-resolution replacement assets. These are
 future goals, not current features. The [project plan](docs/PROJECT_PLAN.md)
 describes the milestones and acceptance criteria.
 
+## License
+
+Project-owned code and documentation are available under the [MIT License](LICENSE).
+This grant covers only rights held by the project authors. It does not grant
+rights to the original Unirally/Uniracers game, ROMs, extracted game content,
+trademarks, or original game artwork shown in screenshots. Third-party code and
+dependencies retain their respective licenses and notices.
+
+The project is not affiliated with or endorsed by the original game's rights
+holders. Licensing the project does not change the
+[contribution policy](CONTRIBUTING.md).
+
 ## Contributions
 
 This repository is public so people can follow development and explore the

@@ -9,7 +9,14 @@ D-0004/D-0006 and [R-0035](../docs/research/R-0035-zoom-zoo-playable-recovery.md
 Resume the existing checkout; `git status`, `git log -5` and the ignored recovery
 record identify its actual tip. Do not overwrite private fixtures or old packs.
 
-## Resource and review boundary
+## Active continuation override
+
+The user resumed M4-16 with “You can ignore usage boundaries. Continue”.
+Percentage stop/reserve rules in the historical checkpoint below are superseded
+for this execution; continue until acceptance or actual unavailable prerequisites.
+No reset/purchase/provider change is authorized. Resumed from debb2729a629e4e5b90096042b7c8fc6c6e73a96.
+
+## Historical resource and review boundary
 
 Session started2026-09-13 22:55:27 UTC, OpenAI Astra/medium, weekly57% used.
 Latest sampling and the stopping reason are recorded in `recovery-closeout.json`

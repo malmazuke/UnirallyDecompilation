@@ -2,6 +2,16 @@
 
 Status: adopted, 12 September 2026. Reassess from measured accepted work.
 
+## M4-16 continuation override — 14 September 2026
+
+After the incomplete recovery checkpoint, the user explicitly instructed:
+“You can ignore usage boundaries. Continue”. For this active M4-16 execution,
+ignore the percentage stop/reserve boundaries and continue toward acceptance.
+Retain usage telemetry for evidence, independent review and task/provider scope.
+This overrides the M4-16 percentage limits below; it does not authorize credit
+redemption, purchases, paid fallback or a provider change. Actual tool/account
+unavailability remains a resource limitation, not an invented percentage cutoff.
+
 ## M4-16 playable-track extension
 
 The user authorized preparation of [M4-16](../../tasks/M4-16.md) after M4-15.

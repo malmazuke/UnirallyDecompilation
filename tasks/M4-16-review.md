@@ -365,3 +365,94 @@ The state, result, restart, producer-closure and deterministic independent-case
 corrections pass this review. Do not accept M4-16 at `4f8aaad`: the required live
 full-race/result/restart review and final visual evidence are still absent, and
 ordinary guarded controls remain unresolved as a product boundary.
+
+## V9 roll re-review — candidate edec610
+
+This focused review used exact detached unaccepted candidate
+`edec61048427d2c38be924c84518b519d606b5f0`. While its full X comparison was
+running, the primary froze a newer V10 candidate and directed this reviewer not
+to start further V9 comparisons. Accordingly this section records the completed
+X gate, V9 state defect, pack/source assessment and additive reviewer freezes;
+it does not approve V9 or evaluate the two prior cases on native V9.
+
+### Pack, original projection and completed X gate
+
+The review checkout rebuilt its own pack through the Python pack API and the
+current two-track rules. The resulting experimental
+`classic.pal.crawler.two-tracks.v3` pack contains 48 entries, has SHA-256
+`301c7c74...`, and validates rules SHA-256 `b45e82a0...`. The two new ROM-only
+entries are the 128-byte roll-pose table `8d10c152...` and 64-byte roll-direction
+table `670f9225...`; accepted DRAGSTER v1 remains available independently.
+
+Before native V9 evaluation, the existing repeated originals for the airborne
+R case and replacement moving-brake case were projected into fresh additive
+680-byte V9 freezes. Their rows SHA-256 values are `2215eab9...` and
+`b8d1af3a...`. They were not compared with native V9 after the primary supplied
+the newer-candidate instruction.
+
+The primary's already frozen full X case was compared independently against the
+task-local pack. Exact candidate V9 matched all 6,225 states from 1376 through
+7600, including the full roll, finishes at 6482/6488, result loading at 6723,
+fully visible result at 6837, 1,782 fresh-process restore boundaries, repeated
+native initialization and the complete restarted race. Runner SHA-256 was
+`168f83c5...`; rows SHA-256 was `f11f998e...`.
+
+### Required state correction
+
+6. **Required correction — V9 accepts an inconsistent active-roll pose base
+   that changes the next collision state.** The decoder bounds the signed roll
+   step and simple flags, but does not relate `pose_base` to the active step,
+   prior orientation/reflection or authenticated roll table
+   (`src/core/movement.cpp:1451-1463`).
+
+   In the authentic X state at frame 1712, rider 0 has `step=-1` and
+   `pose_base=0x0063`. Flipping only serialized `pose_base` bit 15 at byte 639
+   is accepted. Continuing both states with the authentic frame-1713 controller
+   row exits zero, but the corrupt state differs immediately at serialized
+   gameplay bytes 74, 76, 88-89, 101 and 405-406, as well as the mutated roll
+   byte. The bit changes the completion reflection branch and therefore pose and
+   collision continuation. Reject an active roll whose pose base cannot be
+   derived from the static roll table and its serialized orientation/reflection,
+   and add this exact late-step mutation to the malformed-state test.
+
+   V9 also accepts nonzero `held_updates`, `bounce_charge` and
+   `held_rotations`, then throws only when the next active roll update reaches
+   the explicit unrecovered guard. A frame-1712 `held_updates=1` mutation emits
+   the seed state and then fails at frame 1713. Unsupported serialized
+   continuation values should reject at decode rather than admit a state that
+   cannot continue. The primary reports these paths recovered in V10, so the
+   newer decoder should instead validate their reached relationships.
+
+The duplicate support-count field behaves correctly in V9. A mutation rejects
+before emitting a row, and the original access audit directly shows `$818E06`
+copying `$0F33` to `$054B` and `$818F5A` copying the corresponding opponent
+value to `$054D`. This supports treating the two words as redundant mirrors of
+the already serialized contact support count, rather than bounce state.
+
+The focused X access audit authenticates all 6,394 WRAM frames and captures
+frames 1690–1760 around the roll. It reaches the projected roll producers and
+the completion reads at `$8296C6-96E1`. This closes the one complete,
+uninterrupted X path only. Held/released and interrupted X, general multi-event
+reward behavior, Start and Select remain outside V9's proven domain.
+
+### Focused commands and disposition
+
+- `tools/project.py build --preset app-debug --report
+  artifacts/m4-16-review/candidate-edec610-build.json`: passed.
+- `tools/project.py content pack --rules
+  tests/manifests/content/classic-crawler-two-tracks-pack.json ...`: passed exact
+  ROM identity, atomic commit and all 48 entries.
+- Two `zoom_zoo_playable freeze` invocations produced the additive reviewer V9
+  contracts before native evaluation.
+- Full X `zoom_zoo_playable compare`: passed 6,225 states and 1,782 restores,
+  including the full restart race.
+- `ctest --test-dir build/app-debug -R
+  'zoom_zoo_trial_width_state_and_guards|classic_content_pack_identity_rejection'
+  --output-on-failure`: 2/2 passed. Those tests do not cover the late active-roll
+  pose-base mutation above.
+
+Reject `edec610` as a final candidate. Its reached uninterrupted X behavior and
+support mirror pass, but malformed active-roll restore is future-changing, and
+held/interrupted X plus the live/visual product gates remain incomplete. Recheck
+the pose-base invariant and recovered held/release fields on the newer frozen
+candidate.

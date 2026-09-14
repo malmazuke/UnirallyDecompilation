@@ -1135,13 +1135,37 @@ void update_zoom_hints(ZoomZooState& state) {
     for(unsigned i=0;i<4;++i)enqueue_zoom_player(state,40U+4U*a.hint_group+i);
 }
 
+// $8296C3-9711: completion is shared by ordinary rolls and bounce release.
+void complete_zoom_roll(ZoomZooState& state,unsigned index,bool interrupted=false) {
+    auto& roll=state.rolls[index];auto& rider=state.movement.riders[index];
+    if(!roll.bounce_active && !state.surface[index].leading_support && !interrupted)
+        roll.completed_rolls=add_word(roll.completed_rolls,1);
+    roll.bounce_charge=0;state.reflection[index].pose_override=0;
+    if(!(roll.pose_base&0x8000U))rider.pose.reflected=!rider.pose.reflected;
+    rider.pose.orientation=static_cast<std::uint16_t>(rider.pose.orientation-32U)&63U;
+}
+
 // $829398-9714: X enters a roll on unsupported contact. The signed
 // step selects the original nine-frame pose strip and is advanced only on
 // this rider's active update. Pose/reflection feed the next collision sample.
 void update_zoom_roll(ZoomZooState& state,unsigned index,bool pressed,const ZoomZooContent& content) {
     auto& roll=state.rolls[index];auto& rider=state.movement.riders[index];
     auto& turn=state.reflection[index];
-    if(roll.bounce_charge)throw std::invalid_argument("ZOOM ZOO roll-bounce continuation is unrecovered");
+    if(roll.bounce_charge) {
+        // $82965E-96C3. Charge is a retained160, not a per-update ramp:
+        // the original's below512 store writes the same loaded value.
+        const auto bounce=[&] {
+            rider.motion.velocity_y=static_cast<std::uint16_t>(~std::min<std::uint16_t>(roll.bounce_charge,256));
+            roll.bounce_active=1;
+        };
+        if(index==0 && pressed && !state.surface[index].tile_pose_enabled) {
+            roll.input_latched=0;
+            if(state.surface[index].leading_support)bounce();
+            return;
+        }
+        if(rider.contact.unsupported_count<2)bounce();
+        complete_zoom_roll(state,index);return;
+    }
     if(!roll.step) {
         if(turn.pose_override || rider.contact.unsupported_count<9)return;
         if(!pressed) {roll.input_latched=0;return;}
@@ -1192,13 +1216,11 @@ void update_zoom_roll(ZoomZooState& state,unsigned index,bool pressed,const Zoom
         step_index=negative(roll.step)?add_word(roll.step,9):roll.step;
     }
     if(!roll.step) {
-        // $8296C3-9711, reached non-bounce completion. The orientation
-        // subtraction is wrapped modulo64 before later pose generation.
-        if(!roll.bounce_active && !interrupted)roll.completed_rolls=add_word(roll.completed_rolls,1);
-        roll.bounce_charge=0;turn.pose_override=0;
-        if(!(roll.pose_base&0x8000U))rider.pose.reflected=!rider.pose.reflected;
-        rider.pose.orientation=static_cast<std::uint16_t>(rider.pose.orientation-32U)&63U;
-        return;
+        // $829636-965B keeps the final central pose while X charges a bounce.
+        if(turn.pose_override==0x9a8 && index==0 && pressed && !state.surface[index].tile_pose_enabled) {
+            roll.bounce_charge=160;return;
+        }
+        complete_zoom_roll(state,index,interrupted);return;
     }
     auto angle=rider.pose.orientation&63U;
     auto entry=content_word(content.roll_poses,2U*angle);
@@ -1541,7 +1563,7 @@ ZoomZooState deserialize_zoom_zoo(std::span<const std::uint8_t> bytes) {
             for(auto* v:{&r.input_latched,&r.prior_orientation,&r.prior_reflection,&r.pose_base,&r.step,&r.held_updates,
                          &r.bounce_charge,&r.completed_rolls,&r.held_rotations,&r.bounce_active,&r.support_count_mirror,&r.prior_step})*v=in.u16();
             if(r.input_latched>1 || r.prior_orientation>63 || r.prior_reflection>1 ||
-               static_cast<std::int16_t>(r.step)<-9 || static_cast<std::int16_t>(r.step)>9 || r.bounce_charge || r.bounce_active || r.prior_step || (r.pose_base&0x4000U))
+               static_cast<std::int16_t>(r.step)<-9 || static_cast<std::int16_t>(r.step)>9 || (r.bounce_charge!=0 && r.bounce_charge!=160) || r.bounce_active>1 || (r.bounce_charge && r.step) || r.prior_step || (r.pose_base&0x4000U))
                 throw std::invalid_argument("invalid ZOOM ZOO roll state");
             if(state.movement.frame==1376 && (r.input_latched || r.prior_orientation || r.prior_reflection || r.pose_base ||
                r.step || r.held_updates || r.bounce_charge || r.completed_rolls || r.held_rotations || r.bounce_active || r.support_count_mirror || r.prior_step))

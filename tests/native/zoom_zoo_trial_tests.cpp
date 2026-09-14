@@ -127,11 +127,22 @@ int main() {
         rejects([&]{(void)deserialize_zoom_zoo(corrupt);});
     }
 
-    // Reached post-initial archives must reject unsupported bounce fields too.
-    for(unsigned offset:{644U,650U,654U,668U,674U,678U}) {
+    // Frozen late-roll recovery now admits charge160 and binary bounce-active.
+    // Invalid charge values and still-unproduced prior steps remain rejected.
+    for(unsigned offset:{644U,654U,668U,678U}) {
         auto corrupt=result_bytes;corrupt[offset]=1;
         rejects([&]{(void)deserialize_zoom_zoo(corrupt);});
     }
+    for(unsigned offset:{650U,674U}) {
+        auto corrupt=result_bytes;corrupt[offset]=2;
+        rejects([&]{(void)deserialize_zoom_zoo(corrupt);});
+        auto valid=result_bytes;valid[offset]=1;
+        require(serialize_zoom_zoo(deserialize_zoom_zoo(valid))==valid);
+    }
+    auto charged=result;charged.rolls[0].bounce_charge=160;
+    require(serialize_zoom_zoo(deserialize_zoom_zoo(serialize_zoom_zoo(charged)))==serialize_zoom_zoo(charged));
+    charged.rolls[0].step=1;
+    rejects([&]{(void)deserialize_zoom_zoo(serialize_zoom_zoo(charged));});
     auto bad_weight=initial;bad_weight.learned_weights[0][0]=1;
     const auto weight_before=serialize_zoom_zoo(bad_weight);
     rejects([&]{validate_zoom_zoo_content_state(bad_weight,initial_content);});

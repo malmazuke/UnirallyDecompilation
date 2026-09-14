@@ -113,6 +113,11 @@ def probe(reference: Path, core_path: Path, event: int, before_frame: int, throu
                     advanced = (cursor + 1) & 31
                     if advanced == before[OPPONENT_READ]:
                         raise ValueError('probe refuses to fill the opponent ring')
+                    if cursor == before[OPPONENT_READ]:
+                        # $81C5CD-C5D0 returns without publishing when the
+                        # cursors already meet, so this would not be the
+                        # enqueue the producer performs.
+                        raise ValueError('the opponent ring is already at its publication limit')
                     ctypes.memmove(pointer + OPPONENT_ENTRIES + cursor, bytes([event]), 1)
                     ctypes.memmove(pointer + OPPONENT_WRITE, bytes([advanced]), 1)
                     modified = core.wram()
@@ -183,10 +188,15 @@ def freeze(first: Path, second: Path, out: Path) -> dict:
     """Require two independent captures of the same intervention to agree."""
     if out.exists():
         raise ValueError('fresh probe freeze required')
+    if first.resolve() == second.resolve():
+        raise ValueError('a freeze needs two independent captures, not one directory twice')
     left = json.loads((first/'report.json').read_text())
     right = json.loads((second/'report.json').read_text())
     if left['kind'] != 'artificial_original_opponent_reward_probe' or right['kind'] != left['kind']:
         raise ValueError('both inputs must be opponent reward probes')
+    for report in (left, right):
+        if report['intervention'].get('consumed_at_frame') is None:
+            raise ValueError('probe predates the consumption assertion; recapture before freezing')
     for field in ('rom_sha256', 'core_sha256', 'timeline_sha256', 'intervention', 'frames',
                   'seed_sha256', 'rows_sha256', 'rows', 'observations'):
         if left[field] != right[field]:
@@ -215,6 +225,8 @@ def native(probe_dir: Path, reference: Path, binary: Path, pack: Path) -> dict:
     seed = (probe_dir/'seed.state').read_bytes()
     if sha(seed) != report['seed_sha256'] or digest(report['rows']) != report['rows_sha256']:
         raise ValueError('probe evidence identity differs')
+    if report['intervention'].get('consumed_at_frame') is None:
+        raise ValueError('probe predates the consumption assertion; recapture before comparing')
     document = json.loads((reference/'reference.json').read_text())
     if document['timeline_sha256'] != report['timeline_sha256']:
         raise ValueError('probe and reference timelines differ')

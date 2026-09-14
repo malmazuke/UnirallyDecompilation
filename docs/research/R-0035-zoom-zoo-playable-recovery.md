@@ -179,12 +179,21 @@ Evidence is `zoom_zoo_opponent_reward_probe`, an artificial original-only
 intervention. It cold-starts the authenticated primary timeline, verifies every
 pre-intervention frame, then performs exactly the enqueue the producer would
 perform and records the original's answer. The natural primary reaches only
-opponent events 1, 14, 15 and 39, so events 2, 8, 17, 13 and voice 200 were each
-captured twice, identically, to cover the full reward, zero-weight,
-leading-class and out-of-table branches. Native continuation matches all 742
-bytes across 9 observations for every capture; a single flipped byte at the
-consumption frame is detected. These probes are internal mechanics experiments
-and never a seed-based playable acceptance fallback.
+opponent events 1, 14, 15 and 39, so **nine** events were each captured twice,
+identically, and frozen: 2, 8 and 21 for the full reward path, 17 for a counted
+class with a zero weight, 13 for the leading class, 200 and 215 for the
+out-of-table voice range, and 150 as the voice-path control the native refuses
+to restore. Every capture is required to reach consumption — all do, at frame
+1722 — and native continuation matches all 742 bytes across 9 observations for
+each; a single flipped byte at the consumption frame is detected.
+
+At the 742-byte projection the voice path and the out-of-table reward path are
+both "consume, publish nothing", so the probes alone do not discriminate the two
+domain predicates. The cartridge class counters are what separate them, and they
+sit outside the projected inventory: event 150 moves none, event 205 increments
+`$770801`, event 17 increments `$770819` (class 34) and event 18 increments
+`$770805` (class 24). These probes are internal mechanics experiments and never
+a seed-based playable acceptance fallback.
 
 ```sh
 python3 -m tools.unirally_lab.native.zoom_zoo_opponent_reward_probe capture --reference artifacts/m4-16/boundary-a --core local/emulators/bsnes/bsnes/out/bsnes_libretro.dylib --event 2 --out artifacts/m4-16/opponent-reward-probe/FRESH

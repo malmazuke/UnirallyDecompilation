@@ -177,6 +177,15 @@ int main() {
         auto forged=result;forged.movement.rewards.cooldown=60000;
         rejects([&]{(void)deserialize_zoom_zoo(serialize_zoom_zoo(forged));});
     }
+    // $81C598-C5C8 never publishes a zero, so a restore carrying one would
+    // otherwise be accepted and only fail on the following update.
+    {
+        auto forged=result;auto& o=forged.movement.rewards;
+        o.read_cursor=0;o.write_cursor=2;o.entries[1]=0;o.entries[2]=1;
+        rejects([&]{(void)deserialize_zoom_zoo(serialize_zoom_zoo(forged));});
+        o.entries[1]=1;
+        require(serialize_zoom_zoo(deserialize_zoom_zoo(serialize_zoom_zoo(forged)))==serialize_zoom_zoo(forged));
+    }
     auto bad_weight=initial;bad_weight.learned_weights[0][0]=1;
     const auto weight_before=serialize_zoom_zoo(bad_weight);
     rejects([&]{validate_zoom_zoo_content_state(bad_weight,initial_content);});

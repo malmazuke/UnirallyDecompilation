@@ -654,6 +654,10 @@ void update_reward_queue(MovementState& state,unsigned event_one,const MovementC
                 else throw std::invalid_argument("reward queue left the recovered event-one domain");
             }
         } else if(event<200 || event>215) {
+            // Unreachable while deserialization admits only the produced
+            // 200-215 above 71: 216-255 would read $7E21D9 upward, which the
+            // appended guards deliberately do not cover. Widen those guards
+            // with this domain if it ever moves.
             throw std::invalid_argument("reward queue left the recovered event-one domain");
         }
         // Beyond the 72-entry class table only the BRONSEN voice range is
@@ -1603,6 +1607,9 @@ ZoomZooState deserialize_zoom_zoo(std::span<const std::uint8_t> bytes) {
         q.feature_total=in.u16();q.event_one_weight=in.u8();
         a.hints_active=in.u16();a.hint_updates=in.u16();a.hint_group=in.u16();a.empty_display=in.u16();
         if(q.read_cursor>31 || q.write_cursor>31 || q.cooldown>120 ||
+           // The reachable weights are the halvings of the $82D7A4 template
+           // byte the initializer now reads from content; they coincide for
+           // the frozen pack, so a template change must revisit this bound.
            (q.event_one_weight!=1 && q.event_one_weight!=2 && q.event_one_weight!=4) ||
            a.hints_active>1 || a.hint_updates>=300 || a.hint_group>=8 || a.empty_display>1)
             throw std::invalid_argument("invalid ZOOM ZOO player announcement state");
@@ -1698,6 +1705,14 @@ ZoomZooState deserialize_zoom_zoo(std::span<const std::uint8_t> bytes) {
             throw std::invalid_argument("invalid ZOOM ZOO opponent voice event");
         for(unsigned cursor=(q.read_cursor+1U)&31U;cursor!=q.write_cursor;cursor=(cursor+1U)&31U)
             if(q.entries[cursor]==0)throw std::invalid_argument("empty pending ZOOM ZOO announcement");
+        // The opponent's ring needs the same closure. $81C598-C5C8 never
+        // publishes a zero, and the consumer rejects one, so a restore that
+        // carried a published zero would only fail on the following update.
+        {
+            const auto& o=state.movement.rewards;
+            for(unsigned cursor=(o.read_cursor+1U)&31U;cursor!=o.write_cursor;cursor=(cursor+1U)&31U)
+                if(o.entries[cursor]==0)throw std::invalid_argument("empty pending ZOOM ZOO opponent reward");
+        }
         if(elapsed==0 && (state.charge_announced[0] || state.charge_announced[1]))throw std::invalid_argument("initial charge flag must be clear");
         if(state.pause.suspended_countdown_updates>(elapsed>4U?elapsed-4U:0U))
             throw std::invalid_argument("invalid ZOOM ZOO suspended countdown clock");

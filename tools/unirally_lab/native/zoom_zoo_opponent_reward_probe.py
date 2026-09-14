@@ -153,6 +153,17 @@ def probe(reference: Path, core_path: Path, event: int, before_frame: int, throu
                                          guards_tripped=tripped, **_observation(wram, sram)))
             if seed is None:
                 raise ValueError('probe never reached its intervention frame')
+            # A window that ends before the cooldown expires would "pass"
+            # without the consumer ever running. Require the read cursor to
+            # reach the injected entry inside the captured window.
+            consumed = next((o['frame'] for o in captured if o['read_cursor'] == intervention['entry_index']), None)
+            if consumed is None:
+                raise ValueError('probe window ended before the injected entry was consumed; '
+                                 'widen --through past the publication cooldown')
+            intervention['consumed_at_frame'] = consumed
+            tripped = {o['frame']: o['guards_tripped'] for o in captured if o['guards_tripped']}
+            if tripped:
+                raise ValueError(f'artificial branch left the guarded original domain: {tripped}')
             (out/'seed.state').write_bytes(seed)
             report = dict(kind='artificial_original_opponent_reward_probe', acceptance=False,
                           scope=('Internal $81C219-C2C9 recovery evidence for reward events the natural primary '
@@ -166,6 +177,30 @@ def probe(reference: Path, core_path: Path, event: int, before_frame: int, throu
             return report
         finally:
             core.unload()
+
+
+def freeze(first: Path, second: Path, out: Path) -> dict:
+    """Require two independent captures of the same intervention to agree."""
+    if out.exists():
+        raise ValueError('fresh probe freeze required')
+    left = json.loads((first/'report.json').read_text())
+    right = json.loads((second/'report.json').read_text())
+    if left['kind'] != 'artificial_original_opponent_reward_probe' or right['kind'] != left['kind']:
+        raise ValueError('both inputs must be opponent reward probes')
+    for field in ('rom_sha256', 'core_sha256', 'timeline_sha256', 'intervention', 'frames',
+                  'seed_sha256', 'rows_sha256', 'rows', 'observations'):
+        if left[field] != right[field]:
+            raise ValueError(f'the two probe captures differ at {field}')
+    if (first/'seed.state').read_bytes() != (second/'seed.state').read_bytes():
+        raise ValueError('the two probe seeds differ')
+    result = dict(kind='artificial_opponent_reward_probe_freeze', acceptance=False, scope=left['scope'],
+                  event=left['intervention']['event'], intervention=left['intervention'],
+                  frames=left['frames'], state_bytes=742, rom_sha256=left['rom_sha256'],
+                  core_sha256=left['core_sha256'], timeline_sha256=left['timeline_sha256'],
+                  seed_sha256=left['seed_sha256'], rows_sha256=left['rows_sha256'],
+                  captures=[str(first), str(second)])
+    out.write_text(json.dumps(result, indent=2)+'\n')
+    return result
 
 
 def native(probe_dir: Path, reference: Path, binary: Path, pack: Path) -> dict:
@@ -213,7 +248,8 @@ def native(probe_dir: Path, reference: Path, binary: Path, pack: Path) -> dict:
     outcome = dict(kind='artificial_opponent_reward_native_probe', acceptance=False,
                    scope=report['scope'], probe=str(probe_dir), event=report['intervention']['event'],
                    frames=report['frames'], state_bytes=742, returncode=result.returncode,
-                   observations=len(report['rows']), seed_sha256=report['seed_sha256'],
+                   observations=len(report['rows']), consumed_at_frame=report['intervention'].get('consumed_at_frame'),
+                   seed_sha256=report['seed_sha256'],
                    rows_sha256=report['rows_sha256'], binary_sha256=sha(binary.read_bytes()),
                    pack_sha256=sha(pack.read_bytes()), stderr=result.stderr.strip()[:400],
                    status='passed' if mismatch is None and result.returncode == 0 and
@@ -232,6 +268,10 @@ def main() -> None:
     capture.add_argument('--before-frame', type=int, default=1718)
     capture.add_argument('--through', type=int, default=1726)
     capture.add_argument('--out', type=Path, required=True)
+    agree = sub.add_parser('freeze', help='require two captures of one intervention to agree')
+    agree.add_argument('--first', type=Path, required=True)
+    agree.add_argument('--second', type=Path, required=True)
+    agree.add_argument('--out', type=Path, required=True)
     compare = sub.add_parser('native', help='continue the frozen probe natively and compare')
     compare.add_argument('--probe', type=Path, required=True)
     compare.add_argument('--reference', type=Path, required=True)
@@ -241,6 +281,8 @@ def main() -> None:
     if args.command == 'capture':
         report = probe(args.reference, args.core, args.event, args.before_frame, args.through, args.out)
         print(json.dumps({k: v for k, v in report.items() if k not in ('rows', 'observations')}, indent=2))
+    elif args.command == 'freeze':
+        print(json.dumps(freeze(args.first, args.second, args.out), indent=2))
     else:
         outcome = native(args.probe, args.reference, args.binary, args.pack)
         print(json.dumps(outcome, indent=2))

@@ -145,16 +145,38 @@ int main() {
         auto corrupt=result_bytes;corrupt[offset]=1;
         rejects([&]{(void)deserialize_zoom_zoo(corrupt);});
     }
-    for(unsigned offset:{650U,674U}) {
-        auto corrupt=result_bytes;corrupt[offset]=2;
+    {
+        // Rider 0 may be mid-bounce; a nonbinary flag still rejects.
+        auto corrupt=result_bytes;corrupt[650]=2;
         rejects([&]{(void)deserialize_zoom_zoo(corrupt);});
-        auto valid=result_bytes;valid[offset]=1;
+        auto valid=result_bytes;valid[650]=1;
         require(serialize_zoom_zoo(deserialize_zoom_zoo(valid))==valid);
+    }
+    // $829641-9649 gates the charge store on rider $0FF9 whenever $0C6D is
+    // non-zero, and the reference guard holds $0C6D at 1 throughout, so the
+    // opponent can neither charge nor bounce. Both of its flags reject.
+    for(unsigned value:{1U,2U}) {
+        auto corrupt=result_bytes;corrupt[674]=static_cast<std::uint8_t>(value);
+        rejects([&]{(void)deserialize_zoom_zoo(corrupt);});
     }
     auto charged=result;charged.rolls[0].bounce_charge=160;
     require(serialize_zoom_zoo(deserialize_zoom_zoo(serialize_zoom_zoo(charged)))==serialize_zoom_zoo(charged));
     charged.rolls[0].step=1;
     rejects([&]{(void)deserialize_zoom_zoo(serialize_zoom_zoo(charged));});
+    auto opponent_charged=result;opponent_charged.rolls[1].bounce_charge=160;
+    rejects([&]{(void)deserialize_zoom_zoo(serialize_zoom_zoo(opponent_charged));});
+    auto opponent_bouncing=result;opponent_bouncing.rolls[1].bounce_active=1;
+    rejects([&]{(void)deserialize_zoom_zoo(serialize_zoom_zoo(opponent_bouncing));});
+    // The opponent's reward queue now carries the player's bounds: a weight
+    // halving can never reach, or a cooldown above the 40 of $81C2CC-C2D0.
+    for(unsigned weight:{0U,3U,250U}) {
+        auto forged=result;forged.movement.rewards.event_one_weight=static_cast<std::uint8_t>(weight);
+        rejects([&]{(void)deserialize_zoom_zoo(serialize_zoom_zoo(forged));});
+    }
+    {
+        auto forged=result;forged.movement.rewards.cooldown=60000;
+        rejects([&]{(void)deserialize_zoom_zoo(serialize_zoom_zoo(forged));});
+    }
     auto bad_weight=initial;bad_weight.learned_weights[0][0]=1;
     const auto weight_before=serialize_zoom_zoo(bad_weight);
     rejects([&]{validate_zoom_zoo_content_state(bad_weight,initial_content);});

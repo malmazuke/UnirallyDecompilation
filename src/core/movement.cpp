@@ -639,10 +639,13 @@ void update_reward_queue(MovementState& state,unsigned event_one,const MovementC
         }
         if(!leading_event)weight=&state.rewards.event_one_weight;
     }
-    // $81C238 branches on a *signed* comparison with 72, so the fixed BRONSEN
-    // voice range 200-215 is negative and enters the reward path instead of
-    // the voice path that the player's positive 72-87 take.
-    else if(static_cast<std::int8_t>(event)<72) {
+    // $81C238 is CMP #$48 / BMI, which tests bit 7 of the 8-bit difference
+    // rather than comparing signed values: the reward path is taken for
+    // events 0-71 and again for 200-255, and 72-199 take the voice path.
+    // The fixed BRONSEN voices 200-215 therefore reach the reward path,
+    // unlike the player's 72-87 which do not. This is deliberately not
+    // int8(event)<72; that spelling would also divert 128-199.
+    else if(event<72 || event>=200) {
         if(event==0)throw std::invalid_argument("reward queue holds no published event");
         if(event<=content.rotation_class.size()) {
             if(content.rotation_class[event-1]!=255) {
@@ -655,11 +658,13 @@ void update_reward_queue(MovementState& state,unsigned event_one,const MovementC
         }
         // Beyond the 72-entry class table only the BRONSEN voice range is
         // reachable. $81C241 then indexes past the table into ROM code and
-        // $81C260 past the 26-byte learned bank into $7E21C9-$7E21D8, which
-        // the reference guard holds at zero on every authenticated frame, so
-        // the original takes its zero-weight exit and publishes no reward.
-        // The cartridge class counter it still bumps is outside the recovered
-        // inventory here exactly as it is for the player.
+        // $81C260 past the 26-byte learned bank into $7E21C9-$7E21D8. Those
+        // bytes are zero on every authenticated frame of every reference
+        // capture, which the appended reward-bank guards now assert rather
+        // than leaving to observation, so the original takes its zero-weight
+        // exit and publishes no reward. The cartridge class counter it still
+        // bumps is outside the recovered inventory here exactly as it is for
+        // the player.
     }
     if(weight && *weight) {
         state.rewards.feature_total=add_word(state.rewards.feature_total,*weight);
@@ -1601,16 +1606,39 @@ ZoomZooState deserialize_zoom_zoo(std::span<const std::uint8_t> bytes) {
            (q.event_one_weight!=1 && q.event_one_weight!=2 && q.event_one_weight!=4) ||
            a.hints_active>1 || a.hint_updates>=300 || a.hint_group>=8 || a.empty_display>1)
             throw std::invalid_argument("invalid ZOOM ZOO player announcement state");
+        // The opponent's identical queue fields had no bound at all, so a
+        // forged bank could publish an arbitrary feature total or a weight
+        // that halving can never reach. $82DB87-DB94 seeds both banks from
+        // one template, and $81C27B-C280 only ever halves toward a floor of
+        // one, so the reachable set matches the player's. The opponent has
+        // no tutorial path, so its cooldown tops out at the 40 of
+        // $81C2CC-C2D0 rather than the player's hint value of 120.
+        {
+            const auto& o=state.movement.rewards;
+            if(o.cooldown>40 || (o.event_one_weight!=1 && o.event_one_weight!=2 && o.event_one_weight!=4))
+                throw std::invalid_argument("invalid ZOOM ZOO opponent reward queue state");
+        }
         if(state.movement.countdown && (state.race.riders[0].finished || state.race.riders[1].finished || state.result_updates))
             throw std::invalid_argument("ZOOM ZOO finish/result conflicts with start phase");
         if(state.result!=zoom_result_fields(state.race,state.result_updates))
             throw std::invalid_argument("inconsistent ZOOM ZOO result publication");
-        for(auto& r:state.rolls) {
+        for(unsigned roll_index=0;roll_index<state.rolls.size();++roll_index) {
+            auto& r=state.rolls[roll_index];
             for(auto* v:{&r.input_latched,&r.prior_orientation,&r.prior_reflection,&r.pose_base,&r.step,&r.held_updates,
                          &r.bounce_charge,&r.completed_rolls,&r.held_rotations,&r.bounce_active,&r.support_count_mirror,&r.prior_step})*v=in.u16();
             if(r.input_latched>1 || r.prior_orientation>63 || r.prior_reflection>1 ||
                static_cast<std::int16_t>(r.step)<-9 || static_cast<std::int16_t>(r.step)>9 || (r.bounce_charge!=0 && r.bounce_charge!=160) || r.bounce_active>1 || (r.bounce_charge && r.step) || r.prior_step || (r.pose_base&0x4000U))
                 throw std::invalid_argument("invalid ZOOM ZOO roll state");
+            // $829641-9649 and $82965E-9666 read $0C6D and, when it is
+            // non-zero, require rider $0FF9 to be the player before storing
+            // charge $A0 at $1007. The reference guard holds $0C6D at 1 on
+            // every authenticated frame, so the opponent can never charge and
+            // never reach the bounce that only a charge enables. The native
+            // producer already gates on the rider index; reject the forged
+            // restore too instead of continuing from a state the original
+            // cannot produce.
+            if(roll_index==1 && (r.bounce_charge || r.bounce_active))
+                throw std::invalid_argument("invalid ZOOM ZOO opponent bounce state");
             if(state.movement.frame==1376 && (r.input_latched || r.prior_orientation || r.prior_reflection || r.pose_base ||
                r.step || r.held_updates || r.bounce_charge || r.completed_rolls || r.held_rotations || r.bounce_active || r.support_count_mirror || r.prior_step))
                 throw std::invalid_argument("inconsistent initial ZOOM ZOO roll state");

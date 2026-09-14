@@ -148,15 +148,32 @@ and 16-21; reward words are `$81C493`. `$82DB87-DB94` copies one 26-byte
 `$82D7A4` template into both learned banks, so the opponent event-one weight is
 static content, not a constant.
 
-The domain test `$81C238` is a **signed** comparison with 72. The fixed BRONSEN
-voices 200-215 are therefore negative and take the reward path, leaving both the
-class table and the 26-byte bank; the original exits on the zero weight at
-`$7E21C9-$7E21D8`, which holds zero on all 6,394 authenticated frames and is
-already covered by the reference zero guard, as is the opponent hint latch
-`$12E5` that the enqueue `$81C5D5-C5E3` would otherwise clear. The cartridge
-class counter the original still bumps is outside the recovered inventory here
-exactly as the player's `$77076B` is. Treat both as bounded observations, not as
-a claim about arbitrary opponent state.
+The domain test `$81C238` is `CMP #$48` followed by `BMI`, which tests bit 7 of
+the 8-bit difference rather than comparing signed values. The reward path is
+taken for events **0-71 and again for 200-255**, and 72-199 take the voice path.
+The fixed BRONSEN voices 200-215 therefore reach the reward path, leaving both
+the class table and the 26-byte bank; the original exits on the zero weight at
+`$7E21C9-$7E21D8`. The cartridge class counter it still bumps is outside the
+recovered inventory here exactly as the player's `$77076B` is.
+
+An earlier revision of this record called that test a signed comparison and the
+implementation spelled it `int8(event) < 72`. That is wrong for events 128-199,
+which a signed test diverts to the reward path but the hardware sends to the
+voice path. Independent review caught it and settled it on the original rather
+than on paper: injecting event 150 changes no cartridge class counter, while 205
+increments `$770801`, so 150 really is on the voice side. Event 150 is also an
+original-only control here — the native refuses to restore it at all, because
+no producer emits it — so the corrected predicate has source and original-side
+evidence but no native differential coverage for 128-199.
+
+`$7E21C9-$7E21D8` was likewise asserted to be guarded when it was not. It is
+zero on all **343,482** authenticated frames of all **53** reference captures,
+and those sixteen bytes are now actual entries in
+`zoom-zoo-race-guards.reference.json`, so a future capture that reaches a
+nonzero value fails before native evaluation instead of being silently
+mismodelled. The opponent hint latch `$12E5`, which the enqueue `$81C5D5-C5E3`
+would otherwise clear, was already guarded at zero. Treat the out-of-bank exit
+as a guarded bounded observation, not as a claim about arbitrary opponent state.
 
 Evidence is `zoom_zoo_opponent_reward_probe`, an artificial original-only
 intervention. It cold-starts the authenticated primary timeline, verifies every

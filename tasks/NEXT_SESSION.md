@@ -42,32 +42,50 @@ checkout; without it every historical command exits 2, missing prerequisite.
 
 ## Remaining work, in order
 
-1. **Live controls — blocked on the user, not on code.** A visible window driven
-   by real key events through a complete race, result and restart is the main
-   acceptance gap. Synthesized events are dropped: macOS discards them from a
-   process without Accessibility permission and reports no error, so the
-   PID-restricted `artifacts/m4-16/live-key` helper returns 0 while the app
-   records `mapped key down/up 0/0` over 900 updates; activating the window via
-   System Events hangs on the Automation consent prompt. Either the user grants
-   Accessibility to the driving process, or the user exercises the app directly.
-   Do not retry this blindly and do not substitute a fixed mask, a replay or a
-   terminal runner. The app itself launches, validates, renders and runs 50 Hz
-   native updates correctly.
-2. **M4-15 race matrix and the ZOOM ZOO trial differentials.** Not run: their
+1. **High: the opponent multi-axis AI trick aborts ordinary play.** A live
+   exercise hit `ZOOM ZOO multi-axis AI trick is unrecovered` around lap two.
+   `$83E1CB-E21A` sets the selector to `x & 7` on a sloped launch; bit 0 is the
+   rotation the native implements, while bits 1 and 2 additionally press the
+   opponent's A (`$031F`) and X (`$0323`). The native has no A or roll input for
+   rider 1 at all — `movement.cpp:1893` hardcodes the roll input to the player —
+   so six of eight selector values abort at `movement.cpp:1009`/`:1020`.
+   **No reference capture exercises this**: the selector and both opponent trick
+   inputs are 0 on all 5,076 race frames of every capture, because the opponent
+   leaves `feature_total == 0` at frame 1672 and the player never leads by three
+   transitions at a sloped launch. Recovery needs a *new* original capture with
+   a much faster player before any implementation; see the M4-16 record. This
+   blocks acceptance — ordinary play can abort mid-race.
+2. **Live controls — demonstrated; only the reviewer's own exercise is due.**
+   A complete three-lap race, the RUNNER UP result, the authored pause menu and
+   a clean restart were driven with real key events: 5,785 nonzero updates from
+   21 presses, PAL cadence measured at 10.16 s of race clock per 10 s wall. Use
+   the computer-use per-app approval flow
+   (https://code.claude.com/docs/en/computer-use), **not** hand-granted
+   Accessibility: Bash subprocesses run under `com.anthropic.claude-code`, a
+   different bundle from the granted desktop app, so `CGEvent.postToPid`
+   silently delivers nothing and `artifacts/m4-16/live-key` is a dead end. The
+   track is a **loop** — one held direction cannot finish it; the original
+   alternates direction thirteen times. Ride the whole race in one uninterrupted
+   sequence, since gaps let the rider coast and desync. Never substitute a fixed
+   mask, replay or terminal runner. Outstanding: the reviewer's independent
+   exercise of live controls and a result/restart boundary, gamepad (no
+   hardware), and the focus-loss active-clear witness, which reads 0 because
+   macOS releases held keys before `SDL_EVENT_WINDOW_FOCUS_LOST`.
+3. **M4-15 race matrix and the ZOOM ZOO trial differentials.** Not run: their
    original reference pairs are absent from this checkout. Re-capturing the
    M4-15 primary pair is roughly 1.3 GB against about 24 GB free. The legacy
    empty-bank path is provably unchanged, which is a reason to expect a pass,
    not evidence of one.
-3. **Visual acceptance.** Original scene identities are frozen in
+4. **Visual acceptance.** Original scene identities are frozen in
    `tests/manifests/presentation/zoom-zoo-playable-v2.json`; private originals
    are `visual-original-a/b`, comparison `visual-7c3e3b6/comparison.png`. The
    recorded limitations are a missing direction arrow and coaching cue, rider
    anchors off by roughly 8-14 pixels, and low-salience result graph points.
    Independent readability review is still due.
-4. **Result-loading read classification** against the durable
+5. **Result-loading read classification** against the durable
    [persistent-input ledger](../docs/research/M4-16-persistent-input-ledger.md).
    Zero unresolved stores is not zero unresolved reads.
-5. **Final integration**: reviewed exact merge, hosted macOS/Linux CI on the
+6. **Final integration**: reviewed exact merge, hosted macOS/Linux CI on the
    exact tip, and synchronized private main. Hosted Linux is synthetic coverage,
    not private Linux differential execution. No M4-17 and no milestone tag.
 

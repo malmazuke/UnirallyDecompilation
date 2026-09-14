@@ -2,9 +2,13 @@
 
 Updated 14 September 2026: M4-15 is accepted at `8bc2e71`; private main ref and
 exact-tip macOS/Linux CI `34785933369` verified during M4-16 preparation.
-M4-16 is in progress in its isolated task checkout: native initialization,
-pack/frontend and result recovery are provisional. Initial Sol review found
-restore and result-inventory defects; acceptance remains outstanding. See [NEXT_SESSION](../tasks/NEXT_SESSION.md); no M4-17 dispatch.
+M4-16 is in progress and unaccepted in `.worktrees/m4-16-playable-zoom-zoo`.
+Candidate9f7f3b4 matches730-byte primary/held-X start-to-result states, fresh
+restores and restart; debug/sanitize each405 checks pass. Native initialization,
+49-entry pack, frontend/result and held-roll recovery remain provisional until
+ordinary controls, live/visual and remaining acceptance gates close. See
+[R-0035](research/R-0035-zoom-zoo-playable-recovery.md) and
+[NEXT_SESSION](../tasks/NEXT_SESSION.md); no M4-17 dispatch.
 
 ## Accepted product and evidence
 

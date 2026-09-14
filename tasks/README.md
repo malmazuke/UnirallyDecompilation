@@ -41,7 +41,7 @@ The coordinator maintains the status registry below. Work orders further below d
 | M4-13 | accepted (`b288396`; private sync and hosted CI passed) | [Player landing and recovery trial](M4-13.md) |
 | M4-14 | accepted (`38c72e8`; private sync and final-tip CI passed) | [Sustained ZOOM ZOO traversal](M4-14.md) |
 | M4-15 | accepted (`8bc2e71`; private sync and final-tip CI passed) | [ZOOM ZOO race completion](M4-15.md) |
-| M4-16 | in progress; Astra/medium, initial Sol review findings being addressed | [Playable ZOOM ZOO](M4-16.md) |
+| M4-16 | in progress, unaccepted; V10 reviewed recovery checkpoint, live/visual/control gaps | [Playable ZOOM ZOO](M4-16.md) |
 | M4-17 – M6 | unclaimed; outside this assignment | Do not automatically dispatch |
 
 ## M0 — repeatable laboratory

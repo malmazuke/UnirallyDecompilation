@@ -42,19 +42,17 @@ checkout; without it every historical command exits 2, missing prerequisite.
 
 ## Remaining work, in order
 
-1. **High: the opponent multi-axis AI trick aborts ordinary play.** A live
-   exercise hit `ZOOM ZOO multi-axis AI trick is unrecovered` around lap two.
-   `$83E1CB-E21A` sets the selector to `x & 7` on a sloped launch; bit 0 is the
-   rotation the native implements, while bits 1 and 2 additionally press the
-   opponent's A (`$031F`) and X (`$0323`). The native has no A or roll input for
-   rider 1 at all — `movement.cpp:1893` hardcodes the roll input to the player —
-   so six of eight selector values abort at `movement.cpp:1009`/`:1020`.
-   **No reference capture exercises this**: the selector and both opponent trick
-   inputs are 0 on all 5,076 race frames of every capture, because the opponent
-   leaves `feature_total == 0` at frame 1672 and the player never leads by three
-   transitions at a sloped launch. Recovery needs a *new* original capture with
-   a much faster player before any implementation; see the M4-16 record. This
-   blocks acceptance — ordinary play can abort mid-race.
+1. **Closed: the opponent multi-axis AI trick.** A live playthrough aborted with
+   `ZOOM ZOO multi-axis AI trick is unrecovered`. `$83E1CB-E21A` sets the
+   selector to `x & 7` on a sloped launch; bit 0 is the rotation, bit 1 the
+   opponent's A (`$031F`) and bit 2 its X (`$0323`). All six unrecovered values
+   are now recovered from original evidence and independently reviewed, and the
+   A-dependent rotation rate at `$82A49F-A5F9`, which had been keyed to the
+   player's button, now reads each rider's own A. Eight frozen probe cases match
+   742 bytes across 41 observations each; a live run then reported **85
+   multi-axis updates across selectors 2 and 7** with no abort. Nothing is
+   outstanding here; it is listed so the history is not re-derived.
+
 2. **Live controls — demonstrated; only the reviewer's own exercise is due.**
    A complete three-lap race, the RUNNER UP result, the authored pause menu and
    a clean restart were driven with real key events: 5,785 nonzero updates from

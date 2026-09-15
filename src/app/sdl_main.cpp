@@ -313,6 +313,11 @@ int main(int argc, char **argv) try {
       longest_identical_fallback_race_run{};
   std::optional<unirally::RgbFrame> previous_frame;
   std::uint32_t mapped_key_down_events{}, mapped_key_up_events{};
+  // Opponent trick telemetry. The multi-axis branch is what aborted before it
+  // was recovered, and it is invisible in the other counters, so a live run
+  // can otherwise only show the absence of a crash rather than the presence of
+  // the repaired path. seen_selectors is a bitmask over selector values 0-7.
+  std::uint32_t opponent_trick_updates{}, opponent_multi_axis_updates{}, seen_selectors{};
   std::uint32_t nonzero_input_updates{}, simultaneous_input_updates{};
   std::uint32_t neutral_updates_after_input{}, focus_loss_events{};
   std::uint32_t focus_loss_nonzero_clears{};
@@ -386,6 +391,15 @@ int main(int argc, char **argv) try {
         if(zoom_state.result_updates==115 && buttons.start)
           unirally::restart_zoom_zoo(zoom_state,zoom_content);
         else unirally::update_zoom_zoo(zoom_state,buttons,zoom_content);
+        // Selector 0 is a real trick (the flat path's negative-velocity
+        // rotation), so the impulse is the activity signal; the selector alone
+        // would silently drop it.
+        if(zoom_state.movement.opponent_ai.impulse_countdown) {
+          const auto selector=zoom_state.movement.opponent_ai.trick_selector;
+          ++opponent_trick_updates;
+          if(selector&6U)++opponent_multi_axis_updates;
+          if(selector<8U)seen_selectors|=1U<<selector;
+        }
         if(zoom_state.movement.frame<previous_simulation_frame) {
           // Both keyboard and gamepad navigation replace all simulation/art
           // state. A physically held Start cannot immediately pause the new race.
@@ -466,6 +480,13 @@ int main(int argc, char **argv) try {
       <<"; outcome "<<static_cast<unsigned>(state.finish.outcome)<<'\n';
   if(parsed->zoom_zoo)std::cout<<"ZOOM ZOO result updates "<<zoom_state.result_updates<<"; restarts "<<restarts
       <<"; totals "<<zoom_state.race.total_times[0]<<'/'<<zoom_state.race.total_times[1]<<'\n';
+  if(parsed->zoom_zoo) {
+    std::cout<<"Opponent tricks: updates "<<opponent_trick_updates<<"; multi-axis updates "
+             <<opponent_multi_axis_updates<<"; selectors seen";
+    if(!seen_selectors)std::cout<<" none";
+    else for(unsigned s=0;s<8;++s)if(seen_selectors&(1U<<s))std::cout<<' '<<s;
+    std::cout<<'\n';
+  }
   return 0;
 } catch (const std::exception &error) {
   std::cerr << "Unirally launch failed: " << error.what() << '\n';

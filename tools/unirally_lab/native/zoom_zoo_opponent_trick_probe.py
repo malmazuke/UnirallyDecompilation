@@ -15,7 +15,13 @@ eight values, so forcing *only* the gate lets the original itself choose the
 selector and show what it does.
 
 The intervention is therefore one SRAM word: the opponent feature total at
-`$770825` set to zero immediately before the chosen frame. Everything
+`$770825` set to zero immediately before the chosen frame. That word is read by
+twenty-two sites across banks `$80`-`$83`, not only by this gate, so it is the
+*smallest* lever rather than a gate-private one; it is preferred over forcing
+the transition counts, which additionally feed the speed limiter's progress
+terms, the progress adjustment and the lap logic. Both sides of the comparison
+see the same forced value and the field is inside the projection, so the
+differential stays sound. Everything
 downstream, including the selector, is the original's own arithmetic. This is an
 internal mechanics experiment, not native initialization and not a playable
 acceptance case.
@@ -88,6 +94,10 @@ def probe(reference: Path, core_path: Path, frame: int, through: int, out: Path)
                         raise ValueError('probe frame is not under an opponent jump marker')
                     if int.from_bytes(before_sram[FEATURE_TOTAL:FEATURE_TOTAL+2], 'little') == 0:
                         raise ValueError('opponent feature total is already zero; the gate needs no forcing here')
+                    if any(int.from_bytes(before_wram[a:a+2], 'little')
+                           for a in (SELECTOR, OPPONENT_A, OPPONENT_X, IMPULSE)):
+                        raise ValueError('a trick is already in flight here, so the captured selector would be '
+                                         'retained rather than freshly chosen')
                     size = ctypes.c_size_t()
                     pointer = core._lib.unirally_memory(1, ctypes.byref(size))
                     if not pointer or size.value != 8192:
@@ -124,12 +134,23 @@ def probe(reference: Path, core_path: Path, frame: int, through: int, out: Path)
                 if step >= frame:
                     rows.append(_row(wram, sram, step, paused_updates, countdown_paused).hex())
                     captured.append(dict(frame=step, wram_sha256=sha(wram), sram_sha256=sha(sram),
+                                         guards_tripped=[f'{item["address"]:04x}' for item in guards
+                                                         if item['address'] not in (0xd53, 0xd55)
+                                                         and item['address'] not in {a+2*r for a in ROLL_WORDS for r in (0, 1)}
+                                                         and item['address'] not in (0x31d, 0x321, 0x339, 0x31f, 0x323)
+                                                         and int.from_bytes(wram[item['address']:item['address']+item['width']],
+                                                                            'little') != item['value']],
                                          **_observation(wram, sram)))
             if seed is None:
                 raise ValueError('probe never reached its intervention frame')
+            tripped = {o['frame']: o['guards_tripped'] for o in captured if o['guards_tripped']}
+            if tripped:
+                raise ValueError(f'artificial branch left the guarded original domain: {tripped}')
             fired = [o for o in captured if o['selector'] or o['opponent_a'] or o['opponent_x']]
             if not fired:
-                raise ValueError('the opponent trick never fired in this window; choose another frame')
+                raise ValueError('the opponent trick never fired in this window; choose a frame one after a '
+                                 'qualifying stored state, since an impulse already counting down ($0C6F set) '
+                                 'replays the retained selector instead of choosing a new one')
             selector = fired[0]['selector']
             # The AI reads position and surface angle part-way through the
             # update, so the pre-frame x&7 is a hint for choosing a frame, not
@@ -185,6 +206,8 @@ def native(probe_dir: Path, reference: Path, binary: Path, pack: Path) -> dict:
     if sha(seed) != report['seed_sha256'] or digest(report['rows']) != report['rows_sha256']:
         raise ValueError('probe evidence identity differs')
     document = json.loads((reference/'reference.json').read_text())
+    if document['timeline_sha256'] != report['timeline_sha256']:
+        raise ValueError('probe and reference timelines differ')
     first, last = report['frames']
     inputs = probe_dir/'native-inputs.txt'
     inputs.write_text(''.join(f'{f} {sum(1 << BUTTONS.index(b) for b in document["timeline"][f][0])} 0\n'
@@ -202,6 +225,8 @@ def native(probe_dir: Path, reference: Path, binary: Path, pack: Path) -> dict:
         if index+1 >= len(produced):
             mismatch = dict(frame=first+index, reason='native produced no state'); break
         frame, actual = int(produced[index+1][0]), produced[index+1][1]
+        if frame != first+index:
+            mismatch = dict(frame=first+index, reason=f'native reported frame {frame}'); break
         if actual != expected:
             mismatch = dict(frame=frame, reason='state differs',
                             bytes=[[i, a, b] for i, (a, b) in enumerate(zip(bytes.fromhex(actual),

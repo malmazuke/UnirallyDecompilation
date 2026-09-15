@@ -1013,6 +1013,11 @@ void update_zoom_ai(ZoomZooState& state) {
             ai.impulse_countdown=static_cast<std::uint16_t>(-static_cast<std::int16_t>(rider.motion.velocity_y)/2);
             if(whole.rewards.feature_total==0 || static_cast<std::int16_t>(whole.riders[0].progress.transition_count-rider.progress.transition_count)>=3) {
                 ai.suppression_counter=30;
+                // $83E16B compares $1275 with 2 in a three-way structure; only
+                // the below-two arm is modelled here. $1275 is a reference
+                // guard held at 1 on every authenticated frame, so the equal
+                // and above arms, one of which sets suppression to 60, are
+                // unreachable in this scenario rather than ignored.
                 // $83E1CB-E21A. A flat launch only picks a rotation from the
                 // velocity sign; a sloped one takes x&7, whose three bits drive
                 // three independent inputs -- bit 0 the rotation at
@@ -1628,6 +1633,13 @@ ZoomZooState deserialize_zoom_zoo(std::span<const std::uint8_t> bytes) {
             const auto& o=state.movement.rewards;
             if(o.cooldown>40 || (o.event_one_weight!=1 && o.event_one_weight!=2 && o.event_one_weight!=4))
                 throw std::invalid_argument("invalid ZOOM ZOO opponent reward queue state");
+            // $83E1F1 masks the sloped selector with 7 and the flat path writes
+            // only 0 or 1, so nothing above 7 is producible. The removed
+            // multi-axis guards were this field's only bound, and without one a
+            // forged 14 or 65535 would alias onto 6 and 7 and play identically
+            // to them, which the original never does.
+            if(state.movement.opponent_ai.trick_selector>7)
+                throw std::invalid_argument("invalid ZOOM ZOO opponent trick selector");
         }
         if(state.movement.countdown && (state.race.riders[0].finished || state.race.riders[1].finished || state.result_updates))
             throw std::invalid_argument("ZOOM ZOO finish/result conflicts with start phase");

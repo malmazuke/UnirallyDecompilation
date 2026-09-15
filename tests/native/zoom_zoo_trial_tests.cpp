@@ -177,6 +177,18 @@ int main() {
         auto forged=result;forged.movement.rewards.cooldown=60000;
         rejects([&]{(void)deserialize_zoom_zoo(serialize_zoom_zoo(forged));});
     }
+    // $83E1F1 masks the sloped selector with 7 and the flat path writes only
+    // 0 or 1. Removing the multi-axis guards left this field unbounded, so a
+    // forged 14 or 65535 would alias onto 6 and 7 and play identically.
+    for(unsigned value:{8U,14U,255U,65535U}) {
+        auto forged=result;forged.movement.opponent_ai.trick_selector=static_cast<std::uint16_t>(value);
+        rejects([&]{(void)deserialize_zoom_zoo(serialize_zoom_zoo(forged));});
+    }
+    for(unsigned value:{0U,1U,2U,6U,7U}) {
+        auto valid=result;valid.movement.opponent_ai.trick_selector=static_cast<std::uint16_t>(value);
+        const auto bytes=serialize_zoom_zoo(valid);
+        require(serialize_zoom_zoo(deserialize_zoom_zoo(bytes))==bytes);
+    }
     // $81C598-C5C8 never publishes a zero, so a restore carrying one would
     // otherwise be accepted and only fail on the following update.
     {

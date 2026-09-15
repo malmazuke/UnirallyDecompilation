@@ -919,7 +919,14 @@ std::array<unsigned,7> ui_glyph(char c) {
     case 'Y':return {17,17,10,4,4,4,4};case 'Z':return {31,1,2,4,8,16,31};
     case ':':return {0,4,4,0,4,4,0};case '.':return {0,0,0,0,0,4,4};
     case '/':return {1,1,2,4,8,16,16};case '-':return {0,0,0,31,0,0,0};
-    default:return {};
+    // The pause menu's selection marker. Without this glyph the menu still
+    // emitted "> RESUME" but drew it identically to "  RESUME", so the focused
+    // entry was indistinguishable and ENTER's target was unknowable.
+    case '>':return {16,8,4,2,4,8,16};
+    // An unmapped character used to render blank, which hides the omission at
+    // exactly the moment it matters. Draw a box so a future gap is visible on
+    // screen instead of silently absent.
+    default:return {31,17,17,17,17,17,31};
     }
 }
 void ui_text(RgbFrame& frame,int x,int y,std::string_view text,std::array<std::uint8_t,3> ink={255,240,220}) {

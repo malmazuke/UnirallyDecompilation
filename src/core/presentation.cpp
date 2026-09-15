@@ -923,10 +923,15 @@ std::array<unsigned,7> ui_glyph(char c) {
     // emitted "> RESUME" but drew it identically to "  RESUME", so the focused
     // entry was indistinguishable and ENTER's target was unknowable.
     case '>':return {16,8,4,2,4,8,16};
+    // Space must be explicit. It has no glyph of its own, so it used to reach
+    // the default and render blank only because the default was blank; once
+    // the default became a visible box, every space between words drew one.
+    case ' ':return {0,0,0,0,0,0,0};
     // An unmapped character used to render blank, which hides the omission at
-    // exactly the moment it matters. Draw a box so a future gap is visible on
-    // screen instead of silently absent.
-    default:return {31,17,17,17,17,17,31};
+    // exactly the moment it matters. Draw a solid block instead: a hollow box
+    // differs from 'O' only in its top and bottom rows at 5x7, so it reads as
+    // a letter, which is worse than blank. A solid block cannot.
+    default:return {31,31,31,31,31,31,31};
     }
 }
 void ui_text(RgbFrame& frame,int x,int y,std::string_view text,std::array<std::uint8_t,3> ink={255,240,220}) {

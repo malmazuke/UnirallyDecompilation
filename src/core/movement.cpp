@@ -1006,7 +1006,6 @@ void update_zoom_ai(ZoomZooState& state) {
     if(marker&0x2000U) {
         input.jump_input=1;
         if(ai.impulse_countdown) {
-            if(ai.trick_selector&6U)throw std::invalid_argument("ZOOM ZOO multi-axis AI trick is unrecovered");
             if(ai.trick_selector&1U)input.rotate_positive_input=1;else input.rotate_negative_input=1;
             return;
         }
@@ -1014,10 +1013,15 @@ void update_zoom_ai(ZoomZooState& state) {
             ai.impulse_countdown=static_cast<std::uint16_t>(-static_cast<std::int16_t>(rider.motion.velocity_y)/2);
             if(whole.rewards.feature_total==0 || static_cast<std::int16_t>(whole.riders[0].progress.transition_count-rider.progress.transition_count)>=3) {
                 ai.suppression_counter=30;
+                // $83E1CB-E21A. A flat launch only picks a rotation from the
+                // velocity sign; a sloped one takes x&7, whose three bits drive
+                // three independent inputs -- bit 0 the rotation at
+                // $032F/$032B, bit 1 the opponent's A at $031F and bit 2 its X
+                // at $0323. Bits 1 and 2 are consumed where the opponent's
+                // reflection and roll run, below.
                 if(rider.contact.surface_angle==0) {
                     ai.trick_selector=negative(rider.motion.velocity_x)?0:1;
                 } else ai.trick_selector=rider.motion.x&7U;
-                if(ai.trick_selector&6U)throw std::invalid_argument("ZOOM ZOO multi-axis AI trick is unrecovered");
                 if(ai.trick_selector&1U)input.rotate_positive_input=1;else input.rotate_negative_input=1;
                 return;
             }
@@ -1890,7 +1894,11 @@ void update_zoom_zoo(ZoomZooState& state,const ControllerButtons& requested_butt
         if(transition.pose_override>=0x600 && transition.pose_override<0x610)transition.pose_override=0;
         int animation_override=0;bool throttle_target=false;
         if(index==0)update_reflection_transition(rider,transition,horizontal,index!=active,content.reflection_pose_table,state.native_initialization && buttons.a);
-        if(state.native_initialization && index==active)update_zoom_roll(next,index,index==0 && buttons.x,content);
+        // The opponent's X comes from trick selector bit 2 ($0323) rather than
+        // from a controller; the selector is retained state, so it re-derives
+        // each update for as long as the impulse holds.
+        if(state.native_initialization && index==active)
+            update_zoom_roll(next,index,index==0?buttons.x:(whole.opponent_ai.trick_selector&4U)!=0,content);
         if(index==active || surface.leading_support) {
             if(state.native_initialization)update_zoom_landing_rewards(next,index,content);
             else {
@@ -1925,7 +1933,16 @@ void update_zoom_zoo(ZoomZooState& state,const ControllerButtons& requested_butt
                 (std::abs(static_cast<std::int16_t>(rider.contact.surface_angle))<30 && rider.contact.unsupported_count<9) ||
                 (!transition.rotate_negative_input && !transition.rotate_positive_input);
             if(clear)rider.motion.response_b=0;
-            else rider.motion.response_b=static_cast<std::uint16_t>((rider.motion.response_b&0xff00U)|(transition.rotate_negative_input?(buttons.a && index==0?255U:254U):(buttons.a && index==0?1U:2U)));
+            else {
+                // $82A49F-A5F9 halves the rotation step while A is held. The
+                // rate was keyed to the player's button, so the opponent always
+                // rotated at the fast step; its A arrives from trick selector
+                // bit 1 instead and must slow it the same way.
+                const bool holding_a=index==0?buttons.a:
+                    (state.native_initialization && (whole.opponent_ai.trick_selector&2U)!=0);
+                rider.motion.response_b=static_cast<std::uint16_t>((rider.motion.response_b&0xff00U)|
+                    (transition.rotate_negative_input?(holding_a?255U:254U):(holding_a?1U:2U)));
+            }
             const auto previous_wrong_direction=transition.wrong_direction_counter;
             transition.wrong_direction_counter=next_wrong_direction_counter(
                 previous_wrong_direction,rider.motion.velocity_x,
@@ -1937,7 +1954,8 @@ void update_zoom_zoo(ZoomZooState& state,const ControllerButtons& requested_butt
 
         }
         update_rolling_mode(rider,surface.mode!=0);
-        if(index==1)update_reflection_transition(rider,transition,horizontal,index!=active,content.reflection_pose_table);
+        if(index==1)update_reflection_transition(rider,transition,horizontal,index!=active,content.reflection_pose_table,
+            state.native_initialization && (whole.opponent_ai.trick_selector&2U)!=0);
         update_zoom_throttle(rider,transition,horizontal,animation_override,throttle_target,next.charge_announced[index],surface.leading_support!=0);
         update_idle_pose(rider,!throttle_target && !surface.leading_support && transition.pose_override==0,index==1,whole.animation_counter,content.movement.idle_pose_table);
         if(rider.idle_pose.active)surface.tile_mode=1;
